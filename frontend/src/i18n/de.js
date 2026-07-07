@@ -1,0 +1,98 @@
+export const de = {
+  // Navigation
+  nav: {
+    today: 'Heute',
+    lessons: 'Lektionen',
+    vocabulary: 'Wörterbuch',
+    newLesson: '+ Lektion',
+    logout: 'Abmelden',
+    appName: 'Deutsch Lernen 🇩🇪',
+  },
+  // Authentifizierung
+  auth: {
+    login: 'Anmelden',
+    register: 'Registrieren',
+    email: 'E-Mail',
+    password: 'Passwort',
+    passwordHint: 'Passwort (min. 8 Zeichen)',
+    role: 'Rolle',
+    roleStudent: 'Schüler',
+    roleOwner: 'Lehrer / Elternteil',
+    noAccount: 'Noch kein Konto?',
+    hasAccount: 'Bereits ein Konto?',
+    loggingIn: 'Anmeldung...',
+    registering: 'Registrierung...',
+  },
+  // Dashboard
+  dashboard: {
+    title: 'Für heute',
+    allDone: 'Alles für heute gelernt!',
+    comeBack: 'Komm morgen wieder zum Wiederholen.',
+    exercisesWaiting: (n) => `${n} Übungen warten auf Wiederholung`,
+    startSession: 'Wiederholung starten →',
+    loading: 'Laden...',
+  },
+  // Übungen
+  exercise: {
+    flashcard: 'Lernkarte',
+    fillBlank: 'Lückentext',
+    multipleChoice: 'Wähle die Antwort',
+    tapToReveal: 'Tippen zum Aufdecken',
+    forgot: 'Vergessen',
+    hard: 'Schwierig',
+    remembered: 'Gewusst!',
+    checkAnswer: 'Prüfen',
+    next: 'Weiter →',
+    correct: 'Richtig! ✓',
+    wrong: 'Falsch. Richtige Antwort:',
+    enterWord: 'Wort eingeben...',
+    loading: 'Übungen laden...',
+  },
+  // Lektionen
+  lessons: {
+    title: 'Lektionen',
+    empty: 'Noch keine Lektionen. Lade die erste Lektion hoch!',
+    newLesson: 'Neue Lektion',
+    lessonTopic: 'Thema der Lektion (optional)',
+    topicPlaceholder: 'z.B.: Begrüßungen, Zahlen 1-10...',
+    photos: 'Fotos vom Lehrbuch / Heft',
+    photoHint: 'Fotos hierher ziehen oder klicken (mehrere möglich)',
+    photosSelected: (n) => `${n} Fotos ausgewählt`,
+    audio: 'Audioaufnahme der Lektion (optional)',
+    audioHint: 'Audiodatei hierher ziehen oder klicken',
+    audioSelected: (name) => `Audio: ${name}`,
+    processBtn: 'Lektion verarbeiten',
+    processing: {
+      creating: 'Lektion erstellen...',
+      uploading: 'Dateien hochladen...',
+      processing: 'Claude verarbeitet die Lektion... (1-2 Minuten)',
+      done: '✓ Fertig! Übungen wurden erstellt.',
+    },
+    mediaCount: (n) => `${n} Dateien`,
+    status: {
+      pending: 'Wartend',
+      processing: '⏳ Verarbeitung...',
+      done: '✓ Bereit',
+      error: '✗ Fehler',
+    },
+  },
+  // Wörterbuch
+  vocabulary: {
+    title: 'Wörterbuch',
+    all: 'Alle',
+    new: 'Neu',
+    learning: 'In Bearbeitung',
+    known: 'Gelernt',
+    wordsCount: (n) => `${n} Wörter`,
+    loading: 'Wörterbuch laden...',
+    statusNew: 'Neu',
+    statusLearning: 'In Bearbeitung',
+    statusKnown: 'Gelernt',
+  },
+  // Allgemein
+  common: {
+    loading: 'Laden...',
+    error: 'Fehler',
+    cancel: 'Abbrechen',
+  },
+}

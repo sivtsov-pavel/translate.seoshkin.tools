@@ -1,0 +1,98 @@
+export const ru = {
+  // Навигация
+  nav: {
+    today: 'Сегодня',
+    lessons: 'Уроки',
+    vocabulary: 'Словарь',
+    newLesson: '+ Урок',
+    logout: 'Выйти',
+    appName: 'Немецкий 🇩🇪',
+  },
+  // Авторизация
+  auth: {
+    login: 'Войти',
+    register: 'Зарегистрироваться',
+    email: 'Email',
+    password: 'Пароль',
+    passwordHint: 'Пароль (мин. 8 символов)',
+    role: 'Роль',
+    roleStudent: 'Ученик',
+    roleOwner: 'Учитель / Родитель',
+    noAccount: 'Нет аккаунта?',
+    hasAccount: 'Уже есть аккаунт?',
+    loggingIn: 'Вход...',
+    registering: 'Регистрация...',
+  },
+  // Дашборд
+  dashboard: {
+    title: 'На сегодня',
+    allDone: 'Всё выучено на сегодня!',
+    comeBack: 'Возвращайся завтра для повторения.',
+    exercisesWaiting: (n) => `${n} упражнений ждут повторения`,
+    startSession: 'Начать повторение →',
+    loading: 'Загрузка...',
+  },
+  // Упражнения
+  exercise: {
+    flashcard: 'Флеш-карта',
+    fillBlank: 'Заполни пропуск',
+    multipleChoice: 'Выбери ответ',
+    tapToReveal: 'Нажмите чтобы показать ответ',
+    forgot: 'Не помню',
+    hard: 'С трудом',
+    remembered: 'Помню!',
+    checkAnswer: 'Проверить',
+    next: 'Далее →',
+    correct: 'Верно! ✓',
+    wrong: 'Неверно. Правильно:',
+    enterWord: 'Введите слово...',
+    loading: 'Загрузка упражнений...',
+  },
+  // Уроки
+  lessons: {
+    title: 'Уроки',
+    empty: 'Уроков пока нет. Загрузите первый урок!',
+    newLesson: 'Новый урок',
+    lessonTopic: 'Тема урока (необязательно)',
+    topicPlaceholder: 'Например: Приветствия, числа 1-10...',
+    photos: 'Фото учебника / тетради',
+    photoHint: 'Перетащите фото или нажмите для выбора (можно несколько)',
+    photosSelected: (n) => `Выбрано фото: ${n}`,
+    audio: 'Аудиозапись урока (необязательно)',
+    audioHint: 'Перетащите аудиофайл или нажмите для выбора',
+    audioSelected: (name) => `Аудио: ${name}`,
+    processBtn: 'Обработать урок',
+    processing: {
+      creating: 'Создаём урок...',
+      uploading: 'Загружаем файлы...',
+      processing: 'Claude обрабатывает урок... (1-2 минуты)',
+      done: '✓ Готово! Упражнения созданы.',
+    },
+    mediaCount: (n) => `${n} файлов`,
+    status: {
+      pending: 'Ожидает',
+      processing: '⏳ Обработка...',
+      done: '✓ Готов',
+      error: '✗ Ошибка',
+    },
+  },
+  // Словарь
+  vocabulary: {
+    title: 'Словарь',
+    all: 'Все',
+    new: 'Новое',
+    learning: 'Изучается',
+    known: 'Выучено',
+    wordsCount: (n) => `${n} слов`,
+    loading: 'Загрузка словаря...',
+    statusNew: 'Новое',
+    statusLearning: 'Изучается',
+    statusKnown: 'Выучено',
+  },
+  // Общее
+  common: {
+    loading: 'Загрузка...',
+    error: 'Ошибка',
+    cancel: 'Отмена',
+  },
+}
