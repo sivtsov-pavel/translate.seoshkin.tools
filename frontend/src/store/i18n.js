@@ -1,13 +1,14 @@
 import { create } from 'zustand'
 import { ru } from '../i18n/ru.js'
 import { de } from '../i18n/de.js'
+import { en } from '../i18n/en.js'
+import { uk } from '../i18n/uk.js'
 
-const translations = { ru, de }
+const translations = { ru, de, en, uk }
 
-// Язык по умолчанию из localStorage или Russian
 const savedLang = localStorage.getItem('lang') || 'ru'
 
-export const useI18nStore = create((set, get) => ({
+export const useI18nStore = create((set) => ({
   lang: savedLang,
   t: translations[savedLang],
 
@@ -16,6 +17,4 @@ export const useI18nStore = create((set, get) => ({
     localStorage.setItem('lang', lang)
     set({ lang, t: translations[lang] })
   },
-
-  // Удобный геттер — useI18nStore(s => s.t) или деструктурировать { t, lang, setLang }
 }))

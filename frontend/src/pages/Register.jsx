@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
+import LangSwitcher from '../components/LangSwitcher.jsx'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -11,7 +12,7 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuthStore()
-  const { t, lang, setLang } = useI18nStore()
+  const { t } = useI18nStore()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -31,16 +32,8 @@ export default function Register() {
 
   return (
     <div style={{ maxWidth: 400, margin: '60px auto', padding: '0 16px' }}>
-      {/* Переключатель языка */}
       <div style={{ textAlign: 'right', marginBottom: 24 }}>
-        <button onClick={() => setLang('ru')}
-          style={{ marginRight: 8, fontWeight: lang === 'ru' ? 700 : 400, background: 'none', border: 'none', cursor: 'pointer', fontSize: 15 }}>
-          RU
-        </button>
-        <button onClick={() => setLang('de')}
-          style={{ fontWeight: lang === 'de' ? 700 : 400, background: 'none', border: 'none', cursor: 'pointer', fontSize: 15 }}>
-          DE
-        </button>
+        <LangSwitcher />
       </div>
 
       <h1 style={{ marginBottom: 24 }}>{t.nav.appName}</h1>

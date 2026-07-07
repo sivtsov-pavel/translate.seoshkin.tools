@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
+import LangSwitcher from './LangSwitcher.jsx'
 
 export default function Layout({ children }) {
   const { user, logout } = useAuthStore()
-  const { t, lang, setLang } = useI18nStore()
+  const { t } = useI18nStore()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -15,32 +16,20 @@ export default function Layout({ children }) {
   return (
     <div>
       <nav style={{ display: 'flex', gap: 16, padding: '12px 24px', backgroundColor: '#4f46e5', alignItems: 'center', flexWrap: 'wrap' }}>
-        <Link to="/" style={linkStyle('#fff', true)}>{t.nav.appName}</Link>
-        <Link to="/" style={linkStyle('#fff')}>{t.nav.today}</Link>
-        <Link to="/lessons" style={linkStyle('#fff')}>{t.nav.lessons}</Link>
-        <Link to="/vocabulary" style={linkStyle('#fff')}>{t.nav.vocabulary}</Link>
+        <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 15, fontWeight: 700 }}>{t.nav.appName}</Link>
+        <Link to="/" style={navLink}>{t.nav.today}</Link>
+        <Link to="/lessons" style={navLink}>{t.nav.lessons}</Link>
+        <Link to="/vocabulary" style={navLink}>{t.nav.vocabulary}</Link>
         {user?.role === 'owner' && (
-          <Link to="/lessons/new" style={linkStyle('#fff')}>{t.nav.newLesson}</Link>
+          <Link to="/lessons/new" style={{ ...navLink, backgroundColor: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 6 }}>
+            {t.nav.newLesson}
+          </Link>
         )}
-
-        {/* Переключатель языка в навигации */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            onClick={() => setLang('ru')}
-            title="Русский"
-            style={{ ...langBtnStyle, fontWeight: lang === 'ru' ? 700 : 400, opacity: lang === 'ru' ? 1 : 0.6 }}>
-            RU
-          </button>
-          <span style={{ color: '#a5b4fc' }}>|</span>
-          <button
-            onClick={() => setLang('de')}
-            title="Deutsch"
-            style={{ ...langBtnStyle, fontWeight: lang === 'de' ? 700 : 400, opacity: lang === 'de' ? 1 : 0.6 }}>
-            DE
-          </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <LangSwitcher dark />
           <button
             onClick={handleLogout}
-            style={{ background: 'none', border: '1px solid #a5b4fc', color: '#fff', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 13, marginLeft: 8 }}>
+            style={{ background: 'none', border: '1px solid #a5b4fc', color: '#fff', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
             {t.nav.logout}
           </button>
         </div>
@@ -52,18 +41,4 @@ export default function Layout({ children }) {
   )
 }
 
-const linkStyle = (color, bold = false) => ({
-  color,
-  textDecoration: 'none',
-  fontSize: 15,
-  fontWeight: bold ? 700 : 400,
-})
-
-const langBtnStyle = {
-  background: 'none',
-  border: 'none',
-  color: '#fff',
-  cursor: 'pointer',
-  fontSize: 14,
-  padding: '2px 4px',
-}
+const navLink = { color: '#fff', textDecoration: 'none', fontSize: 15 }
