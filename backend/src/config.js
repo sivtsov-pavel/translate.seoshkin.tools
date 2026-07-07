@@ -1,0 +1,10 @@
+// Централизованный конфиг — все env переменные только отсюда
+export const config = {
+  port: parseInt(process.env.PORT || '8090'),
+  host: process.env.HOST || '0.0.0.0',
+  jwtSecret: process.env.JWT_SECRET || 'dev_secret_change_me',
+  databaseUrl: process.env.DATABASE_URL || 'postgresql://german_app:secret@localhost:5432/german_learning',
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
+  openaiApiKey: process.env.OPENAI_API_KEY || '',
+  uploadDir: process.env.UPLOAD_DIR || './uploads',
+}
