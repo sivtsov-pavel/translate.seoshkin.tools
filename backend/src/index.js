@@ -2,17 +2,23 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { config } from './config.js'
 import authPlugin from './plugins/auth.js'
+import uploadPlugin from './plugins/upload.js'
 import { authRoutes } from './routes/auth.js'
+import { lessonsRoutes } from './routes/lessons.js'
+import { mediaRoutes } from './routes/media.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
 // Регистрация плагинов — выделено для переиспользования в тестах
 export async function registerPlugins(app) {
   await app.register(cors, { origin: true })
   await app.register(authPlugin)
+  await app.register(uploadPlugin)
 }
 
 async function registerRoutes(app) {
   await app.register(authRoutes)
+  await app.register(lessonsRoutes)
+  await app.register(mediaRoutes)
 }
 
 export async function buildApp() {
