@@ -6,6 +6,7 @@ import uploadPlugin from './plugins/upload.js'
 import { authRoutes } from './routes/auth.js'
 import { lessonsRoutes } from './routes/lessons.js'
 import { mediaRoutes } from './routes/media.js'
+import { processRoutes } from './routes/process.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
 // Регистрация плагинов — выделено для переиспользования в тестах
@@ -18,6 +19,7 @@ export async function registerPlugins(app) {
 async function registerRoutes(app) {
   await app.register(authRoutes)
   await app.register(lessonsRoutes)
+  await app.register(processRoutes)
   await app.register(mediaRoutes)
 }
 
