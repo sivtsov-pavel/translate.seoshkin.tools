@@ -99,6 +99,7 @@ export default function LessonList() {
   const [translatingSentences, setTranslatingSentences] = useState(false)
   const [enriching, setEnriching]                       = useState(false)
   const [addingLetters, setAddingLetters]         = useState(null)
+  const [processing, setProcessing]               = useState(null)
   const [editingId, setEditingId]       = useState(null)
   const { t } = useI18nStore()
   const { user } = useAuthStore()
@@ -126,6 +127,19 @@ export default function LessonList() {
       const res = await api.post('/admin/translate-sentences', {})
       alert(`Переведено предложений: ${res.updated}`)
     } catch (e) { alert('Ошибка: ' + e.message) } finally { setTranslatingSentences(false) }
+  }
+
+  const handleProcess = async (id) => {
+    setProcessing(id)
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Запускаем...' } : l))
+    try {
+      await api.post(`/lessons/${id}/process`, {})
+      const poll = setInterval(async () => {
+        const updated = await api.get(`/lessons/${id}`)
+        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
+        if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null) }
+      }, 3000)
+    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
   }
 
   const handleAddLetterFill = async (id) => {
@@ -222,6 +236,13 @@ export default function LessonList() {
 
                     {user?.role === 'owner' && (
                       <>
+                        {(status === 'pending' || status === 'error') && (
+                          <button onClick={() => handleProcess(lesson.id)} disabled={processing === lesson.id}
+                            title="Обработать фото и текст — извлечь слова и создать упражнения"
+                            style={{ padding: '5px 14px', borderRadius: 6, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                            {processing === lesson.id ? '⏳' : '▶ Обработать'}
+                          </button>
+                        )}
                         <button onClick={() => setEditingId(isEditing ? null : lesson.id)} title="Редактировать урок"
                           style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: isEditing ? 'var(--accent-soft)' : 'var(--surface)', color: isEditing ? 'var(--accent)' : 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
                           ✏️
