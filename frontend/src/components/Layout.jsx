@@ -34,14 +34,14 @@ export default function Layout({ children }) {
   const handleLogout = () => { logout(); navigate('/login') }
 
   const navItems = [
-    { to: '/',          icon: '🏠', label: t.nav.today },
-    { to: '/courses',   icon: '🎓', label: t.nav.courses },
-    { to: '/lessons',   icon: '📖', label: t.nav.lessons },
-    { to: '/vocabulary',icon: '🗂️', label: t.nav.vocabulary },
-    ...(user?.role === 'owner' ? [{ to: '/students', icon: '👥', label: t.nav.students }] : []),
-    { to: '/reader',    icon: '📓', label: 'Читалка' },
-    { to: '/wiki',      icon: '❓', label: t.nav.wiki },
-    ...(user?.role === 'owner' ? [{ to: '/lessons/new', icon: '➕', label: t.nav.newLesson, divider: true }] : []),
+    { to: '/',          icon: 'bi-house-door-fill',    label: t.nav.today },
+    { to: '/courses',   icon: 'bi-mortarboard-fill',   label: t.nav.courses },
+    { to: '/lessons',   icon: 'bi-book-fill',          label: t.nav.lessons },
+    { to: '/vocabulary',icon: 'bi-card-list',          label: t.nav.vocabulary },
+    ...(user?.role === 'owner' ? [{ to: '/students', icon: 'bi-people-fill', label: t.nav.students }] : []),
+    { to: '/reader',    icon: 'bi-eyeglasses',         label: 'Читалка' },
+    { to: '/wiki',      icon: 'bi-question-circle-fill', label: t.nav.wiki },
+    ...(user?.role === 'owner' ? [{ to: '/lessons/new', icon: 'bi-plus-circle-fill', label: t.nav.newLesson, divider: true }] : []),
   ]
 
   const isActive = (to) => to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
@@ -126,7 +126,7 @@ export default function Layout({ children }) {
                 fontWeight: isActive(item.to) ? 700 : 400,
                 transition: 'background .15s',
               }}>
-                <span style={{ width: 20, textAlign: 'center' }}>{item.icon}</span>
+                <i className={`bi ${item.icon}`} style={{ width: 20, textAlign: 'center', fontSize: 17, flexShrink: 0 }} />
                 {item.label}
               </Link>
             </div>
@@ -136,13 +136,14 @@ export default function Layout({ children }) {
         {/* Подвал drawer */}
         <div style={{ padding: '14px', borderTop: '1px solid var(--line)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={toggleTheme} style={pill} title="Переключить тему">
-            {theme === 'dark' ? '☀️ Светлая' : '🌙 Тёмная'}
+            <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
+            {theme === 'dark' ? ' Светлая' : ' Тёмная'}
           </button>
           <AutoSpeakToggle pill />
           <SpeakTranslationToggle />
           <LangSwitcher pill />
           <button onClick={handleLogout} style={{ ...pill, color: '#C0392B', borderColor: '#C0392B22' }}>
-            ⎋ {t.nav.logout}
+            <i className="bi bi-box-arrow-right" /> {t.nav.logout}
           </button>
         </div>
       </nav>

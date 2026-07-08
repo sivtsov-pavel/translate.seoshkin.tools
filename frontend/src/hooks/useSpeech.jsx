@@ -69,12 +69,12 @@ export function SpeakButton({ text, lang = 'de-DE', size = 18, style = {}, appen
       style={{
         background: 'none', border: 'none', cursor: 'pointer',
         fontSize: size, padding: '2px 4px', borderRadius: 6,
-        color: '#6b7280', transition: 'color .15s', flexShrink: 0,
+        color: 'var(--ink-soft)', transition: 'color .15s', flexShrink: 0,
         lineHeight: 1, ...style,
       }}
-      onMouseEnter={e => e.currentTarget.style.color = '#4f46e5'}
-      onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
-    >🔊</button>
+      onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
+      onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-soft)'}
+    ><i className="bi bi-volume-up-fill" /></button>
   )
 }
 
@@ -95,7 +95,7 @@ export function SpeakTranslationToggle() {
       padding: '8px 12px', fontSize: 13,
       color: on ? 'var(--good)' : 'var(--ink-soft)', cursor: 'pointer',
     }}>
-      🌐 {on ? 'перевод вкл' : 'перевод выкл'}
+      <i className="bi bi-translate" /> {on ? 'перевод вкл' : 'перевод выкл'}
     </button>
   )
 }
@@ -150,7 +150,7 @@ export function AutoSpeakToggle({ pill = false }) {
             padding: '8px 10px', fontSize: 13,
             color: on ? 'var(--good)' : 'var(--ink-soft)', cursor: 'pointer',
           }}>
-            🔊 {on ? 'вкл' : 'выкл'}
+            <i className="bi bi-volume-up-fill" /> {on ? 'вкл' : 'выкл'}
           </button>
           <button onClick={() => setOpen(v => !v)} style={{
             display: 'flex', alignItems: 'center', gap: 4,
