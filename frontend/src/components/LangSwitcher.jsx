@@ -12,26 +12,26 @@ const LANGS = [
   { code: 'en', label: '🇬🇧 EN' },
 ]
 
-// dark=true — для тёмного навбара, dark=false — для светлого фона
-export default function LangSwitcher({ dark = false }) {
+export default function LangSwitcher({ pill = false, dark = false }) {
   const { lang, setLang } = useI18nStore()
 
+  const style = pill ? {
+    display: 'flex', alignItems: 'center', gap: 6,
+    background: 'var(--surface-2)', border: '1px solid var(--line)',
+    borderRadius: 999, padding: '8px 12px', fontSize: 13,
+    color: 'var(--ink)', cursor: 'pointer', outline: 'none',
+  } : {
+    background: 'var(--surface-2)',
+    color: 'var(--ink)',
+    border: '1px solid var(--line)',
+    borderRadius: 8, padding: '5px 8px', fontSize: 13,
+    cursor: 'pointer', outline: 'none',
+  }
+
   return (
-    <select
-      value={lang}
-      onChange={e => setLang(e.target.value)}
-      style={{
-        background: dark ? 'rgba(255,255,255,0.15)' : '#f9fafb',
-        color: dark ? '#fff' : '#374151',
-        border: dark ? '1px solid rgba(255,255,255,0.3)' : '1px solid #d1d5db',
-        borderRadius: 6,
-        padding: '3px 6px',
-        fontSize: 13,
-        cursor: 'pointer',
-        outline: 'none',
-      }}>
+    <select value={lang} onChange={e => setLang(e.target.value)} style={style}>
       {LANGS.map(l => (
-        <option key={l.code} value={l.code} style={{ color: '#374151', background: '#fff' }}>
+        <option key={l.code} value={l.code} style={{ color: '#fff', background: '#1e1e1e' }}>
           {l.label}
         </option>
       ))}

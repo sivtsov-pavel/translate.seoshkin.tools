@@ -5,7 +5,27 @@ import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write']
-const TYPE_ICON  = { flashcard: '🃏', fill_blank: '✏️', multiple_choice: '☑️', sentence_write: '✍️', letter_fill: '🔤' }
+const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🎯', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️' }
+
+// Кольцо прогресса
+function ProgressRing({ pct }) {
+  const r = 32, circ = 2 * Math.PI * r
+  const dash = circ * (pct / 100)
+  return (
+    <div style={{ position: 'relative', width: 76, height: 76, flexShrink: 0 }}>
+      <svg width="76" height="76" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="38" cy="38" r={r} fill="none" stroke="var(--surface-2)" strokeWidth="6" />
+        <circle cx="38" cy="38" r={r} fill="none" stroke="var(--accent)" strokeWidth="6"
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+          style={{ transition: 'stroke-dasharray .6s ease' }} />
+      </svg>
+      <span style={{
+        position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 14, fontWeight: 700, color: 'var(--ink)',
+      }}>{pct}%</span>
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
@@ -17,47 +37,78 @@ export default function Dashboard() {
     api.get('/exercises/stats').then(setStats).catch(console.error).finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <p>{t.dashboard.loading}</p>
+  if (loading) return (
+    <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-soft)' }}>
+      {t.dashboard.loading}
+    </div>
+  )
 
   const total   = stats?.total ?? 0
   const lessons = stats?.lessons ?? []
+  const done    = stats?.done ?? 0
+  const all     = total + done
+  const pct     = all > 0 ? Math.round((done / all) * 100) : 100
 
   if (total === 0) {
     return (
-      <div>
-        <h1>{t.dashboard.title}</h1>
-        <div style={{ textAlign: 'center', marginTop: 80 }}>
-          <p style={{ fontSize: 40 }}>🎉</p>
-          <p style={{ fontSize: 20, fontWeight: 600 }}>{t.dashboard.allDone}</p>
-          <p style={{ color: '#6b7280' }}>{t.dashboard.comeBack}</p>
+      <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+        <div style={{ fontFamily: 'Georgia,serif', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
+          {t.dashboard.allDone}
         </div>
+        <div style={{ color: 'var(--ink-soft)', fontSize: 15 }}>{t.dashboard.comeBack}</div>
       </div>
     )
   }
 
   return (
-    <div>
-      <h1>{t.dashboard.title}</h1>
-      <p style={{ color: '#6b7280', marginBottom: 24, fontSize: 16 }}>
-        {t.dashboard.exercisesWaiting(total)}
-      </p>
+    <div style={{ paddingBottom: 90 }}>
+      {/* Hero */}
+      <div style={{ padding: '20px 20px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+          <ProgressRing pct={pct} />
+          <div>
+            <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 26, margin: '0 0 4px', lineHeight: 1.1 }}>
+              {t.dashboard.title}
+            </h1>
+            <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>
+              {t.dashboard.exercisesWaiting(total)}
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Карточки по урокам */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
+      {/* Уроки */}
+      <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 20 }}>
+        Уроки
+      </div>
+
+      <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {lessons.map(lesson => (
           <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} />
         ))}
       </div>
 
-      {/* Общее тестирование */}
-      <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 24 }}>
-        <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-          Все уроки вместе
-        </p>
+      {/* Sticky CTA */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 640,
+        padding: '12px 16px 20px',
+        background: 'linear-gradient(to top, var(--bg) 70%, transparent)',
+      }}>
         <button
           onClick={() => navigate('/exercise-session')}
-          style={{ width: '100%', maxWidth: 400, padding: '14px 32px', fontSize: 16, backgroundColor: '#4f46e5', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700 }}>
-          ▶ {t.dashboard.startSession} — все {total} карточек
+          style={{
+            width: '100%', padding: '16px', borderRadius: 16,
+            background: 'var(--ink)', color: 'var(--bg)',
+            border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 15,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+          }}>
+          ▶ Повторить всё
+          <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 8, padding: '2px 10px', fontSize: 13 }}>
+            {total}
+          </span>
         </button>
       </div>
     </div>
@@ -66,7 +117,7 @@ export default function Dashboard() {
 
 function LessonCard({ lesson, navigate }) {
   const { t } = useI18nStore()
-  const [words, setWords]       = useState(null)   // null = не загружены
+  const [words, setWords]       = useState(null)
   const [showWords, setShowWords] = useState(false)
 
   const typeLabels = {
@@ -85,86 +136,91 @@ function LessonCard({ lesson, navigate }) {
     setShowWords(v => !v)
   }
 
+  const total   = lesson.total
+  const chips   = TYPE_ORDER.filter(type => lesson.byType[type])
+
   return (
     <div style={{
-      border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden',
-      backgroundColor: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,.04)',
+      background: 'var(--surface)', border: '1px solid var(--line)',
+      borderRadius: 'var(--radius)', padding: 16,
     }}>
-      {/* Шапка карточки */}
-      <div style={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: '#1e1b4b' }}>
-              📚 {lesson.lesson_title || `Урок #${lesson.lesson_id}`}
-            </div>
-            {lesson.lesson_description && (
-              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2, fontStyle: 'italic' }}>
-                {lesson.lesson_description}
-              </div>
-            )}
-            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
-              {lesson.total} карточек ждут повторения
-            </div>
+      {/* Шапка */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: 'Georgia,serif', fontSize: 19, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            📚 {lesson.lesson_title || `Урок #${lesson.lesson_id}`}
           </div>
-          <button
-            onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}`)}
-            style={{
-              padding: '8px 20px', backgroundColor: '#4f46e5', color: '#fff',
-              border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14,
-              whiteSpace: 'nowrap',
-            }}>
-            ▶ Начать
-          </button>
+          {lesson.lesson_description && (
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2, fontStyle: 'italic' }}>
+              {lesson.lesson_description}
+            </div>
+          )}
+          <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4 }}>
+            {total} карточек ждут повторения
+          </div>
         </div>
-
-        {/* Типы упражнений */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-          {TYPE_ORDER.filter(type => lesson.byType[type]).map(type => { const count = lesson.byType[type]; return (
-            <button
-              key={type}
-              onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}&type=${type}`)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '5px 12px', borderRadius: 20, fontSize: 13,
-                border: '1px solid #e5e7eb', backgroundColor: '#f9fafb',
-                cursor: 'pointer', transition: 'all .15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#818cf8'; e.currentTarget.style.backgroundColor = '#eef2ff' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.backgroundColor = '#f9fafb' }}
-            >
-              <span>{TYPE_ICON[type]}</span>
-              <span style={{ fontWeight: 700, color: '#4f46e5' }}>{count}</span>
-              <span style={{ color: '#6b7280' }}>{typeLabels[type]}</span>
-            </button>
-          )})}
-        </div>
-
-        {/* Кнопка показать слова */}
-        <button onClick={toggleWords}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#6b7280', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-          {showWords ? '▲' : '▼'} Слова урока {words !== null ? `(${words.length})` : ''}
+        <button
+          onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}`)}
+          style={{
+            background: 'var(--accent)', color: 'var(--accent-ink)',
+            border: 'none', borderRadius: 12, padding: '10px 16px',
+            fontSize: 14, fontWeight: 700, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}>
+          ▶ Начать
         </button>
       </div>
 
-      {/* Список слов */}
-      {showWords && (
-        <div style={{ borderTop: '1px solid #f3f4f6', backgroundColor: '#fafafa', padding: '12px 20px' }}>
-          {words === null ? (
-            <p style={{ color: '#9ca3af', fontSize: 13 }}>Загрузка...</p>
-          ) : words.length === 0 ? (
-            <p style={{ color: '#9ca3af', fontSize: 13 }}>Нет слов</p>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '6px 16px' }}>
-              {words.map(w => (
-                <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14 }}>
-                  <SpeakButton text={w.word_de} size={14} />
-                  <span style={{ fontWeight: 600 }}>{w.word_de}</span>
-                  <span style={{ color: '#9ca3af' }}>—</span>
-                  <span style={{ color: '#6b7280' }}>{w.translation_ru}</span>
-                </div>
-              ))}
+      {/* Чипы типов упражнений — 2 колонки */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
+        {chips.map(type => (
+          <button key={type}
+            onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}&type=${type}`)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'var(--surface-2)', border: '1px solid var(--line)',
+              borderRadius: 12, padding: '10px', fontSize: 13,
+              color: 'var(--ink)', cursor: 'pointer', textAlign: 'left',
+            }}>
+            <span>{TYPE_ICON[type]}</span>
+            <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, borderRadius: 7, padding: '2px 7px', fontSize: 13 }}>
+              {lesson.byType[type]}
+            </span>
+            <span style={{ color: 'var(--ink-soft)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {typeLabels[type]}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Прогресс-бар */}
+      <div style={{ height: 4, borderRadius: 3, background: 'var(--surface-2)', marginTop: 14, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: '40%', background: 'var(--accent)', borderRadius: 3 }} />
+      </div>
+
+      {/* Слова урока */}
+      <button onClick={toggleWords} style={{
+        marginTop: 12, width: '100%', textAlign: 'left',
+        background: 'none', border: 'none', borderTop: '1px solid var(--line)',
+        paddingTop: 12, color: 'var(--ink-soft)', fontSize: 13,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        cursor: 'pointer',
+      }}>
+        Слова урока {words !== null ? `(${words.length})` : ''}
+        <span>{showWords ? '▲' : '▾'}</span>
+      </button>
+
+      {showWords && words && (
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {words.map(w => (
+            <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>{w.word_de}</span>
+              <SpeakButton text={w.word_de} size={14} />
+              <span style={{ color: 'var(--ink-soft)' }}>—</span>
+              <span style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{w.translation_ru}</span>
             </div>
-          )}
+          ))}
         </div>
       )}
     </div>
