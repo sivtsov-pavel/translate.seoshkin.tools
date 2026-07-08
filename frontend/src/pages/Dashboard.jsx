@@ -97,6 +97,11 @@ function LessonCard({ lesson, navigate }) {
             <div style={{ fontWeight: 700, fontSize: 16, color: '#1e1b4b' }}>
               📚 {lesson.lesson_title || `Урок #${lesson.lesson_id}`}
             </div>
+            {lesson.lesson_description && (
+              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2, fontStyle: 'italic' }}>
+                {lesson.lesson_description}
+              </div>
+            )}
             <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
               {lesson.total} карточек ждут повторения
             </div>

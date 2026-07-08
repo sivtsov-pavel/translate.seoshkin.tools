@@ -66,25 +66,25 @@ export async function exercisesRoutes(fastify) {
     if (role === 'owner') {
       params = [userId, today]
       query = `
-        SELECT l.id AS lesson_id, l.title AS lesson_title,
+        SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, e.type
+        GROUP BY l.id, l.title, l.description, e.type
         ORDER BY l.id, e.type`
     } else {
       params = [userId, today]
       query = `
-        SELECT l.id AS lesson_id, l.title AS lesson_title,
+        SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.status = 'done'
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, e.type
+        GROUP BY l.id, l.title, l.description, e.type
         ORDER BY l.id, e.type`
     }
 
@@ -94,7 +94,7 @@ export async function exercisesRoutes(fastify) {
     const lessonsMap = {}
     for (const r of rows) {
       if (!lessonsMap[r.lesson_id]) {
-        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, total: 0, byType: {} }
+        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_description: r.lesson_description, total: 0, byType: {} }
       }
       lessonsMap[r.lesson_id].byType[r.type] = r.count
       lessonsMap[r.lesson_id].total += r.count
