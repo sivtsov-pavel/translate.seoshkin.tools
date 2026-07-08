@@ -4,7 +4,8 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
-const TYPE_ICON = { flashcard: '🃏', fill_blank: '✏️', multiple_choice: '☑️', sentence_write: '✍️', letter_fill: '🔤' }
+const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write']
+const TYPE_ICON  = { flashcard: '🃏', fill_blank: '✏️', multiple_choice: '☑️', sentence_write: '✍️', letter_fill: '🔤' }
 
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
@@ -113,7 +114,7 @@ function LessonCard({ lesson, navigate }) {
 
         {/* Типы упражнений */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-          {Object.entries(lesson.byType).map(([type, count]) => (
+          {TYPE_ORDER.filter(type => lesson.byType[type]).map(type => { const count = lesson.byType[type]; return (
             <button
               key={type}
               onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}&type=${type}`)}
@@ -130,7 +131,7 @@ function LessonCard({ lesson, navigate }) {
               <span style={{ fontWeight: 700, color: '#4f46e5' }}>{count}</span>
               <span style={{ color: '#6b7280' }}>{typeLabels[type]}</span>
             </button>
-          ))}
+          )})}
         </div>
 
         {/* Кнопка показать слова */}

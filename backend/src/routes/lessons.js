@@ -52,9 +52,8 @@ export async function lessonsRoutes(fastify) {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const lessonId = parseInt(request.params.id)
 
-    // Проверяем что урок наш
     const { rows: lessonRows } = await db.query(
-      'SELECT id FROM lessons WHERE id = $1 AND owner_id = $2', [lessonId, request.user.id]
+      'SELECT id FROM lessons WHERE id = $1', [lessonId]
     )
     if (!lessonRows[0]) return reply.status(404).send({ error: 'Урок не найден' })
 
@@ -134,6 +133,35 @@ export async function lessonsRoutes(fastify) {
     return { ...rows[0], media }
   })
 
+  // Редактировать урок (title, description) — любой owner
+  fastify.patch('/api/lessons/:id', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          title:       { type: 'string' },
+          description: { type: 'string' },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+    const { title, description } = request.body
+
+    const { rows } = await db.query(
+      `UPDATE lessons SET
+         title       = COALESCE($1, title),
+         description = COALESCE($2, description)
+       WHERE id = $3
+       RETURNING *`,
+      [title ?? null, description ?? null, lessonId]
+    )
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    return rows[0]
+  })
+
   // Удалить урок (только owner, каскадно удаляет слова/упражнения через FK)
   fastify.delete('/api/lessons/:id', {
     preHandler: [fastify.authenticate],
@@ -153,10 +181,8 @@ export async function lessonsRoutes(fastify) {
   }, async (request, reply) => {
     const lessonId = request.params.id
 
-    // Проверяем принадлежность урока
     const { rows: lessonRows } = await db.query(
-      'SELECT id FROM lessons WHERE id = $1 AND owner_id = $2',
-      [lessonId, request.user.id]
+      'SELECT id FROM lessons WHERE id = $1', [lessonId]
     )
     if (!lessonRows[0]) return reply.status(404).send({ error: 'Урок не найден' })
 
