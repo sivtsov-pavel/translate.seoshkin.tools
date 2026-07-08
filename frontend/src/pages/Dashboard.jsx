@@ -5,7 +5,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write']
-const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🎯', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️' }
+const TYPE_ICON  = { multiple_choice: 'bi-check-square-fill', flashcard: 'bi-card-text', letter_fill: 'bi-fonts', fill_blank: 'bi-pencil-fill', sentence_write: 'bi-pen-fill' }
 
 // Кольцо прогресса
 function ProgressRing({ pct, done, total }) {
@@ -193,7 +193,7 @@ function LessonCard({ lesson, navigate }) {
               color: 'var(--ink)', cursor: 'pointer', textAlign: 'left',
               minWidth: 0, overflow: 'hidden',
             }}>
-            <span style={{ flexShrink: 0 }}>{TYPE_ICON[type]}</span>
+            <i className={`bi ${TYPE_ICON[type]}`} style={{ flexShrink: 0, fontSize: 15 }} />
             <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, borderRadius: 7, padding: '2px 7px', fontSize: 13, flexShrink: 0 }}>
               {lesson.byType[type]}
             </span>

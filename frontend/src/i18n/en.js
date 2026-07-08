@@ -6,7 +6,7 @@ export const en = {
     courses: 'Courses',
     students: 'Students',
     wiki: 'Help',
-    newLesson: '+ Lesson',
+    newLesson: 'New Lesson',
     logout: 'Log out',
     appName: 'Deutsch Lernen 🇩🇪',
   },

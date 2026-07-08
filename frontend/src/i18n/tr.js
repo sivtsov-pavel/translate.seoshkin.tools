@@ -6,7 +6,7 @@ export const tr = {
     courses: 'Kurslar',
     students: 'Öğrenciler',
     wiki: 'Yardım',
-    newLesson: '+ Ders',
+    newLesson: 'Yeni Ders',
     logout: 'Çıkış',
     appName: 'Almanca 🇩🇪',
   },

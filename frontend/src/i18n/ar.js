@@ -8,7 +8,7 @@ export const ar = {
     courses: 'الدورات',
     students: 'الطلاب',
     wiki: 'مساعدة',
-    newLesson: '+ درس',
+    newLesson: 'درس جديد',
     logout: 'خروج',
     appName: 'الألمانية 🇩🇪',
   },

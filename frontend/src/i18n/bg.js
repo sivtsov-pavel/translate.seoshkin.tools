@@ -6,7 +6,7 @@ export const bg = {
     courses: 'Курсове',
     students: 'Ученици',
     wiki: 'Помощ',
-    newLesson: '+ Урок',
+    newLesson: 'Новый урок',
     logout: 'Изход',
     appName: 'Немски 🇩🇪',
   },

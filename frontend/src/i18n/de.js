@@ -7,7 +7,7 @@ export const de = {
     courses: 'Kurse',
     students: 'Schüler',
     wiki: 'Hilfe',
-    newLesson: '+ Lektion',
+    newLesson: 'Neue Lektion',
     logout: 'Abmelden',
     appName: 'Deutsch Lernen 🇩🇪',
   },

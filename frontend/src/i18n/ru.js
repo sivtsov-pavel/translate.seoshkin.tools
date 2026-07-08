@@ -7,7 +7,7 @@ export const ru = {
     courses: 'Курсы',
     students: 'Ученики',
     wiki: 'Справка',
-    newLesson: '+ Урок',
+    newLesson: 'Новый урок',
     logout: 'Выйти',
     appName: 'Немецкий 🇩🇪',
   },
