@@ -20,6 +20,7 @@ export async function exercisesRoutes(fastify) {
       query = `
         SELECT e.*,
                w.word_de, w.translation_ru,
+               l.title AS lesson_title,
                COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
                COALESCE(uep.interval_days,    0)            AS interval_days,
                COALESCE(uep.repetitions,      0)            AS repetitions,
@@ -39,6 +40,7 @@ export async function exercisesRoutes(fastify) {
       query = `
         SELECT e.*,
                w.word_de, w.translation_ru,
+               l.title AS lesson_title,
                COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
                COALESCE(uep.interval_days,    0)            AS interval_days,
                COALESCE(uep.repetitions,      0)            AS repetitions,

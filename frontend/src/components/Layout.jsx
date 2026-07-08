@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 import LangSwitcher from './LangSwitcher.jsx'
+import { AutoSpeakToggle } from '../hooks/useSpeech.jsx'
 
 export default function Layout({ children }) {
   const { user, logout } = useAuthStore()
@@ -33,6 +34,7 @@ export default function Layout({ children }) {
             {user?.role === 'owner' && (
               <Link to="/students" style={navLink}>{t.nav.students}</Link>
             )}
+            <Link to="/reader" style={navLink}>📖</Link>
             <Link to="/wiki" style={navLink}>{t.nav.wiki}</Link>
             {user?.role === 'owner' && (
               <Link to="/lessons/new" style={{ ...navLink, backgroundColor: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 6 }}>
@@ -40,6 +42,7 @@ export default function Layout({ children }) {
               </Link>
             )}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <AutoSpeakToggle />
               <LangSwitcher dark />
               <button onClick={handleLogout} style={logoutBtn}>{t.nav.logout}</button>
             </div>
@@ -65,9 +68,11 @@ export default function Layout({ children }) {
             <MobileLink to="/lessons">{t.nav.lessons}</MobileLink>
             <MobileLink to="/vocabulary">{t.nav.vocabulary}</MobileLink>
             {user?.role === 'owner' && <MobileLink to="/students">{t.nav.students}</MobileLink>}
+            <MobileLink to="/reader">📖 Читалка</MobileLink>
             <MobileLink to="/wiki">{t.nav.wiki}</MobileLink>
             {user?.role === 'owner' && <MobileLink to="/lessons/new">{t.nav.newLesson}</MobileLink>}
             <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <AutoSpeakToggle />
               <LangSwitcher dark />
               <button onClick={handleLogout} style={logoutBtn}>{t.nav.logout}</button>
             </div>

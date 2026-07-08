@@ -1,25 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
+import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 
-export default function Flashcard({ payload, onAnswer }) {
+export default function Flashcard({ payload, onAnswer, lessonTitle }) {
   const [revealed, setRevealed] = useState(false)
   const { t } = useI18nStore()
 
+  // Автопроизношение немецкого слова при появлении карточки
+  useEffect(() => {
+    speakAuto(payload.question)
+  }, [payload.question])
+
+  const reveal = () => {
+    setRevealed(true)
+  }
+
   return (
     <div>
+      {lessonTitle && (
+        <div style={{ fontSize: 12, color: '#a5b4fc', marginBottom: 8, fontWeight: 500 }}>
+          📚 {lessonTitle}
+        </div>
+      )}
+
       <div
-        onClick={() => setRevealed(true)}
+        onClick={!revealed ? reveal : undefined}
         style={{
           minHeight: 200, display: 'flex', flexDirection: 'column', alignItems: 'center',
           justifyContent: 'center', border: '2px solid #e5e7eb', borderRadius: 12,
           padding: 32, cursor: revealed ? 'default' : 'pointer',
           backgroundColor: '#fafafa', marginBottom: 16, userSelect: 'none',
-        }}>
-        <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 16, textAlign: 'center' }}>
-          {payload.question}
+          transition: 'border-color .2s',
+        }}
+      >
+        {/* Немецкое слово + кнопка произнести */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
+          <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center' }}>
+            {payload.question}
+          </div>
+          <SpeakButton text={payload.question} size={22} />
         </div>
+
         {revealed
-          ? <div style={{ fontSize: 26, color: '#4f46e5', textAlign: 'center' }}>{payload.answer}</div>
+          ? <div style={{ fontSize: 26, color: '#4f46e5', textAlign: 'center', borderTop: '1px solid #e5e7eb', paddingTop: 16, width: '100%' }}>{payload.answer}</div>
           : <div style={{ color: '#9ca3af', fontSize: 14 }}>{t.exercise.tapToReveal}</div>}
       </div>
 
