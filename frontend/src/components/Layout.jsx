@@ -160,6 +160,41 @@ export default function Layout({ children }) {
       <main className="main-content">
         {children}
       </main>
+
+      {/* Нижняя панель — только мобиль */}
+      <nav className="bottom-nav">
+        {[
+          { to: '/',                        icon: 'bi-house-door-fill',         label: t.nav.today },
+          { to: '/vocabulary',              icon: 'bi-card-list',               label: t.nav.vocabulary },
+          { to: '/vocabulary?status=learning', icon: 'bi-journal-bookmark-fill', label: t.nav.learningWords },
+          { to: '/reader',                  icon: 'bi-book-half',               label: 'Читалка' },
+        ].map(item => {
+          const active = item.to.includes('?')
+            ? location.pathname + location.search === item.to
+            : location.pathname === item.to
+          return (
+            <Link key={item.to} to={item.to} style={{
+              flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', gap: 3, padding: '8px 2px',
+              textDecoration: 'none',
+              color: active ? 'var(--accent)' : 'var(--ink-soft)',
+              fontSize: 10, fontWeight: active ? 700 : 400,
+            }}>
+              <i className={`bi ${item.icon}`} style={{ fontSize: 20 }} />
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+        <button onClick={() => setOpen(true)} style={{
+          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', gap: 3, padding: '8px 2px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--ink-soft)', fontSize: 10,
+        }}>
+          <i className="bi bi-three-dots" style={{ fontSize: 20 }} />
+          <span>Ещё</span>
+        </button>
+      </nav>
     </div>
   )
 }
