@@ -1,11 +1,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 
 const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
-const AUTO_KEY  = 'auto_speak'
-const VOICE_KEY = 'de_voice_name'
+const AUTO_KEY        = 'auto_speak'
+const VOICE_KEY       = 'de_voice_name'
+const SPEAK_TRANS_KEY = 'speak_translation'
 
 export function isAutoSpeakEnabled() {
   return localStorage.getItem(AUTO_KEY) !== 'false'
+}
+
+export function isSpeakTranslationEnabled() {
+  return localStorage.getItem(SPEAK_TRANS_KEY) !== 'false'
 }
 
 function getSelectedVoiceName() {
@@ -47,6 +52,15 @@ export function cancel() {
   synth?.cancel()
 }
 
+// Добавить в очередь синтеза без отмены текущего — для произношения перевода после немецкого слова
+export function speakAppend(text, lang = 'ru-RU') {
+  if (!synth || !isSpeakTranslationEnabled() || !text) return
+  const utt = new SpeechSynthesisUtterance(text)
+  utt.lang = lang
+  utt.rate = 1.0
+  synth.speak(utt)
+}
+
 export function SpeakButton({ text, lang = 'de-DE', size = 18, style = {} }) {
   return (
     <button
@@ -61,6 +75,28 @@ export function SpeakButton({ text, lang = 'de-DE', size = 18, style = {} }) {
       onMouseEnter={e => e.currentTarget.style.color = '#4f46e5'}
       onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
     >🔊</button>
+  )
+}
+
+export function SpeakTranslationToggle() {
+  const [on, setOn] = useState(() => localStorage.getItem(SPEAK_TRANS_KEY) !== 'false')
+
+  const toggle = () => {
+    const next = !on
+    localStorage.setItem(SPEAK_TRANS_KEY, next ? 'true' : 'false')
+    setOn(next)
+  }
+
+  return (
+    <button onClick={toggle} style={{
+      display: 'flex', alignItems: 'center', gap: 6,
+      background: on ? 'rgba(78,154,110,0.15)' : 'var(--surface-2)',
+      border: '1px solid var(--line)', borderRadius: 999,
+      padding: '8px 12px', fontSize: 13,
+      color: on ? 'var(--good)' : 'var(--ink-soft)', cursor: 'pointer',
+    }}>
+      🌐 {on ? 'перевод вкл' : 'перевод выкл'}
+    </button>
   )
 }
 

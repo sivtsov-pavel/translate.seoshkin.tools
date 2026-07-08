@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { speak, cancel, SpeakButton } from '../hooks/useSpeech.jsx'
+import { speak, cancel, speakAppend, SpeakButton } from '../hooks/useSpeech.jsx'
 import { api } from '../api/client.js'
 
 function splitSentences(text) {
@@ -154,6 +154,8 @@ export default function TextReader() {
           imageUrl: res?.image_url || null,
         })
         updateSelected(next2)
+        // Произнести перевод после немецкого слова (если опция включена)
+        if (res?.translation_ru) speakAppend(res.translation_ru)
       }
     } catch {
       if (selectedRef.current.has(key)) {

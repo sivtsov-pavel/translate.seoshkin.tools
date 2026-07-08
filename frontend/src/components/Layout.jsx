@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useThemeStore } from '../store/theme.js'
 import LangSwitcher from './LangSwitcher.jsx'
-import { AutoSpeakToggle } from '../hooks/useSpeech.jsx'
+import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 
 export default function Layout({ children }) {
   const { user, logout } = useAuthStore()
@@ -139,6 +139,7 @@ export default function Layout({ children }) {
             {theme === 'dark' ? '☀️ Светлая' : '🌙 Тёмная'}
           </button>
           <AutoSpeakToggle pill />
+          <SpeakTranslationToggle />
           <LangSwitcher pill />
           <button onClick={handleLogout} style={{ ...pill, color: '#C0392B', borderColor: '#C0392B22' }}>
             ⎋ {t.nav.logout}
