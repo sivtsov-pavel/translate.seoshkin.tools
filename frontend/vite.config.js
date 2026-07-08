@@ -7,16 +7,25 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        runtimeCaching: [
+          { urlPattern: /^https:\/\/.*\/api\//, handler: 'NetworkFirst' },
+        ],
+      },
       manifest: {
-        name: 'Deutsch Lernen — учебные упражнения',
+        name: 'Deutsch Lernen',
         short_name: 'Deutsch',
         description: 'Закрепление немецкого языка / Deutsch Lernen',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        lang: 'ru',
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
     }),
