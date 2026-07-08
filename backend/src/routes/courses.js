@@ -2,13 +2,13 @@ import { db } from '../db/index.js'
 
 export async function coursesRoutes(fastify) {
 
-  // Список курсов: owner видит свои; student видит все курсы с готовыми уроками
+  // Список курсов: все owner видят общий пул; student видит курсы с готовыми уроками
   fastify.get('/api/courses', { preHandler: [fastify.authenticate] }, async (request) => {
-    const { id: userId, role } = request.user
+    const { role } = request.user
     const filter = role === 'owner'
-      ? 'WHERE c.owner_id = $1'
+      ? ''
       : 'WHERE EXISTS (SELECT 1 FROM lessons l WHERE l.course_id = c.id AND l.status = \'done\')'
-    const params = role === 'owner' ? [userId] : []
+    const params = []
 
     const { rows } = await db.query(`
       SELECT

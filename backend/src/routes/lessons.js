@@ -27,15 +27,12 @@ export async function lessonsRoutes(fastify) {
     return reply.status(201).send(rows[0])
   })
 
-  // Список уроков: owner видит все свои; student видит готовые уроки класса
+  // Список уроков: все owner видят общий пул; student видит готовые
   fastify.get('/api/lessons', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
-    const { id: userId, role } = request.user
-    const filter = role === 'owner'
-      ? 'WHERE l.owner_id = $1'
-      : "WHERE l.status = 'done'"
-    const params = role === 'owner' ? [userId] : []
+    const { role } = request.user
+    const filter = role === 'owner' ? '' : "WHERE l.status = 'done'"
 
     const { rows } = await db.query(
       `SELECT l.*, COUNT(lm.id)::int AS media_count
@@ -43,8 +40,7 @@ export async function lessonsRoutes(fastify) {
        LEFT JOIN lesson_media lm ON lm.lesson_id = l.id
        ${filter}
        GROUP BY l.id
-       ORDER BY l.date DESC`,
-      params
+       ORDER BY l.date DESC`
     )
     return rows
   })

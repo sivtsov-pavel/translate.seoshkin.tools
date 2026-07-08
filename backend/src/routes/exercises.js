@@ -29,13 +29,12 @@ export async function exercisesRoutes(fastify) {
 
     let query, params
     if (role === 'owner') {
-      params = [userId, userId, today]
+      params = [userId, today]
       if (type)      params.push(type)
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
       query = SELECT + `
-        WHERE l.owner_id = $2
-          AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $3
+        WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
         ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT 50`
@@ -65,15 +64,14 @@ export async function exercisesRoutes(fastify) {
 
     let query, params
     if (role === 'owner') {
-      params = [userId, userId, today]
+      params = [userId, today]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
-        WHERE l.owner_id = $2
-          AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $3
+        WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
         GROUP BY l.id, l.title, e.type
         ORDER BY l.id, e.type`
     } else {
