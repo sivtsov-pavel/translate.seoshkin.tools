@@ -4,7 +4,7 @@ import { db } from '../db/index.js'
 export async function authRoutes(fastify) {
   // Регистрация нового пользователя
   // Только эти email могут быть учителями
-  const OWNER_EMAILS = new Set(['teacher@seoshkin.tools', 'teacherseo@seoshkin.tools'])
+  const OWNER_EMAILS = new Set(['teacher@seoshkin.tools', 'teacherseo@seoshkin.tools', 'sivtsov.pavel@gmail.com'])
 
   fastify.post('/api/auth/register', {
     schema: {
