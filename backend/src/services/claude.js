@@ -164,6 +164,33 @@ export async function checkSentence(wordDe, translationRu, userSentence) {
   return parseJson(response.content[0].text)
 }
 
+// Дополняем слова: перевод + пример предложения (батч)
+export async function enrichWords(words) {
+  // words = [{id, word_de, needs_translation, needs_example}]
+  const list = words.map((w, i) => `${i + 1}. ${w.word_de}`).join('\n')
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 2048,
+    messages: [{
+      role: 'user',
+      content: `Для каждого немецкого слова/выражения уровня A1 дай:
+- translation_ru: перевод на русский (кратко)
+- example_sentence: простое немецкое предложение с этим словом (A1 уровень)
+- example_sentence_ru: перевод этого предложения на русский
+
+Верни ТОЛЬКО JSON-массив в том же порядке, без пояснений:
+[{"translation_ru": "...", "example_sentence": "...", "example_sentence_ru": "..."}, ...]
+
+Слова:
+${list}`,
+    }],
+  })
+
+  const results = parseJson(response.content[0].text)
+  return words.map((w, i) => ({ id: w.id, ...results[i] }))
+}
+
 // Перевод примеров предложений батчем
 export async function translateSentences(pairs) {
   const list = pairs.map((p, i) => `${i + 1}. ${p.sentence}`).join('\n')

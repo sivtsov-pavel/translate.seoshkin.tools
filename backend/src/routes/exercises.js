@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { checkSentence, translateSentences } from '../services/claude.js'
+import { checkSentence, translateSentences, enrichWords } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl } from '../services/unsplash.js'
 
 export async function exercisesRoutes(fastify) {
@@ -386,6 +386,43 @@ export async function exercisesRoutes(fastify) {
     }
 
     return { total: words.length + exs.length, updated, failed }
+  })
+
+  // Дополнить словарь: переводы + примеры для всех неполных слов
+  fastify.post('/api/admin/enrich-words', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+
+    const { rows } = await db.query(
+      `SELECT id, word_de, translation_ru,
+              (word_de = translation_ru) AS needs_translation,
+              (example_sentence IS NULL) AS needs_example
+       FROM words
+       WHERE example_sentence IS NULL OR word_de = translation_ru
+       ORDER BY id`
+    )
+    if (!rows.length) return { updated: 0 }
+
+    // Батчами по 20 чтобы не перегружать Claude
+    let updated = 0
+    for (let i = 0; i < rows.length; i += 20) {
+      const batch = rows.slice(i, i + 20)
+      const results = await enrichWords(batch)
+      for (const r of results) {
+        if (!r) continue
+        await db.query(
+          `UPDATE words SET
+             translation_ru     = CASE WHEN word_de = translation_ru THEN $1 ELSE translation_ru END,
+             example_sentence   = COALESCE(example_sentence, $2),
+             example_sentence_ru = COALESCE(example_sentence_ru, $3)
+           WHERE id = $4`,
+          [r.translation_ru, r.example_sentence, r.example_sentence_ru, r.id]
+        )
+        updated++
+      }
+    }
+    return { updated, total: rows.length }
   })
 
   // Перевести примеры предложений для всех слов без example_sentence_ru

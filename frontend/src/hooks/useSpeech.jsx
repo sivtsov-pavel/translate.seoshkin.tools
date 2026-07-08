@@ -21,7 +21,11 @@ function pickVoice() {
   const saved = getSelectedVoiceName()
   const voices = getDeVoices()
   if (!voices.length) return null
-  return voices.find(v => v.name === saved) || voices[0]
+  if (saved) return voices.find(v => v.name === saved) || voices[0]
+  // По умолчанию предпочитаем Google Deutsch
+  return voices.find(v => v.name === 'Google Deutsch')
+      || voices.find(v => v.name.toLowerCase().includes('google') && v.lang.startsWith('de'))
+      || voices[0]
 }
 
 export function speak(text, lang = 'de-DE', rate = 0.9) {

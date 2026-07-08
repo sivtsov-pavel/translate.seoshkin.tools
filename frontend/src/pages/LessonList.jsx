@@ -91,6 +91,7 @@ export default function LessonList() {
   const [deleting, setDeleting]         = useState(null)
   const [fetchingImages, setFetchingImages]       = useState(false)
   const [translatingSentences, setTranslatingSentences] = useState(false)
+  const [enriching, setEnriching]                       = useState(false)
   const [addingLetters, setAddingLetters]         = useState(null)
   const [editingId, setEditingId]       = useState(null)
   const { t } = useI18nStore()
@@ -106,6 +107,18 @@ export default function LessonList() {
       alert('Ошибка: ' + e.message)
     } finally {
       setFetchingImages(false)
+    }
+  }
+
+  const handleEnrichWords = async () => {
+    setEnriching(true)
+    try {
+      const res = await api.post('/admin/enrich-words', {})
+      alert(`Дополнено слов: ${res.updated} из ${res.total}`)
+    } catch (e) {
+      alert('Ошибка: ' + e.message)
+    } finally {
+      setEnriching(false)
     }
   }
 
@@ -182,6 +195,16 @@ export default function LessonList() {
                 color: '#059669', fontWeight: 600, fontSize: 13, cursor: translatingSentences ? 'not-allowed' : 'pointer',
               }}>
               {translatingSentences ? '⏳ Перевожу...' : '🌐 Перевести предложения'}
+            </button>
+            <button
+              onClick={handleEnrichWords}
+              disabled={enriching}
+              style={{
+                padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
+                backgroundColor: enriching ? '#f3f4f6' : '#fff',
+                color: '#d97706', fontWeight: 600, fontSize: 13, cursor: enriching ? 'not-allowed' : 'pointer',
+              }}>
+              {enriching ? '⏳ Дополняю...' : '🤖 Дополнить словарь'}
             </button>
           </div>
         )}
