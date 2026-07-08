@@ -4,6 +4,7 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
+import ProgressRing from '../components/ProgressRing.jsx'
 
 function detectGrammar(word_de) {
   const w = (word_de || '').trim()
@@ -64,9 +65,8 @@ export default function Vocabulary() {
 
   useEffect(() => {
     setLoading(true)
-    const url = statusFilter ? `/words?status=${statusFilter}` : '/words'
-    api.get(url).then(setWords).finally(() => setLoading(false))
-  }, [statusFilter])
+    api.get('/words').then(setWords).finally(() => setLoading(false))
+  }, [])
 
   const updateStatus = async (wordId, status) => {
     const updated = await api.patch(`/words/${wordId}`, { status })
@@ -87,7 +87,11 @@ export default function Vocabulary() {
 
   const lessonTitles = [...new Set(words.map(w => w.lesson_title || 'Без урока'))]
   const q = search.toLowerCase().trim()
+  const knownCount = words.filter(w => w.status === 'known').length
+  const vocabPct   = words.length > 0 ? Math.round((knownCount / words.length) * 100) : 0
+
   const filtered = words.filter(w => {
+    if (statusFilter && w.status !== statusFilter) return false
     if (lessonFilter && (w.lesson_title || 'Без урока') !== lessonFilter) return false
     if (grammarFilter && detectGrammar(w.word_de) !== grammarFilter) return false
     if (q) return w.word_de.toLowerCase().includes(q) || w.translation_ru.toLowerCase().includes(q)
@@ -104,8 +108,11 @@ export default function Vocabulary() {
   if (loading) return <p style={{ padding: 20, color: 'var(--ink-soft)' }}>{t.vocabulary.loading}</p>
 
   return (
-    <div style={{ padding: '30px 14px 12px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
+    <div style={{ paddingBottom: 12 }}>
+      {words.length > 0 && (
+        <ProgressRing pct={vocabPct} done={knownCount} total={words.length} label="Словарь" />
+      )}
+      <div style={{ padding: '0 14px 10px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 24 }}>{t.vocabulary.title}</h1>
         <button onClick={sendToReader} disabled={sending}
           style={{ padding: '6px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--accent)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
@@ -113,6 +120,7 @@ export default function Vocabulary() {
         </button>
       </div>
 
+      <div style={{ padding: '0 14px' }}>
       {/* Поиск */}
       <div style={{ position: 'relative', marginBottom: 12 }}>
         <input
@@ -216,6 +224,7 @@ export default function Vocabulary() {
           <p>Слова появятся после обработки урока</p>
         </div>
       )}
+      </div>
     </div>
   )
 }

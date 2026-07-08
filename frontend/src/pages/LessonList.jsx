@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ProgressRing from '../components/ProgressRing.jsx'
 import { useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -137,9 +138,16 @@ export default function LessonList() {
 
   if (loading) return <p>{t.common.loading}</p>
 
+  const doneLessons = lessons.filter(l => l.status === 'done').length
+  const lessonPct   = lessons.length > 0 ? Math.round((doneLessons / lessons.length) * 100) : 0
+
   return (
-    <div style={{ paddingTop: 30 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
+    <div>
+      {lessons.length > 0 && (
+        <ProgressRing pct={lessonPct} done={doneLessons} total={lessons.length} label={t.lessons.title} />
+      )}
+      <div style={{ paddingLeft: 0, paddingRight: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8, padding: '0 0 8px' }}>
         <h1 style={{ margin: 0 }}>{t.lessons.title}</h1>
         {user?.role === 'owner' && (
           <div style={{ display: 'flex', gap: 8 }}>
@@ -224,6 +232,7 @@ export default function LessonList() {
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }
