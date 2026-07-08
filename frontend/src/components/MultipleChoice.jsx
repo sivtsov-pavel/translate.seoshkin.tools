@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
+import WordImage from './WordImage.jsx'
 
 export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe }) {
   const [selected, setSelected] = useState(null)
@@ -40,8 +41,9 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe 
         </div>
       )}
 
-      {/* Немецкое слово крупно */}
+      {/* Немецкое слово + картинка */}
       <div style={{ backgroundColor: '#f8fafc', borderRadius: 10, padding: '18px 20px', marginBottom: 18, textAlign: 'center' }}>
+        <WordImage wordDe={germanWord} size={240} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           <span style={{ fontSize: 32, fontWeight: 700, color: '#1e1b4b' }}>{germanWord}</span>
           <SpeakButton text={germanWord} size={24} />

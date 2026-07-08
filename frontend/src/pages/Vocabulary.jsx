@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
+import WordImage from '../components/WordImage.jsx'
 
 const STATUS_COLORS = { new: '#6b7280', learning: '#f59e0b', known: '#10b981' }
 const STATUS_BG     = { new: '#fff', learning: '#fffdf0', known: '#f0fdf4' }
@@ -132,39 +133,7 @@ export default function Vocabulary() {
           </div>
 
           {lessonWords.map(word => (
-            <div key={word.id} style={{
-              display: 'flex', alignItems: 'flex-start', padding: '10px 10px',
-              borderBottom: '1px solid #f3f4f6', gap: 10, borderRadius: 8,
-              marginBottom: 3, backgroundColor: STATUS_BG[word.status] ?? '#fff',
-            }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 700, fontSize: 17 }}>{word.word_de}</span>
-                  <SpeakButton text={word.word_de} />
-                  <span style={{ color: '#9ca3af' }}>—</span>
-                  <span style={{ color: '#374151', fontSize: 15 }}>{word.translation_ru}</span>
-                </div>
-                {word.example_sentence && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
-                    <span style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>{word.example_sentence}</span>
-                    <SpeakButton text={word.example_sentence} size={13} />
-                  </div>
-                )}
-              </div>
-              <select
-                value={word.status}
-                onChange={e => updateStatus(word.id, e.target.value)}
-                style={{
-                  padding: '4px 8px', borderRadius: 6,
-                  border: `1px solid ${STATUS_COLORS[word.status]}`,
-                  color: STATUS_COLORS[word.status], fontWeight: 700, fontSize: 12,
-                  cursor: 'pointer', backgroundColor: '#fff', flexShrink: 0,
-                }}>
-                <option value="new">{statusLabels.new}</option>
-                <option value="learning">{statusLabels.learning}</option>
-                <option value="known">{statusLabels.known}</option>
-              </select>
-            </div>
+            <VocabWord key={word.id} word={word} statusLabels={statusLabels} onStatusChange={updateStatus} />
           ))}
         </div>
       ))}
@@ -175,6 +144,68 @@ export default function Vocabulary() {
           <p>Слова появятся после обработки урока</p>
         </div>
       )}
+    </div>
+  )
+}
+
+function VocabWord({ word, statusLabels, onStatusChange }) {
+  const [showImg, setShowImg] = useState(false)
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'flex-start', padding: '10px 10px',
+      borderBottom: '1px solid #f3f4f6', gap: 10, borderRadius: 8,
+      marginBottom: 3, backgroundColor: STATUS_BG[word.status] ?? '#fff',
+    }}>
+      {/* Миниатюра картинки */}
+      <div
+        onClick={() => setShowImg(v => !v)}
+        title="Показать картинку"
+        style={{
+          width: 40, height: 40, borderRadius: 6, overflow: 'hidden',
+          backgroundColor: '#f3f4f6', flexShrink: 0, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 18,
+        }}
+      >
+        {showImg
+          ? <img
+              src={`https://source.unsplash.com/80x80/?${encodeURIComponent(word.word_de.replace(/^(der|die|das)\s+/i, ''))}`}
+              alt={word.word_de}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          : '🖼️'
+        }
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+          <span style={{ fontWeight: 700, fontSize: 17 }}>{word.word_de}</span>
+          <SpeakButton text={word.word_de} />
+          <span style={{ color: '#9ca3af' }}>—</span>
+          <span style={{ color: '#374151', fontSize: 15 }}>{word.translation_ru}</span>
+        </div>
+        {word.example_sentence && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
+            <span style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>{word.example_sentence}</span>
+            <SpeakButton text={word.example_sentence} size={13} />
+          </div>
+        )}
+      </div>
+
+      <select
+        value={word.status}
+        onChange={e => onStatusChange(word.id, e.target.value)}
+        style={{
+          padding: '4px 8px', borderRadius: 6,
+          border: `1px solid ${STATUS_COLORS[word.status]}`,
+          color: STATUS_COLORS[word.status], fontWeight: 700, fontSize: 12,
+          cursor: 'pointer', backgroundColor: '#fff', flexShrink: 0,
+        }}>
+        <option value="new">{statusLabels.new}</option>
+        <option value="learning">{statusLabels.learning}</option>
+        <option value="known">{statusLabels.known}</option>
+      </select>
     </div>
   )
 }

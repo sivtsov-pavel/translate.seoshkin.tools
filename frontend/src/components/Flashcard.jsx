@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
+import WordImage from './WordImage.jsx'
 
 export default function Flashcard({ payload, onAnswer, lessonTitle }) {
   const [revealed, setRevealed] = useState(false)
@@ -33,6 +34,9 @@ export default function Flashcard({ payload, onAnswer, lessonTitle }) {
           transition: 'border-color .2s',
         }}
       >
+          {/* Картинка по слову */}
+        <WordImage wordDe={payload.question} size={280} />
+
         {/* Немецкое слово + кнопка произнести */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
           <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center' }}>
