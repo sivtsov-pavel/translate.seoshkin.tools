@@ -226,7 +226,7 @@ function LessonCard({ lesson, navigate }) {
           {words.map(w => (
             <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
               <span style={{ fontWeight: 700, fontSize: 15 }}>{w.word_de}</span>
-              <SpeakButton text={w.word_de} size={14} />
+              <SpeakButton text={w.word_de} size={14} appendText={w.translation_ru} />
               <span style={{ color: 'var(--ink-soft)' }}>—</span>
               <span style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{w.translation_ru}</span>
             </div>
