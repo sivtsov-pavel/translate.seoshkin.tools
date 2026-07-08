@@ -8,10 +8,11 @@ import MultipleChoice from '../components/MultipleChoice.jsx'
 import SentenceWrite from '../components/SentenceWrite.jsx'
 import ProgressBar from '../components/ProgressBar.jsx'
 
+const SESSION_KEY = 'exercise_session'
+
 export default function ExerciseSession() {
   const [exercises, setExercises] = useState([])
   const [current, setCurrent] = useState(0)
-  const [done, setDone] = useState(0)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -19,13 +20,35 @@ export default function ExerciseSession() {
 
   useEffect(() => {
     const type = searchParams.get('type')
+    const saved = sessionStorage.getItem(SESSION_KEY)
+
+    // Восстанавливаем сессию если она для того же типа и не завершена
+    if (saved) {
+      try {
+        const { exercises: exs, current: idx, sessionType } = JSON.parse(saved)
+        if (sessionType === (type || '') && idx < exs.length) {
+          setExercises(exs)
+          setCurrent(idx)
+          setLoading(false)
+          return
+        }
+      } catch {}
+    }
+
     const url = type ? `/exercises/today?type=${type}` : '/exercises/today'
-    api.get(url).then(setExercises).finally(() => setLoading(false))
+    api.get(url).then(exs => {
+      setExercises(exs)
+      setCurrent(0)
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        exercises: exs,
+        current: 0,
+        sessionType: type || '',
+      }))
+    }).finally(() => setLoading(false))
   }, [])
 
   const handleAnswer = async (quality, userAnswer = '') => {
     const ex = exercises[current]
-    // sentence_write уже записан в /check-sentence — не дублируем
     if (ex.type !== 'sentence_write') {
       try {
         await api.post(`/exercises/${ex.id}/attempt`, { userAnswer: String(userAnswer), quality })
@@ -36,10 +59,16 @@ export default function ExerciseSession() {
 
     const next = current + 1
     if (next >= exercises.length) {
+      sessionStorage.removeItem(SESSION_KEY)
       navigate('/')
     } else {
       setCurrent(next)
-      setDone(d => d + 1)
+      // Обновляем сохранённый индекс
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        exercises,
+        current: next,
+        sessionType: searchParams.get('type') || '',
+      }))
     }
   }
 
@@ -47,6 +76,7 @@ export default function ExerciseSession() {
   if (exercises.length === 0) { navigate('/'); return null }
 
   const ex = exercises[current]
+  const done = current
 
   return (
     <div>
@@ -54,10 +84,11 @@ export default function ExerciseSession() {
       <div style={{ marginBottom: 10, color: '#9ca3af', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite }[ex.type]}
       </div>
-      {ex.type === 'flashcard'       && <Flashcard      payload={ex.payload} onAnswer={handleAnswer} />}
-      {ex.type === 'fill_blank'      && <FillBlank      payload={ex.payload} onAnswer={handleAnswer} />}
-      {ex.type === 'multiple_choice' && <MultipleChoice payload={ex.payload} onAnswer={handleAnswer} />}
-      {ex.type === 'sentence_write'  && <SentenceWrite  exercise={ex}        onAnswer={handleAnswer} />}
+      {/* key={ex.id} заставляет React пересоздавать компонент при смене упражнения */}
+      {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} />}
+      {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} />}
+      {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} />}
+      {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} />}
     </div>
   )
 }
