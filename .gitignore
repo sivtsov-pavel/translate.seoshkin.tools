@@ -4,4 +4,6 @@ dist/
 *.log
 uploads/
 .DS_Store
-test/
+frontend/dist/
+backend/node_modules/
+frontend/node_modules/
