@@ -15,7 +15,8 @@ export async function exercisesRoutes(fastify) {
 
     const SELECT = `
         SELECT e.*,
-               w.word_de, w.translation_ru, w.image_url,
+               w.word_de, w.translation_ru,
+               COALESCE(w.image_url, e.image_url) AS image_url,
                l.title AS lesson_title,
                COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
                COALESCE(uep.interval_days,    0)            AS interval_days,
@@ -330,35 +331,62 @@ export async function exercisesRoutes(fastify) {
     return { image_url: imageUrl }
   })
 
-  // Загрузка картинок для всех слов без image_url — только для owner
+  // Загрузка картинок: сначала слова, потом упражнения без image_url
   fastify.post('/api/admin/fetch-images', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
 
-    const { rows: words } = await db.query(
-      `SELECT id, word_de FROM words WHERE image_url IS NULL ORDER BY id`
-    )
-
     let updated = 0
     let failed  = 0
 
+    // 1. Слова без image_url
+    const { rows: words } = await db.query(
+      `SELECT id, word_de FROM words WHERE image_url IS NULL ORDER BY id`
+    )
     for (const word of words) {
       try {
         const url = await fetchImageUrl(word.word_de)
         if (url) {
           await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url, word.id])
           updated++
-        } else {
-          failed++
-        }
-        // Пауза 250мс чтобы не превысить лимит Unsplash (50 req/sec)
+        } else { failed++ }
         await new Promise(r => setTimeout(r, 250))
-      } catch {
-        failed++
-      }
+      } catch { failed++ }
     }
 
-    return { total: words.length, updated, failed }
+    // 2. Упражнения без image_url — ищем слово из payload
+    const { rows: exs } = await db.query(`
+      SELECT e.id, e.type,
+        COALESCE(w.word_de,
+          e.payload->>'question',
+          e.payload->>'word_de',
+          e.payload->>'blank'
+        ) AS word_de
+      FROM exercises e
+      LEFT JOIN words w ON w.id = e.word_id
+      WHERE e.image_url IS NULL
+        AND COALESCE(w.image_url, '') = ''
+      ORDER BY e.id
+    `)
+
+    for (const ex of exs) {
+      if (!ex.word_de) { failed++; continue }
+      try {
+        // Сначала проверяем есть ли уже в words для этого слова
+        const { rows: cached } = await db.query(
+          `SELECT image_url FROM words WHERE LOWER(word_de) = LOWER($1) AND image_url IS NOT NULL LIMIT 1`,
+          [ex.word_de]
+        )
+        const url = cached[0]?.image_url ?? await fetchImageUrl(ex.word_de)
+        if (url) {
+          await db.query('UPDATE exercises SET image_url = $1 WHERE id = $2', [url, ex.id])
+          updated++
+        } else { failed++ }
+        await new Promise(r => setTimeout(r, 250))
+      } catch { failed++ }
+    }
+
+    return { total: words.length + exs.length, updated, failed }
   })
 }
