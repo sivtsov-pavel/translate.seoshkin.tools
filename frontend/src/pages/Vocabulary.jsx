@@ -208,7 +208,7 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--ink)' }}>{word.word_de}</span>
-          <SpeakButton text={word.word_de} />
+          <SpeakButton text={word.word_de} appendText={word.translation_ru} />
           <span style={{ color: 'var(--ink-soft)' }}>—</span>
           <span style={{ color: 'var(--ink)', fontSize: 15 }}>{word.translation_ru}</span>
         </div>

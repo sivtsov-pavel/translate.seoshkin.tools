@@ -61,10 +61,10 @@ export function speakAppend(text, lang = 'ru-RU') {
   synth.speak(utt)
 }
 
-export function SpeakButton({ text, lang = 'de-DE', size = 18, style = {} }) {
+export function SpeakButton({ text, lang = 'de-DE', size = 18, style = {}, appendText = null }) {
   return (
     <button
-      onClick={e => { e.stopPropagation(); speak(text, lang) }}
+      onClick={e => { e.stopPropagation(); speak(text, lang); if (appendText) speakAppend(appendText) }}
       title="Произнести"
       style={{
         background: 'none', border: 'none', cursor: 'pointer',
