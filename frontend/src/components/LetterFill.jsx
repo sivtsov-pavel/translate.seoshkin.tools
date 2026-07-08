@@ -45,14 +45,15 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl })
   const resultColor = submitted ? (correct ? 'var(--good)' : 'var(--red)') : 'var(--accent)'
 
   return (
-    <div style={{ border: '2px solid var(--line)', borderRadius: 14, padding: 24, marginBottom: 16 }}>
+    <div style={{ border: '2px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
+      <WordImage imageUrl={imageUrl} bleed />
+
+      <div style={{ padding: 24 }}>
       {lessonTitle && (
         <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
           📚 {lessonTitle}
         </div>
       )}
-
-      <WordImage imageUrl={imageUrl} size={240} />
 
       <p style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 15, marginBottom: 16 }}>
         Вспомни немецкое слово: <strong style={{ color: 'var(--ink)' }}>{payload.translation_ru}</strong>
@@ -96,6 +97,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl })
           {correct ? `✓ Верно! ${payload.answer}` : `✗ Правильно: ${payload.answer}`}
         </div>
       )}
+      </div>
     </div>
   )
 }

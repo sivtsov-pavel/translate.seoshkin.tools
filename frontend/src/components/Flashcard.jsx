@@ -22,14 +22,14 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl }) 
       <div
         onClick={!revealed ? reveal : undefined}
         style={{
-          minHeight: 200, display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', border: '2px solid var(--line)', borderRadius: 16,
-          padding: 32, cursor: revealed ? 'default' : 'pointer',
+          border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden',
+          cursor: revealed ? 'default' : 'pointer',
           background: 'var(--surface)', marginBottom: 16, userSelect: 'none',
         }}
       >
-        <WordImage imageUrl={imageUrl} size={280} />
+        <WordImage imageUrl={imageUrl} bleed />
 
+        <div style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
           <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center', color: 'var(--ink)' }}>
             {payload.question}
@@ -43,6 +43,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl }) 
             </div>
           : <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{t.exercise.tapToReveal}</div>
         }
+        </div>
       </div>
 
       {revealed && (

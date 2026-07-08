@@ -37,16 +37,18 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   }
 
   return (
-    <div style={{ border: '2px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 16, background: 'var(--surface)' }}>
+    <div style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
 
+      <WordImage imageUrl={imageUrl} bleed />
+
+      <div style={{ padding: 24 }}>
       {lessonTitle && (
         <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
           📚 {lessonTitle}
         </div>
       )}
 
-      <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '18px 20px', marginBottom: 18, textAlign: 'center' }}>
-        <WordImage imageUrl={imageUrl} size={240} />
+      <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 20px', marginBottom: 18, textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}>{germanWord}</span>
           <SpeakButton text={germanWord} size={24} />
@@ -80,6 +82,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
             : `✗ ${t.exercise.wrong} — ${payload.options[payload.correct]}`}
         </p>
       )}
+      </div>
     </div>
   )
 }
