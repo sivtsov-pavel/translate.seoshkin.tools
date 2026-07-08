@@ -239,7 +239,7 @@ export default function TextReader() {
   const hasSelection = selectedWords.size > 0
 
   return (
-    <div style={{ padding: '12px 14px 40px' }}>
+    <div style={{ padding: '30px 14px 40px' }}>
       <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 24, marginTop: 0, marginBottom: 6 }}>📖 Читалка</h1>
       <p style={{ color: 'var(--ink-soft)', marginBottom: 16, fontSize: 14 }}>
         Вставь немецкий текст — читай по абзацам или выбирай слова для перевода.

@@ -36,7 +36,7 @@ export default function CourseList() {
   if (loading) return <p>{c.loading}</p>
 
   return (
-    <div>
+    <div style={{ paddingTop: 30 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <h1 style={{ margin: 0 }}>{c.title}</h1>
         {user?.role === 'owner' && (

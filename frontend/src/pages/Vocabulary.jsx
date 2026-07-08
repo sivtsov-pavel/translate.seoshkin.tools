@@ -74,7 +74,7 @@ export default function Vocabulary() {
   if (loading) return <p style={{ padding: 20, color: 'var(--ink-soft)' }}>{t.vocabulary.loading}</p>
 
   return (
-    <div style={{ padding: '12px 14px' }}>
+    <div style={{ padding: '30px 14px 12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 24 }}>{t.vocabulary.title}</h1>
         <button onClick={sendToReader} disabled={sending}

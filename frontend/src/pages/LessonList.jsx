@@ -138,7 +138,7 @@ export default function LessonList() {
   if (loading) return <p>{t.common.loading}</p>
 
   return (
-    <div>
+    <div style={{ paddingTop: 30 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
         <h1 style={{ margin: 0 }}>{t.lessons.title}</h1>
         {user?.role === 'owner' && (
