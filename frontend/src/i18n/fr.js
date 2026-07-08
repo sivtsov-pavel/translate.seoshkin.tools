@@ -7,6 +7,7 @@ export const fr = {
     students: 'Élèves',
     wiki: 'Aide',
     newLesson: 'Nouvelle leçon',
+    learningWords: "J'apprends",
     logout: 'Déconnexion',
     appName: 'Allemand 🇩🇪',
   },

@@ -38,13 +38,21 @@ export default function Layout({ children }) {
     { to: '/courses',   icon: 'bi-mortarboard-fill',   label: t.nav.courses },
     { to: '/lessons',   icon: 'bi-book-fill',          label: t.nav.lessons },
     { to: '/vocabulary',icon: 'bi-card-list',          label: t.nav.vocabulary },
+    { to: '/vocabulary?status=learning', icon: 'bi-journal-bookmark-fill', label: t.nav.learningWords },
     ...(user?.role === 'owner' ? [{ to: '/students', icon: 'bi-people-fill', label: t.nav.students }] : []),
     { to: '/reader',    icon: 'bi-eyeglasses',         label: 'Читалка' },
     { to: '/wiki',      icon: 'bi-question-circle-fill', label: t.nav.wiki },
     ...(user?.role === 'owner' ? [{ to: '/lessons/new', icon: 'bi-plus-circle-fill', label: t.nav.newLesson, divider: true }] : []),
   ]
 
-  const isActive = (to) => to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
+  const isActive = (to) => {
+    if (to === '/') return location.pathname === '/'
+    if (to.includes('?')) {
+      const [path, qs] = to.split('?')
+      return location.pathname.startsWith(path) && location.search.includes(qs)
+    }
+    return location.pathname.startsWith(to) && !location.search.includes('status=learning')
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)', position: 'relative' }}

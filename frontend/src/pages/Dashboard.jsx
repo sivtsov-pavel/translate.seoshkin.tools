@@ -205,7 +205,7 @@ function LessonCard({ lesson, navigate }) {
       </div>
 
       {/* Прогресс-бар */}
-      <div style={{ height: 4, borderRadius: 3, background: 'var(--surface-2)', marginTop: 14, overflow: 'hidden' }}>
+      <div style={{ height: 4, borderRadius: 3, background: 'var(--red)', marginTop: 14, overflow: 'hidden' }}>
         <div style={{ height: '100%', width: '40%', background: 'var(--accent)', borderRadius: 3 }} />
       </div>
 

@@ -8,6 +8,7 @@ export const ru = {
     students: 'Ученики',
     wiki: 'Справка',
     newLesson: 'Новый урок',
+    learningWords: 'Изучаю',
     logout: 'Выйти',
     appName: 'Немецкий 🇩🇪',
   },

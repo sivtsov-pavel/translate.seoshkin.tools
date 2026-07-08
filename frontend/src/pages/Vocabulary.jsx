@@ -1,8 +1,28 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
+
+function detectGrammar(word_de) {
+  const w = (word_de || '').trim()
+  if (/^der\s/i.test(w)) return 'der'
+  if (/^die\s/i.test(w)) return 'die'
+  if (/^das\s/i.test(w)) return 'das'
+  if (w[0] >= 'A' && w[0] <= 'Z') return 'Nomen'
+  if (/(?:en|eln|ern)$/.test(w)) return 'Verb'
+  return 'Anderes'
+}
+
+const GRAMMAR_LABELS = {
+  'der': 'der (муж.)',
+  'die': 'die (жен.)',
+  'das': 'das (ср.)',
+  'Nomen': 'Существ.',
+  'Verb': 'Глаголы',
+  'Anderes': 'Прочие',
+}
 
 const STATUS_COLORS = { new: 'var(--ink-soft)', learning: '#B07D1B', known: 'var(--good)' }
 const STATUS_BG     = {
@@ -12,13 +32,21 @@ const STATUS_BG     = {
 }
 
 export default function Vocabulary() {
+  const location = useLocation()
   const [words, setWords]         = useState([])
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(location.search).get('status') || '')
   const [lessonFilter, setLessonFilter] = useState('')
+  const [grammarFilter, setGrammarFilter] = useState('')
   const [search, setSearch]       = useState('')
   const [loading, setLoading]     = useState(true)
   const [sending, setSending]     = useState(false)
   const { t } = useI18nStore()
+
+  useEffect(() => {
+    const s = new URLSearchParams(location.search).get('status') || ''
+    setStatusFilter(s)
+    setGrammarFilter('')
+  }, [location.search])
 
   const sendToReader = async () => {
     const sentences = filtered.map(w => w.example_sentence).filter(Boolean)
@@ -61,9 +89,11 @@ export default function Vocabulary() {
   const q = search.toLowerCase().trim()
   const filtered = words.filter(w => {
     if (lessonFilter && (w.lesson_title || 'Без урока') !== lessonFilter) return false
+    if (grammarFilter && detectGrammar(w.word_de) !== grammarFilter) return false
     if (q) return w.word_de.toLowerCase().includes(q) || w.translation_ru.toLowerCase().includes(q)
     return true
   })
+  const grammarCats = [...new Set(words.map(w => detectGrammar(w.word_de)))].sort()
   const grouped = filtered.reduce((acc, w) => {
     const key = w.lesson_title || 'Без урока'
     if (!acc[key]) acc[key] = []
@@ -112,6 +142,28 @@ export default function Vocabulary() {
           </button>
         ))}
       </div>
+
+      {/* Фильтр по грамматике */}
+      {grammarCats.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+          <button onClick={() => setGrammarFilter('')} style={{
+            padding: '5px 14px', borderRadius: 20, fontSize: 13, flexShrink: 0,
+            border: `1px solid ${grammarFilter === '' ? 'var(--accent)' : 'var(--line)'}`,
+            background: grammarFilter === '' ? 'var(--accent-soft)' : 'var(--surface-2)',
+            color: grammarFilter === '' ? 'var(--accent)' : 'var(--ink-soft)',
+            fontWeight: grammarFilter === '' ? 700 : 400, cursor: 'pointer',
+          }}>Все части речи</button>
+          {grammarCats.map(cat => (
+            <button key={cat} onClick={() => setGrammarFilter(cat)} style={{
+              padding: '5px 14px', borderRadius: 20, fontSize: 13, flexShrink: 0,
+              border: `1px solid ${grammarFilter === cat ? 'var(--accent)' : 'var(--line)'}`,
+              background: grammarFilter === cat ? 'var(--accent-soft)' : 'var(--surface-2)',
+              color: grammarFilter === cat ? 'var(--accent)' : 'var(--ink-soft)',
+              fontWeight: grammarFilter === cat ? 700 : 400, cursor: 'pointer',
+            }}>{GRAMMAR_LABELS[cat] || cat}</button>
+          ))}
+        </div>
+      )}
 
       {/* Фильтр по уроку */}
       {lessonTitles.length > 1 && (
