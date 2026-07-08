@@ -2,9 +2,14 @@ import { db } from '../db/index.js'
 
 export async function coursesRoutes(fastify) {
 
-  // Список курсов владельца со статистикой уроков
+  // Список курсов: owner видит свои; student видит все курсы с готовыми уроками
   fastify.get('/api/courses', { preHandler: [fastify.authenticate] }, async (request) => {
-    const ownerId = request.user.id
+    const { id: userId, role } = request.user
+    const filter = role === 'owner'
+      ? 'WHERE c.owner_id = $1'
+      : 'WHERE EXISTS (SELECT 1 FROM lessons l WHERE l.course_id = c.id AND l.status = \'done\')'
+    const params = role === 'owner' ? [userId] : []
+
     const { rows } = await db.query(`
       SELECT
         c.id, c.title, c.description, c.sort_order, c.created_at,
@@ -13,10 +18,10 @@ export async function coursesRoutes(fastify) {
         COUNT(CASE WHEN l.status = 'processing' THEN 1 END)::int         AS lessons_processing
       FROM courses c
       LEFT JOIN lessons l ON l.course_id = c.id
-      WHERE c.owner_id = $1
+      ${filter}
       GROUP BY c.id
       ORDER BY c.sort_order, c.created_at
-    `, [ownerId])
+    `, params)
     return rows
   })
 

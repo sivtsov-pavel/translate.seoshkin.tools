@@ -4,22 +4,28 @@ import { checkSentence } from '../services/claude.js'
 
 export async function exercisesRoutes(fastify) {
   // Упражнения на сегодня по SRS очереди
+  // Owner видит свои уроки; student видит все готовые уроки класса
   fastify.get('/api/exercises/today', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
-    const userId = request.user.id
+    const { id: userId, role } = request.user
     const today = new Date().toISOString().slice(0, 10)
+
+    const filter = role === 'owner'
+      ? 'l.owner_id = $1'
+      : 'l.status = $1'
+    const param  = role === 'owner' ? userId : 'done'
 
     const { rows } = await db.query(
       `SELECT e.*, w.word_de, w.translation_ru
        FROM exercises e
        JOIN lessons l ON l.id = e.lesson_id
        LEFT JOIN words w ON w.id = e.word_id
-       WHERE l.owner_id = $1
+       WHERE ${filter}
          AND e.next_review_date <= $2
        ORDER BY e.next_review_date ASC
        LIMIT 50`,
-      [userId, today]
+      [param, today]
     )
     return rows
   })
@@ -28,17 +34,22 @@ export async function exercisesRoutes(fastify) {
   fastify.get('/api/exercises/stats', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
-    const userId = request.user.id
+    const { id: userId, role } = request.user
     const today = new Date().toISOString().slice(0, 10)
+
+    const filter = role === 'owner'
+      ? 'l.owner_id = $1'
+      : 'l.status = $1'
+    const param  = role === 'owner' ? userId : 'done'
 
     const { rows } = await db.query(
       `SELECT e.type, COUNT(*)::int AS count
        FROM exercises e
        JOIN lessons l ON l.id = e.lesson_id
-       WHERE l.owner_id = $1
+       WHERE ${filter}
          AND e.next_review_date <= $2
        GROUP BY e.type`,
-      [userId, today]
+      [param, today]
     )
 
     const byType = Object.fromEntries(rows.map(r => [r.type, r.count]))
@@ -46,21 +57,30 @@ export async function exercisesRoutes(fastify) {
     return { total, byType }
   })
 
-  // Словарь пользователя
+  // Словарь: owner — свои слова; student — все слова из готовых уроков
   fastify.get('/api/words', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
-    const userId = request.user.id
+    const { id: userId, role } = request.user
     const { status } = request.query
 
-    let query = `SELECT w.*, l.title AS lesson_title
-                 FROM words w
-                 LEFT JOIN lessons l ON l.id = w.lesson_id
-                 WHERE w.user_id = $1`
-    const params = [userId]
+    let query, params
+    if (role === 'owner') {
+      query = `SELECT w.*, l.title AS lesson_title
+               FROM words w
+               LEFT JOIN lessons l ON l.id = w.lesson_id
+               WHERE w.user_id = $1`
+      params = [userId]
+    } else {
+      query = `SELECT w.*, l.title AS lesson_title
+               FROM words w
+               LEFT JOIN lessons l ON l.id = w.lesson_id
+               WHERE l.status = 'done'`
+      params = []
+    }
 
     if (status) {
-      query += ' AND w.status = $2'
+      query += ` AND w.status = $${params.length + 1}`
       params.push(status)
     }
 
