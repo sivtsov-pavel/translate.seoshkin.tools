@@ -149,7 +149,6 @@ export default function Vocabulary() {
 }
 
 function VocabWord({ word, statusLabels, onStatusChange }) {
-  const [showImg, setShowImg]     = useState(false)
   const [imageUrl, setImageUrl]   = useState(word.image_url)
   const [refreshing, setRefreshing] = useState(false)
   const { user } = useAuthStore()
@@ -173,18 +172,11 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       {/* Миниатюра картинки */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
         {imageUrl ? (
-          <div
-            onClick={() => setShowImg(v => !v)}
-            title="Показать/скрыть картинку"
-            style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', backgroundColor: '#f3f4f6', cursor: 'pointer' }}
-          >
-            {showImg
-              ? <img src={imageUrl} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🖼️</div>
-            }
+          <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+            <img src={imageUrl} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         ) : (
-          <div style={{ width: 40, height: 40 }} />
+          <div style={{ width: 56, height: 56 }} />
         )}
         {user?.role === 'owner' && (
           <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку"
