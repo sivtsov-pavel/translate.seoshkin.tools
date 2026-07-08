@@ -34,7 +34,7 @@ export default function Layout({ children }) {
             {user?.role === 'owner' && (
               <Link to="/students" style={navLink}>{t.nav.students}</Link>
             )}
-            <Link to="/reader" style={navLink}>📖</Link>
+            <Link to="/reader" style={navLink}>📖 Читалка</Link>
             <Link to="/wiki" style={navLink}>{t.nav.wiki}</Link>
             {user?.role === 'owner' && (
               <Link to="/lessons/new" style={{ ...navLink, backgroundColor: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 6 }}>
@@ -44,6 +44,9 @@ export default function Layout({ children }) {
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
               <AutoSpeakToggle />
               <LangSwitcher dark />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.role === 'owner' ? '👨‍🏫' : '👨‍🎓'} {user?.email}
+              </span>
               <button onClick={handleLogout} style={logoutBtn}>{t.nav.logout}</button>
             </div>
           </div>

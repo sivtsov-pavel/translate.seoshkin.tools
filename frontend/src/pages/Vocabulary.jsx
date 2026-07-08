@@ -7,16 +7,17 @@ const STATUS_COLORS = { new: '#6b7280', learning: '#f59e0b', known: '#10b981' }
 const STATUS_BG     = { new: '#fff', learning: '#fffdf0', known: '#f0fdf4' }
 
 export default function Vocabulary() {
-  const [words, setWords]   = useState([])
-  const [filter, setFilter] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [words, setWords]         = useState([])
+  const [statusFilter, setStatusFilter] = useState('')
+  const [lessonFilter, setLessonFilter] = useState('')
+  const [loading, setLoading]     = useState(true)
   const { t } = useI18nStore()
 
   useEffect(() => {
     setLoading(true)
-    const url = filter ? `/words?status=${filter}` : '/words'
+    const url = statusFilter ? `/words?status=${statusFilter}` : '/words'
     api.get(url).then(setWords).finally(() => setLoading(false))
-  }, [filter])
+  }, [statusFilter])
 
   const updateStatus = async (wordId, status) => {
     const updated = await api.patch(`/words/${wordId}`, { status })
@@ -35,8 +36,12 @@ export default function Vocabulary() {
     known:    t.vocabulary.statusKnown,
   }
 
-  // Группируем по уроку
-  const grouped = words.reduce((acc, w) => {
+  // Все уроки для фильтра
+  const lessonTitles = [...new Set(words.map(w => w.lesson_title || 'Без урока'))]
+
+  // Группируем по уроку с учётом фильтра
+  const filtered = lessonFilter ? words.filter(w => (w.lesson_title || 'Без урока') === lessonFilter) : words
+  const grouped = filtered.reduce((acc, w) => {
     const key = w.lesson_title || 'Без урока'
     if (!acc[key]) acc[key] = []
     acc[key].push(w)
@@ -49,22 +54,48 @@ export default function Vocabulary() {
     <div>
       <h1>{t.vocabulary.title}</h1>
 
-      {/* Фильтры по статусу */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+      {/* Фильтр по статусу */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         {['', 'new', 'learning', 'known'].map(s => (
-          <button key={s} onClick={() => setFilter(s)}
+          <button key={s} onClick={() => setStatusFilter(s)}
             style={{
               padding: '6px 16px', borderRadius: 20, border: '1px solid #d1d5db',
-              backgroundColor: filter === s ? '#4f46e5' : '#fff',
-              color: filter === s ? '#fff' : '#374151',
-              cursor: 'pointer', fontSize: 14, fontWeight: filter === s ? 600 : 400,
+              backgroundColor: statusFilter === s ? '#4f46e5' : '#fff',
+              color: statusFilter === s ? '#fff' : '#374151',
+              cursor: 'pointer', fontSize: 14, fontWeight: statusFilter === s ? 600 : 400,
             }}>
             {filterLabels[s]}
           </button>
         ))}
       </div>
 
-      <p style={{ color: '#6b7280', marginBottom: 20, fontSize: 14 }}>{t.vocabulary.wordsCount(words.length)}</p>
+      {/* Фильтр по уроку */}
+      {lessonTitles.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+          <button onClick={() => setLessonFilter('')}
+            style={{
+              padding: '4px 12px', borderRadius: 16, border: '1px solid #d1d5db', fontSize: 13,
+              backgroundColor: lessonFilter === '' ? '#e0e7ff' : '#f9fafb',
+              color: lessonFilter === '' ? '#4338ca' : '#6b7280',
+              fontWeight: lessonFilter === '' ? 700 : 400, cursor: 'pointer',
+            }}>
+            Все уроки
+          </button>
+          {lessonTitles.map(lt => (
+            <button key={lt} onClick={() => setLessonFilter(lt)}
+              style={{
+                padding: '4px 12px', borderRadius: 16, border: '1px solid #d1d5db', fontSize: 13,
+                backgroundColor: lessonFilter === lt ? '#e0e7ff' : '#f9fafb',
+                color: lessonFilter === lt ? '#4338ca' : '#6b7280',
+                fontWeight: lessonFilter === lt ? 700 : 400, cursor: 'pointer',
+              }}>
+              📚 {lt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <p style={{ color: '#6b7280', marginBottom: 16, fontSize: 14 }}>{t.vocabulary.wordsCount(filtered.length)}</p>
 
       {/* Сгруппировано по урокам */}
       {Object.entries(grouped).map(([lessonTitle, lessonWords]) => (
