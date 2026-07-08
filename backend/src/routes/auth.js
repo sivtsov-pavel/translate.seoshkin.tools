@@ -3,6 +3,9 @@ import { db } from '../db/index.js'
 
 export async function authRoutes(fastify) {
   // Регистрация нового пользователя
+  // Только эти email могут быть учителями
+  const OWNER_EMAILS = new Set(['teacher@seoshkin.tools', 'teacherseo@seoshkin.tools'])
+
   fastify.post('/api/auth/register', {
     schema: {
       body: {
@@ -11,12 +14,12 @@ export async function authRoutes(fastify) {
         properties: {
           email:    { type: 'string', format: 'email' },
           password: { type: 'string', minLength: 8 },
-          role:     { type: 'string', enum: ['owner', 'student'], default: 'student' },
         },
       },
     },
   }, async (request, reply) => {
-    const { email, password, role = 'student' } = request.body
+    const { email, password } = request.body
+    const role = OWNER_EMAILS.has(email.toLowerCase()) ? 'owner' : 'student'
 
     const existing = await db.query('SELECT id FROM users WHERE email = $1', [email])
     if (existing.rows.length > 0) {
