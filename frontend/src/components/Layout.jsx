@@ -30,6 +30,9 @@ export default function Layout({ children }) {
             <Link to="/lessons"    style={navLink}>{t.nav.lessons}</Link>
             <Link to="/vocabulary" style={navLink}>{t.nav.vocabulary}</Link>
             {user?.role === 'owner' && (
+              <Link to="/students" style={navLink}>{t.nav.students}</Link>
+            )}
+            {user?.role === 'owner' && (
               <Link to="/lessons/new" style={{ ...navLink, backgroundColor: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 6 }}>
                 {t.nav.newLesson}
               </Link>
@@ -58,6 +61,7 @@ export default function Layout({ children }) {
             <MobileLink to="/">{t.nav.today}</MobileLink>
             <MobileLink to="/lessons">{t.nav.lessons}</MobileLink>
             <MobileLink to="/vocabulary">{t.nav.vocabulary}</MobileLink>
+            {user?.role === 'owner' && <MobileLink to="/students">{t.nav.students}</MobileLink>}
             {user?.role === 'owner' && <MobileLink to="/lessons/new">{t.nav.newLesson}</MobileLink>}
             <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <LangSwitcher dark />

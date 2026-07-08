@@ -4,6 +4,7 @@ export const de = {
     today: 'Heute',
     lessons: 'Lektionen',
     vocabulary: 'Wörterbuch',
+    students: 'Schüler',
     newLesson: '+ Lektion',
     logout: 'Abmelden',
     appName: 'Deutsch Lernen 🇩🇪',
@@ -95,7 +96,18 @@ export const de = {
     statusLearning: 'In Bearbeitung',
     statusKnown: 'Gelernt',
   },
-  // Allgemein
+  students: {
+    title: 'Schüler',
+    empty: 'Noch keine Schüler. Sie sollen sich als „Schüler" registrieren.',
+    loading: 'Laden...',
+    registered: 'Registriert',
+    wordsTotal: 'Wörter',
+    wordsKnown: 'Gelernt',
+    wordsLearning: 'In Bearbeitung',
+    attemptsTotal: 'Versuche gesamt',
+    attemptsToday: 'Heute',
+    noActivity: 'Noch keine Aktivität',
+  },
   common: {
     loading: 'Laden...',
     error: 'Fehler',

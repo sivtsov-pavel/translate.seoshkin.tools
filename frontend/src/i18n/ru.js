@@ -4,6 +4,7 @@ export const ru = {
     today: 'Сегодня',
     lessons: 'Уроки',
     vocabulary: 'Словарь',
+    students: 'Ученики',
     newLesson: '+ Урок',
     logout: 'Выйти',
     appName: 'Немецкий 🇩🇪',
@@ -95,7 +96,18 @@ export const ru = {
     statusLearning: 'Изучается',
     statusKnown: 'Выучено',
   },
-  // Общее
+  students: {
+    title: 'Ученики',
+    empty: 'Учеников пока нет. Пусть зарегистрируются с ролью «Ученик».',
+    loading: 'Загрузка...',
+    registered: 'Зарегистрирован',
+    wordsTotal: 'Слов',
+    wordsKnown: 'Выучено',
+    wordsLearning: 'В процессе',
+    attemptsTotal: 'Попыток всего',
+    attemptsToday: 'Сегодня',
+    noActivity: 'Ещё не занимался',
+  },
   common: {
     loading: 'Загрузка...',
     error: 'Ошибка',
