@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
@@ -14,6 +15,7 @@ export default function LessonList() {
   const [addingLetters, setAddingLetters]   = useState(null)
   const { t } = useI18nStore()
   const { user } = useAuthStore()
+  const navigate = useNavigate()
 
   const handleFetchImages = async () => {
     setFetchingImages(true)
@@ -101,6 +103,15 @@ export default function LessonList() {
                     <span style={{ color: STATUS_COLORS[status], fontWeight: 600, fontSize: 13 }}>
                       {STATUS_ICONS[status]} {t.lessons.status[status]}
                     </span>
+
+                    {/* Кнопка старта для студентов */}
+                    {user?.role !== 'owner' && status === 'done' && (
+                      <button
+                        onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
+                        style={{ padding: '5px 14px', borderRadius: 6, border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                        ▶ Начать
+                      </button>
+                    )}
 
                     {/* Кнопка добавить letter_fill — только для done уроков */}
                     {user?.role === 'owner' && status === 'done' && (
