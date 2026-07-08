@@ -54,7 +54,7 @@ export default function ExerciseSession() {
   const ex = exercises[current]
 
   return (
-    <div>
+    <div style={{ paddingTop: 30 }}>
       <ProgressBar current={current} total={exercises.length} />
       <div style={{ marginBottom: 10, color: 'var(--ink-soft)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill }[ex.type]}
