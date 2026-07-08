@@ -45,7 +45,7 @@ export default function CourseView() {
   const { course, lessons } = data
 
   return (
-    <div>
+    <div style={{ paddingTop: 30 }}>
       <Link to="/courses" style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: 14 }}>{c.back}</Link>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, margin: '16px 0 24px', flexWrap: 'wrap' }}>
