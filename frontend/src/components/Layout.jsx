@@ -39,7 +39,7 @@ export default function Layout({ children }) {
     { to: '/lessons',   icon: '📖', label: t.nav.lessons },
     { to: '/vocabulary',icon: '🗂️', label: t.nav.vocabulary },
     ...(user?.role === 'owner' ? [{ to: '/students', icon: '👥', label: t.nav.students }] : []),
-    { to: '/reader',    icon: '📓', label: '📓 Читалка' },
+    { to: '/reader',    icon: '📓', label: 'Читалка' },
     { to: '/wiki',      icon: '❓', label: t.nav.wiki },
     ...(user?.role === 'owner' ? [{ to: '/lessons/new', icon: '➕', label: t.nav.newLesson, divider: true }] : []),
   ]

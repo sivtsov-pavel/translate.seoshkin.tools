@@ -1,9 +1,65 @@
-import { useState, useRef, useEffect } from 'react'
-import { speak, cancel } from '../hooks/useSpeech.jsx'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { speak, cancel, SpeakButton } from '../hooks/useSpeech.jsx'
 import { api } from '../api/client.js'
 
 function splitSentences(text) {
   return text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)?.map(s => s.trim()).filter(Boolean) ?? []
+}
+
+// Токенизация предложения на слова и пунктуацию
+function tokenize(sentence) {
+  return sentence.match(/[\wäöüÄÖÜß]+|[^\wäöüÄÖÜß]/g) || []
+}
+
+function isWord(token) {
+  return /[\wäöüÄÖÜß]/.test(token)
+}
+
+// Панель перевода — фиксированная снизу
+function WordPanel({ entry, onClose }) {
+  if (!entry) return null
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+      width: '100%', maxWidth: 640, zIndex: 300,
+      background: 'var(--surface)', borderTop: '1px solid var(--line)',
+      borderRadius: '20px 20px 0 0',
+      padding: '20px 24px 36px',
+      boxShadow: '0 -12px 40px rgba(0,0,0,.4)',
+      animation: 'slideUp .2s ease',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)' }}>{entry.word}</span>
+            <SpeakButton text={entry.word} size={22} />
+          </div>
+          {entry.loading ? (
+            <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>...</div>
+          ) : entry.translation ? (
+            <>
+              <div style={{ fontSize: 18, color: 'var(--accent)', fontWeight: 700, marginBottom: 6 }}>
+                {entry.translation}
+              </div>
+              {entry.example && (
+                <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                  <span style={{ fontStyle: 'italic' }}>{entry.example}</span>
+                  {entry.exampleRu && <><br /><span style={{ color: 'var(--ink-soft)' }}>{entry.exampleRu}</span></>}
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic' }}>
+              Не найдено в словаре — произношение доступно
+            </div>
+          )}
+        </div>
+        {entry.imageUrl && (
+          <img src={entry.imageUrl} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }} />
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function TextReader() {
@@ -21,6 +77,9 @@ export default function TextReader() {
   const [customSentence, setCustomSentence] = useState('')
   const [showCustom, setShowCustom]         = useState(false)
 
+  // Состояние выбранного слова
+  const [wordEntry, setWordEntry] = useState(null) // { word, translation, example, exampleRu, imageUrl, loading }
+
   const idxRef    = useRef(0)
   const cancelRef = useRef(false)
 
@@ -29,12 +88,40 @@ export default function TextReader() {
     return () => { cancel(); cancelRef.current = true }
   }, [])
 
+  const handleWordClick = useCallback(async (raw) => {
+    // Убираем артикли для поиска
+    const word = raw.replace(/^(der|die|das|ein|eine|einen|dem|den|des)\s+/i, '').trim()
+    if (!word) return
+
+    speak(word)
+    setWordEntry({ word, loading: true, translation: null, example: null, exampleRu: null, imageUrl: null })
+
+    try {
+      const res = await api.get(`/words/lookup?q=${encodeURIComponent(word)}`)
+      if (res) {
+        setWordEntry({
+          word: res.word_de || word,
+          loading: false,
+          translation: res.translation_ru,
+          example: res.example_sentence,
+          exampleRu: res.example_sentence_ru,
+          imageUrl: res.image_url,
+        })
+      } else {
+        setWordEntry(prev => ({ ...prev, loading: false }))
+      }
+    } catch {
+      setWordEntry(prev => ({ ...prev, loading: false }))
+    }
+  }, [])
+
   const start = async (fromIdx = 0) => {
     const parts = splitSentences(text)
     if (!parts.length) return
     setSentences(parts)
     setPlaying(true)
     setActive(fromIdx)
+    setWordEntry(null)
     cancelRef.current = false
     idxRef.current = fromIdx
 
@@ -97,7 +184,7 @@ export default function TextReader() {
     <div style={{ padding: '12px 14px 40px' }}>
       <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 24, marginTop: 0, marginBottom: 6 }}>📖 Читалка</h1>
       <p style={{ color: 'var(--ink-soft)', marginBottom: 16, fontSize: 14 }}>
-        Вставь немецкий текст — программа прочитает его вслух с подсветкой предложений.
+        Вставь немецкий текст — читай по абзацам или кликай на слова для перевода.
       </p>
 
       {/* Сохранённые наборы */}
@@ -157,7 +244,7 @@ export default function TextReader() {
         {!playing ? (
           <button onClick={() => start(0)} disabled={!text.trim()}
             style={{ padding: '10px 24px', background: text.trim() ? 'var(--accent)' : 'var(--surface-2)', color: text.trim() ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: text.trim() ? 'pointer' : 'default', fontSize: 15, fontWeight: 700 }}>
-            ▶ Читать
+            ▶ Читать всё
           </button>
         ) : (
           <button onClick={stop}
@@ -182,9 +269,7 @@ export default function TextReader() {
 
         {showSave && (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-            <input
-              autoFocus value={saveTitle}
-              onChange={e => setSaveTitle(e.target.value)}
+            <input autoFocus value={saveTitle} onChange={e => setSaveTitle(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
               placeholder="Название набора..."
               style={{ fontSize: 14, width: 200 }}
@@ -210,9 +295,7 @@ export default function TextReader() {
           </button>
         ) : (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              autoFocus value={customSentence}
-              onChange={e => setCustomSentence(e.target.value)}
+            <input autoFocus value={customSentence} onChange={e => setCustomSentence(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addCustomSentence()}
               placeholder="Немецкое предложение..."
               style={{ fontSize: 14, flex: 1, minWidth: 220 }}
@@ -229,36 +312,68 @@ export default function TextReader() {
         )}
       </div>
 
-      {/* Текст с подсветкой по предложениям */}
+      {/* Текст с подсветкой по предложениям + кликабельные слова */}
       {sentences.length > 0 && (
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '20px 18px', lineHeight: 2.2 }}>
-          {sentences.map((s, i) => (
-            <span key={i}
-              onClick={() => !playing && start(i)}
-              style={{
-                display: 'inline',
-                background: active === i ? 'var(--accent-soft)' : 'transparent',
-                borderRadius: 6, padding: '2px 5px',
-                cursor: playing ? 'default' : 'pointer',
-                fontSize: 17,
-                fontWeight: active === i ? 600 : 400,
-                color: active === i ? 'var(--accent)' : 'var(--ink)',
-                borderBottom: active === i ? '2px solid var(--accent)' : 'none',
-                transition: 'background .2s, color .2s',
-              }}>
-              {s}{' '}
-            </span>
-          ))}
-        </div>
+        <>
+          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>
+            💡 Нажми на предложение чтобы начать с него · Нажми на слово чтобы увидеть перевод
+          </div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '20px 18px', lineHeight: 2.4, paddingBottom: wordEntry ? 140 : 20 }}>
+            {sentences.map((s, i) => (
+              <span key={i} style={{ display: 'inline' }}>
+                <span
+                  onClick={() => !playing && start(i)}
+                  style={{
+                    display: 'inline',
+                    background: active === i ? 'var(--accent-soft)' : 'transparent',
+                    borderRadius: 6, padding: '1px 0',
+                    cursor: playing ? 'default' : 'pointer',
+                    borderBottom: active === i ? '2px solid var(--accent)' : 'none',
+                    transition: 'background .2s',
+                  }}>
+                  {tokenize(s).map((token, j) => (
+                    isWord(token) ? (
+                      <span key={j}
+                        onClick={e => { e.stopPropagation(); handleWordClick(token) }}
+                        style={{
+                          fontSize: 17,
+                          fontWeight: active === i ? 600 : 400,
+                          color: active === i ? 'var(--accent)' : 'var(--ink)',
+                          cursor: 'pointer',
+                          borderRadius: 4,
+                          padding: '0 1px',
+                          transition: 'background .1s',
+                          display: 'inline',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-soft)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >{token}</span>
+                    ) : (
+                      <span key={j} style={{ fontSize: 17, color: active === i ? 'var(--accent)' : 'var(--ink)', fontWeight: active === i ? 600 : 400 }}>{token}</span>
+                    )
+                  ))}
+                </span>
+                {' '}
+              </span>
+            ))}
+          </div>
+        </>
       )}
 
       {sentences.length === 0 && !text && (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
           <p style={{ fontSize: 36, marginTop: 0 }}>🎧</p>
-          <p style={{ margin: '0 0 6px' }}>Вставь немецкий текст и нажми «Читать»</p>
-          <p style={{ fontSize: 13, margin: 0 }}>Кликни на конкретное предложение чтобы начать с него</p>
+          <p style={{ margin: '0 0 6px' }}>Вставь немецкий текст и нажми «Читать всё»</p>
+          <p style={{ fontSize: 13, margin: 0 }}>Или нажми «Разбить» чтобы кликать по словам и предложениям</p>
         </div>
       )}
+
+      {/* Панель перевода выбранного слова */}
+      <WordPanel entry={wordEntry} onClose={() => setWordEntry(null)} />
+
+      <style>{`
+        @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+      `}</style>
     </div>
   )
 }

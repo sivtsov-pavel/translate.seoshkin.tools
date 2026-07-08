@@ -463,4 +463,21 @@ export async function exercisesRoutes(fastify) {
     }
     return { updated, total: rows.length }
   })
+
+  // Поиск слова по написанию (для читалки)
+  fastify.get('/api/words/lookup', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const q = (request.query.q || '').trim().toLowerCase()
+    if (!q) return null
+    const { rows } = await db.query(
+      `SELECT word_de, translation_ru, example_sentence, example_sentence_ru, image_url
+       FROM words
+       WHERE LOWER(word_de) = $1
+          OR LOWER(REPLACE(word_de, 'ä', 'ae')) = LOWER(REPLACE($1, 'ä', 'ae'))
+       LIMIT 1`,
+      [q]
+    )
+    return rows[0] || null
+  })
 }

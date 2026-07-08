@@ -106,15 +106,61 @@ export function AutoSpeakToggle({ pill = false }) {
   if (pill) {
     return (
       <div ref={ref} style={{ position: 'relative' }}>
-        <button onClick={toggle} style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: on ? 'var(--good)' : 'var(--surface-2)',
-          border: '1px solid var(--line)', borderRadius: 999,
-          padding: '8px 12px', fontSize: 13,
-          color: on ? '#fff' : 'var(--ink-soft)', cursor: 'pointer',
-        }}>
-          🎙 {on ? 'Вкл' : 'Выкл'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          <button onClick={toggle} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: on ? 'rgba(78,154,110,0.15)' : 'var(--surface-2)',
+            border: '1px solid var(--line)', borderRadius: '999px 0 0 999px',
+            padding: '8px 10px', fontSize: 13,
+            color: on ? 'var(--good)' : 'var(--ink-soft)', cursor: 'pointer',
+          }}>
+            🔊 {on ? 'вкл' : 'выкл'}
+          </button>
+          <button onClick={() => setOpen(v => !v)} style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'var(--surface-2)',
+            border: '1px solid var(--line)', borderLeft: 'none',
+            borderRadius: '0 999px 999px 0',
+            padding: '8px 10px', fontSize: 12,
+            color: 'var(--ink-soft)', cursor: 'pointer',
+          }}>
+            {currentVoice ? currentVoice.name.split(' ')[0] : '🎤'} ▾
+          </button>
+        </div>
+
+        {open && (
+          <div style={{
+            position: 'absolute', bottom: '110%', left: 0, zIndex: 1000,
+            background: 'var(--surface)', border: '1px solid var(--line)',
+            borderRadius: 12, boxShadow: '0 -8px 32px rgba(0,0,0,.4)',
+            minWidth: 220, overflow: 'hidden',
+          }}>
+            <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--ink-soft)', fontWeight: 600, borderBottom: '1px solid var(--line)', textTransform: 'uppercase' }}>
+              Немецкие голоса
+            </div>
+            {voices.length === 0 && <div style={{ padding: 12, fontSize: 13, color: 'var(--ink-soft)' }}>Голоса не найдены</div>}
+            {voices.map(v => {
+              const active = selected === v.name || (!selected && v === voices[0])
+              return (
+                <button key={v.name} onClick={() => { selectVoice(v.name); setOpen(false) }}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '9px 14px', border: 'none', cursor: 'pointer', fontSize: 13,
+                    background: active ? 'var(--accent-soft)' : 'transparent',
+                    color: active ? 'var(--accent)' : 'var(--ink)',
+                    fontWeight: active ? 700 : 400,
+                    borderBottom: '1px solid var(--line)',
+                  }}>
+                  {active ? '✓ ' : '   '}{v.name}
+                  <span style={{ fontSize: 11, color: 'var(--ink-soft)', marginLeft: 6 }}>{v.lang}</span>
+                </button>
+              )
+            })}
+            <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--ink-soft)', borderTop: '1px solid var(--line)' }}>
+              Нажми — услышишь пример
+            </div>
+          </div>
+        )}
       </div>
     )
   }
