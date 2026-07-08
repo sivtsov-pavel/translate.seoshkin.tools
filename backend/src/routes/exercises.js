@@ -119,7 +119,16 @@ export async function exercisesRoutes(fastify) {
     const byType  = {}
     for (const r of rows) byType[r.type] = (byType[r.type] ?? 0) + r.count
 
-    return { total, done, byType, lessons }
+    // Статистика уроков
+    const { rows: lessonStats } = await db.query(
+      `SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status = 'done')::int AS done_count
+       FROM lessons WHERE owner_id = $1`,
+      [userId]
+    )
+    const lessonsTotal = lessonStats[0]?.total ?? 0
+    const lessonsDone  = lessonStats[0]?.done_count ?? 0
+
+    return { total, done, byType, lessons, lessonsTotal, lessonsDone }
   })
 
   // Словарь — per-user статус через user_word_status

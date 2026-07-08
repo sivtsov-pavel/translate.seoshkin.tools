@@ -52,10 +52,13 @@ export default function Dashboard() {
   )
 
   const total   = stats?.total ?? 0
-  const lessons = stats?.lessons ?? []
-  const done    = stats?.done ?? 0
-  const all     = total + done
-  const pct     = all > 0 ? Math.round((done / all) * 100) : 100
+  const lessons      = stats?.lessons ?? []
+  const done         = stats?.done ?? 0
+  const all          = total + done
+  const pct          = all > 0 ? Math.round((done / all) * 100) : 100
+  const lessonsTotal = stats?.lessonsTotal ?? 0
+  const lessonsDone  = stats?.lessonsDone ?? 0
+  const lessonsPct   = lessonsTotal > 0 ? Math.round((lessonsDone / lessonsTotal) * 100) : 0
 
   if (total === 0) {
     return (
@@ -74,16 +77,31 @@ export default function Dashboard() {
       <style>{`.chips-grid { grid-template-columns: 1fr; } @media (min-width: 480px) { .chips-grid { grid-template-columns: 1fr 1fr; } }`}</style>
       {/* Hero */}
       <div style={{ padding: '20px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <ProgressRing pct={pct} done={done} total={total} />
-          <div>
-            <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 26, margin: '0 0 4px', lineHeight: 1.1 }}>
-              {t.dashboard.title}
-            </h1>
-            <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>
-              {t.dashboard.exercisesWaiting(total)}
-            </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          {/* Левая метрика — упражнения */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
+            <ProgressRing pct={pct} done={done} total={total} />
+            <div>
+              <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px', lineHeight: 1.1 }}>
+                {t.dashboard.title}
+              </h1>
+              <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 13 }}>
+                {t.dashboard.exercisesWaiting(total)}
+              </p>
+              <p style={{ margin: '2px 0 0', color: 'var(--ink-soft)', fontSize: 12 }}>
+                Пройдено: {done}
+              </p>
+            </div>
           </div>
+          {/* Правая метрика — уроки */}
+          {lessonsTotal > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              <ProgressRing pct={lessonsPct} done={lessonsDone} total={lessonsTotal - lessonsDone} />
+              <span style={{ fontSize: 11, color: 'var(--ink-soft)', textAlign: 'center', letterSpacing: '0.5px' }}>
+                {t.lessons.title}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
