@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import Flashcard from '../components/Flashcard.jsx'
@@ -14,12 +14,13 @@ export default function ExerciseSession() {
   const [done, setDone] = useState(0)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { t } = useI18nStore()
 
   useEffect(() => {
-    api.get('/exercises/today')
-      .then(setExercises)
-      .finally(() => setLoading(false))
+    const type = searchParams.get('type')
+    const url = type ? `/exercises/today?type=${type}` : '/exercises/today'
+    api.get(url).then(setExercises).finally(() => setLoading(false))
   }, [])
 
   const handleAnswer = async (quality, userAnswer = '') => {

@@ -45,14 +45,21 @@ export default function Dashboard() {
             {t.dashboard.exercisesWaiting(total)}
           </p>
 
-          {/* Разбивка по типам */}
+          {/* Плитки по типам — кликабельны */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10, marginBottom: 28 }}>
             {Object.entries(byType).map(([type, count]) => (
-              <div key={type} style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', textAlign: 'center' }}>
-                <div style={{ fontSize: 24, marginBottom: 4 }}>{TYPE_ICON[type] ?? '📝'}</div>
+              <button
+                key={type}
+                onClick={() => navigate(`/exercise-session?type=${type}`)}
+                style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', textAlign: 'center', cursor: 'pointer', transition: 'all .15s' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#4f46e5'; e.currentTarget.style.backgroundColor = '#eef2ff' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.backgroundColor = '#f9fafb' }}
+              >
+                <div style={{ fontSize: 28, marginBottom: 4 }}>{TYPE_ICON[type] ?? '📝'}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, color: '#4f46e5' }}>{count}</div>
                 <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{typeLabels[type] ?? type}</div>
-              </div>
+                <div style={{ fontSize: 11, color: '#a5b4fc', marginTop: 4 }}>→ начать</div>
+              </button>
             ))}
           </div>
 

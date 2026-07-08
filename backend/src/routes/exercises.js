@@ -16,6 +16,9 @@ export async function exercisesRoutes(fastify) {
       : 'l.status = $1'
     const param  = role === 'owner' ? userId : 'done'
 
+    const { type } = request.query
+    const typeFilter = type ? ` AND e.type = $3` : ''
+
     const { rows } = await db.query(
       `SELECT e.*, w.word_de, w.translation_ru
        FROM exercises e
@@ -23,9 +26,10 @@ export async function exercisesRoutes(fastify) {
        LEFT JOIN words w ON w.id = e.word_id
        WHERE ${filter}
          AND e.next_review_date <= $2
+         ${typeFilter}
        ORDER BY e.next_review_date ASC
        LIMIT 50`,
-      [param, today]
+      type ? [param, today, type] : [param, today]
     )
     return rows
   })
