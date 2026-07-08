@@ -110,7 +110,9 @@ export default function Vocabulary() {
   return (
     <div style={{ paddingBottom: 12 }}>
       {words.length > 0 && (
-        <ProgressRing pct={vocabPct} done={knownCount} total={words.length} label="Словарь" />
+        <div className="hide-mobile">
+          <ProgressRing pct={vocabPct} done={knownCount} total={words.length} label="Словарь" />
+        </div>
       )}
       <div style={{ padding: '0 14px 10px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 24 }}>{t.vocabulary.title}</h1>

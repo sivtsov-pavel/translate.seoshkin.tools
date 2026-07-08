@@ -80,6 +80,7 @@ a { color: var(--accent); text-decoration: none; }
 .bottom-nav { display: none; }
 
 @media (max-width: 640px) {
+  .hide-mobile { display: none; }
   .main-content {
     padding-left: 10px;
     padding-right: 10px;
