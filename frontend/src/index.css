@@ -66,6 +66,24 @@ input:focus, textarea:focus, select:focus {
 
 a { color: var(--accent); text-decoration: none; }
 
+/* Основной контент */
+.main-content {
+  padding-top: 59px;
+  padding-left: 30px;
+  padding-right: 30px;
+  min-height: 100vh;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding-left: 10px;
+    padding-right: 10px;
+    max-width: 100%;
+  }
+}
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }

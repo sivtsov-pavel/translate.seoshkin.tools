@@ -149,7 +149,7 @@ export default function Layout({ children }) {
       </nav>
 
       {/* Контент */}
-      <main style={{ paddingTop: 56 + 3, paddingLeft: 30, paddingRight: 30, minHeight: '100vh', maxWidth: 640, margin: '0 auto' }}>
+      <main className="main-content">
         {children}
       </main>
     </div>
