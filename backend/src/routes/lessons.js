@@ -48,6 +48,22 @@ export async function lessonsRoutes(fastify) {
     return rows
   })
 
+  // Слова урока — через упражнения (не через words.lesson_id, т.к. там дедупликация)
+  fastify.get('/api/lessons/:id/words', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const lessonId = parseInt(request.params.id)
+    const { rows } = await db.query(
+      `SELECT DISTINCT ON (w.id) w.id, w.word_de, w.translation_ru, w.example_sentence
+       FROM exercises e
+       JOIN words w ON w.id = e.word_id
+       WHERE e.lesson_id = $1 AND e.word_id IS NOT NULL
+       ORDER BY w.id`,
+      [lessonId]
+    )
+    return rows
+  })
+
   // Получить один урок
   fastify.get('/api/lessons/:id', {
     preHandler: [fastify.authenticate],
