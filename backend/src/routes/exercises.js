@@ -116,8 +116,8 @@ export async function exercisesRoutes(fastify) {
 
     let lessonFilter, params
     if (role === 'owner') {
-      lessonFilter = 'l.owner_id = $2'
-      params = [userId, userId]
+      lessonFilter = '1=1'
+      params = [userId]
     } else {
       lessonFilter = "l.status = 'done'"
       params = [userId]
