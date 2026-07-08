@@ -10,6 +10,7 @@ export default function Vocabulary() {
   const [words, setWords]         = useState([])
   const [statusFilter, setStatusFilter] = useState('')
   const [lessonFilter, setLessonFilter] = useState('')
+  const [search, setSearch]       = useState('')
   const [loading, setLoading]     = useState(true)
   const { t } = useI18nStore()
 
@@ -39,8 +40,13 @@ export default function Vocabulary() {
   // Все уроки для фильтра
   const lessonTitles = [...new Set(words.map(w => w.lesson_title || 'Без урока'))]
 
-  // Группируем по уроку с учётом фильтра
-  const filtered = lessonFilter ? words.filter(w => (w.lesson_title || 'Без урока') === lessonFilter) : words
+  // Поиск + фильтр по уроку
+  const q = search.toLowerCase().trim()
+  const filtered = words.filter(w => {
+    if (lessonFilter && (w.lesson_title || 'Без урока') !== lessonFilter) return false
+    if (q) return w.word_de.toLowerCase().includes(q) || w.translation_ru.toLowerCase().includes(q)
+    return true
+  })
   const grouped = filtered.reduce((acc, w) => {
     const key = w.lesson_title || 'Без урока'
     if (!acc[key]) acc[key] = []
@@ -53,6 +59,24 @@ export default function Vocabulary() {
   return (
     <div>
       <h1>{t.vocabulary.title}</h1>
+
+      {/* Живой поиск */}
+      <div style={{ position: 'relative', marginBottom: 12 }}>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Поиск по немецкому или переводу..."
+          style={{
+            width: '100%', padding: '10px 36px 10px 14px', fontSize: 15,
+            border: '1px solid #d1d5db', borderRadius: 10, boxSizing: 'border-box',
+            outline: 'none',
+          }}
+        />
+        {search
+          ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9ca3af' }}>✕</button>
+          : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#d1d5db' }}>🔍</span>
+        }
+      </div>
 
       {/* Фильтр по статусу */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
