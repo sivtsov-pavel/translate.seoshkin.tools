@@ -89,8 +89,9 @@ export default function LessonList() {
   const [lessons, setLessons]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [deleting, setDeleting]         = useState(null)
-  const [fetchingImages, setFetchingImages] = useState(false)
-  const [addingLetters, setAddingLetters]   = useState(null)
+  const [fetchingImages, setFetchingImages]       = useState(false)
+  const [translatingSentences, setTranslatingSentences] = useState(false)
+  const [addingLetters, setAddingLetters]         = useState(null)
   const [editingId, setEditingId]       = useState(null)
   const { t } = useI18nStore()
   const { user } = useAuthStore()
@@ -105,6 +106,18 @@ export default function LessonList() {
       alert('Ошибка: ' + e.message)
     } finally {
       setFetchingImages(false)
+    }
+  }
+
+  const handleTranslateSentences = async () => {
+    setTranslatingSentences(true)
+    try {
+      const res = await api.post('/admin/translate-sentences', {})
+      alert(`Переведено предложений: ${res.updated}`)
+    } catch (e) {
+      alert('Ошибка: ' + e.message)
+    } finally {
+      setTranslatingSentences(false)
     }
   }
 
@@ -149,16 +162,28 @@ export default function LessonList() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
         <h1 style={{ margin: 0 }}>{t.lessons.title}</h1>
         {user?.role === 'owner' && (
-          <button
-            onClick={handleFetchImages}
-            disabled={fetchingImages}
-            style={{
-              padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
-              backgroundColor: fetchingImages ? '#f3f4f6' : '#fff',
-              color: '#4f46e5', fontWeight: 600, fontSize: 13, cursor: fetchingImages ? 'not-allowed' : 'pointer',
-            }}>
-            {fetchingImages ? '⏳ Загружаю картинки...' : '🖼️ Загрузить картинки'}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={handleFetchImages}
+              disabled={fetchingImages}
+              style={{
+                padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
+                backgroundColor: fetchingImages ? '#f3f4f6' : '#fff',
+                color: '#4f46e5', fontWeight: 600, fontSize: 13, cursor: fetchingImages ? 'not-allowed' : 'pointer',
+              }}>
+              {fetchingImages ? '⏳ Загружаю картинки...' : '🖼️ Загрузить картинки'}
+            </button>
+            <button
+              onClick={handleTranslateSentences}
+              disabled={translatingSentences}
+              style={{
+                padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
+                backgroundColor: translatingSentences ? '#f3f4f6' : '#fff',
+                color: '#059669', fontWeight: 600, fontSize: 13, cursor: translatingSentences ? 'not-allowed' : 'pointer',
+              }}>
+              {translatingSentences ? '⏳ Перевожу...' : '🌐 Перевести предложения'}
+            </button>
+          </div>
         )}
       </div>
       {lessons.length === 0 ? (

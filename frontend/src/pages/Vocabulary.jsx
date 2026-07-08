@@ -217,9 +217,16 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
           <span style={{ color: '#374151', fontSize: 15 }}>{word.translation_ru}</span>
         </div>
         {word.example_sentence && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
-            <span style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>{word.example_sentence}</span>
-            <SpeakButton text={word.example_sentence} size={13} />
+          <div style={{ marginTop: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 13, color: '#6b7280', fontStyle: 'italic' }}>{word.example_sentence}</span>
+              <SpeakButton text={word.example_sentence} size={13} />
+            </div>
+            {word.example_sentence_ru && (
+              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2, paddingLeft: 2 }}>
+                {word.example_sentence_ru}
+              </div>
+            )}
           </div>
         )}
       </div>

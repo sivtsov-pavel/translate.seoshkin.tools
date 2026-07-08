@@ -163,3 +163,20 @@ export async function checkSentence(wordDe, translationRu, userSentence) {
 
   return parseJson(response.content[0].text)
 }
+
+// Перевод примеров предложений батчем
+export async function translateSentences(pairs) {
+  const list = pairs.map((p, i) => `${i + 1}. ${p.sentence}`).join('\n')
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: `Переведи каждое немецкое предложение на русский язык. Верни ТОЛЬКО JSON-массив строк в том же порядке, без пояснений:\n${list}`,
+    }],
+  })
+
+  const translations = parseJson(response.content[0].text)
+  return pairs.map((p, i) => ({ id: p.id, translation: translations[i] || null }))
+}

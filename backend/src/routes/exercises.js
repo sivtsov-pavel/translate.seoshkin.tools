@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { checkSentence } from '../services/claude.js'
+import { checkSentence, translateSentences } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl } from '../services/unsplash.js'
 
 export async function exercisesRoutes(fastify) {
@@ -386,5 +386,29 @@ export async function exercisesRoutes(fastify) {
     }
 
     return { total: words.length + exs.length, updated, failed }
+  })
+
+  // Перевести примеры предложений для всех слов без example_sentence_ru
+  fastify.post('/api/admin/translate-sentences', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+
+    const { rows } = await db.query(
+      `SELECT id, example_sentence FROM words
+       WHERE example_sentence IS NOT NULL AND example_sentence_ru IS NULL
+       ORDER BY id`
+    )
+    if (!rows.length) return { updated: 0 }
+
+    const results = await translateSentences(rows.map(r => ({ id: r.id, sentence: r.example_sentence })))
+
+    let updated = 0
+    for (const r of results) {
+      if (!r.translation) continue
+      await db.query('UPDATE words SET example_sentence_ru = $1 WHERE id = $2', [r.translation, r.id])
+      updated++
+    }
+    return { updated, total: rows.length }
   })
 }
