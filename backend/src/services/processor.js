@@ -100,9 +100,18 @@ export async function processLesson(lessonId, ownerId) {
       )
     }
 
+    // Диктант — одно упражнение на каждое слово, всегда последними
+    for (const word of consolidated.words) {
+      const wordId = wordMap[word.word_de] || null
+      await db.query(
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        [lessonId, wordId, 'dictation', JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })]
+      )
+    }
+
     await db.query(
       "UPDATE lessons SET status = 'done', progress = $1 WHERE id = $2",
-      [`Готово! Слов: ${consolidated.words.length}, упражнений: ${exercises.length}`, lessonId]
+      [`Готово! Слов: ${consolidated.words.length}, упражнений: ${exercises.length + consolidated.words.length}`, lessonId]
     )
 
     return {

@@ -39,6 +39,7 @@ export const fr = {
     multipleChoice: 'Choisis la réponse',
     sentenceWrite: 'Écris une phrase',
     letterFill: 'Ajoute la lettre',
+    dictation: 'Dictée',
     tapToReveal: 'Appuie pour voir la réponse',
     forgot: "J'ai oublié",
     hard: 'Difficile',

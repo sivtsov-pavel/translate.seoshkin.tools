@@ -39,6 +39,7 @@ export const tr = {
     multipleChoice: 'Cevabı seç',
     sentenceWrite: 'Cümle yaz',
     letterFill: 'Harf ekle',
+    dictation: 'Dikte',
     tapToReveal: 'Cevabı görmek için dokun',
     forgot: 'Unuttum',
     hard: 'Zor',

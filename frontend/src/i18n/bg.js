@@ -39,6 +39,7 @@ export const bg = {
     multipleChoice: 'Избери отговор',
     sentenceWrite: 'Напиши изречение',
     letterFill: 'Добави буква',
+    dictation: 'Диктовка',
     tapToReveal: 'Натисни за отговор',
     forgot: 'Забравих',
     hard: 'Трудно',

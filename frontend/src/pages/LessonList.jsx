@@ -98,6 +98,7 @@ export default function LessonList() {
   const [translatingSentences, setTranslatingSentences] = useState(false)
   const [enriching, setEnriching]                       = useState(false)
   const [addingLetters, setAddingLetters]         = useState(null)
+  const [addingDictation, setAddingDictation]     = useState(null)
   const [processing, setProcessing]               = useState(null)
   const [editingId, setEditingId]       = useState(null)
   const { t } = useI18nStore()
@@ -147,6 +148,14 @@ export default function LessonList() {
       const res = await api.post(`/lessons/${id}/add-letter-fill`, {})
       alert(`Добавлено ${res.added} упражнений "Добавь букву"!`)
     } catch (e) { alert('Ошибка: ' + e.message) } finally { setAddingLetters(null) }
+  }
+
+  const handleAddDictation = async (id) => {
+    setAddingDictation(id)
+    try {
+      const res = await api.post(`/lessons/${id}/add-dictation`, {})
+      alert(`Добавлено ${res.added} упражнений "Диктант"!`)
+    } catch (e) { alert(e.message) } finally { setAddingDictation(null) }
   }
 
   useEffect(() => {
@@ -241,11 +250,18 @@ export default function LessonList() {
                           ✏️
                         </button>
                         {status === 'done' && (
-                          <button onClick={() => handleAddLetterFill(lesson.id)} disabled={addingLetters === lesson.id}
-                            title="Добавить упражнения «Добавь букву»"
-                            style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
-                            {addingLetters === lesson.id ? '⏳' : '🔤'}
-                          </button>
+                          <>
+                            <button onClick={() => handleAddLetterFill(lesson.id)} disabled={addingLetters === lesson.id}
+                              title="Добавить упражнения «Добавь букву»"
+                              style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
+                              {addingLetters === lesson.id ? '⏳' : '🔤'}
+                            </button>
+                            <button onClick={() => handleAddDictation(lesson.id)} disabled={addingDictation === lesson.id}
+                              title="Добавить диктант"
+                              style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
+                              {addingDictation === lesson.id ? '⏳' : '🎙️'}
+                            </button>
+                          </>
                         )}
                         <button onClick={() => handleDelete(lesson.id)} disabled={deleting === lesson.id}
                           style={{ padding: '4px 10px', fontSize: 13, color: 'var(--red)', background: 'var(--surface)', border: '1px solid rgba(179,56,44,0.4)', borderRadius: 6, cursor: 'pointer' }}>

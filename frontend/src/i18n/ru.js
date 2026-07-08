@@ -43,6 +43,7 @@ export const ru = {
     multipleChoice: 'Выбери ответ',
     sentenceWrite: 'Напиши предложение',
     letterFill: 'Добавь букву',
+    dictation: 'Диктант',
     tapToReveal: 'Нажмите чтобы показать ответ',
     forgot: 'Не помню',
     hard: 'С трудом',

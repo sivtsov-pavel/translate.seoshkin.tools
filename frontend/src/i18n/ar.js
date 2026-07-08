@@ -41,6 +41,7 @@ export const ar = {
     multipleChoice: 'اختر الإجابة',
     sentenceWrite: 'اكتب جملة',
     letterFill: 'أضف الحرف',
+    dictation: 'إملاء',
     tapToReveal: 'انقر لرؤية الإجابة',
     forgot: 'نسيت',
     hard: 'صعب',

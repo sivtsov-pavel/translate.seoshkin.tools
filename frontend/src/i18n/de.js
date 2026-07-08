@@ -43,6 +43,7 @@ export const de = {
     multipleChoice: 'Wähle die Antwort',
     sentenceWrite: 'Satz schreiben',
     letterFill: 'Buchstaben ergänzen',
+    dictation: 'Diktat',
     tapToReveal: 'Tippen zum Aufdecken',
     forgot: 'Vergessen',
     hard: 'Schwierig',
