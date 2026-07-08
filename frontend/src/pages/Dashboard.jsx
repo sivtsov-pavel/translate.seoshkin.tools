@@ -8,21 +8,29 @@ const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank',
 const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🎯', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️' }
 
 // Кольцо прогресса
-function ProgressRing({ pct }) {
-  const r = 32, circ = 2 * Math.PI * r
-  const dash = circ * (pct / 100)
+function ProgressRing({ pct, done, total }) {
+  const size = 88
+  const r = 36
+  const circ = 2 * Math.PI * r
+  // Минимум 4% чтобы кольцо было видно даже при малом прогрессе
+  const dash = circ * (Math.max(pct, pct > 0 ? 4 : 0) / 100)
   return (
-    <div style={{ position: 'relative', width: 76, height: 76, flexShrink: 0 }}>
-      <svg width="76" height="76" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx="38" cy="38" r={r} fill="none" stroke="var(--surface-2)" strokeWidth="6" />
-        <circle cx="38" cy="38" r={r} fill="none" stroke="var(--accent)" strokeWidth="6"
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        {/* Фон кольца */}
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--surface-2)" strokeWidth="7" />
+        {/* Прогресс */}
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--accent)" strokeWidth="7"
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-          style={{ transition: 'stroke-dasharray .6s ease' }} />
+          style={{ transition: 'stroke-dasharray .8s cubic-bezier(.4,0,.2,1)' }} />
       </svg>
-      <span style={{
-        position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 14, fontWeight: 700, color: 'var(--ink)',
-      }}>{pct}%</span>
+      <div style={{
+        position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 0,
+      }}>
+        <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', lineHeight: 1 }}>{pct}%</span>
+        <span style={{ fontSize: 10, color: 'var(--ink-soft)', lineHeight: 1.4 }}>{done}/{done+total}</span>
+      </div>
     </div>
   )
 }
@@ -66,7 +74,7 @@ export default function Dashboard() {
       {/* Hero */}
       <div style={{ padding: '20px 20px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <ProgressRing pct={pct} />
+          <ProgressRing pct={pct} done={done} total={total} />
           <div>
             <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 26, margin: '0 0 4px', lineHeight: 1.1 }}>
               {t.dashboard.title}

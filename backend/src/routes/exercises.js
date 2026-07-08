@@ -90,6 +90,21 @@ export async function exercisesRoutes(fastify) {
 
     const { rows } = await db.query(query, params)
 
+    // Сколько упражнений уже изучено (next_review_date в будущем)
+    const doneFilter = role === 'owner'
+      ? ''
+      : "JOIN lessons l2 ON l2.id = e2.lesson_id WHERE l2.status = 'done' AND"
+    const doneQuery = role === 'owner'
+      ? `SELECT COUNT(*)::int AS done FROM exercises e2
+         JOIN user_exercise_progress uep2 ON uep2.exercise_id = e2.id AND uep2.user_id = $1
+         WHERE uep2.next_review_date > $2`
+      : `SELECT COUNT(*)::int AS done FROM exercises e2
+         JOIN lessons l2 ON l2.id = e2.lesson_id
+         JOIN user_exercise_progress uep2 ON uep2.exercise_id = e2.id AND uep2.user_id = $1
+         WHERE l2.status = 'done' AND uep2.next_review_date > $2`
+    const { rows: doneRows } = await db.query(doneQuery, [userId, today])
+    const done = doneRows[0]?.done ?? 0
+
     // Группируем по урокам
     const lessonsMap = {}
     for (const r of rows) {
@@ -104,7 +119,7 @@ export async function exercisesRoutes(fastify) {
     const byType  = {}
     for (const r of rows) byType[r.type] = (byType[r.type] ?? 0) + r.count
 
-    return { total, byType, lessons }
+    return { total, done, byType, lessons }
   })
 
   // Словарь — per-user статус через user_word_status
