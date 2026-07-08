@@ -1,7 +1,7 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
 import { checkSentence } from '../services/claude.js'
-import { fetchImageUrl } from '../services/unsplash.js'
+import { fetchImageUrl, fetchRandomImageUrl } from '../services/unsplash.js'
 
 export async function exercisesRoutes(fastify) {
 
@@ -311,6 +311,23 @@ export async function exercisesRoutes(fastify) {
     )
 
     return { ...result, nextReviewDate }
+  })
+
+  // Обновить картинку одного слова — получает случайную новую
+  fastify.post('/api/words/:id/refresh-image', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const wordId = parseInt(request.params.id)
+
+    const { rows } = await db.query('SELECT id, word_de FROM words WHERE id = $1', [wordId])
+    if (!rows[0]) return reply.status(404).send({ error: 'Слово не найдено' })
+
+    const imageUrl = await fetchRandomImageUrl(rows[0].word_de)
+    if (!imageUrl) return reply.status(502).send({ error: 'Unsplash не вернул картинку' })
+
+    await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [imageUrl, wordId])
+    return { image_url: imageUrl }
   })
 
   // Загрузка картинок для всех слов без image_url — только для owner

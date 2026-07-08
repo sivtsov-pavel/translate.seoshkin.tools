@@ -41,6 +41,7 @@ export const de = {
     fillBlank: 'Lückentext',
     multipleChoice: 'Wähle die Antwort',
     sentenceWrite: 'Satz schreiben',
+    letterFill: 'Buchstaben ergänzen',
     tapToReveal: 'Tippen zum Aufdecken',
     forgot: 'Vergessen',
     hard: 'Schwierig',

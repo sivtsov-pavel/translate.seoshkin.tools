@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
+import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
 const STATUS_COLORS = { new: '#6b7280', learning: '#f59e0b', known: '#10b981' }
@@ -148,7 +149,20 @@ export default function Vocabulary() {
 }
 
 function VocabWord({ word, statusLabels, onStatusChange }) {
-  const [showImg, setShowImg] = useState(false)
+  const [showImg, setShowImg]     = useState(false)
+  const [imageUrl, setImageUrl]   = useState(word.image_url)
+  const [refreshing, setRefreshing] = useState(false)
+  const { user } = useAuthStore()
+
+  const refreshImage = async (e) => {
+    e.stopPropagation()
+    setRefreshing(true)
+    try {
+      const res = await api.post(`/words/${word.id}/refresh-image`, {})
+      setImageUrl(res.image_url)
+    } catch {}
+    setRefreshing(false)
+  }
 
   return (
     <div style={{
@@ -156,21 +170,29 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       borderBottom: '1px solid #f3f4f6', gap: 10, borderRadius: 8,
       marginBottom: 3, backgroundColor: STATUS_BG[word.status] ?? '#fff',
     }}>
-      {/* Миниатюра картинки — только если загружена */}
-      {word.image_url ? (
-        <div
-          onClick={() => setShowImg(v => !v)}
-          title="Показать/скрыть картинку"
-          style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', backgroundColor: '#f3f4f6', flexShrink: 0, cursor: 'pointer' }}
-        >
-          {showImg
-            ? <img src={word.image_url} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🖼️</div>
-          }
-        </div>
-      ) : (
-        <div style={{ width: 40, flexShrink: 0 }} />
-      )}
+      {/* Миниатюра картинки */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+        {imageUrl ? (
+          <div
+            onClick={() => setShowImg(v => !v)}
+            title="Показать/скрыть картинку"
+            style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', backgroundColor: '#f3f4f6', cursor: 'pointer' }}
+          >
+            {showImg
+              ? <img src={imageUrl} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🖼️</div>
+            }
+          </div>
+        ) : (
+          <div style={{ width: 40, height: 40 }} />
+        )}
+        {user?.role === 'owner' && (
+          <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: 0, lineHeight: 1 }}>
+            {refreshing ? '⏳' : '🔄'}
+          </button>
+        )}
+      </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>

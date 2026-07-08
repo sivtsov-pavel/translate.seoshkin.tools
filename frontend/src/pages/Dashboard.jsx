@@ -4,7 +4,7 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
-const TYPE_ICON = { flashcard: '🃏', fill_blank: '✏️', multiple_choice: '☑️', sentence_write: '✍️' }
+const TYPE_ICON = { flashcard: '🃏', fill_blank: '✏️', multiple_choice: '☑️', sentence_write: '✍️', letter_fill: '🔤' }
 
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
@@ -73,6 +73,7 @@ function LessonCard({ lesson, navigate }) {
     fill_blank:      t.exercise.fillBlank,
     multiple_choice: t.exercise.multipleChoice,
     sentence_write:  t.exercise.sentenceWrite,
+    letter_fill:     t.exercise.letterFill,
   }
 
   const toggleWords = async () => {

@@ -41,6 +41,7 @@ export const ru = {
     fillBlank: 'Заполни пропуск',
     multipleChoice: 'Выбери ответ',
     sentenceWrite: 'Напиши предложение',
+    letterFill: 'Добавь букву',
     tapToReveal: 'Нажмите чтобы показать ответ',
     forgot: 'Не помню',
     hard: 'С трудом',

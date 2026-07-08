@@ -17,3 +17,17 @@ export async function fetchImageUrl(wordDe) {
   const data = await res.json()
   return data?.results?.[0]?.urls?.small ?? null
 }
+
+// Случайная картинка — для кнопки «обновить» (каждый раз другая)
+export async function fetchRandomImageUrl(wordDe) {
+  if (!config.unsplashAccessKey) return null
+
+  const word = cleanWord(wordDe)
+  const url = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(word)}&orientation=landscape&content_filter=high&client_id=${config.unsplashAccessKey}`
+
+  const res = await fetch(url)
+  if (!res.ok) return null
+
+  const data = await res.json()
+  return data?.urls?.small ?? null
+}

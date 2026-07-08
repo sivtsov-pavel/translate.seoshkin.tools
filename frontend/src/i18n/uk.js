@@ -37,6 +37,7 @@ export const uk = {
     fillBlank: 'Заповни пропуск',
     multipleChoice: 'Обери відповідь',
     sentenceWrite: 'Напиши речення',
+    letterFill: 'Додай букву',
     tapToReveal: 'Натисни щоб побачити відповідь',
     forgot: 'Не памʼятаю',
     hard: 'Важко',

@@ -37,6 +37,7 @@ export const en = {
     fillBlank: 'Fill in the blank',
     multipleChoice: 'Multiple choice',
     sentenceWrite: 'Write a sentence',
+    letterFill: 'Fill in the letters',
     tapToReveal: 'Tap to reveal answer',
     forgot: 'Forgot',
     hard: 'Hard',

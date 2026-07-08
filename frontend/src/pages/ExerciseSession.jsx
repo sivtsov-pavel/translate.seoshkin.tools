@@ -6,6 +6,7 @@ import Flashcard from '../components/Flashcard.jsx'
 import FillBlank from '../components/FillBlank.jsx'
 import MultipleChoice from '../components/MultipleChoice.jsx'
 import SentenceWrite from '../components/SentenceWrite.jsx'
+import LetterFill from '../components/LetterFill.jsx'
 import ProgressBar from '../components/ProgressBar.jsx'
 
 const SESSION_KEY = 'exercise_session'
@@ -85,13 +86,14 @@ export default function ExerciseSession() {
     <div>
       <ProgressBar current={done} total={exercises.length} />
       <div style={{ marginBottom: 10, color: '#9ca3af', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite }[ex.type]}
+        {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill }[ex.type]}
       </div>
       {/* key={ex.id} заставляет React пересоздавать компонент при смене упражнения */}
       {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} />}
       {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} />}
       {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} wordDe={ex.word_de} imageUrl={ex.image_url} />}
       {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={ex.lesson_title} />}
+      {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} />}
     </div>
   )
 }
