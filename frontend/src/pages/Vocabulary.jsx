@@ -13,7 +13,24 @@ export default function Vocabulary() {
   const [lessonFilter, setLessonFilter] = useState('')
   const [search, setSearch]       = useState('')
   const [loading, setLoading]     = useState(true)
+  const [sending, setSending]     = useState(false)
   const { t } = useI18nStore()
+
+  const sendToReader = async () => {
+    const sentences = filtered
+      .map(w => w.example_sentence)
+      .filter(Boolean)
+    if (!sentences.length) { alert('Нет примеров предложений у отфильтрованных слов'); return }
+    const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : 'Словарь') + ' — примеры'
+    setSending(true)
+    try {
+      await api.post('/phrase-sets', { title, content: sentences.join('\n') })
+      alert(`Набор "${title}" сохранён в Читалке (${sentences.length} предложений)`)
+    } catch (e) {
+      alert('Ошибка: ' + e.message)
+    }
+    setSending(false)
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -59,7 +76,13 @@ export default function Vocabulary() {
 
   return (
     <div>
-      <h1>{t.vocabulary.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
+        <h1 style={{ margin: 0 }}>{t.vocabulary.title}</h1>
+        <button onClick={sendToReader} disabled={sending}
+          style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #c7d2fe', backgroundColor: '#fff', color: '#4f46e5', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+          {sending ? '...' : '📖 В Читалку'}
+        </button>
+      </div>
 
       {/* Живой поиск */}
       <div style={{ position: 'relative', marginBottom: 12 }}>

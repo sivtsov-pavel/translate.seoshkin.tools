@@ -1,4 +1,5 @@
 import { db } from '../db/index.js'
+import { generateLetterFill } from '../services/claude.js'
 
 export async function lessonsRoutes(fastify) {
   // Создание урока (опционально с привязкой к курсу)
@@ -46,6 +47,60 @@ export async function lessonsRoutes(fastify) {
       params
     )
     return rows
+  })
+
+  // Добавить letter_fill к уроку без сброса прогресса
+  fastify.post('/api/lessons/:id/add-letter-fill', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+
+    // Проверяем что урок наш
+    const { rows: lessonRows } = await db.query(
+      'SELECT id FROM lessons WHERE id = $1 AND owner_id = $2', [lessonId, request.user.id]
+    )
+    if (!lessonRows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+
+    // Берём слова урока (из существующих упражнений, дедупликация по word_de)
+    const { rows: existing } = await db.query(
+      `SELECT DISTINCT ON (e.payload->>'question')
+         e.word_id,
+         COALESCE(w.word_de, e.payload->>'question') AS word_de,
+         COALESCE(w.translation_ru, e.payload->>'answer') AS translation_ru
+       FROM exercises e
+       LEFT JOIN words w ON w.id = e.word_id
+       WHERE e.lesson_id = $1 AND e.type = 'flashcard'
+       ORDER BY e.payload->>'question'`,
+      [lessonId]
+    )
+
+    if (!existing.length) return reply.status(400).send({ error: 'Нет слов в уроке' })
+
+    // Проверяем нет ли уже letter_fill у этого урока
+    const { rows: already } = await db.query(
+      `SELECT COUNT(*) cnt FROM exercises WHERE lesson_id = $1 AND type = 'letter_fill'`, [lessonId]
+    )
+    if (parseInt(already[0].cnt) > 0) {
+      return reply.status(409).send({ error: 'Упражнения letter_fill уже есть в этом уроке' })
+    }
+
+    const words = existing.map(r => ({ word_de: r.word_de, translation_ru: r.translation_ru }))
+    const exercises = await generateLetterFill(words)
+
+    const wordMap = Object.fromEntries(existing.map(r => [r.word_de, r.word_id]))
+    let added = 0
+    for (const ex of exercises) {
+      if (ex.type !== 'letter_fill') continue
+      const wordId = wordMap[ex.word_de] ?? null
+      await db.query(
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        [lessonId, wordId, ex.type, JSON.stringify(ex.payload)]
+      )
+      added++
+    }
+
+    return { added }
   })
 
   // Слова урока — через упражнения (не через words.lesson_id, т.к. там дедупликация)

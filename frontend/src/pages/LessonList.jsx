@@ -9,8 +9,9 @@ const STATUS_ICONS  = { pending: '○', processing: '⏳', done: '✓', error: '
 export default function LessonList() {
   const [lessons, setLessons] = useState([])
   const [loading, setLoading] = useState(true)
-  const [deleting, setDeleting] = useState(null)
+  const [deleting, setDeleting]         = useState(null)
   const [fetchingImages, setFetchingImages] = useState(false)
+  const [addingLetters, setAddingLetters]   = useState(null)
   const { t } = useI18nStore()
   const { user } = useAuthStore()
 
@@ -23,6 +24,18 @@ export default function LessonList() {
       alert('Ошибка: ' + e.message)
     } finally {
       setFetchingImages(false)
+    }
+  }
+
+  const handleAddLetterFill = async (id) => {
+    setAddingLetters(id)
+    try {
+      const res = await api.post(`/lessons/${id}/add-letter-fill`, {})
+      alert(`Добавлено ${res.added} упражнений "Добавь букву"!`)
+    } catch (e) {
+      alert('Ошибка: ' + e.message)
+    } finally {
+      setAddingLetters(null)
     }
   }
 
@@ -88,6 +101,21 @@ export default function LessonList() {
                     <span style={{ color: STATUS_COLORS[status], fontWeight: 600, fontSize: 13 }}>
                       {STATUS_ICONS[status]} {t.lessons.status[status]}
                     </span>
+
+                    {/* Кнопка добавить letter_fill — только для done уроков */}
+                    {user?.role === 'owner' && status === 'done' && (
+                      <button
+                        onClick={() => handleAddLetterFill(lesson.id)}
+                        disabled={addingLetters === lesson.id}
+                        title="Добавить упражнения «Добавь букву»"
+                        style={{
+                          padding: '5px 10px', borderRadius: 6, border: '1px solid #e5e7eb',
+                          backgroundColor: '#fff', color: '#6b7280', fontSize: 13,
+                          cursor: 'pointer',
+                        }}>
+                        {addingLetters === lesson.id ? '⏳' : '🔤'}
+                      </button>
+                    )}
 
                     {/* Кнопка удаления — только для owner */}
                     {user?.role === 'owner' && (

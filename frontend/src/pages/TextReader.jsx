@@ -23,7 +23,7 @@ export default function TextReader() {
   const cancelRef = useRef(false)
 
   useEffect(() => {
-    api.get('/phrase-sets').then(setSets).catch(() => {})
+    api.get('/phrase-sets').then(setSets).catch(e => console.error('phrase-sets:', e))
     return () => { cancel(); cancelRef.current = true }
   }, [])
 
@@ -83,8 +83,9 @@ export default function TextReader() {
       setSets(prev => [set, ...prev])
       setSaveTitle('')
       setShowSave(false)
+      alert(`Набор "${set.title}" сохранён!`)
     } catch (e) {
-      alert('Ошибка: ' + e.message)
+      alert('Ошибка сохранения: ' + e.message)
     }
     setSaving(false)
   }
