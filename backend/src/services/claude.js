@@ -34,9 +34,15 @@ const VISION_PROMPT = `Это фото страницы учебника или 
   "raw_text": "весь распознанный текст"
 }`
 
-export async function extractFromPhoto(filepath, mimeType = 'image/jpeg') {
+function getMimeType(filepath) {
+  const ext = filepath.split('.').pop().toLowerCase()
+  return { png: 'image/png', gif: 'image/gif', webp: 'image/webp' }[ext] || 'image/jpeg'
+}
+
+export async function extractFromPhoto(filepath) {
   const imageData = readFileSync(filepath)
   const base64 = imageData.toString('base64')
+  const mimeType = getMimeType(filepath)
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
