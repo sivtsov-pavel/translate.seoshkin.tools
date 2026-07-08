@@ -71,6 +71,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ paddingBottom: 90 }}>
+      <style>{`.chips-grid { grid-template-columns: 1fr; } @media (min-width: 480px) { .chips-grid { grid-template-columns: 1fr 1fr; } }`}</style>
       {/* Hero */}
       <div style={{ padding: '20px 20px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
@@ -180,8 +181,8 @@ function LessonCard({ lesson, navigate }) {
         </button>
       </div>
 
-      {/* Чипы типов упражнений — 2 колонки */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
+      {/* Чипы типов упражнений — 2 колонки на wide, 1 на мобиле */}
+      <div className="chips-grid" style={{ display: 'grid', gap: 8, marginTop: 14 }}>
         {chips.map(type => (
           <button key={type}
             onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}&type=${type}`)}

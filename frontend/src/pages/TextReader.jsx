@@ -6,7 +6,6 @@ function splitSentences(text) {
   return text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g)?.map(s => s.trim()).filter(Boolean) ?? []
 }
 
-// Токенизация предложения на слова и пунктуацию
 function tokenize(sentence) {
   return sentence.match(/[\wäöüÄÖÜß]+|[^\wäöüÄÖÜß]/g) || []
 }
@@ -15,49 +14,77 @@ function isWord(token) {
   return /[\wäöüÄÖÜß]/.test(token)
 }
 
-// Панель перевода — фиксированная снизу
-function WordPanel({ entry, onClose }) {
-  if (!entry) return null
+// Панель выбранных слов — фиксированная снизу
+function SelectionPanel({ words, onRemove, onClear }) {
+  if (!words.size) return null
+  const entries = [...words.values()]
+  const count = words.size
+  const label = count === 1 ? 'слово' : count < 5 ? 'слова' : 'слов'
+
   return (
-    <div onClick={onClose} style={{
+    <div style={{
       position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
       width: '100%', maxWidth: 640, zIndex: 300,
       background: 'var(--surface)', borderTop: '1px solid var(--line)',
       borderRadius: '20px 20px 0 0',
-      padding: '20px 24px 36px',
-      boxShadow: '0 -12px 40px rgba(0,0,0,.4)',
+      maxHeight: '55vh',
+      boxShadow: '0 -12px 40px rgba(0,0,0,.35)',
       animation: 'slideUp .2s ease',
+      display: 'flex', flexDirection: 'column',
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)' }}>{entry.word}</span>
-            <SpeakButton text={entry.word} size={22} />
-          </div>
-          {entry.loading ? (
-            <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>...</div>
-          ) : entry.translation ? (
-            <>
-              <div style={{ fontSize: 18, color: 'var(--accent)', fontWeight: 700, marginBottom: 6 }}>
-                {entry.translation}
+      {/* Заголовок */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '14px 20px 10px', borderBottom: '1px solid var(--line)', flexShrink: 0,
+      }}>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>
+          {count} {label}
+        </span>
+        <button onClick={onClear} style={{
+          background: 'none', border: 'none', color: 'var(--ink-soft)',
+          cursor: 'pointer', fontSize: 13, padding: '4px 8px', borderRadius: 8,
+        }}>
+          Очистить всё ✕
+        </button>
+      </div>
+
+      {/* Список слов с прокруткой */}
+      <div style={{ overflowY: 'auto', flex: 1 }}>
+        {entries.map(entry => (
+          <div key={entry.key} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '12px 20px', borderBottom: '1px solid var(--line)',
+          }}>
+            {entry.imageUrl && (
+              <img src={entry.imageUrl} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>{entry.word}</span>
+                <SpeakButton text={entry.word} size={15} />
               </div>
-              {entry.example && (
-                <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+              {entry.loading ? (
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>…</span>
+              ) : entry.translation ? (
+                <span style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 600 }}>{entry.translation}</span>
+              ) : (
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>не найдено в словаре</span>
+              )}
+              {!entry.loading && entry.example && (
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2, lineHeight: 1.4 }}>
                   <span style={{ fontStyle: 'italic' }}>{entry.example}</span>
-                  {entry.exampleRu && <><br /><span style={{ color: 'var(--ink-soft)' }}>{entry.exampleRu}</span></>}
+                  {entry.exampleRu && <><br />{entry.exampleRu}</>}
                 </div>
               )}
-            </>
-          ) : (
-            <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic' }}>
-              Не найдено в словаре — произношение доступно
             </div>
-          )}
-        </div>
-        {entry.imageUrl && (
-          <img src={entry.imageUrl} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }} />
-        )}
+            <button onClick={() => onRemove(entry.key)} style={{
+              background: 'none', border: 'none', color: 'var(--ink-soft)',
+              cursor: 'pointer', fontSize: 20, flexShrink: 0, padding: '0 4px', lineHeight: 1,
+            }}>×</button>
+          </div>
+        ))}
       </div>
+      <div style={{ height: 24, flexShrink: 0 }} />
     </div>
   )
 }
@@ -77,8 +104,9 @@ export default function TextReader() {
   const [customSentence, setCustomSentence] = useState('')
   const [showCustom, setShowCustom]         = useState(false)
 
-  // Состояние выбранного слова
-  const [wordEntry, setWordEntry] = useState(null) // { word, translation, example, exampleRu, imageUrl, loading }
+  // Выбранные слова: Map<key, {key, word, loading, translation, example, exampleRu, imageUrl}>
+  const [selectedWords, setSelectedWords] = useState(new Map())
+  const selectedRef = useRef(new Map()) // синхронный доступ внутри async
 
   const idxRef    = useRef(0)
   const cancelRef = useRef(false)
@@ -88,31 +116,59 @@ export default function TextReader() {
     return () => { cancel(); cancelRef.current = true }
   }, [])
 
+  const updateSelected = (map) => {
+    selectedRef.current = map
+    setSelectedWords(new Map(map))
+  }
+
   const handleWordClick = useCallback(async (raw) => {
-    // Убираем артикли для поиска
     const word = raw.replace(/^(der|die|das|ein|eine|einen|dem|den|des)\s+/i, '').trim()
     if (!word) return
+    const key = word.toLowerCase()
 
+    // Если уже выбрано — снять выбор
+    if (selectedRef.current.has(key)) {
+      const next = new Map(selectedRef.current)
+      next.delete(key)
+      updateSelected(next)
+      return
+    }
+
+    // Добавить с загрузкой
     speak(word)
-    setWordEntry({ word, loading: true, translation: null, example: null, exampleRu: null, imageUrl: null })
+    const next = new Map(selectedRef.current)
+    next.set(key, { key, word, loading: true, translation: null, example: null, exampleRu: null, imageUrl: null })
+    updateSelected(next)
 
     try {
       const res = await api.get(`/words/lookup?q=${encodeURIComponent(word)}`)
-      if (res) {
-        setWordEntry({
-          word: res.word_de || word,
+      if (selectedRef.current.has(key)) {
+        const next2 = new Map(selectedRef.current)
+        next2.set(key, {
+          key,
+          word: res?.word_de || word,
           loading: false,
-          translation: res.translation_ru,
-          example: res.example_sentence,
-          exampleRu: res.example_sentence_ru,
-          imageUrl: res.image_url,
+          translation: res?.translation_ru || null,
+          example: res?.example_sentence || null,
+          exampleRu: res?.example_sentence_ru || null,
+          imageUrl: res?.image_url || null,
         })
-      } else {
-        setWordEntry(prev => ({ ...prev, loading: false }))
+        updateSelected(next2)
       }
     } catch {
-      setWordEntry(prev => ({ ...prev, loading: false }))
+      if (selectedRef.current.has(key)) {
+        const next2 = new Map(selectedRef.current)
+        next2.set(key, { ...next2.get(key), loading: false })
+        updateSelected(next2)
+      }
     }
+  }, [])
+
+  const clearSelection = useCallback(() => { updateSelected(new Map()) }, [])
+  const removeWord = useCallback((key) => {
+    const next = new Map(selectedRef.current)
+    next.delete(key)
+    updateSelected(next)
   }, [])
 
   const start = async (fromIdx = 0) => {
@@ -121,7 +177,7 @@ export default function TextReader() {
     setSentences(parts)
     setPlaying(true)
     setActive(fromIdx)
-    setWordEntry(null)
+    clearSelection()
     cancelRef.current = false
     idxRef.current = fromIdx
 
@@ -180,11 +236,13 @@ export default function TextReader() {
     try { await api.delete(`/phrase-sets/${id}`); setSets(prev => prev.filter(s => s.id !== id)) } catch {}
   }
 
+  const hasSelection = selectedWords.size > 0
+
   return (
     <div style={{ padding: '12px 14px 40px' }}>
       <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 24, marginTop: 0, marginBottom: 6 }}>📖 Читалка</h1>
       <p style={{ color: 'var(--ink-soft)', marginBottom: 16, fontSize: 14 }}>
-        Вставь немецкий текст — читай по абзацам или кликай на слова для перевода.
+        Вставь немецкий текст — читай по абзацам или выбирай слова для перевода.
       </p>
 
       {/* Сохранённые наборы */}
@@ -316,9 +374,13 @@ export default function TextReader() {
       {sentences.length > 0 && (
         <>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>
-            💡 Нажми на предложение чтобы начать с него · Нажми на слово чтобы увидеть перевод
+            💡 Нажми на предложение чтобы начать с него · Нажми на слово — выбрать/убрать перевод
           </div>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '20px 18px', lineHeight: 2.4, paddingBottom: wordEntry ? 140 : 20 }}>
+          <div style={{
+            background: 'var(--surface)', border: '1px solid var(--line)',
+            borderRadius: 16, padding: '20px 18px', lineHeight: 2.4,
+            paddingBottom: hasSelection ? 160 : 20,
+          }}>
             {sentences.map((s, i) => (
               <span key={i} style={{ display: 'inline' }}>
                 <span
@@ -331,27 +393,31 @@ export default function TextReader() {
                     borderBottom: active === i ? '2px solid var(--accent)' : 'none',
                     transition: 'background .2s',
                   }}>
-                  {tokenize(s).map((token, j) => (
-                    isWord(token) ? (
+                  {tokenize(s).map((token, j) => {
+                    const key = token.toLowerCase()
+                    const sel = isWord(token) && selectedWords.has(key)
+                    return isWord(token) ? (
                       <span key={j}
                         onClick={e => { e.stopPropagation(); handleWordClick(token) }}
                         style={{
                           fontSize: 17,
-                          fontWeight: active === i ? 600 : 400,
-                          color: active === i ? 'var(--accent)' : 'var(--ink)',
+                          fontWeight: sel ? 700 : (active === i ? 600 : 400),
+                          color: sel ? 'var(--accent)' : (active === i ? 'var(--accent)' : 'var(--ink)'),
                           cursor: 'pointer',
                           borderRadius: 4,
-                          padding: '0 1px',
+                          padding: '1px 2px',
+                          background: sel ? 'var(--accent-soft)' : 'transparent',
+                          outline: sel ? '1px solid var(--accent)' : 'none',
                           transition: 'background .1s',
                           display: 'inline',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-soft)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--accent-soft)' }}
+                        onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}
                       >{token}</span>
                     ) : (
                       <span key={j} style={{ fontSize: 17, color: active === i ? 'var(--accent)' : 'var(--ink)', fontWeight: active === i ? 600 : 400 }}>{token}</span>
                     )
-                  ))}
+                  })}
                 </span>
                 {' '}
               </span>
@@ -368,8 +434,8 @@ export default function TextReader() {
         </div>
       )}
 
-      {/* Панель перевода выбранного слова */}
-      <WordPanel entry={wordEntry} onClose={() => setWordEntry(null)} />
+      {/* Панель выбранных слов */}
+      <SelectionPanel words={selectedWords} onRemove={removeWord} onClear={clearSelection} />
 
       <style>{`
         @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
