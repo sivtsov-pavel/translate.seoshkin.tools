@@ -172,11 +172,11 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       {/* Миниатюра картинки */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
         {imageUrl ? (
-          <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+          <div style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', backgroundColor: '#f3f4f6', flexShrink: 0 }}>
             <img src={imageUrl} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         ) : (
-          <div style={{ width: 56, height: 56 }} />
+          <div style={{ width: 80, flexShrink: 0 }} />
         )}
         {user?.role === 'owner' && (
           <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку"

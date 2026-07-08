@@ -9,7 +9,7 @@ import SentenceWrite from '../components/SentenceWrite.jsx'
 import LetterFill from '../components/LetterFill.jsx'
 import ProgressBar from '../components/ProgressBar.jsx'
 
-const SESSION_KEY = 'exercise_session_v2'
+const SESSION_KEY = 'exercise_session_v3'
 
 export default function ExerciseSession() {
   const [exercises, setExercises] = useState([])
