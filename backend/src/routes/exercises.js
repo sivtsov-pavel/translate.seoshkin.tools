@@ -10,57 +10,51 @@ export async function exercisesRoutes(fastify) {
   }, async (request) => {
     const { id: userId, role } = request.user
     const today = new Date().toISOString().slice(0, 10)
-    const { type } = request.query
+    const { type, lesson_id } = request.query
 
-    // $1 = userId (для LEFT JOIN uep), $2 = owner фильтр (или today для student), $3 = today / type
+    const SELECT = `
+        SELECT e.*,
+               w.word_de, w.translation_ru,
+               l.title AS lesson_title,
+               COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
+               COALESCE(uep.interval_days,    0)            AS interval_days,
+               COALESCE(uep.repetitions,      0)            AS repetitions,
+               COALESCE(uep.next_review_date, CURRENT_DATE) AS next_review_date
+        FROM exercises e
+        JOIN lessons l ON l.id = e.lesson_id
+        LEFT JOIN words w ON w.id = e.word_id
+        LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1`
+
     let query, params
     if (role === 'owner') {
       params = [userId, userId, today]
-      if (type) params.push(type)
-      query = `
-        SELECT e.*,
-               w.word_de, w.translation_ru,
-               l.title AS lesson_title,
-               COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
-               COALESCE(uep.interval_days,    0)            AS interval_days,
-               COALESCE(uep.repetitions,      0)            AS repetitions,
-               COALESCE(uep.next_review_date, CURRENT_DATE) AS next_review_date
-        FROM exercises e
-        JOIN lessons l ON l.id = e.lesson_id
-        LEFT JOIN words w ON w.id = e.word_id
-        LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+      if (type)      params.push(type)
+      if (lesson_id) params.push(parseInt(lesson_id))
+      const p = params.length
+      query = SELECT + `
         WHERE l.owner_id = $2
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $3
-          ${type ? 'AND e.type = $4' : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC
-        LIMIT 50`
+          ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
+          ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
+        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT 50`
     } else {
       params = [userId, today]
-      if (type) params.push(type)
-      query = `
-        SELECT e.*,
-               w.word_de, w.translation_ru,
-               l.title AS lesson_title,
-               COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
-               COALESCE(uep.interval_days,    0)            AS interval_days,
-               COALESCE(uep.repetitions,      0)            AS repetitions,
-               COALESCE(uep.next_review_date, CURRENT_DATE) AS next_review_date
-        FROM exercises e
-        JOIN lessons l ON l.id = e.lesson_id
-        LEFT JOIN words w ON w.id = e.word_id
-        LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+      if (type)      params.push(type)
+      if (lesson_id) params.push(parseInt(lesson_id))
+      const p = params.length
+      query = SELECT + `
         WHERE l.status = 'done'
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-          ${type ? 'AND e.type = $3' : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC
-        LIMIT 50`
+          ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
+          ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
+        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT 50`
     }
 
     const { rows } = await db.query(query, params)
     return rows
   })
 
-  // Статистика для дашборда — per-user очередь
+  // Статистика для дашборда — по урокам и типам, per-user
   fastify.get('/api/exercises/stats', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
@@ -71,29 +65,46 @@ export async function exercisesRoutes(fastify) {
     if (role === 'owner') {
       params = [userId, userId, today]
       query = `
-        SELECT e.type, COUNT(*)::int AS count
+        SELECT l.id AS lesson_id, l.title AS lesson_title,
+               e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.owner_id = $2
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $3
-        GROUP BY e.type`
+        GROUP BY l.id, l.title, e.type
+        ORDER BY l.id, e.type`
     } else {
       params = [userId, today]
       query = `
-        SELECT e.type, COUNT(*)::int AS count
+        SELECT l.id AS lesson_id, l.title AS lesson_title,
+               e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.status = 'done'
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY e.type`
+        GROUP BY l.id, l.title, e.type
+        ORDER BY l.id, e.type`
     }
 
     const { rows } = await db.query(query, params)
-    const byType = Object.fromEntries(rows.map(r => [r.type, r.count]))
-    const total  = rows.reduce((s, r) => s + r.count, 0)
-    return { total, byType }
+
+    // Группируем по урокам
+    const lessonsMap = {}
+    for (const r of rows) {
+      if (!lessonsMap[r.lesson_id]) {
+        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, total: 0, byType: {} }
+      }
+      lessonsMap[r.lesson_id].byType[r.type] = r.count
+      lessonsMap[r.lesson_id].total += r.count
+    }
+    const lessons = Object.values(lessonsMap)
+    const total   = lessons.reduce((s, l) => s + l.total, 0)
+    const byType  = {}
+    for (const r of rows) byType[r.type] = (byType[r.type] ?? 0) + r.count
+
+    return { total, byType, lessons }
   })
 
   // Словарь — per-user статус через user_word_status

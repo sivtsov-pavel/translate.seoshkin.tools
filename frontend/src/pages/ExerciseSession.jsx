@@ -19,14 +19,16 @@ export default function ExerciseSession() {
   const { t } = useI18nStore()
 
   useEffect(() => {
-    const type = searchParams.get('type')
+    const type      = searchParams.get('type')
+    const lesson_id = searchParams.get('lesson_id')
+    const sessionKey = `${lesson_id || ''}_${type || ''}`
     const saved = sessionStorage.getItem(SESSION_KEY)
 
-    // Восстанавливаем сессию если она для того же типа и не завершена
+    // Восстанавливаем сессию если она для той же комбинации урок+тип
     if (saved) {
       try {
         const { exercises: exs, current: idx, sessionType } = JSON.parse(saved)
-        if (sessionType === (type || '') && idx < exs.length) {
+        if (sessionType === sessionKey && idx < exs.length) {
           setExercises(exs)
           setCurrent(idx)
           setLoading(false)
@@ -35,15 +37,15 @@ export default function ExerciseSession() {
       } catch {}
     }
 
-    const url = type ? `/exercises/today?type=${type}` : '/exercises/today'
+    const qs = new URLSearchParams()
+    if (type)      qs.set('type', type)
+    if (lesson_id) qs.set('lesson_id', lesson_id)
+    const url = `/exercises/today${qs.toString() ? '?' + qs : ''}`
+
     api.get(url).then(exs => {
       setExercises(exs)
       setCurrent(0)
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-        exercises: exs,
-        current: 0,
-        sessionType: type || '',
-      }))
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ exercises: exs, current: 0, sessionType: sessionKey }))
     }).finally(() => setLoading(false))
   }, [])
 
@@ -64,10 +66,11 @@ export default function ExerciseSession() {
     } else {
       setCurrent(next)
       // Обновляем сохранённый индекс
+      const type      = searchParams.get('type')
+      const lesson_id = searchParams.get('lesson_id')
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-        exercises,
-        current: next,
-        sessionType: searchParams.get('type') || '',
+        exercises, current: next,
+        sessionType: `${lesson_id || ''}_${type || ''}`,
       }))
     }
   }
