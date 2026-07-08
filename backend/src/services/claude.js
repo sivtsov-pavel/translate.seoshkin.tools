@@ -10,7 +10,12 @@ function parseJson(text) {
   try {
     return JSON.parse(clean)
   } catch (e) {
-    // Если JSON обрезан — бросаем понятную ошибку с контекстом
+    // Пробуем обрезать до последнего полного элемента (если ответ Claude обрезан)
+    const lastComma = clean.lastIndexOf('},')
+    if (lastComma > 0) {
+      const candidate = (clean.startsWith('[') ? '[' : '{') + clean.slice(1, lastComma + 1) + (clean.startsWith('[') ? ']' : '}')
+      try { return JSON.parse(candidate) } catch {}
+    }
     throw new Error(`Ошибка парсинга JSON от Claude (${clean.length} символов): ${e.message}`)
   }
 }
@@ -35,7 +40,7 @@ export async function extractFromPhoto(filepath, mimeType = 'image/jpeg') {
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
+    max_tokens: 4096,
     messages: [{
       role: 'user',
       content: [
