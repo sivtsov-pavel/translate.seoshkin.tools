@@ -1,6 +1,7 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
 import { checkSentence } from '../services/claude.js'
+import { fetchImageUrl } from '../services/unsplash.js'
 
 export async function exercisesRoutes(fastify) {
 
@@ -14,7 +15,7 @@ export async function exercisesRoutes(fastify) {
 
     const SELECT = `
         SELECT e.*,
-               w.word_de, w.translation_ru,
+               w.word_de, w.translation_ru, w.image_url,
                l.title AS lesson_title,
                COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
                COALESCE(uep.interval_days,    0)            AS interval_days,
@@ -310,5 +311,37 @@ export async function exercisesRoutes(fastify) {
     )
 
     return { ...result, nextReviewDate }
+  })
+
+  // Загрузка картинок для всех слов без image_url — только для owner
+  fastify.post('/api/admin/fetch-images', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+
+    const { rows: words } = await db.query(
+      `SELECT id, word_de FROM words WHERE image_url IS NULL ORDER BY id`
+    )
+
+    let updated = 0
+    let failed  = 0
+
+    for (const word of words) {
+      try {
+        const url = await fetchImageUrl(word.word_de)
+        if (url) {
+          await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url, word.id])
+          updated++
+        } else {
+          failed++
+        }
+        // Пауза 250мс чтобы не превысить лимит Unsplash (50 req/sec)
+        await new Promise(r => setTimeout(r, 250))
+      } catch {
+        failed++
+      }
+    }
+
+    return { total: words.length, updated, failed }
   })
 }

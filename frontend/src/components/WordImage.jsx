@@ -1,15 +1,9 @@
 import { useState } from 'react'
 
-// Берём только существо слова без артикля: "der Hund" → "Hund"
-function cleanWord(wordDe) {
-  return wordDe.replace(/^(der|die|das|ein|eine)\s+/i, '').split(' ')[0]
-}
+export default function WordImage({ imageUrl, size = 260 }) {
+  const [status, setStatus] = useState('loading')
 
-export default function WordImage({ wordDe, size = 260 }) {
-  const [status, setStatus] = useState('loading') // loading | ok | error
-  const word = cleanWord(wordDe)
-  const src  = `https://source.unsplash.com/${size}x${Math.round(size * 0.65)}/?${encodeURIComponent(word)},german`
-
+  if (!imageUrl) return null
   if (status === 'error') return null
 
   return (
@@ -26,8 +20,8 @@ export default function WordImage({ wordDe, size = 260 }) {
         }}>🖼️</div>
       )}
       <img
-        src={src}
-        alt={wordDe}
+        src={imageUrl}
+        alt=""
         onLoad={() => setStatus('ok')}
         onError={() => setStatus('error')}
         style={{

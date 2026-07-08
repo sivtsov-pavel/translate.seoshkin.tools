@@ -6,5 +6,6 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL || 'postgresql://german_app:secret@localhost:5432/german_learning',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
+  unsplashAccessKey: process.env.UNSPLASH_ACCESS_KEY || '',
   uploadDir: process.env.UPLOAD_DIR || './uploads',
 }

@@ -10,8 +10,21 @@ export default function LessonList() {
   const [lessons, setLessons] = useState([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
+  const [fetchingImages, setFetchingImages] = useState(false)
   const { t } = useI18nStore()
   const { user } = useAuthStore()
+
+  const handleFetchImages = async () => {
+    setFetchingImages(true)
+    try {
+      const res = await api.post('/admin/fetch-images', {})
+      alert(`Готово! Загружено: ${res.updated} картинок, не найдено: ${res.failed}`)
+    } catch (e) {
+      alert('Ошибка: ' + e.message)
+    } finally {
+      setFetchingImages(false)
+    }
+  }
 
   useEffect(() => {
     api.get('/lessons').then(setLessons).finally(() => setLoading(false))
@@ -34,7 +47,21 @@ export default function LessonList() {
 
   return (
     <div>
-      <h1>{t.lessons.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
+        <h1 style={{ margin: 0 }}>{t.lessons.title}</h1>
+        {user?.role === 'owner' && (
+          <button
+            onClick={handleFetchImages}
+            disabled={fetchingImages}
+            style={{
+              padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
+              backgroundColor: fetchingImages ? '#f3f4f6' : '#fff',
+              color: '#4f46e5', fontWeight: 600, fontSize: 13, cursor: fetchingImages ? 'not-allowed' : 'pointer',
+            }}>
+            {fetchingImages ? '⏳ Загружаю картинки...' : '🖼️ Загрузить картинки'}
+          </button>
+        )}
+      </div>
       {lessons.length === 0 ? (
         <p style={{ color: '#6b7280' }}>{t.lessons.empty}</p>
       ) : (

@@ -3,7 +3,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 
-export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe }) {
+export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl }) {
   const [selected, setSelected] = useState(null)
   const { t } = useI18nStore()
 
@@ -43,7 +43,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe 
 
       {/* Немецкое слово + картинка */}
       <div style={{ backgroundColor: '#f8fafc', borderRadius: 10, padding: '18px 20px', marginBottom: 18, textAlign: 'center' }}>
-        <WordImage wordDe={germanWord} size={240} />
+        <WordImage imageUrl={imageUrl} size={240} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           <span style={{ fontSize: 32, fontWeight: 700, color: '#1e1b4b' }}>{germanWord}</span>
           <SpeakButton text={germanWord} size={24} />

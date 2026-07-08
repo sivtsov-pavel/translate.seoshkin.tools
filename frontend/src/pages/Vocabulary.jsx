@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
-import WordImage from '../components/WordImage.jsx'
 
 const STATUS_COLORS = { new: '#6b7280', learning: '#f59e0b', known: '#10b981' }
 const STATUS_BG     = { new: '#fff', learning: '#fffdf0', known: '#f0fdf4' }
@@ -157,26 +156,21 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       borderBottom: '1px solid #f3f4f6', gap: 10, borderRadius: 8,
       marginBottom: 3, backgroundColor: STATUS_BG[word.status] ?? '#fff',
     }}>
-      {/* Миниатюра картинки */}
-      <div
-        onClick={() => setShowImg(v => !v)}
-        title="Показать картинку"
-        style={{
-          width: 40, height: 40, borderRadius: 6, overflow: 'hidden',
-          backgroundColor: '#f3f4f6', flexShrink: 0, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 18,
-        }}
-      >
-        {showImg
-          ? <img
-              src={`https://source.unsplash.com/80x80/?${encodeURIComponent(word.word_de.replace(/^(der|die|das)\s+/i, ''))}`}
-              alt={word.word_de}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          : '🖼️'
-        }
-      </div>
+      {/* Миниатюра картинки — только если загружена */}
+      {word.image_url ? (
+        <div
+          onClick={() => setShowImg(v => !v)}
+          title="Показать/скрыть картинку"
+          style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', backgroundColor: '#f3f4f6', flexShrink: 0, cursor: 'pointer' }}
+        >
+          {showImg
+            ? <img src={word.image_url} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🖼️</div>
+          }
+        </div>
+      ) : (
+        <div style={{ width: 40, flexShrink: 0 }} />
+      )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
