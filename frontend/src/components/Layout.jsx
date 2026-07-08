@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -7,6 +8,7 @@ export default function Layout({ children }) {
   const { user, logout } = useAuthStore()
   const { t } = useI18nStore()
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -15,30 +17,81 @@ export default function Layout({ children }) {
 
   return (
     <div>
-      <nav style={{ display: 'flex', gap: 16, padding: '12px 24px', backgroundColor: '#4f46e5', alignItems: 'center', flexWrap: 'wrap' }}>
-        <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 15, fontWeight: 700 }}>{t.nav.appName}</Link>
-        <Link to="/" style={navLink}>{t.nav.today}</Link>
-        <Link to="/lessons" style={navLink}>{t.nav.lessons}</Link>
-        <Link to="/vocabulary" style={navLink}>{t.nav.vocabulary}</Link>
-        {user?.role === 'owner' && (
-          <Link to="/lessons/new" style={{ ...navLink, backgroundColor: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 6 }}>
-            {t.nav.newLesson}
+      <nav style={{ backgroundColor: '#4f46e5', padding: '0 16px' }}>
+        {/* Верхняя строка: лого + гамбургер на мобильном */}
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 52 }}>
+          <Link to="/" style={{ color: '#fff', textDecoration: 'none', fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+            {t.nav.appName}
           </Link>
-        )}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <LangSwitcher dark />
+
+          {/* Десктопная навигация */}
+          <div className="nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 16, marginLeft: 24, flex: 1 }}>
+            <Link to="/"           style={navLink}>{t.nav.today}</Link>
+            <Link to="/lessons"    style={navLink}>{t.nav.lessons}</Link>
+            <Link to="/vocabulary" style={navLink}>{t.nav.vocabulary}</Link>
+            {user?.role === 'owner' && (
+              <Link to="/lessons/new" style={{ ...navLink, backgroundColor: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 6 }}>
+                {t.nav.newLesson}
+              </Link>
+            )}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <LangSwitcher dark />
+              <button onClick={handleLogout} style={logoutBtn}>{t.nav.logout}</button>
+            </div>
+          </div>
+
+          {/* Гамбургер для мобильных */}
           <button
-            onClick={handleLogout}
-            style={{ background: 'none', border: '1px solid #a5b4fc', color: '#fff', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}>
-            {t.nav.logout}
+            className="nav-burger"
+            onClick={() => setMenuOpen(v => !v)}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', padding: 8, display: 'none', flexDirection: 'column', gap: 5 }}>
+            <span style={{ display: 'block', width: 22, height: 2, backgroundColor: '#fff', transition: menuOpen ? 'transform .2s' : 'none', transform: menuOpen ? 'rotate(45deg) translateY(7px)' : 'none' }} />
+            <span style={{ display: 'block', width: 22, height: 2, backgroundColor: '#fff', opacity: menuOpen ? 0 : 1 }} />
+            <span style={{ display: 'block', width: 22, height: 2, backgroundColor: '#fff', transform: menuOpen ? 'rotate(-45deg) translateY(-7px)' : 'none', transition: menuOpen ? 'transform .2s' : 'none' }} />
           </button>
         </div>
+
+        {/* Мобильное меню */}
+        {menuOpen && (
+          <div className="nav-mobile-menu" style={{ padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.15)' }}
+               onClick={() => setMenuOpen(false)}>
+            <MobileLink to="/">{t.nav.today}</MobileLink>
+            <MobileLink to="/lessons">{t.nav.lessons}</MobileLink>
+            <MobileLink to="/vocabulary">{t.nav.vocabulary}</MobileLink>
+            {user?.role === 'owner' && <MobileLink to="/lessons/new">{t.nav.newLesson}</MobileLink>}
+            <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <LangSwitcher dark />
+              <button onClick={handleLogout} style={logoutBtn}>{t.nav.logout}</button>
+            </div>
+          </div>
+        )}
       </nav>
-      <main style={{ maxWidth: 800, margin: '24px auto', padding: '0 16px' }}>
+
+      {/* Глобальные стили адаптива */}
+      <style>{`
+        @media (max-width: 600px) {
+          .nav-desktop { display: none !important; }
+          .nav-burger  { display: flex !important; }
+        }
+        @media (min-width: 601px) {
+          .nav-mobile-menu { display: none !important; }
+        }
+      `}</style>
+
+      <main style={{ maxWidth: 800, margin: '20px auto', padding: '0 16px' }}>
         {children}
       </main>
     </div>
   )
 }
 
+function MobileLink({ to, children }) {
+  return (
+    <Link to={to} style={{ display: 'block', color: '#fff', textDecoration: 'none', padding: '10px 0', fontSize: 16, fontWeight: 500 }}>
+      {children}
+    </Link>
+  )
+}
+
 const navLink = { color: '#fff', textDecoration: 'none', fontSize: 15 }
+const logoutBtn = { background: 'none', border: '1px solid #a5b4fc', color: '#fff', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 13 }
