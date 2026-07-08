@@ -6,6 +6,7 @@ export const ru = {
     vocabulary: 'Словарь',
     courses: 'Курсы',
     students: 'Ученики',
+    wiki: 'Справка',
     newLesson: '+ Урок',
     logout: 'Выйти',
     appName: 'Немецкий 🇩🇪',

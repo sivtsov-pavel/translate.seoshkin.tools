@@ -6,6 +6,7 @@ export const de = {
     vocabulary: 'Wörterbuch',
     courses: 'Kurse',
     students: 'Schüler',
+    wiki: 'Hilfe',
     newLesson: '+ Lektion',
     logout: 'Abmelden',
     appName: 'Deutsch Lernen 🇩🇪',

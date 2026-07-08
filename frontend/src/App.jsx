@@ -10,6 +10,7 @@ import Vocabulary from './pages/Vocabulary.jsx'
 import Students from './pages/Students.jsx'
 import CourseList from './pages/CourseList.jsx'
 import CourseView from './pages/CourseView.jsx'
+import Wiki from './pages/Wiki.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/students"    element={<ProtectedRoute><Layout><Students   /></Layout></ProtectedRoute>} />
         <Route path="/courses"     element={<ProtectedRoute><Layout><CourseList /></Layout></ProtectedRoute>} />
         <Route path="/courses/:id" element={<ProtectedRoute><Layout><CourseView /></Layout></ProtectedRoute>} />
+        <Route path="/wiki"        element={<ProtectedRoute><Layout><Wiki       /></Layout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )

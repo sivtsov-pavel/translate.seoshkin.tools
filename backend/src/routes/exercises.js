@@ -24,6 +24,28 @@ export async function exercisesRoutes(fastify) {
     return rows
   })
 
+  // Статистика для дашборда — сколько упражнений по типам ждут сегодня
+  fastify.get('/api/exercises/stats', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const userId = request.user.id
+    const today = new Date().toISOString().slice(0, 10)
+
+    const { rows } = await db.query(
+      `SELECT e.type, COUNT(*)::int AS count
+       FROM exercises e
+       JOIN lessons l ON l.id = e.lesson_id
+       WHERE l.owner_id = $1
+         AND e.next_review_date <= $2
+       GROUP BY e.type`,
+      [userId, today]
+    )
+
+    const byType = Object.fromEntries(rows.map(r => [r.type, r.count]))
+    const total = rows.reduce((s, r) => s + r.count, 0)
+    return { total, byType }
+  })
+
   // Словарь пользователя
   fastify.get('/api/words', {
     preHandler: [fastify.authenticate],

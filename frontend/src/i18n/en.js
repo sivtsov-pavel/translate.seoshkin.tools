@@ -5,6 +5,7 @@ export const en = {
     vocabulary: 'Vocabulary',
     courses: 'Courses',
     students: 'Students',
+    wiki: 'Help',
     newLesson: '+ Lesson',
     logout: 'Log out',
     appName: 'Deutsch Lernen 🇩🇪',

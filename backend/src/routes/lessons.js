@@ -62,6 +62,19 @@ export async function lessonsRoutes(fastify) {
     return { ...rows[0], media }
   })
 
+  // Удалить урок (только owner, каскадно удаляет слова/упражнения через FK)
+  fastify.delete('/api/lessons/:id', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const { rows } = await db.query(
+      'DELETE FROM lessons WHERE id = $1 AND owner_id = $2 RETURNING id',
+      [parseInt(request.params.id), request.user.id]
+    )
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    return reply.status(204).send()
+  })
+
   // Загрузка медиафайлов к уроку
   fastify.post('/api/lessons/:id/media', {
     preHandler: [fastify.authenticate],
