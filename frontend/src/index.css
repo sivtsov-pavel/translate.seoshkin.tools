@@ -1,4 +1,6 @@
-:root {
+/* ── Тёмная тема (по умолчанию) ── */
+:root,
+[data-theme="dark"] {
   --bg: #0A0A0A;
   --surface: #141414;
   --surface-2: #1E1E1E;
@@ -11,6 +13,24 @@
   --red: #B3382C;
   --good: #4E9A6E;
   --radius: 18px;
+  color-scheme: dark;
+}
+
+/* ── Светлая тема ── */
+[data-theme="light"] {
+  --bg: #F8F7F2;
+  --surface: #FFFFFF;
+  --surface-2: #EFEDE6;
+  --ink: #1A1917;
+  --ink-soft: #78766F;
+  --line: #DEDBD0;
+  --accent: #B8912A;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #FEF3C7;
+  --red: #C0392B;
+  --good: #2E7D52;
+  --radius: 18px;
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -23,6 +43,7 @@ html, body, #root {
   color: var(--ink);
   font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background .25s ease, color .25s ease;
 }
 
 button { font-family: inherit; }
@@ -36,6 +57,7 @@ input, textarea, select {
   padding: 10px 12px;
   font-size: 15px;
   outline: none;
+  transition: background .2s, border-color .2s;
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--accent);

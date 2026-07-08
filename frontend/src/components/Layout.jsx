@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
+import { useThemeStore } from '../store/theme.js'
 import LangSwitcher from './LangSwitcher.jsx'
 import { AutoSpeakToggle } from '../hooks/useSpeech.jsx'
 
 export default function Layout({ children }) {
   const { user, logout } = useAuthStore()
   const { t } = useI18nStore()
+  const { theme, toggle: toggleTheme } = useThemeStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -133,6 +135,9 @@ export default function Layout({ children }) {
 
         {/* Подвал drawer */}
         <div style={{ padding: '14px', borderTop: '1px solid var(--line)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button onClick={toggleTheme} style={pill} title="Переключить тему">
+            {theme === 'dark' ? '☀️ Светлая' : '🌙 Тёмная'}
+          </button>
           <AutoSpeakToggle pill />
           <LangSwitcher pill />
           <button onClick={handleLogout} style={{ ...pill, color: '#C0392B', borderColor: '#C0392B22' }}>

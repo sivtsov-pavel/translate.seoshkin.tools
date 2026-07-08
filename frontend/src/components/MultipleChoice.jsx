@@ -7,12 +7,9 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   const [selected, setSelected] = useState(null)
   const { t } = useI18nStore()
 
-  // Из вопроса "Wie heißt das auf Russisch: [word]?" извлекаем немецкое слово
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
-  useEffect(() => {
-    if (germanWord) speakAuto(germanWord)
-  }, [germanWord])
+  useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])
 
   const handleSelect = (idx) => {
     if (selected !== null) return
@@ -22,58 +19,62 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
 
   const getStyle = (idx) => {
     const base = {
-      padding: '12px 16px', marginBottom: 8, borderRadius: 8, cursor: 'pointer',
+      padding: '12px 16px', marginBottom: 8, borderRadius: 12, cursor: 'pointer',
       border: '2px solid', width: '100%', textAlign: 'left', fontSize: 16,
       transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 8,
     }
-    if (selected === null) return { ...base, borderColor: '#e5e7eb', backgroundColor: '#fff' }
-    if (idx === payload.correct) return { ...base, borderColor: '#10b981', backgroundColor: '#d1fae5', cursor: 'default' }
-    if (idx === selected)        return { ...base, borderColor: '#ef4444', backgroundColor: '#fee2e2', cursor: 'default' }
-    return { ...base, borderColor: '#e5e7eb', backgroundColor: '#f9fafb', cursor: 'default', opacity: 0.6 }
+    if (selected === null) return { ...base, borderColor: 'var(--line)', background: 'var(--surface-2)', color: 'var(--ink)' }
+    if (idx === payload.correct) return { ...base, borderColor: 'var(--good)', background: 'rgba(78,154,110,0.15)', cursor: 'default', color: 'var(--ink)' }
+    if (idx === selected)        return { ...base, borderColor: 'var(--red)',  background: 'rgba(179,56,44,0.12)',  cursor: 'default', color: 'var(--ink)' }
+    return { ...base, borderColor: 'var(--line)', background: 'var(--surface-2)', cursor: 'default', opacity: 0.5, color: 'var(--ink)' }
+  }
+
+  const badgeColor = (idx) => {
+    if (selected === null) return 'var(--surface)'
+    if (idx === payload.correct) return 'var(--good)'
+    if (idx === selected) return 'var(--red)'
+    return 'var(--surface)'
   }
 
   return (
-    <div style={{ border: '2px solid #e5e7eb', borderRadius: 12, padding: 24, marginBottom: 16 }}>
+    <div style={{ border: '2px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 16, background: 'var(--surface)' }}>
 
       {lessonTitle && (
-        <div style={{ fontSize: 12, color: '#a5b4fc', marginBottom: 10, fontWeight: 500 }}>
+        <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
           📚 {lessonTitle}
         </div>
       )}
 
-      {/* Немецкое слово + картинка */}
-      <div style={{ backgroundColor: '#f8fafc', borderRadius: 10, padding: '18px 20px', marginBottom: 18, textAlign: 'center' }}>
+      <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '18px 20px', marginBottom: 18, textAlign: 'center' }}>
         <WordImage imageUrl={imageUrl} size={240} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-          <span style={{ fontSize: 32, fontWeight: 700, color: '#1e1b4b' }}>{germanWord}</span>
+          <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}>{germanWord}</span>
           <SpeakButton text={germanWord} size={24} />
         </div>
-        <p style={{ fontSize: 14, color: '#9ca3af', margin: '8px 0 0' }}>Выбери правильный перевод:</p>
+        <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0' }}>Выбери правильный перевод:</p>
       </div>
 
-      {/* Варианты уже на русском */}
       {payload.options.map((opt, idx) => (
         <button key={idx} style={getStyle(idx)} onClick={() => handleSelect(idx)}>
           <span style={{
             width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-            backgroundColor: selected === null ? '#e5e7eb'
-              : idx === payload.correct ? '#10b981'
-              : idx === selected ? '#ef4444' : '#e5e7eb',
-            color: selected !== null && (idx === payload.correct || idx === selected) ? '#fff' : '#6b7280',
+            background: badgeColor(idx),
+            color: selected !== null && (idx === payload.correct || idx === selected) ? '#fff' : 'var(--ink-soft)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 13, fontWeight: 700,
+            fontSize: 13, fontWeight: 700, border: '1px solid var(--line)',
           }}>
             {String.fromCharCode(65 + idx)}
           </span>
           {opt}
           {selected !== null && idx === payload.correct && (
-            <span style={{ marginLeft: 'auto', color: '#10b981', fontWeight: 700 }}>✓</span>
+            <span style={{ marginLeft: 'auto', color: 'var(--good)', fontWeight: 700 }}>✓</span>
           )}
         </button>
       ))}
 
       {selected !== null && (
-        <p style={{ marginTop: 10, fontSize: 15, color: selected === payload.correct ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+        <p style={{ marginTop: 10, fontSize: 15, fontWeight: 700,
+          color: selected === payload.correct ? 'var(--good)' : 'var(--red)' }}>
           {selected === payload.correct
             ? `✓ ${t.exercise.correct}`
             : `✗ ${t.exercise.wrong} — ${payload.options[payload.correct]}`}

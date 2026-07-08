@@ -4,8 +4,12 @@ import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
-const STATUS_COLORS = { new: '#6b7280', learning: '#f59e0b', known: '#10b981' }
-const STATUS_BG     = { new: '#fff', learning: '#fffdf0', known: '#f0fdf4' }
+const STATUS_COLORS = { new: 'var(--ink-soft)', learning: '#B07D1B', known: 'var(--good)' }
+const STATUS_BG     = {
+  new:      'var(--surface)',
+  learning: 'rgba(176,125,27,0.08)',
+  known:    'rgba(78,154,110,0.08)',
+}
 
 export default function Vocabulary() {
   const [words, setWords]         = useState([])
@@ -17,9 +21,7 @@ export default function Vocabulary() {
   const { t } = useI18nStore()
 
   const sendToReader = async () => {
-    const sentences = filtered
-      .map(w => w.example_sentence)
-      .filter(Boolean)
+    const sentences = filtered.map(w => w.example_sentence).filter(Boolean)
     if (!sentences.length) { alert('Нет примеров предложений у отфильтрованных слов'); return }
     const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : 'Словарь') + ' — примеры'
     setSending(true)
@@ -55,10 +57,7 @@ export default function Vocabulary() {
     known:    t.vocabulary.statusKnown,
   }
 
-  // Все уроки для фильтра
   const lessonTitles = [...new Set(words.map(w => w.lesson_title || 'Без урока'))]
-
-  // Поиск + фильтр по уроку
   const q = search.toLowerCase().trim()
   const filtered = words.filter(w => {
     if (lessonFilter && (w.lesson_title || 'Без урока') !== lessonFilter) return false
@@ -72,33 +71,29 @@ export default function Vocabulary() {
     return acc
   }, {})
 
-  if (loading) return <p>{t.vocabulary.loading}</p>
+  if (loading) return <p style={{ padding: 20, color: 'var(--ink-soft)' }}>{t.vocabulary.loading}</p>
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
-        <h1 style={{ margin: 0 }}>{t.vocabulary.title}</h1>
+    <div style={{ padding: '12px 14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
+        <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 24 }}>{t.vocabulary.title}</h1>
         <button onClick={sendToReader} disabled={sending}
-          style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #c7d2fe', backgroundColor: '#fff', color: '#4f46e5', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+          style={{ padding: '6px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--accent)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           {sending ? '...' : '📖 В Читалку'}
         </button>
       </div>
 
-      {/* Живой поиск */}
+      {/* Поиск */}
       <div style={{ position: 'relative', marginBottom: 12 }}>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Поиск по немецкому или переводу..."
-          style={{
-            width: '100%', padding: '10px 36px 10px 14px', fontSize: 15,
-            border: '1px solid #d1d5db', borderRadius: 10, boxSizing: 'border-box',
-            outline: 'none',
-          }}
+          style={{ width: '100%', paddingRight: 36, boxSizing: 'border-box' }}
         />
         {search
-          ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9ca3af' }}>✕</button>
-          : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: '#d1d5db' }}>🔍</span>
+          ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--ink-soft)' }}>✕</button>
+          : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: 'var(--ink-soft)' }}>🔍</span>
         }
       </div>
 
@@ -107,9 +102,10 @@ export default function Vocabulary() {
         {['', 'new', 'learning', 'known'].map(s => (
           <button key={s} onClick={() => setStatusFilter(s)}
             style={{
-              padding: '6px 16px', borderRadius: 20, border: '1px solid #d1d5db',
-              backgroundColor: statusFilter === s ? '#4f46e5' : '#fff',
-              color: statusFilter === s ? '#fff' : '#374151',
+              padding: '6px 16px', borderRadius: 20,
+              border: `1px solid ${statusFilter === s ? 'var(--accent)' : 'var(--line)'}`,
+              background: statusFilter === s ? 'var(--accent)' : 'var(--surface-2)',
+              color: statusFilter === s ? 'var(--accent-ink)' : 'var(--ink)',
               cursor: 'pointer', fontSize: 14, fontWeight: statusFilter === s ? 600 : 400,
             }}>
             {filterLabels[s]}
@@ -122,9 +118,10 @@ export default function Vocabulary() {
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
           <button onClick={() => setLessonFilter('')}
             style={{
-              padding: '4px 12px', borderRadius: 16, border: '1px solid #d1d5db', fontSize: 13,
-              backgroundColor: lessonFilter === '' ? '#e0e7ff' : '#f9fafb',
-              color: lessonFilter === '' ? '#4338ca' : '#6b7280',
+              padding: '4px 12px', borderRadius: 16, fontSize: 13,
+              border: `1px solid ${lessonFilter === '' ? 'var(--accent)' : 'var(--line)'}`,
+              background: lessonFilter === '' ? 'var(--accent-soft)' : 'var(--surface-2)',
+              color: lessonFilter === '' ? 'var(--accent)' : 'var(--ink-soft)',
               fontWeight: lessonFilter === '' ? 700 : 400, cursor: 'pointer',
             }}>
             Все уроки
@@ -132,9 +129,10 @@ export default function Vocabulary() {
           {lessonTitles.map(lt => (
             <button key={lt} onClick={() => setLessonFilter(lt)}
               style={{
-                padding: '4px 12px', borderRadius: 16, border: '1px solid #d1d5db', fontSize: 13,
-                backgroundColor: lessonFilter === lt ? '#e0e7ff' : '#f9fafb',
-                color: lessonFilter === lt ? '#4338ca' : '#6b7280',
+                padding: '4px 12px', borderRadius: 16, fontSize: 13,
+                border: `1px solid ${lessonFilter === lt ? 'var(--accent)' : 'var(--line)'}`,
+                background: lessonFilter === lt ? 'var(--accent-soft)' : 'var(--surface-2)',
+                color: lessonFilter === lt ? 'var(--accent)' : 'var(--ink-soft)',
                 fontWeight: lessonFilter === lt ? 700 : 400, cursor: 'pointer',
               }}>
               📚 {lt}
@@ -143,16 +141,15 @@ export default function Vocabulary() {
         </div>
       )}
 
-      <p style={{ color: '#6b7280', marginBottom: 16, fontSize: 14 }}>{t.vocabulary.wordsCount(filtered.length)}</p>
+      <p style={{ color: 'var(--ink-soft)', marginBottom: 16, fontSize: 14 }}>{t.vocabulary.wordsCount(filtered.length)}</p>
 
-      {/* Сгруппировано по урокам */}
       {Object.entries(grouped).map(([lessonTitle, lessonWords]) => (
         <div key={lessonTitle} style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '2px solid #e5e7eb' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: `2px solid var(--line)` }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               📚 {lessonTitle}
             </span>
-            <span style={{ fontSize: 12, color: '#9ca3af' }}>{lessonWords.length} сл.</span>
+            <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{lessonWords.length} сл.</span>
           </div>
 
           {lessonWords.map(word => (
@@ -162,7 +159,7 @@ export default function Vocabulary() {
       ))}
 
       {words.length === 0 && (
-        <div style={{ textAlign: 'center', marginTop: 60, color: '#9ca3af' }}>
+        <div style={{ textAlign: 'center', marginTop: 60, color: 'var(--ink-soft)' }}>
           <p style={{ fontSize: 40 }}>📚</p>
           <p>Слова появятся после обработки урока</p>
         </div>
@@ -188,14 +185,13 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'flex-start', padding: '10px 10px',
-      borderBottom: '1px solid #f3f4f6', gap: 10, borderRadius: 8,
-      marginBottom: 3, backgroundColor: STATUS_BG[word.status] ?? '#fff',
+      display: 'flex', alignItems: 'flex-start', padding: '10px',
+      borderBottom: '1px solid var(--line)', gap: 10, borderRadius: 10,
+      marginBottom: 3, background: STATUS_BG[word.status] ?? 'var(--surface)',
     }}>
-      {/* Миниатюра картинки */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
         {imageUrl ? (
-          <div style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', backgroundColor: '#f3f4f6', flexShrink: 0 }}>
+          <div style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
             <img src={imageUrl} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         ) : (
@@ -203,7 +199,7 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
         )}
         {user?.role === 'owner' && (
           <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#9ca3af', padding: 0, lineHeight: 1 }}>
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
             {refreshing ? '⏳' : '🔄'}
           </button>
         )}
@@ -211,19 +207,19 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-          <span style={{ fontWeight: 700, fontSize: 17 }}>{word.word_de}</span>
+          <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--ink)' }}>{word.word_de}</span>
           <SpeakButton text={word.word_de} />
-          <span style={{ color: '#9ca3af' }}>—</span>
-          <span style={{ color: '#374151', fontSize: 15 }}>{word.translation_ru}</span>
+          <span style={{ color: 'var(--ink-soft)' }}>—</span>
+          <span style={{ color: 'var(--ink)', fontSize: 15 }}>{word.translation_ru}</span>
         </div>
         {word.example_sentence && (
           <div style={{ marginTop: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 13, color: '#6b7280', fontStyle: 'italic' }}>{word.example_sentence}</span>
+              <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{word.example_sentence}</span>
               <SpeakButton text={word.example_sentence} size={13} />
             </div>
             {word.example_sentence_ru && (
-              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2, paddingLeft: 2 }}>
+              <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2, paddingLeft: 2 }}>
                 {word.example_sentence_ru}
               </div>
             )}
@@ -235,10 +231,11 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
         value={word.status}
         onChange={e => onStatusChange(word.id, e.target.value)}
         style={{
-          padding: '4px 8px', borderRadius: 6,
+          padding: '4px 8px', borderRadius: 8, fontSize: 12,
           border: `1px solid ${STATUS_COLORS[word.status]}`,
-          color: STATUS_COLORS[word.status], fontWeight: 700, fontSize: 12,
-          cursor: 'pointer', backgroundColor: '#fff', flexShrink: 0,
+          color: STATUS_COLORS[word.status], fontWeight: 700,
+          cursor: 'pointer', flexShrink: 0,
+          background: 'var(--surface-2)',
         }}>
         <option value="new">{statusLabels.new}</option>
         <option value="learning">{statusLabels.learning}</option>
