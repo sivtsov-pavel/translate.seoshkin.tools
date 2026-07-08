@@ -62,7 +62,15 @@ export default function Dashboard() {
 
   if (total === 0) {
     return (
-      <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+      <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+        {lessonsTotal > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <ProgressRing pct={lessonsPct} done={lessonsDone} total={lessonsTotal - lessonsDone} />
+              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.lessons.title}</span>
+            </div>
+          </div>
+        )}
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
         <div style={{ fontFamily: 'Georgia,serif', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
           {t.dashboard.allDone}

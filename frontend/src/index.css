@@ -68,7 +68,7 @@ a { color: var(--accent); text-decoration: none; }
 
 /* Основной контент */
 .main-content {
-  padding-top: 59px;
+  padding-top: 80px;
   padding-left: 30px;
   padding-right: 30px;
   min-height: 100vh;
