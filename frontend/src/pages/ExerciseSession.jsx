@@ -56,7 +56,7 @@ export default function ExerciseSession() {
   return (
     <div>
       <ProgressBar current={current} total={exercises.length} />
-      <div style={{ marginBottom: 10, color: '#9ca3af', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div style={{ marginBottom: 10, color: 'var(--ink-soft)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill }[ex.type]}
       </div>
       {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} />}

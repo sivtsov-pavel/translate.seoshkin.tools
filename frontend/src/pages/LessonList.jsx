@@ -4,7 +4,7 @@ import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 
-const STATUS_COLORS = { pending: '#9ca3af', processing: '#f59e0b', done: '#10b981', error: '#ef4444' }
+const STATUS_COLORS = { pending: 'var(--ink-soft)', processing: '#f59e0b', done: 'var(--good)', error: 'var(--red)' }
 const STATUS_ICONS  = { pending: '○', processing: '⏳', done: '✓', error: '✗' }
 
 function EditForm({ lesson, onSave, onCancel }) {
@@ -42,42 +42,29 @@ function EditForm({ lesson, onSave, onCancel }) {
   }
 
   return (
-    <div style={{ marginTop: 12, padding: '12px 14px', backgroundColor: '#f8fafc', borderRadius: 8, border: '1px solid #e0e7ff' }}>
+    <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--line)' }}>
       <div style={{ marginBottom: 8 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 4 }}>Название урока</label>
-        <input
-          autoFocus
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="Например: Lektion 1"
-          style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' }}
-        />
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Название урока</label>
+        <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="Например: Lektion 1" style={{ width: '100%', boxSizing: 'border-box' }} />
       </div>
       <div style={{ marginBottom: 10 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 4 }}>Описание / заметки для ассистента</label>
-        <textarea
-          value={desc}
-          onChange={e => setDesc(e.target.value)}
-          placeholder="Тема урока, особенности группы, задачи..."
-          rows={3}
-          style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
-        />
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Описание / заметки для ассистента</label>
+        <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Тема урока, особенности группы, задачи..." rows={3}
+          style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={save} disabled={saving}
-          style={{ padding: '7px 18px', backgroundColor: '#4f46e5', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+          style={{ padding: '7px 18px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
           {saving ? '...' : '✓ Сохранить'}
         </button>
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          style={{ padding: '7px 14px', backgroundColor: '#fff', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+        <button onClick={() => fileRef.current?.click()} disabled={uploading}
+          style={{ padding: '7px 14px', background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
           {uploading ? '⏳ Загружаю...' : '📎 Добавить фото/аудио'}
         </button>
         <input ref={fileRef} type="file" multiple accept="image/*,audio/*" style={{ display: 'none' }}
           onChange={e => uploadMedia([...e.target.files])} />
         <button onClick={onCancel}
-          style={{ padding: '7px 12px', backgroundColor: '#f3f4f6', color: '#6b7280', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
+          style={{ padding: '7px 12px', background: 'var(--surface-2)', color: 'var(--ink-soft)', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
           Отмена
         </button>
       </div>
@@ -103,11 +90,7 @@ export default function LessonList() {
     try {
       const res = await api.post('/admin/fetch-images', {})
       alert(`Готово! Загружено: ${res.updated} картинок, не найдено: ${res.failed}`)
-    } catch (e) {
-      alert('Ошибка: ' + e.message)
-    } finally {
-      setFetchingImages(false)
-    }
+    } catch (e) { alert('Ошибка: ' + e.message) } finally { setFetchingImages(false) }
   }
 
   const handleEnrichWords = async () => {
@@ -115,11 +98,7 @@ export default function LessonList() {
     try {
       const res = await api.post('/admin/enrich-words', {})
       alert(`Дополнено слов: ${res.updated} из ${res.total}`)
-    } catch (e) {
-      alert('Ошибка: ' + e.message)
-    } finally {
-      setEnriching(false)
-    }
+    } catch (e) { alert('Ошибка: ' + e.message) } finally { setEnriching(false) }
   }
 
   const handleTranslateSentences = async () => {
@@ -127,11 +106,7 @@ export default function LessonList() {
     try {
       const res = await api.post('/admin/translate-sentences', {})
       alert(`Переведено предложений: ${res.updated}`)
-    } catch (e) {
-      alert('Ошибка: ' + e.message)
-    } finally {
-      setTranslatingSentences(false)
-    }
+    } catch (e) { alert('Ошибка: ' + e.message) } finally { setTranslatingSentences(false) }
   }
 
   const handleAddLetterFill = async (id) => {
@@ -139,11 +114,7 @@ export default function LessonList() {
     try {
       const res = await api.post(`/lessons/${id}/add-letter-fill`, {})
       alert(`Добавлено ${res.added} упражнений "Добавь букву"!`)
-    } catch (e) {
-      alert('Ошибка: ' + e.message)
-    } finally {
-      setAddingLetters(null)
-    }
+    } catch (e) { alert('Ошибка: ' + e.message) } finally { setAddingLetters(null) }
   }
 
   useEffect(() => {
@@ -156,11 +127,7 @@ export default function LessonList() {
     try {
       await api.delete(`/lessons/${id}`)
       setLessons(prev => prev.filter(l => l.id !== id))
-    } catch (e) {
-      alert(e.message)
-    } finally {
-      setDeleting(null)
-    }
+    } catch (e) { alert(e.message) } finally { setDeleting(null) }
   }
 
   const handleSaveEdit = (updated) => {
@@ -176,41 +143,21 @@ export default function LessonList() {
         <h1 style={{ margin: 0 }}>{t.lessons.title}</h1>
         {user?.role === 'owner' && (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={handleFetchImages}
-              disabled={fetchingImages}
-              style={{
-                padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
-                backgroundColor: fetchingImages ? '#f3f4f6' : '#fff',
-                color: '#4f46e5', fontWeight: 600, fontSize: 13, cursor: fetchingImages ? 'not-allowed' : 'pointer',
-              }}>
+            <button onClick={handleFetchImages} disabled={fetchingImages} style={adminBtn('var(--accent)')}>
               {fetchingImages ? '⏳ Загружаю картинки...' : '🖼️ Загрузить картинки'}
             </button>
-            <button
-              onClick={handleTranslateSentences}
-              disabled={translatingSentences}
-              style={{
-                padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
-                backgroundColor: translatingSentences ? '#f3f4f6' : '#fff',
-                color: '#059669', fontWeight: 600, fontSize: 13, cursor: translatingSentences ? 'not-allowed' : 'pointer',
-              }}>
+            <button onClick={handleTranslateSentences} disabled={translatingSentences} style={adminBtn('var(--good)')}>
               {translatingSentences ? '⏳ Перевожу...' : '🌐 Перевести предложения'}
             </button>
-            <button
-              onClick={handleEnrichWords}
-              disabled={enriching}
-              style={{
-                padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
-                backgroundColor: enriching ? '#f3f4f6' : '#fff',
-                color: '#d97706', fontWeight: 600, fontSize: 13, cursor: enriching ? 'not-allowed' : 'pointer',
-              }}>
+            <button onClick={handleEnrichWords} disabled={enriching} style={adminBtn('#d97706')}>
               {enriching ? '⏳ Дополняю...' : '🤖 Дополнить словарь'}
             </button>
           </div>
         )}
       </div>
+
       {lessons.length === 0 ? (
-        <p style={{ color: '#6b7280' }}>{t.lessons.empty}</p>
+        <p style={{ color: 'var(--ink-soft)' }}>{t.lessons.empty}</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {lessons.map(lesson => {
@@ -218,18 +165,16 @@ export default function LessonList() {
             const dateStr = new Date(lesson.date).toLocaleDateString()
             const isEditing = editingId === lesson.id
             return (
-              <div key={lesson.id} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 18px', backgroundColor: '#fff' }}>
+              <div key={lesson.id} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: '14px 18px', background: 'var(--surface)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    {/* Короткий заголовок */}
                     <div style={{ fontWeight: 600, fontSize: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {lesson.title || `${t.lessons.newLesson} #${lesson.id}`}
                     </div>
-                    {/* Дата + описание */}
-                    <div style={{ color: '#6b7280', fontSize: 13, marginTop: 3 }}>
+                    <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 3 }}>
                       {dateStr} · {t.lessons.mediaCount(lesson.media_count)}
                       {lesson.description && (
-                        <span style={{ marginLeft: 8, color: '#9ca3af' }}>— {lesson.description}</span>
+                        <span style={{ marginLeft: 8, color: 'var(--ink-soft)' }}>— {lesson.description}</span>
                       )}
                       {lesson.progress && status !== 'done' && (
                         <span style={{ marginLeft: 8, color: STATUS_COLORS[status] }}>{lesson.progress}</span>
@@ -238,46 +183,32 @@ export default function LessonList() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    {/* Статус */}
                     <span style={{ color: STATUS_COLORS[status], fontWeight: 600, fontSize: 13 }}>
                       {STATUS_ICONS[status]} {t.lessons.status[status]}
                     </span>
 
-                    {/* Кнопка старта для студентов */}
                     {user?.role !== 'owner' && status === 'done' && (
-                      <button
-                        onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
-                        style={{ padding: '5px 14px', borderRadius: 6, border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      <button onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
+                        style={{ padding: '5px 14px', borderRadius: 6, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                         ▶ Начать
                       </button>
                     )}
 
                     {user?.role === 'owner' && (
                       <>
-                        {/* Редактировать */}
-                        <button
-                          onClick={() => setEditingId(isEditing ? null : lesson.id)}
-                          title="Редактировать урок"
-                          style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #e5e7eb', backgroundColor: isEditing ? '#eef2ff' : '#fff', color: isEditing ? '#4f46e5' : '#6b7280', fontSize: 13, cursor: 'pointer' }}>
+                        <button onClick={() => setEditingId(isEditing ? null : lesson.id)} title="Редактировать урок"
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: isEditing ? 'var(--accent-soft)' : 'var(--surface)', color: isEditing ? 'var(--accent)' : 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
                           ✏️
                         </button>
-
-                        {/* Добавить letter_fill */}
                         {status === 'done' && (
-                          <button
-                            onClick={() => handleAddLetterFill(lesson.id)}
-                            disabled={addingLetters === lesson.id}
+                          <button onClick={() => handleAddLetterFill(lesson.id)} disabled={addingLetters === lesson.id}
                             title="Добавить упражнения «Добавь букву»"
-                            style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #e5e7eb', backgroundColor: '#fff', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>
+                            style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
                             {addingLetters === lesson.id ? '⏳' : '🔤'}
                           </button>
                         )}
-
-                        {/* Удалить */}
-                        <button
-                          onClick={() => handleDelete(lesson.id)}
-                          disabled={deleting === lesson.id}
-                          style={{ padding: '4px 10px', fontSize: 13, color: '#dc2626', backgroundColor: '#fff', border: '1px solid #fca5a5', borderRadius: 6, cursor: 'pointer' }}>
+                        <button onClick={() => handleDelete(lesson.id)} disabled={deleting === lesson.id}
+                          style={{ padding: '4px 10px', fontSize: 13, color: 'var(--red)', background: 'var(--surface)', border: '1px solid rgba(179,56,44,0.4)', borderRadius: 6, cursor: 'pointer' }}>
                           {deleting === lesson.id ? '...' : '✕'}
                         </button>
                       </>
@@ -285,13 +216,8 @@ export default function LessonList() {
                   </div>
                 </div>
 
-                {/* Форма редактирования */}
                 {isEditing && (
-                  <EditForm
-                    lesson={lesson}
-                    onSave={handleSaveEdit}
-                    onCancel={() => setEditingId(null)}
-                  />
+                  <EditForm lesson={lesson} onSave={handleSaveEdit} onCancel={() => setEditingId(null)} />
                 )}
               </div>
             )
@@ -301,3 +227,8 @@ export default function LessonList() {
     </div>
   )
 }
+
+const adminBtn = (color) => ({
+  padding: '8px 16px', borderRadius: 8, border: '1px solid var(--line)',
+  background: 'var(--surface)', color, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+})
