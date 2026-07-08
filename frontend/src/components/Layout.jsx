@@ -10,6 +10,7 @@ export default function Layout({ children }) {
   const { t } = useI18nStore()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const isRtl = t.dir === 'rtl'
 
   const handleLogout = () => {
     logout()
@@ -94,7 +95,7 @@ export default function Layout({ children }) {
         }
       `}</style>
 
-      <main style={{ maxWidth: 800, margin: '20px auto', padding: '0 16px' }}>
+      <main style={{ maxWidth: 800, margin: '20px auto', padding: '0 16px' }} dir={isRtl ? 'rtl' : undefined}>
         {children}
       </main>
     </div>

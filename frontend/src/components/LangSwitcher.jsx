@@ -1,40 +1,40 @@
 import { useI18nStore } from '../store/i18n.js'
 
 const LANGS = [
-  { code: 'ru', label: 'RU' },
-  { code: 'de', label: 'DE' },
-  { code: 'en', label: 'EN' },
-  { code: 'uk', label: 'UK' },
+  { code: 'ru', label: '🇷🇺 RU' },
+  { code: 'uk', label: '🇺🇦 UK' },
+  { code: 'bg', label: '🇧🇬 BG' },
+  { code: 'tr', label: '🇹🇷 TR' },
+  { code: 'ar', label: '🇸🇦 AR' },
+  { code: 'es', label: '🇪🇸 ES' },
+  { code: 'fr', label: '🇫🇷 FR' },
+  { code: 'de', label: '🇩🇪 DE' },
+  { code: 'en', label: '🇬🇧 EN' },
 ]
 
-// dark=true — белые кнопки (для тёмного навбара), dark=false — тёмные (для светлого фона)
+// dark=true — для тёмного навбара, dark=false — для светлого фона
 export default function LangSwitcher({ dark = false }) {
   const { lang, setLang } = useI18nStore()
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-      {LANGS.map((l, i) => (
-        <span key={l.code} style={{ display: 'flex', alignItems: 'center' }}>
-          {i > 0 && <span style={{ color: dark ? '#a5b4fc' : '#d1d5db', margin: '0 2px', fontSize: 12 }}>|</span>}
-          <button
-            onClick={() => setLang(l.code)}
-            title={l.code.toUpperCase()}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 13,
-              padding: '2px 4px',
-              fontWeight: lang === l.code ? 700 : 400,
-              color: dark
-                ? (lang === l.code ? '#fff' : '#a5b4fc')
-                : (lang === l.code ? '#4f46e5' : '#6b7280'),
-              textDecoration: lang === l.code ? 'underline' : 'none',
-            }}>
-            {l.label}
-          </button>
-        </span>
+    <select
+      value={lang}
+      onChange={e => setLang(e.target.value)}
+      style={{
+        background: dark ? 'rgba(255,255,255,0.15)' : '#f9fafb',
+        color: dark ? '#fff' : '#374151',
+        border: dark ? '1px solid rgba(255,255,255,0.3)' : '1px solid #d1d5db',
+        borderRadius: 6,
+        padding: '3px 6px',
+        fontSize: 13,
+        cursor: 'pointer',
+        outline: 'none',
+      }}>
+      {LANGS.map(l => (
+        <option key={l.code} value={l.code} style={{ color: '#374151', background: '#fff' }}>
+          {l.label}
+        </option>
       ))}
-    </div>
+    </select>
   )
 }

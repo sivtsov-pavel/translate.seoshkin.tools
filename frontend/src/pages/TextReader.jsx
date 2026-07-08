@@ -19,6 +19,10 @@ export default function TextReader() {
   const [showSave, setShowSave]   = useState(false)
   const [saving, setSaving]       = useState(false)
 
+  // Добавление своего предложения
+  const [customSentence, setCustomSentence] = useState('')
+  const [showCustom, setShowCustom]         = useState(false)
+
   const idxRef    = useRef(0)
   const cancelRef = useRef(false)
 
@@ -88,6 +92,16 @@ export default function TextReader() {
       alert('Ошибка сохранения: ' + e.message)
     }
     setSaving(false)
+  }
+
+  const addCustomSentence = () => {
+    const s = customSentence.trim()
+    if (!s) return
+    setText(prev => prev ? prev + '\n' + s : s)
+    setSentences([])
+    setActive(-1)
+    setCustomSentence('')
+    setShowCustom(false)
   }
 
   const handleLoad = (set) => {
@@ -213,6 +227,35 @@ export default function TextReader() {
               {saving ? '...' : '✓'}
             </button>
             <button onClick={() => setShowSave(false)}
+              style={{ padding: '8px 12px', backgroundColor: '#f3f4f6', color: '#6b7280', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
+              ✕
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Добавить своё предложение */}
+      <div style={{ marginBottom: 16 }}>
+        {!showCustom ? (
+          <button onClick={() => setShowCustom(true)}
+            style={{ padding: '6px 14px', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+            ✏️ Добавить предложение
+          </button>
+        ) : (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              autoFocus
+              value={customSentence}
+              onChange={e => setCustomSentence(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addCustomSentence()}
+              placeholder="Напишите предложение на немецком..."
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 14, flex: 1, minWidth: 220 }}
+            />
+            <button onClick={addCustomSentence} disabled={!customSentence.trim()}
+              style={{ padding: '8px 16px', backgroundColor: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
+              + Добавить
+            </button>
+            <button onClick={() => { setShowCustom(false); setCustomSentence('') }}
               style={{ padding: '8px 12px', backgroundColor: '#f3f4f6', color: '#6b7280', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
               ✕
             </button>
