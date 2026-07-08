@@ -71,10 +71,11 @@ export async function processLesson(lessonId, ownerId) {
       )
     }
 
-    // 5. Генерируем упражнения
-    await setProgress(lessonId, `Создаю упражнения (найдено ${consolidated.words.length} слов)...`)
+    // 5. Генерируем упражнения батчами по 15 слов
+    const totalWords = consolidated.words.length
+    await setProgress(lessonId, `Создаю упражнения для ${totalWords} слов...`)
     let exercises = []
-    if (consolidated.words.length > 0) {
+    if (totalWords > 0) {
       exercises = await generateExercises(consolidated.words, consolidated.grammar_points)
     }
 
