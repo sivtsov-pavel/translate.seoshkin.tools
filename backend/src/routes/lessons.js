@@ -1,25 +1,27 @@
 import { db } from '../db/index.js'
 
 export async function lessonsRoutes(fastify) {
-  // Создание урока
+  // Создание урока (опционально с привязкой к курсу)
   fastify.post('/api/lessons', {
     preHandler: [fastify.authenticate],
     schema: {
       body: {
         type: 'object',
         properties: {
-          title: { type: 'string' },
-          date:  { type: 'string', format: 'date' },
+          title:         { type: 'string' },
+          date:          { type: 'string', format: 'date' },
+          course_id:     { type: ['integer', 'null'] },
+          lesson_number: { type: ['integer', 'null'] },
         },
       },
     },
   }, async (request, reply) => {
-    const { title, date } = request.body
+    const { title, date, course_id, lesson_number } = request.body
     const ownerId = request.user.id
 
     const { rows } = await db.query(
-      'INSERT INTO lessons (owner_id, title, date) VALUES ($1, $2, $3) RETURNING *',
-      [ownerId, title || null, date || new Date().toISOString().slice(0, 10)]
+      'INSERT INTO lessons (owner_id, title, date, course_id, lesson_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [ownerId, title || null, date || new Date().toISOString().slice(0, 10), course_id || null, lesson_number || null]
     )
     return reply.status(201).send(rows[0])
   })

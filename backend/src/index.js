@@ -9,6 +9,7 @@ import { mediaRoutes } from './routes/media.js'
 import { processRoutes } from './routes/process.js'
 import { exercisesRoutes } from './routes/exercises.js'
 import { studentsRoutes } from './routes/students.js'
+import { coursesRoutes } from './routes/courses.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
 // Регистрация плагинов — выделено для переиспользования в тестах
@@ -24,6 +25,7 @@ async function registerRoutes(app) {
   await app.register(processRoutes)
   await app.register(exercisesRoutes)
   await app.register(studentsRoutes)
+  await app.register(coursesRoutes)
   await app.register(mediaRoutes)
 }
 

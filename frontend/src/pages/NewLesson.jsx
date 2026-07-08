@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 
@@ -11,6 +11,8 @@ export default function NewLesson() {
   const [progress, setProgress] = useState('')
   const [error, setError]   = useState('')
   const navigate  = useNavigate()
+  const [searchParams] = useSearchParams()
+  const courseId  = searchParams.get('course_id')
   const { t }     = useI18nStore()
   const pollRef   = useRef(null)
 
@@ -49,7 +51,7 @@ export default function NewLesson() {
           clearInterval(pollRef.current)
           setStatus('done')
           photos.forEach(p => URL.revokeObjectURL(p.preview))
-          setTimeout(() => navigate('/'), 2500)
+          setTimeout(() => navigate(courseId ? `/courses/${courseId}` : '/'), 2500)
         } else if (res.status === 'error') {
           clearInterval(pollRef.current)
           setError(res.progress || 'Ошибка обработки')
@@ -71,6 +73,7 @@ export default function NewLesson() {
       const lesson = await api.post('/lessons', {
         title: title || `${t.lessons.newLesson} ${new Date().toLocaleDateString()}`,
         date: new Date().toISOString().slice(0, 10),
+        course_id: courseId ? parseInt(courseId) : null,
       })
 
       setStatus('uploading')

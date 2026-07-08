@@ -27,6 +27,7 @@ export default function Layout({ children }) {
           {/* Десктопная навигация */}
           <div className="nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 16, marginLeft: 24, flex: 1 }}>
             <Link to="/"           style={navLink}>{t.nav.today}</Link>
+            <Link to="/courses"    style={navLink}>{t.nav.courses}</Link>
             <Link to="/lessons"    style={navLink}>{t.nav.lessons}</Link>
             <Link to="/vocabulary" style={navLink}>{t.nav.vocabulary}</Link>
             {user?.role === 'owner' && (
@@ -59,6 +60,7 @@ export default function Layout({ children }) {
           <div className="nav-mobile-menu" style={{ padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.15)' }}
                onClick={() => setMenuOpen(false)}>
             <MobileLink to="/">{t.nav.today}</MobileLink>
+            <MobileLink to="/courses">{t.nav.courses}</MobileLink>
             <MobileLink to="/lessons">{t.nav.lessons}</MobileLink>
             <MobileLink to="/vocabulary">{t.nav.vocabulary}</MobileLink>
             {user?.role === 'owner' && <MobileLink to="/students">{t.nav.students}</MobileLink>}

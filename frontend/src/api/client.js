@@ -26,6 +26,7 @@ async function request(method, url, body) {
     throw new Error(err.error || 'Ошибка сервера')
   }
 
+  if (res.status === 204) return null
   return res.json()
 }
 
@@ -44,7 +45,8 @@ export async function uploadFiles(url, formData) {
 }
 
 export const api = {
-  get:   (url)       => request('GET', url),
-  post:  (url, body) => request('POST', url, body),
-  patch: (url, body) => request('PATCH', url, body),
+  get:    (url)       => request('GET', url),
+  post:   (url, body) => request('POST', url, body),
+  patch:  (url, body) => request('PATCH', url, body),
+  delete: (url)       => request('DELETE', url),
 }

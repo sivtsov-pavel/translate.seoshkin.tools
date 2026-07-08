@@ -8,6 +8,8 @@ import NewLesson from './pages/NewLesson.jsx'
 import ExerciseSession from './pages/ExerciseSession.jsx'
 import Vocabulary from './pages/Vocabulary.jsx'
 import Students from './pages/Students.jsx'
+import CourseList from './pages/CourseList.jsx'
+import CourseView from './pages/CourseView.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
@@ -26,7 +28,9 @@ export default function App() {
         <Route path="/lessons/new" element={<ProtectedRoute><Layout><NewLesson /></Layout></ProtectedRoute>} />
         <Route path="/exercise-session" element={<ProtectedRoute><Layout><ExerciseSession /></Layout></ProtectedRoute>} />
         <Route path="/vocabulary" element={<ProtectedRoute><Layout><Vocabulary /></Layout></ProtectedRoute>} />
-        <Route path="/students"  element={<ProtectedRoute><Layout><Students  /></Layout></ProtectedRoute>} />
+        <Route path="/students"    element={<ProtectedRoute><Layout><Students   /></Layout></ProtectedRoute>} />
+        <Route path="/courses"     element={<ProtectedRoute><Layout><CourseList /></Layout></ProtectedRoute>} />
+        <Route path="/courses/:id" element={<ProtectedRoute><Layout><CourseView /></Layout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )
