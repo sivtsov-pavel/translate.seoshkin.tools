@@ -208,9 +208,9 @@ export default function LessonList() {
             const isEditing = editingId === lesson.id
             return (
               <div key={lesson.id} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: '14px 18px', background: 'var(--surface)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 16 }}>
                       {lesson.title || `${t.lessons.newLesson} #${lesson.id}`}
                     </div>
                     <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 3 }}>
@@ -224,7 +224,7 @@ export default function LessonList() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ color: STATUS_COLORS[status], fontWeight: 600, fontSize: 13 }}>
                       {STATUS_ICONS[status]} {t.lessons.status[status]}
                     </span>
