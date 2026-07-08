@@ -9,10 +9,12 @@ const STATUS_ICON  = { pending: '○', processing: '⏳', done: '✓', error: '�
 
 export default function CourseView() {
   const { id } = useParams()
-  const [data, setData]       = useState(null)   // { course, lessons }
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(false)
+  const [data, setData]           = useState(null)
+  const [loading, setLoading]     = useState(true)
+  const [editing, setEditing]     = useState(false)
   const [editTitle, setEditTitle] = useState('')
+  const [allLessons, setAllLessons] = useState([])
+  const [attachId, setAttachId]   = useState('')
   const { t } = useI18nStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
@@ -21,7 +23,11 @@ export default function CourseView() {
   const load = () =>
     api.get(`/courses/${id}/lessons`).then(setData).finally(() => setLoading(false))
 
-  useEffect(() => { load() }, [id])
+  // Загружаем все уроки чтобы найти без курса (или из другого курса)
+  const loadAllLessons = () =>
+    api.get('/lessons').then(ls => setAllLessons(ls.filter(l => !l.course_id || String(l.course_id) !== id)))
+
+  useEffect(() => { load(); if (user?.role === 'owner') loadAllLessons() }, [id])
 
   const handleRename = async (e) => {
     e.preventDefault()
@@ -73,12 +79,41 @@ export default function CourseView() {
         <p style={{ color: '#6b7280', marginTop: -16, marginBottom: 20 }}>{course.description}</p>
       )}
 
-      {/* Кнопка добавить урок */}
+      {/* Кнопки: новый урок + прикрепить существующий */}
       {user?.role === 'owner' && (
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 20, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <Link to={`/lessons/new?course_id=${id}`} style={{ ...btnPrimary, textDecoration: 'none', display: 'inline-block' }}>
-            {c.addLesson}
+            + {c.addLesson}
           </Link>
+
+          {allLessons.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <select
+                value={attachId}
+                onChange={e => setAttachId(e.target.value)}
+                style={{ padding: '7px 10px', fontSize: 14, border: '1px solid #d1d5db', borderRadius: 6, maxWidth: 280 }}
+              >
+                <option value="">Прикрепить существующий урок...</option>
+                {allLessons.map(l => (
+                  <option key={l.id} value={l.id}>
+                    {l.title || `Урок от ${new Date(l.date).toLocaleDateString()}`}
+                    {l.course_id ? ' (из другого курса)' : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={!attachId}
+                onClick={async () => {
+                  await api.patch(`/lessons/${attachId}/course`, { course_id: parseInt(id), lesson_number: null })
+                  setAttachId('')
+                  await Promise.all([load(), loadAllLessons()])
+                }}
+                style={{ ...btnPrimary, opacity: attachId ? 1 : 0.4, cursor: attachId ? 'pointer' : 'default' }}
+              >
+                Прикрепить
+              </button>
+            </div>
+          )}
         </div>
       )}
 
