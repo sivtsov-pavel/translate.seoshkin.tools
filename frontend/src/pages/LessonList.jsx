@@ -11,6 +11,7 @@ const STATUS_ICONS  = { pending: '○', processing: '⏳', done: '✓', error: '
 function EditForm({ lesson, onSave, onCancel }) {
   const [title, setTitle]       = useState(lesson.title || '')
   const [desc, setDesc]         = useState(lesson.description || '')
+  const [textContent, setTextContent] = useState(lesson.text_content || '')
   const [saving, setSaving]     = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef()
@@ -18,7 +19,11 @@ function EditForm({ lesson, onSave, onCancel }) {
   const save = async () => {
     setSaving(true)
     try {
-      const updated = await api.patch(`/lessons/${lesson.id}`, { title: title.trim() || null, description: desc.trim() || null })
+      const updated = await api.patch(`/lessons/${lesson.id}`, {
+        title: title.trim() || null,
+        description: desc.trim() || null,
+        text_content: textContent.trim() || null,
+      })
       onSave(updated)
     } catch (e) {
       alert('Ошибка: ' + e.message)
@@ -50,8 +55,21 @@ function EditForm({ lesson, onSave, onCancel }) {
       </div>
       <div style={{ marginBottom: 10 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Описание / заметки для ассистента</label>
-        <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Тема урока, особенности группы, задачи..." rows={3}
+        <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Тема урока, особенности группы, задачи..." rows={2}
           style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+      </div>
+      <div style={{ marginBottom: 10 }}>
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>
+          Текст урока / слова
+          <span style={{ fontWeight: 400, marginLeft: 6, color: 'var(--ink-soft)', opacity: 0.7 }}>— Claude разберёт и создаст упражнения</span>
+        </label>
+        <textarea
+          value={textContent}
+          onChange={e => setTextContent(e.target.value)}
+          placeholder={"Вставь слова, предложения или текст урока:\n\nder Hund — собака\ndie Katze — кошка\nsprechen — говорить\n\nИли просто вставь текст на немецком — Claude сам извлечёт слова."}
+          rows={6}
+          style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 13 }}
+        />
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={save} disabled={saving}

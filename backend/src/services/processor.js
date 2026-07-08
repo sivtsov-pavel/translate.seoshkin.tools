@@ -12,6 +12,11 @@ export async function processLesson(lessonId, ownerId) {
   await db.query("UPDATE lessons SET status = 'processing', progress = 'Начинаем...' WHERE id = $1", [lessonId])
 
   try {
+    const { rows: lessonRows } = await db.query(
+      'SELECT text_content FROM lessons WHERE id = $1', [lessonId]
+    )
+    const textContent = lessonRows[0]?.text_content || null
+
     const { rows: mediaFiles } = await db.query(
       'SELECT * FROM lesson_media WHERE lesson_id = $1',
       [lessonId]
@@ -49,8 +54,10 @@ export async function processLesson(lessonId, ownerId) {
 
     // 3. Объединяем в единый конспект
     await setProgress(lessonId, 'Составляю конспект урока...')
-    const consolidated = photoExtractions.length > 0
-      ? await mergeLesson(photoExtractions, transcription)
+    const combinedText = [transcription, textContent].filter(Boolean).join('\n\n') || null
+    const hasContent = photoExtractions.length > 0 || combinedText
+    const consolidated = hasContent
+      ? await mergeLesson(photoExtractions, combinedText)
       : { words: [], grammar_points: [] }
 
     // 4. Сохраняем слова

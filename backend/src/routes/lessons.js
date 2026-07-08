@@ -133,30 +133,32 @@ export async function lessonsRoutes(fastify) {
     return { ...rows[0], media }
   })
 
-  // Редактировать урок (title, description) — любой owner
+  // Редактировать урок (title, description, text_content) — любой owner
   fastify.patch('/api/lessons/:id', {
     preHandler: [fastify.authenticate],
     schema: {
       body: {
         type: 'object',
         properties: {
-          title:       { type: 'string' },
-          description: { type: 'string' },
+          title:        { type: 'string' },
+          description:  { type: 'string' },
+          text_content: { type: 'string' },
         },
       },
     },
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const lessonId = parseInt(request.params.id)
-    const { title, description } = request.body
+    const { title, description, text_content } = request.body
 
     const { rows } = await db.query(
       `UPDATE lessons SET
-         title       = COALESCE($1, title),
-         description = COALESCE($2, description)
-       WHERE id = $3
+         title        = COALESCE($1, title),
+         description  = COALESCE($2, description),
+         text_content = COALESCE($3, text_content)
+       WHERE id = $4
        RETURNING *`,
-      [title ?? null, description ?? null, lessonId]
+      [title ?? null, description ?? null, text_content ?? null, lessonId]
     )
     if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
     return rows[0]
