@@ -4,9 +4,12 @@ import { db } from '../db/index.js'
 import { extractFromPhoto, mergeLesson, generateExercises } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 
-// Главная функция оркестрации обработки урока
+async function setProgress(lessonId, text) {
+  await db.query('UPDATE lessons SET progress = $1 WHERE id = $2', [text, lessonId])
+}
+
 export async function processLesson(lessonId, ownerId) {
-  await db.query("UPDATE lessons SET status = 'processing' WHERE id = $1", [lessonId])
+  await db.query("UPDATE lessons SET status = 'processing', progress = 'Начинаем...' WHERE id = $1", [lessonId])
 
   try {
     const { rows: mediaFiles } = await db.query(
@@ -19,7 +22,10 @@ export async function processLesson(lessonId, ownerId) {
 
     // 1. Обрабатываем каждое фото через Claude vision
     const photoExtractions = []
-    for (const photo of photos) {
+    for (let i = 0; i < photos.length; i++) {
+      await setProgress(lessonId, `Фото ${i + 1} из ${photos.length}...`)
+
+      const photo = photos[i]
       const filepath = join(config.uploadDir, photo.file_path)
       const extraction = await extractFromPhoto(filepath)
       photoExtractions.push(extraction)
@@ -30,20 +36,24 @@ export async function processLesson(lessonId, ownerId) {
       )
     }
 
-    // 2. Транскрипция аудио (берём первый файл для MVP)
+    // 2. Транскрипция аудио
     let transcription = null
-    for (const audio of audios) {
-      const filepath = join(config.uploadDir, audio.file_path)
-      transcription = await transcribeAudio(filepath)
-      await db.query('UPDATE lesson_media SET processed = true WHERE id = $1', [audio.id])
+    if (audios.length > 0) {
+      await setProgress(lessonId, 'Расшифровка аудио...')
+      for (const audio of audios) {
+        const filepath = join(config.uploadDir, audio.file_path)
+        transcription = await transcribeAudio(filepath)
+        await db.query('UPDATE lesson_media SET processed = true WHERE id = $1', [audio.id])
+      }
     }
 
-    // 3. Объединяем в единый конспект через Claude
+    // 3. Объединяем в единый конспект
+    await setProgress(lessonId, 'Составляю конспект урока...')
     const consolidated = photoExtractions.length > 0
       ? await mergeLesson(photoExtractions, transcription)
       : { words: [], grammar_points: [] }
 
-    // 4. Сохраняем слова в БД
+    // 4. Сохраняем слова
     for (const word of consolidated.words) {
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence)
@@ -54,7 +64,6 @@ export async function processLesson(lessonId, ownerId) {
       )
     }
 
-    // Сохраняем грамматику
     for (const gp of consolidated.grammar_points) {
       await db.query(
         'INSERT INTO grammar_points (lesson_id, description, example) VALUES ($1, $2, $3)',
@@ -63,12 +72,12 @@ export async function processLesson(lessonId, ownerId) {
     }
 
     // 5. Генерируем упражнения
+    await setProgress(lessonId, `Создаю упражнения (найдено ${consolidated.words.length} слов)...`)
     let exercises = []
     if (consolidated.words.length > 0) {
       exercises = await generateExercises(consolidated.words, consolidated.grammar_points)
     }
 
-    // Получаем id слов для привязки упражнений
     const { rows: wordRows } = await db.query(
       'SELECT id, word_de FROM words WHERE user_id = $1 AND lesson_id = $2',
       [ownerId, lessonId]
@@ -83,7 +92,10 @@ export async function processLesson(lessonId, ownerId) {
       )
     }
 
-    await db.query("UPDATE lessons SET status = 'done' WHERE id = $1", [lessonId])
+    await db.query(
+      "UPDATE lessons SET status = 'done', progress = $1 WHERE id = $2",
+      [`Готово! Слов: ${consolidated.words.length}, упражнений: ${exercises.length}`, lessonId]
+    )
 
     return {
       lessonId,
@@ -91,7 +103,10 @@ export async function processLesson(lessonId, ownerId) {
       exercisesCount: exercises.length,
     }
   } catch (err) {
-    await db.query("UPDATE lessons SET status = 'error' WHERE id = $1", [lessonId])
+    await db.query(
+      "UPDATE lessons SET status = 'error', progress = $1 WHERE id = $2",
+      [`Ошибка: ${err.message}`, lessonId]
+    )
     throw err
   }
 }
