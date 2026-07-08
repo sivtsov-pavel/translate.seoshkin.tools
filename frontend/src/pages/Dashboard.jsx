@@ -190,12 +190,13 @@ function LessonCard({ lesson, navigate }) {
               background: 'var(--surface-2)', border: '1px solid var(--line)',
               borderRadius: 12, padding: '10px', fontSize: 13,
               color: 'var(--ink)', cursor: 'pointer', textAlign: 'left',
+              minWidth: 0, overflow: 'hidden',
             }}>
-            <span>{TYPE_ICON[type]}</span>
-            <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, borderRadius: 7, padding: '2px 7px', fontSize: 13 }}>
+            <span style={{ flexShrink: 0 }}>{TYPE_ICON[type]}</span>
+            <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, borderRadius: 7, padding: '2px 7px', fontSize: 13, flexShrink: 0 }}>
               {lesson.byType[type]}
             </span>
-            <span style={{ color: 'var(--ink-soft)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ color: 'var(--ink-soft)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
               {typeLabels[type]}
             </span>
           </button>
