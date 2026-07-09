@@ -5,7 +5,9 @@ import { config } from '../config.js'
 const client = new OpenAI({ apiKey: config.openaiApiKey })
 
 function parseJson(text) {
-  const clean = text.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim()
+  let clean = text.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim()
+  // Убираем управляющие символы внутри JSON-строк (частая проблема с GPT)
+  clean = clean.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
   try {
     return JSON.parse(clean)
   } catch (e) {
@@ -207,23 +209,26 @@ ${list}`, { max_tokens: 2048 })
 const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es']
 
 export async function translateWordsToAllLangs(words) {
-  const BATCH = 30
+  const BATCH = 20
   const results = {}
   for (let i = 0; i < words.length; i += BATCH) {
     const batch = words.slice(i, i + BATCH)
     const list = batch.map(w => `${w.id}: ${w.word_de} → ${w.translation_ru}`).join('\n')
-    const text = await ask(
-      `Переведи эти немецкие слова на 7 языков (en, uk, fr, ar, bg, tr, es).
+    try {
+      const text = await ask(
+        `Переведи эти немецкие слова на 7 языков (en, uk, fr, ar, bg, tr, es).
 Слова в формате "id: слово → перевод_на_русский".
 Верни ТОЛЬКО JSON (без markdown): { "<id>": { "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "..." } }
 Переводы должны быть краткими (слово или словосочетание), как в словаре.
 
 ${list}`,
-      { max_tokens: 4096 }
-    )
-    const parsed = parseJson(text)
-    for (const [id, t] of Object.entries(parsed)) {
-      results[id] = t
+        { max_tokens: 4096 }
+      )
+      const parsed = parseJson(text)
+      for (const [id, t] of Object.entries(parsed)) results[id] = t
+    } catch (e) {
+      // Пропускаем битый батч — переводы для этих слов останутся пустыми
+      console.error(`translateWordsToAllLangs: батч ${i}-${i + BATCH} пропущен: ${e.message}`)
     }
   }
   return results
