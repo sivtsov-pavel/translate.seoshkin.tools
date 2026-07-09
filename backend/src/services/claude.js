@@ -59,9 +59,7 @@ export async function extractFromPhoto(filepath) {
   return parseJson(response.content[0].text)
 }
 
-export async function mergeLesson(extractions, transcription = null) {
-  const input = JSON.stringify({ extractions, transcription }, null, 2)
-  const prompt = `Объедини данные из нескольких фото страниц урока немецкого (A1) в единый конспект.
+const MERGE_PROMPT = `Объедини данные из нескольких фото страниц урока немецкого (A1) в единый конспект.
 Правила:
 - Убери дубли слов (оставь лучший вариант с переводом и примером)
 - Нормализуй существительные: добавь артикль (der/die/das) если известен
@@ -70,13 +68,37 @@ export async function mergeLesson(extractions, transcription = null) {
 Верни ТОЛЬКО JSON без markdown:
 {"words": [{"word_de": "...", "translation_ru": "...", "example_sentence": "..."}], "grammar_points": [{"description": "...", "example": "..."}]}`
 
+async function mergeChunk(extractions, transcription = null) {
+  const input = JSON.stringify({ extractions, transcription }, null, 2)
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 8192,
-    messages: [{ role: 'user', content: `${prompt}\n\nДанные для объединения:\n${input}` }],
+    messages: [{ role: 'user', content: `${MERGE_PROMPT}\n\nДанные:\n${input}` }],
   })
-
   return parseJson(response.content[0].text)
+}
+
+export async function mergeLesson(extractions, transcription = null) {
+  const CHUNK = 12
+  if (extractions.length <= CHUNK) {
+    return mergeChunk(extractions, transcription)
+  }
+
+  // Большой урок — мержим батчами, потом финальный мерж
+  const chunks = []
+  for (let i = 0; i < extractions.length; i += CHUNK) {
+    chunks.push(extractions.slice(i, i + CHUNK))
+  }
+  const partials = []
+  for (const chunk of chunks) {
+    const partial = await mergeChunk(chunk, null)
+    // передаём результат как одну "экстракцию" для финального мержа
+    partials.push({ words: partial.words, grammar_points: partial.grammar_points })
+  }
+  // Финальный мерж объединяет все частичные результаты
+  const allWords = partials.flatMap(p => p.words || [])
+  const allGrammar = partials.flatMap(p => p.grammar_points || [])
+  return mergeChunk([{ words: allWords, grammar_points: allGrammar }], transcription)
 }
 
 const EXERCISES_PROMPT = `На основе слов и грамматики урока немецкого (A1) создай упражнения для школьника.
