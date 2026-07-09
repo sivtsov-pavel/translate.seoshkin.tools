@@ -1,5 +1,5 @@
-// Для немецкого UI-языка слова уже немецкие — берём английский как запасной
-const LANG_FALLBACK = { de: 'en' }
+// Промежуточные fallback для редких случаев (de не нужен — слова уже немецкие, fallback → ru)
+const LANG_FALLBACK = {}
 
 // Получить перевод строки (слова, предложения, подсказки) на нужный язык
 export function getTranslation(translations, lang, fallbackRu) {
