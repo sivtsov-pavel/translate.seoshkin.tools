@@ -7,6 +7,7 @@ export const tr = {
     students: 'Öğrenciler',
     wiki: 'Yardım',
     newLesson: 'Yeni Ders',
+    addStudent: 'Öğrenci',
     learningWords: 'Öğreniyorum',
     logout: 'Çıkış',
     appName: 'Almanca 🇩🇪',

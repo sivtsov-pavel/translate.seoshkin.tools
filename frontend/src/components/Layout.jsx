@@ -81,7 +81,10 @@ export default function Layout({ children }) {
     ...(user?.role === 'owner' ? [{ to: '/report',   icon: 'bi-bar-chart-fill', label: '📊 Отчёт' }] : []),
     { to: '/reader',    icon: 'bi-eyeglasses',         label: t.nav.reader },
     { to: '/wiki',      icon: 'bi-question-circle-fill', label: t.nav.wiki },
-    ...(user?.role === 'owner' ? [{ to: '/lessons/new', icon: 'bi-plus-circle-fill', label: t.nav.newLesson, divider: true }] : []),
+    ...(user?.role === 'owner' ? [
+      { to: '/lessons/new',   icon: 'bi-plus-circle-fill', label: t.nav.newLesson, divider: true },
+      { to: '/register',      icon: 'bi-person-plus-fill',  label: '+ ' + t.nav.addStudent },
+    ] : []),
   ]
 
   const isActive = (to) => {

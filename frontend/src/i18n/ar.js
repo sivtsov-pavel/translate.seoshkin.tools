@@ -9,6 +9,7 @@ export const ar = {
     students: 'الطلاب',
     wiki: 'مساعدة',
     newLesson: 'درس جديد',
+    addStudent: 'طالب',
     learningWords: 'أتعلم',
     logout: 'خروج',
     appName: 'الألمانية 🇩🇪',

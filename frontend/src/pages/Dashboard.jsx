@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
+import { getTranslation } from '../utils/translation.js'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'dictation']
 const TYPE_ICON  = { multiple_choice: 'bi-check-square-fill', flashcard: 'bi-card-text', letter_fill: 'bi-fonts', fill_blank: 'bi-pencil-fill', sentence_write: 'bi-pen-fill', dictation: 'bi-mic-fill' }
@@ -235,7 +236,7 @@ function LessonCard({ lesson, navigate }) {
       {showWords && words && (
         <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {words.map(w => {
-            const translation = w.translations?.[lang] || w.translation_ru
+            const translation = getTranslation(w.translations, lang, w.translation_ru)
             return (
               <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
                 <span style={{ fontWeight: 700, fontSize: 15 }}>{w.word_de}</span>

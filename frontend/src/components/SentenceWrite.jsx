@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
+import { getTranslation } from '../utils/translation.js'
 
 export default function SentenceWrite({ exercise, onAnswer, payloadTranslations }) {
   const [sentence, setSentence] = useState('')
@@ -10,8 +11,8 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
   const { t, lang } = useI18nStore()
   const pTranslations = payloadTranslations || exercise.payload_translations
   const { word_de, translation_ru, hint_ru, example } = exercise.payload
-  const displayTranslation = exercise.translations?.[lang] || exercise.translation_ru || translation_ru
-  const displayHint = pTranslations?.[lang] || hint_ru
+  const displayTranslation = getTranslation(exercise.translations, lang, exercise.translation_ru || translation_ru)
+  const displayHint = getTranslation(pTranslations, lang, hint_ru)
 
   const handleCheck = async (e) => {
     e.preventDefault()

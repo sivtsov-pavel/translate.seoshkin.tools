@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
+import { getTranslation, getEffectiveLang } from '../utils/translation.js'
 
 export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations }) {
   const [selected, setSelected] = useState(null)
@@ -11,19 +12,22 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   const { options, correctIdx } = useMemo(() => {
     const orig = payload.options ?? []
     const correctAnswer = orig[payload.correct ?? 0]
-    const localized = payloadTranslations?.[lang]
+    // Учитываем fallback для 'de' → 'en' и других языков без ключа
+    const effectiveLang = getEffectiveLang(payloadTranslations, lang)
+    const localized = effectiveLang ? payloadTranslations[effectiveLang] : null
     // Если есть переводы всех вариантов — используем их (сохраняем оригинальный порядок для correctIdx)
     const displayOpts = Array.isArray(localized) ? localized : orig
     const shuffled = [...displayOpts].sort(() => Math.random() - 0.5)
     // Правильный ответ: локализованный или из translations, fallback на оригинал
     const correctLocalized = Array.isArray(localized)
       ? localized[payload.correct ?? 0]
-      : (translations?.[lang] || translationRu || correctAnswer)
+      : getTranslation(translations, lang, translationRu || correctAnswer)
     return { options: shuffled, correctIdx: shuffled.indexOf(correctLocalized) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const correctAnswer = payloadTranslations?.[lang]?.[payload.correct ?? 0]
-    || translations?.[lang] || translationRu || options[correctIdx]
+  const effectiveLang = getEffectiveLang(payloadTranslations, lang)
+  const correctAnswer = (effectiveLang && payloadTranslations[effectiveLang]?.[payload.correct ?? 0])
+    || getTranslation(translations, lang, translationRu || options[correctIdx])
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
   useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])

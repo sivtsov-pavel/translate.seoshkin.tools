@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useI18nStore } from '../store/i18n.js'
+import { getTranslation } from '../utils/translation.js'
 
 export default function Dictation({ payload, onAnswer, lessonTitle, translations, translationRu }) {
   const { word_de, translation_ru } = payload
@@ -10,7 +11,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
   const inputRef              = useRef(null)
   const { t, lang }           = useI18nStore()
 
-  const displayTranslation = translations?.[lang] || translationRu || translation_ru
+  const displayTranslation = getTranslation(translations, lang, translationRu || translation_ru)
 
   useEffect(() => {
     setTimeout(() => speak(word_de, 'de-DE', 0.8), 300)

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
+import { getTranslation } from '../utils/translation.js'
 
 export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTranslations }) {
   const [answer, setAnswer] = useState('')
@@ -30,8 +31,8 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
 
   const fullSentence = beforeBlank + payload.blank + afterBlank
 
-  // Перевод предложения — для любого языка
-  const sentenceTranslation = payloadTranslations?.[lang] || payload.sentence_ru
+  // Перевод предложения — для любого языка (для 'de' fallback → 'en')
+  const sentenceTranslation = getTranslation(payloadTranslations, lang, payload.sentence_ru)
 
   const selectHint = (opt) => {
     setAnswer(opt)

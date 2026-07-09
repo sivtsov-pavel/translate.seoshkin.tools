@@ -7,6 +7,7 @@ export const uk = {
     students: 'Учні',
     wiki: 'Довідка',
     newLesson: 'Новый урок',
+    addStudent: 'Учень',
     learningWords: 'Вивчаю',
     logout: 'Вийти',
     appName: 'Deutsch Lernen 🇩🇪',

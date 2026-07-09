@@ -76,10 +76,10 @@ export async function coursesRoutes(fastify) {
     return rows[0]
   })
 
-  // Удалить курс (уроки остаются, course_id → NULL)
+  // Удалить курс (уроки остаются, course_id → NULL); owner удаляет любой курс
   fastify.delete('/api/courses/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
-    await db.query('DELETE FROM courses WHERE id = $1 AND owner_id = $2', [parseInt(request.params.id), request.user.id])
+    await db.query('DELETE FROM courses WHERE id = $1', [parseInt(request.params.id)])
     return reply.status(204).send()
   })
 

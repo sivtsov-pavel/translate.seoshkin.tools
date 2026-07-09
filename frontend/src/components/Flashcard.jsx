@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
+import { getTranslation } from '../utils/translation.js'
 
 export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
   const [revealed, setRevealed] = useState(false)
@@ -9,7 +10,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
   useEffect(() => { speakAuto(payload.question) }, [payload.question])
 
-  const answer = translations?.[lang] || translationRu || payload.answer
+  const answer = getTranslation(translations, lang, translationRu || payload.answer)
 
   const reveal = () => { setRevealed(true) }
 
