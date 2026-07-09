@@ -407,9 +407,9 @@ export async function exercisesRoutes(fastify) {
 
     for (const word of words) {
       try {
-        // Ищем по русскому переводу — Unsplash лучше находит конкретные образы
-        const searchQuery = word.translation_ru || word.word_de
-        const remoteUrl = await fetchImageUrl(searchQuery)
+        // Сначала по-русски, если не нашли — по-немецки (Unsplash плохо знает кириллицу)
+        const remoteUrl = (word.translation_ru ? await fetchImageUrl(word.translation_ru) : null)
+          ?? await fetchImageUrl(word.word_de)
         if (remoteUrl) {
           const localUrl = await downloadAndSave(remoteUrl, word.id)
           await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [localUrl, word.id])

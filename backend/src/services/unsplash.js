@@ -2,8 +2,9 @@ import { config } from '../config.js'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
-function cleanWord(wordDe) {
-  return wordDe.replace(/^(der|die|das|ein|eine)\s+/i, '').split(' ')[0]
+function cleanWord(word) {
+  // Убираем немецкие артикли и берём не более 2 слов для поиска
+  return word.replace(/^(der|die|das|ein|eine)\s+/i, '').split(' ').slice(0, 2).join(' ')
 }
 
 // Скачивает картинку и сохраняет на сервер, возвращает локальный путь
