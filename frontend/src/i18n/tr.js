@@ -131,6 +131,10 @@ export const tr = {
     loading: 'Yükleniyor...',
     back: '← Geri',
     edit: 'Yeniden adlandır',
+    opFetchImages: "Görseller yükleniyor",
+    opEnrichWords: "Sözlük zenginleştiriliyor",
+    opTranslate: "Cümleler çevriliyor",
+    words: "kelime",
   },
-  common: { loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal' },
+  common: { loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal', starting: "Başlıyor...", deleteLesson: "Ders silinsin mi? Tüm kelimeler ve alıştırmalar kalıcı olarak silinecek." },
 }

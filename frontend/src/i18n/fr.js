@@ -131,6 +131,10 @@ export const fr = {
     loading: 'Chargement...',
     back: '← Retour',
     edit: 'Renommer',
+    opFetchImages: "Chargement des images",
+    opEnrichWords: "Enrichissement du vocabulaire",
+    opTranslate: "Traduction des phrases",
+    words: "mots",
   },
-  common: { loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler' },
+  common: { loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler', starting: "Démarrage...", deleteLesson: "Supprimer la leçon? Tous les mots et exercices seront définitivement supprimés." },
 }

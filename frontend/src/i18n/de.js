@@ -144,6 +144,10 @@ export const de = {
     loading: 'Kurse laden...',
     back: '← Zurück zu Kursen',
     edit: 'Umbenennen',
+    opFetchImages: "Bilder laden",
+    opEnrichWords: "Wörterbuch ergänzen",
+    opTranslate: "Sätze übersetzen",
+    words: "Wörter",
   },
   common: {
     loading: 'Laden...',

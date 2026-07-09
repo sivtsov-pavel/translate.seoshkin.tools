@@ -133,6 +133,10 @@ export const ar = {
     loading: 'جاري التحميل...',
     back: '→ رجوع',
     edit: 'إعادة تسمية',
+    opFetchImages: "تحميل الصور",
+    opEnrichWords: "إثراء المفردات",
+    opTranslate: "ترجمة الجمل",
+    words: "كلمات",
   },
-  common: { loading: 'جاري التحميل...', error: 'خطأ', cancel: 'إلغاء' },
+  common: { loading: 'جاري التحميل...', error: 'خطأ', cancel: 'إلغاء', starting: "يبدأ...", deleteLesson: "حذف الدرس؟ سيتم حذف جميع الكلمات والتمارين نهائياً." },
 }

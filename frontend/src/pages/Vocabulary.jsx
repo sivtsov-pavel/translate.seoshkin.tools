@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import ProgressRing from '../components/ProgressRing.jsx'
 
-const shortLesson = (title) => title?.match(/Урок\s*\d+/)?.[0] || title || 'Без урока'
+const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
 
 function detectGrammar(word_de) {
   const w = (word_de || '').trim()
@@ -18,14 +18,14 @@ function detectGrammar(word_de) {
   return 'Anderes'
 }
 
-const GRAMMAR_LABELS = {
-  'der': 'der (муж.)',
-  'die': 'die (жен.)',
-  'das': 'das (ср.)',
-  'Nomen': 'Существ.',
-  'Verb': 'Глаголы',
-  'Anderes': 'Прочие',
-}
+const getGrammarLabels = (t) => ({
+  'der': t.vocabulary.grammarDer,
+  'die': t.vocabulary.grammarDie,
+  'das': t.vocabulary.grammarDas,
+  'Nomen': t.vocabulary.grammarNomen,
+  'Verb': t.vocabulary.grammarVerb,
+  'Anderes': t.vocabulary.grammarOther,
+})
 
 const STATUS_COLORS = { new: 'var(--ink-soft)', learning: '#B07D1B', known: 'var(--good)' }
 const STATUS_BG     = {
@@ -53,14 +53,14 @@ export default function Vocabulary() {
 
   const sendToReader = async () => {
     const sentences = filtered.map(w => w.example_sentence).filter(Boolean)
-    if (!sentences.length) { alert('Нет примеров предложений у отфильтрованных слов'); return }
-    const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : 'Словарь') + ' — примеры'
+    if (!sentences.length) { alert(t.vocabulary.noExamples); return }
+    const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : t.vocabulary.title) + ' — примеры'
     setSending(true)
     try {
       await api.post('/phrase-sets', { title, content: sentences.join('\n') })
-      alert(`Набор "${title}" сохранён в Читалке (${sentences.length} предложений)`)
+      alert(`${t.vocabulary.sendToReader}: "${title}" (${sentences.length})`)
     } catch (e) {
-      alert('Ошибка: ' + e.message)
+      alert(t.common.error + ': ' + e.message)
     }
     setSending(false)
   }
@@ -87,21 +87,22 @@ export default function Vocabulary() {
     known:    t.vocabulary.statusKnown,
   }
 
-  const lessonTitles = [...new Set(words.map(w => w.lesson_title || 'Без урока'))]
+  const GRAMMAR_LABELS = getGrammarLabels(t)
+  const lessonTitles = [...new Set(words.map(w => w.lesson_title || t.vocabulary.noLesson))]
   const q = search.toLowerCase().trim()
   const knownCount = words.filter(w => w.status === 'known').length
   const vocabPct   = words.length > 0 ? Math.round((knownCount / words.length) * 100) : 0
 
   const filtered = words.filter(w => {
     if (statusFilter && w.status !== statusFilter) return false
-    if (lessonFilter && (w.lesson_title || 'Без урока') !== lessonFilter) return false
+    if (lessonFilter && (w.lesson_title || t.vocabulary.noLesson) !== lessonFilter) return false
     if (grammarFilter && detectGrammar(w.word_de) !== grammarFilter) return false
     if (q) return w.word_de.toLowerCase().includes(q) || w.translation_ru.toLowerCase().includes(q)
     return true
   })
   const grammarCats = [...new Set(words.map(w => detectGrammar(w.word_de)))].sort()
   const grouped = filtered.reduce((acc, w) => {
-    const key = w.lesson_title || 'Без урока'
+    const key = w.lesson_title || t.vocabulary.noLesson
     if (!acc[key]) acc[key] = []
     acc[key].push(w)
     return acc
@@ -199,7 +200,7 @@ export default function Vocabulary() {
                 color: lessonFilter === lt ? 'var(--accent)' : 'var(--ink-soft)',
                 fontWeight: lessonFilter === lt ? 700 : 400, cursor: 'pointer',
               }}>
-              📚 {shortLesson(lt)}
+              📚 {shortLesson(lt, t.vocabulary.noLesson)}
             </button>
           ))}
         </div>

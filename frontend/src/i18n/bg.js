@@ -131,6 +131,10 @@ export const bg = {
     loading: 'Зареждане...',
     back: '← Назад',
     edit: 'Преименувай',
+    opFetchImages: "Зареждане на изображения",
+    opEnrichWords: "Обогатяване на речника",
+    opTranslate: "Превод на изречения",
+    words: "думи",
   },
-  common: { loading: 'Зареждане...', error: 'Грешка', cancel: 'Отказ' },
+  common: { loading: 'Зареждане...', error: 'Грешка', cancel: 'Отказ', starting: "Стартиране...", deleteLesson: "Изтриване на урока? Всички думи и упражнения ще бъдат изтрити." },
 }

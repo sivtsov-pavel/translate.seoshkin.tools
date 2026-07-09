@@ -138,6 +138,10 @@ export const en = {
     loading: 'Loading courses...',
     back: '← Back to courses',
     edit: 'Rename',
+    opFetchImages: "Loading images",
+    opEnrichWords: "Enriching vocabulary",
+    opTranslate: "Translating sentences",
+    words: "words",
   },
   common: {
     loading: 'Loading...',

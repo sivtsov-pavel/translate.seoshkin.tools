@@ -131,6 +131,10 @@ export const es = {
     loading: 'Cargando...',
     back: '← Volver',
     edit: 'Renombrar',
+    opFetchImages: "Cargando imágenes",
+    opEnrichWords: "Enriqueciendo vocabulario",
+    opTranslate: "Traduciendo frases",
+    words: "palabras",
   },
-  common: { loading: 'Cargando...', error: 'Error', cancel: 'Cancelar' },
+  common: { loading: 'Cargando...', error: 'Error', cancel: 'Cancelar', starting: "Iniciando...", deleteLesson: "¿Eliminar lección? Todas las palabras y ejercicios serán borrados permanentemente." },
 }

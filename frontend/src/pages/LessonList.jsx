@@ -90,11 +90,11 @@ function EditForm({ lesson, onSave, onCancel }) {
   )
 }
 
-const OP_NAMES = {
-  'fetch-images':         '🖼️ Загрузка картинок',
-  'enrich-words':         '🤖 Дополнение словаря',
-  'translate-sentences':  '🌐 Перевод предложений',
-}
+const getOpNames = (t) => ({
+  'fetch-images':         '🖼️ ' + t.lessons.opFetchImages,
+  'enrich-words':         '🤖 ' + t.lessons.opEnrichWords,
+  'translate-sentences':  '🌐 ' + t.lessons.opTranslate,
+})
 
 export default function LessonList() {
   const [lessons, setLessons]           = useState([])
@@ -106,6 +106,7 @@ export default function LessonList() {
   const [processing, setProcessing]               = useState(null)
   const [editingId, setEditingId]       = useState(null)
   const { t } = useI18nStore()
+  const OP_NAMES = getOpNames(t)
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
@@ -158,7 +159,7 @@ export default function LessonList() {
 
   const handleProcess = async (id) => {
     setProcessing(id)
-    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Запускаем...' } : l))
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: t.common.starting } : l))
     try {
       await api.post(`/lessons/${id}/process`, {})
       const poll = setInterval(async () => {
@@ -190,7 +191,7 @@ export default function LessonList() {
   }, [])
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Удалить урок? Все слова и упражнения этого урока будут удалены.')) return
+    if (!window.confirm(t.common.deleteLesson)) return
     setDeleting(id)
     try {
       await api.delete(`/lessons/${id}`)
@@ -234,8 +235,8 @@ export default function LessonList() {
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{OP_NAMES[adminOp.name]}</span>
                 <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
                   {adminOp.total > 0
-                    ? `${adminOp.done} / ${adminOp.total} слов`
-                    : 'Запускаю...'}
+                    ? `${adminOp.done} / ${adminOp.total} ${t.lessons.words}`
+                    : t.common.starting}
                 </span>
               </div>
               <div style={{ height: 8, background: 'var(--line)', borderRadius: 4, overflow: 'hidden' }}>
@@ -266,7 +267,7 @@ export default function LessonList() {
           )}
           {adminOp.status === 'error' && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: 'var(--red)', fontSize: 14 }}>✗ Ошибка: {adminOp.error}</span>
+              <span style={{ color: 'var(--red)', fontSize: 14 }}>✗ {t.common.error}: {adminOp.error}</span>
               <button onClick={() => setAdminOp({ status: 'idle', name: null, done: 0, total: 0, updated: 0, failed: 0 })}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18, lineHeight: 1 }}>✕</button>
             </div>

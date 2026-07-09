@@ -144,6 +144,10 @@ export const ru = {
     loading: 'Загрузка курсов...',
     back: '← Назад к курсам',
     edit: 'Переименовать',
+    opFetchImages: "Загрузка картинок",
+    opEnrichWords: "Дополнение словаря",
+    opTranslate: "Перевод предложений",
+    words: "слов",
   },
   common: {
     loading: 'Загрузка...',

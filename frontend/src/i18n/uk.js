@@ -136,6 +136,10 @@ export const uk = {
     loading: 'Завантаження курсів...',
     back: '← Назад до курсів',
     edit: 'Перейменувати',
+    opFetchImages: "Завантаження зображень",
+    opEnrichWords: "Доповнення словника",
+    opTranslate: "Переклад речень",
+    words: "слів",
   },
   common: {
     loading: 'Завантаження...',
