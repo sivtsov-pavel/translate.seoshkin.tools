@@ -161,6 +161,7 @@ function LessonCard({ lesson, navigate }) {
     multiple_choice: t.exercise.multipleChoice,
     sentence_write:  t.exercise.sentenceWrite,
     letter_fill:     t.exercise.letterFill,
+    dictation:       t.exercise.dictation,
   }
 
   const toggleWords = async () => {
