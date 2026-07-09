@@ -1,5 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import fastifyStatic from '@fastify/static'
+import { resolve } from 'path'
 import { config } from './config.js'
 import authPlugin from './plugins/auth.js'
 import uploadPlugin from './plugins/upload.js'
@@ -18,6 +20,11 @@ export async function registerPlugins(app) {
   await app.register(cors, { origin: true })
   await app.register(authPlugin)
   await app.register(uploadPlugin)
+  await app.register(fastifyStatic, {
+    root: resolve(config.uploadDir),
+    prefix: '/uploads/',
+    decorateReply: false,
+  })
 }
 
 async function registerRoutes(app) {

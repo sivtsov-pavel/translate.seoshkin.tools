@@ -17,7 +17,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl })
 
   const handleSubmit = () => {
     if (!input.trim() || submitted) return
-    const isCorrect = input.trim().toLowerCase() === payload.answer.toLowerCase()
+    const isCorrect = input.trim().toLowerCase() === payload.answer.trim().toLowerCase()
     setCorrect(isCorrect)
     setSubmitted(true)
     setTimeout(() => speak(payload.word_de), 300)

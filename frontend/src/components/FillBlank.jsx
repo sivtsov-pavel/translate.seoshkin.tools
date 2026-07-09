@@ -8,7 +8,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
   const { t } = useI18nStore()
   const inputRef = useRef(null)
 
-  const isCorrect = answer.trim().toLowerCase() === payload.blank.toLowerCase()
+  const isCorrect = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
   const parts = payload.sentence.split('___')
 
   useEffect(() => { inputRef.current?.focus() }, [])
