@@ -90,13 +90,17 @@ function EditForm({ lesson, onSave, onCancel }) {
   )
 }
 
+const OP_NAMES = {
+  'fetch-images':         '🖼️ Загрузка картинок',
+  'enrich-words':         '🤖 Дополнение словаря',
+  'translate-sentences':  '🌐 Перевод предложений',
+}
+
 export default function LessonList() {
   const [lessons, setLessons]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [deleting, setDeleting]         = useState(null)
-  const [fetchingImages, setFetchingImages]       = useState(false)
-  const [translatingSentences, setTranslatingSentences] = useState(false)
-  const [enriching, setEnriching]                       = useState(false)
+  const [adminOp, setAdminOp]           = useState({ status: 'idle', name: null, done: 0, total: 0, updated: 0, failed: 0 })
   const [addingLetters, setAddingLetters]         = useState(null)
   const [addingDictation, setAddingDictation]     = useState(null)
   const [processing, setProcessing]               = useState(null)
@@ -105,28 +109,56 @@ export default function LessonList() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
+  // Опрос статуса пока операция работает
+  useEffect(() => {
+    if (adminOp.status !== 'running') return
+    const tid = setInterval(async () => {
+      try {
+        const s = await api.get('/admin/operation-status')
+        if (s.status !== 'idle') setAdminOp(s)
+      } catch {}
+    }, 2000)
+    return () => clearInterval(tid)
+  }, [adminOp.status])
+
+  // Проверяем при загрузке — вдруг операция уже идёт
+  useEffect(() => {
+    if (user?.role !== 'owner') return
+    api.get('/admin/operation-status').then(s => {
+      if (s.status === 'running') setAdminOp(s)
+    }).catch(() => {})
+  }, [user?.role])
+
+  const startOp = (name) => setAdminOp({ status: 'running', name, done: 0, total: 0, updated: 0, failed: 0 })
+
   const handleFetchImages = async () => {
-    setFetchingImages(true)
+    startOp('fetch-images')
     try {
       const res = await api.post('/admin/fetch-images', {})
-      alert(`Готово! Загружено: ${res.updated} картинок, не найдено: ${res.failed}`)
-    } catch (e) { alert('Ошибка: ' + e.message) } finally { setFetchingImages(false) }
+      setAdminOp(prev => ({ ...prev, ...res, status: 'done' }))
+    } catch (e) {
+      setAdminOp(prev => ({ ...prev, status: 'error', error: e.message }))
+    }
   }
 
   const handleEnrichWords = async () => {
-    setEnriching(true)
+    startOp('enrich-words')
     try {
       const res = await api.post('/admin/enrich-words', {})
-      alert(`Дополнено слов: ${res.updated} из ${res.total}`)
-    } catch (e) { alert('Ошибка: ' + e.message) } finally { setEnriching(false) }
+      setAdminOp(prev => ({ ...prev, ...res, status: 'done' }))
+    } catch (e) {
+      setAdminOp(prev => ({ ...prev, status: 'error', error: e.message }))
+    }
   }
 
   const handleTranslateSentences = async () => {
-    setTranslatingSentences(true)
+    startOp('translate-sentences')
     try {
       const res = await api.post('/admin/translate-sentences', {})
-      alert(`Переведено предложений: ${res.updated}`)
-    } catch (e) { alert('Ошибка: ' + e.message) } finally { setTranslatingSentences(false) }
+      setAdminOp(prev => ({ ...prev, ...res, status: 'done' }))
+    } catch (e) {
+      setAdminOp(prev => ({ ...prev, status: 'error', error: e.message }))
+    }
   }
 
   const handleProcess = async (id) => {
@@ -185,18 +217,65 @@ export default function LessonList() {
         <h1 style={{ margin: 0 }}>{t.lessons.title}</h1>
         {user?.role === 'owner' && (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleFetchImages} disabled={fetchingImages} style={adminBtn('var(--accent)')}>
-              {fetchingImages ? '⏳ Загружаю картинки...' : '🖼️ Загрузить картинки'}
+            <button onClick={handleFetchImages} disabled={adminOp.status === 'running'} style={adminBtn('var(--accent)', adminOp.name === 'fetch-images' && adminOp.status === 'running')}>
+              🖼️ Загрузить картинки
             </button>
-            <button onClick={handleTranslateSentences} disabled={translatingSentences} style={adminBtn('var(--good)')}>
-              {translatingSentences ? '⏳ Перевожу...' : '🌐 Перевести предложения'}
+            <button onClick={handleTranslateSentences} disabled={adminOp.status === 'running'} style={adminBtn('var(--good)', adminOp.name === 'translate-sentences' && adminOp.status === 'running')}>
+              🌐 Перевести предложения
             </button>
-            <button onClick={handleEnrichWords} disabled={enriching} style={adminBtn('#d97706')}>
-              {enriching ? '⏳ Дополняю...' : '🤖 Дополнить словарь'}
+            <button onClick={handleEnrichWords} disabled={adminOp.status === 'running'} style={adminBtn('#d97706', adminOp.name === 'enrich-words' && adminOp.status === 'running')}>
+              🤖 Дополнить словарь
             </button>
           </div>
         )}
       </div>
+
+      {/* Прогресс admin-операции */}
+      {user?.role === 'owner' && adminOp.status !== 'idle' && (
+        <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 10, background: 'var(--surface-2)', border: `1px solid ${adminOp.status === 'error' ? 'var(--red)' : adminOp.status === 'done' ? 'var(--good)' : 'var(--accent)'}` }}>
+          {adminOp.status === 'running' && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{OP_NAMES[adminOp.name]}</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+                  {adminOp.total > 0 ? `${adminOp.done} / ${adminOp.total}` : 'Запускаю...'}
+                </span>
+              </div>
+              <div style={{ height: 8, background: 'var(--line)', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: adminOp.total > 0 ? `${Math.round(adminOp.done / adminOp.total * 100)}%` : '8%',
+                  background: 'var(--accent)',
+                  borderRadius: 4,
+                  transition: 'width 0.4s ease',
+                }} />
+              </div>
+              {adminOp.total > 0 && (
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 5 }}>
+                  {Math.round(adminOp.done / adminOp.total * 100)}% · обновлено: {adminOp.updated} · ошибок: {adminOp.failed}
+                </div>
+              )}
+            </>
+          )}
+          {adminOp.status === 'done' && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--good)', fontWeight: 600, fontSize: 14 }}>
+                ✓ {OP_NAMES[adminOp.name]} — обновлено: {adminOp.updated}
+                {adminOp.failed > 0 ? `, не найдено: ${adminOp.failed}` : ''}
+              </span>
+              <button onClick={() => setAdminOp({ status: 'idle', name: null, done: 0, total: 0, updated: 0, failed: 0 })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+          )}
+          {adminOp.status === 'error' && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--red)', fontSize: 14 }}>✗ Ошибка: {adminOp.error}</span>
+              <button onClick={() => setAdminOp({ status: 'idle', name: null, done: 0, total: 0, updated: 0, failed: 0 })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {lessons.length === 0 ? (
         <p style={{ color: 'var(--ink-soft)' }}>{t.lessons.empty}</p>
@@ -294,7 +373,9 @@ export default function LessonList() {
   )
 }
 
-const adminBtn = (color) => ({
-  padding: '8px 16px', borderRadius: 8, border: '1px solid var(--line)',
-  background: 'var(--surface)', color, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+const adminBtn = (color, active = false) => ({
+  padding: '8px 16px', borderRadius: 8,
+  border: `1px solid ${active ? color : 'var(--line)'}`,
+  background: active ? 'var(--surface-2)' : 'var(--surface)',
+  color, fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: 1,
 })

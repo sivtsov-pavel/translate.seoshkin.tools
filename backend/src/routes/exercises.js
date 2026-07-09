@@ -8,6 +8,16 @@ import { config } from '../config.js'
 
 export async function exercisesRoutes(fastify) {
 
+  // Трекер прогресса admin-операций (одна за раз, in-memory)
+  const adminOp = { name: null, done: 0, total: 0, status: 'idle', updated: 0, failed: 0 }
+
+  fastify.get('/api/admin/operation-status', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    return { ...adminOp }
+  })
+
   // Упражнения на сегодня — прогресс берётся из user_exercise_progress для каждого юзера отдельно
   fastify.get('/api/exercises/today', {
     preHandler: [fastify.authenticate],
@@ -385,26 +395,10 @@ export async function exercisesRoutes(fastify) {
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
 
-    let updated = 0
-    let failed  = 0
-
-    // 1. Слова без image_url
+    // Оба запроса до начала обработки — чтобы знать total сразу
     const { rows: words } = await db.query(
       `SELECT id, word_de FROM words WHERE image_url IS NULL ORDER BY id`
     )
-    for (const word of words) {
-      try {
-        const remoteUrl = await fetchImageUrl(word.word_de)
-        if (remoteUrl) {
-          const localUrl = await downloadAndSave(remoteUrl, word.id)
-          await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [localUrl, word.id])
-          updated++
-        } else { failed++ }
-        await new Promise(r => setTimeout(r, 250))
-      } catch { failed++ }
-    }
-
-    // 2. Упражнения без image_url — ищем слово из payload
     const { rows: exs } = await db.query(`
       SELECT e.id, e.type,
         COALESCE(w.word_de,
@@ -419,10 +413,24 @@ export async function exercisesRoutes(fastify) {
       ORDER BY e.id
     `)
 
-    for (const ex of exs) {
-      if (!ex.word_de) { failed++; continue }
+    Object.assign(adminOp, { name: 'fetch-images', done: 0, total: words.length + exs.length, status: 'running', updated: 0, failed: 0 })
+
+    for (const word of words) {
       try {
-        // Сначала проверяем есть ли уже в words для этого слова
+        const remoteUrl = await fetchImageUrl(word.word_de)
+        if (remoteUrl) {
+          const localUrl = await downloadAndSave(remoteUrl, word.id)
+          await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [localUrl, word.id])
+          adminOp.updated++
+        } else { adminOp.failed++ }
+        await new Promise(r => setTimeout(r, 250))
+      } catch { adminOp.failed++ }
+      adminOp.done++
+    }
+
+    for (const ex of exs) {
+      if (!ex.word_de) { adminOp.failed++; adminOp.done++; continue }
+      try {
         const { rows: cached } = await db.query(
           `SELECT image_url FROM words WHERE LOWER(word_de) = LOWER($1) AND image_url IS NOT NULL LIMIT 1`,
           [ex.word_de]
@@ -430,13 +438,15 @@ export async function exercisesRoutes(fastify) {
         const url = cached[0]?.image_url ?? await fetchImageUrl(ex.word_de)
         if (url) {
           await db.query('UPDATE exercises SET image_url = $1 WHERE id = $2', [url, ex.id])
-          updated++
-        } else { failed++ }
+          adminOp.updated++
+        } else { adminOp.failed++ }
         await new Promise(r => setTimeout(r, 250))
-      } catch { failed++ }
+      } catch { adminOp.failed++ }
+      adminOp.done++
     }
 
-    return { total: words.length + exs.length, updated, failed }
+    adminOp.status = 'done'
+    return { total: adminOp.total, updated: adminOp.updated, failed: adminOp.failed }
   })
 
   // Дополнить словарь: переводы + примеры для всех неполных слов
@@ -455,8 +465,8 @@ export async function exercisesRoutes(fastify) {
     )
     if (!rows.length) return { updated: 0 }
 
-    // Батчами по 20 чтобы не перегружать Claude
-    let updated = 0
+    Object.assign(adminOp, { name: 'enrich-words', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
+
     for (let i = 0; i < rows.length; i += 20) {
       const batch = rows.slice(i, i + 20)
       const results = await enrichWords(batch)
@@ -470,10 +480,13 @@ export async function exercisesRoutes(fastify) {
            WHERE id = $4`,
           [r.translation_ru, r.example_sentence, r.example_sentence_ru, r.id]
         )
-        updated++
+        adminOp.updated++
       }
+      adminOp.done = Math.min(i + 20, rows.length)
     }
-    return { updated, total: rows.length }
+
+    adminOp.status = 'done'
+    return { updated: adminOp.updated, total: rows.length }
   })
 
   // Перевести примеры предложений для всех слов без example_sentence_ru
@@ -489,15 +502,22 @@ export async function exercisesRoutes(fastify) {
     )
     if (!rows.length) return { updated: 0 }
 
-    const results = await translateSentences(rows.map(r => ({ id: r.id, sentence: r.example_sentence })))
+    Object.assign(adminOp, { name: 'translate-sentences', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
 
-    let updated = 0
-    for (const r of results) {
-      if (!r.translation) continue
-      await db.query('UPDATE words SET example_sentence_ru = $1 WHERE id = $2', [r.translation, r.id])
-      updated++
+    const BATCH = 25
+    for (let i = 0; i < rows.length; i += BATCH) {
+      const batch = rows.slice(i, i + BATCH)
+      const results = await translateSentences(batch.map(r => ({ id: r.id, sentence: r.example_sentence })))
+      for (const r of results) {
+        if (!r.translation) continue
+        await db.query('UPDATE words SET example_sentence_ru = $1 WHERE id = $2', [r.translation, r.id])
+        adminOp.updated++
+      }
+      adminOp.done = Math.min(i + BATCH, rows.length)
     }
-    return { updated, total: rows.length }
+
+    adminOp.status = 'done'
+    return { updated: adminOp.updated, total: rows.length }
   })
 
   // Поиск слова по написанию (для читалки)
