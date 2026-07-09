@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { api } from '../api/client.js'
+import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
@@ -234,8 +234,10 @@ export default function Vocabulary() {
 }
 
 function VocabWord({ word, statusLabels, onStatusChange }) {
-  const [imageUrl, setImageUrl]   = useState(word.image_url)
+  const [imageUrl, setImageUrl]     = useState(word.image_url)
   const [refreshing, setRefreshing] = useState(false)
+  const [uploading, setUploading]   = useState(false)
+  const fileRef                     = useRef(null)
   const { user } = useAuthStore()
 
   const refreshImage = async (e) => {
@@ -246,6 +248,20 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       setImageUrl(res.image_url)
     } catch {}
     setRefreshing(false)
+  }
+
+  const uploadImage = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await uploadFiles(`/words/${word.id}/upload-image`, fd)
+      setImageUrl(res.image_url)
+    } catch {}
+    setUploading(false)
+    e.target.value = ''
   }
 
   return (
@@ -263,10 +279,17 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
           <div style={{ width: 80, flexShrink: 0 }} />
         )}
         {user?.role === 'owner' && (
-          <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
-            {refreshing ? '⏳' : '🔄'}
-          </button>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку (Unsplash)"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
+              {refreshing ? '⏳' : '🔄'}
+            </button>
+            <button onClick={() => fileRef.current?.click()} disabled={uploading} title="Загрузить свою картинку"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
+              {uploading ? '⏳' : '📷'}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadImage} />
+          </div>
         )}
       </div>
 

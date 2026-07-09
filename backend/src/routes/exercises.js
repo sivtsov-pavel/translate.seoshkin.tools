@@ -1,7 +1,10 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
 import { checkSentence, translateSentences, enrichWords } from '../services/claude.js'
-import { fetchImageUrl, fetchRandomImageUrl } from '../services/unsplash.js'
+import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
+import { writeFileSync, mkdirSync } from 'fs'
+import { join, extname } from 'path'
+import { config } from '../config.js'
 
 export async function exercisesRoutes(fastify) {
 
@@ -346,8 +349,31 @@ export async function exercisesRoutes(fastify) {
     const { rows } = await db.query('SELECT id, word_de FROM words WHERE id = $1', [wordId])
     if (!rows[0]) return reply.status(404).send({ error: 'Слово не найдено' })
 
-    const imageUrl = await fetchRandomImageUrl(rows[0].word_de)
-    if (!imageUrl) return reply.status(502).send({ error: 'Unsplash не вернул картинку' })
+    const remoteUrl = await fetchRandomImageUrl(rows[0].word_de)
+    if (!remoteUrl) return reply.status(502).send({ error: 'Unsplash не вернул картинку' })
+
+    const imageUrl = await downloadAndSave(remoteUrl, wordId)
+    await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [imageUrl, wordId])
+    return { image_url: imageUrl }
+  })
+
+  // Загрузка своей картинки для слова
+  fastify.post('/api/words/:id/upload-image', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const wordId = parseInt(request.params.id)
+
+    const data = await request.file()
+    if (!data) return reply.status(400).send({ error: 'Файл не передан' })
+
+    const buf = await data.toBuffer()
+    const ext = extname(data.filename || '.jpg').toLowerCase() || '.jpg'
+    const dir = join(config.uploadDir, 'word-images')
+    mkdirSync(dir, { recursive: true })
+    const filename = `word_${wordId}${ext}`
+    writeFileSync(join(dir, filename), buf)
+    const imageUrl = `/uploads/word-images/${filename}`
 
     await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [imageUrl, wordId])
     return { image_url: imageUrl }
@@ -368,9 +394,10 @@ export async function exercisesRoutes(fastify) {
     )
     for (const word of words) {
       try {
-        const url = await fetchImageUrl(word.word_de)
-        if (url) {
-          await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url, word.id])
+        const remoteUrl = await fetchImageUrl(word.word_de)
+        if (remoteUrl) {
+          const localUrl = await downloadAndSave(remoteUrl, word.id)
+          await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [localUrl, word.id])
           updated++
         } else { failed++ }
         await new Promise(r => setTimeout(r, 250))
