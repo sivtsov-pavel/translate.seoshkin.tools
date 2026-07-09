@@ -6,6 +6,8 @@ import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import ProgressRing from '../components/ProgressRing.jsx'
 
+const shortLesson = (title) => title?.match(/Урок\s*\d+/)?.[0] || title || 'Без урока'
+
 function detectGrammar(word_de) {
   const w = (word_de || '').trim()
   if (/^der\s/i.test(w)) return 'der'
@@ -197,7 +199,7 @@ export default function Vocabulary() {
                 color: lessonFilter === lt ? 'var(--accent)' : 'var(--ink-soft)',
                 fontWeight: lessonFilter === lt ? 700 : 400, cursor: 'pointer',
               }}>
-              📚 {lt}
+              📚 {shortLesson(lt)}
             </button>
           ))}
         </div>
