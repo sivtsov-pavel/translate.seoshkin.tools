@@ -120,6 +120,7 @@ export default function CourseView() {
 function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
   const [editNum, setEditNum] = useState(String(lesson.lesson_number ?? ''))
   const [saving, setSaving]   = useState(false)
+  const [regen, setRegen]     = useState(false)
   const status = lesson.status || 'pending'
 
   const saveNumber = async () => {
@@ -129,6 +130,17 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
       onUpdate()
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleRegen = async () => {
+    if (!window.confirm(`Пересоздать упражнения для «${lesson.title}»? Старые упражнения будут удалены.`)) return
+    setRegen(true)
+    try {
+      await api.post(`/lessons/${lesson.id}/regenerate`, {})
+      setTimeout(onUpdate, 3000)
+    } finally {
+      setRegen(false)
     }
   }
 
@@ -146,13 +158,29 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
       <div style={{ flex: 1, minWidth: 120 }}>
         <div style={{ fontWeight: 600, fontSize: 15 }}>{lesson.title || '—'}</div>
         {lesson.date && <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{new Date(lesson.date).toLocaleDateString()}</div>}
+        {lesson.words_total > 0 && (
+          <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
+            {lesson.words_total} слов · {lesson.exercises_total ?? '?'} упр.
+          </div>
+        )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-        <span style={{ color: STATUS_COLOR[status], fontSize: 14 }}>{STATUS_ICON[status]}</span>
-        <span style={{ fontSize: 12, color: STATUS_COLOR[status], fontWeight: 600 }}>
-          {lesson.status === 'processing' && lesson.progress ? lesson.progress : status}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ color: STATUS_COLOR[status], fontSize: 14 }}>{STATUS_ICON[status]}</span>
+          <span style={{ fontSize: 12, color: STATUS_COLOR[status], fontWeight: 600 }}>
+            {lesson.status === 'processing' && lesson.progress ? lesson.progress : status}
+          </span>
+        </div>
+        {isOwner && (
+          <button
+            onClick={handleRegen}
+            disabled={regen || lesson.status === 'processing'}
+            title="Пересоздать упражнения из существующих слов (без сканирования фото)"
+            style={{ fontSize: 12, padding: '4px 10px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>
+            {regen ? '⏳' : '⚙️ Упражнения'}
+          </button>
+        )}
       </div>
     </div>
   )

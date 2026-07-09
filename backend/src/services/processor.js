@@ -8,6 +8,66 @@ async function setProgress(lessonId, text) {
   await db.query('UPDATE lessons SET progress = $1 WHERE id = $2', [text, lessonId])
 }
 
+// Генерация упражнений из уже существующих слов в БД (без сканирования фото)
+export async function regenerateExercisesFromDb(lessonId) {
+  await db.query("UPDATE lessons SET status = 'processing', progress = 'Генерирую упражнения из существующих слов...' WHERE id = $1", [lessonId])
+
+  try {
+    // Берём слова урока из БД
+    const { rows: wordRows } = await db.query(
+      `SELECT id, word_de, translation_ru, example_sentence
+       FROM words WHERE lesson_id = $1 ORDER BY id`,
+      [lessonId]
+    )
+    if (!wordRows.length) throw new Error('Нет слов для этого урока')
+
+    const words = wordRows.map(w => ({
+      word_de: w.word_de,
+      translation_ru: w.translation_ru,
+      example_sentence: w.example_sentence,
+    }))
+    const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+
+    // Удаляем старые упражнения (если есть)
+    await db.query('DELETE FROM exercises WHERE lesson_id = $1', [lessonId])
+
+    await setProgress(lessonId, `Генерирую упражнения для ${words.length} слов...`)
+
+    // Генерируем упражнения батчами по 15 слов
+    const exercises = await generateExercises(words, [])
+
+    for (const ex of exercises) {
+      const wordId = wordMap[ex.word_de] || null
+      await db.query(
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        [lessonId, wordId, ex.type, JSON.stringify(ex.payload)]
+      )
+    }
+
+    // Диктант — по одному на каждое слово
+    for (const word of words) {
+      const wordId = wordMap[word.word_de] || null
+      await db.query(
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        [lessonId, wordId, 'dictation', JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })]
+      )
+    }
+
+    const total = exercises.length + words.length
+    await db.query(
+      "UPDATE lessons SET status = 'done', progress = $1 WHERE id = $2",
+      [`Готово! Слов: ${words.length}, упражнений: ${total}`, lessonId]
+    )
+    return { lessonId, wordsCount: words.length, exercisesCount: total }
+  } catch (err) {
+    await db.query(
+      "UPDATE lessons SET status = 'error', progress = $1 WHERE id = $2",
+      [`Ошибка: ${err.message}`, lessonId]
+    )
+    throw err
+  }
+}
+
 export async function processLesson(lessonId, ownerId) {
   await db.query("UPDATE lessons SET status = 'processing', progress = 'Начинаем...' WHERE id = $1", [lessonId])
 

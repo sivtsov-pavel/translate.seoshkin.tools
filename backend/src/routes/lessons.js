@@ -1,5 +1,6 @@
 import { db } from '../db/index.js'
 import { generateLetterFill } from '../services/claude.js'
+import { regenerateExercisesFromDb } from '../services/processor.js'
 
 export async function lessonsRoutes(fastify) {
   // Создание урока (опционально с привязкой к курсу)
@@ -38,7 +39,8 @@ export async function lessonsRoutes(fastify) {
       `SELECT l.*,
           COUNT(DISTINCT lm.id)::int AS media_count,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
-          COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images
+          COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images,
+          COUNT(DISTINCT e.id)::int AS exercises_total
        FROM lessons l
        LEFT JOIN lesson_media lm ON lm.lesson_id = l.id
        LEFT JOIN exercises e ON e.lesson_id = l.id
@@ -260,5 +262,58 @@ export async function lessonsRoutes(fastify) {
     }
 
     return reply.status(201).send(savedFiles)
+  })
+
+  // Пересоздать упражнения из существующих слов (без сканирования фото)
+  fastify.post('/api/lessons/:id/regenerate', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+
+    const { rows } = await db.query(
+      'SELECT id, title FROM lessons WHERE id = $1', [lessonId]
+    )
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+
+    // Отвечаем немедленно — генерация идёт в фоне
+    reply.code(202).send({ started: true, lessonId })
+
+    try {
+      await regenerateExercisesFromDb(lessonId)
+    } catch (e) {
+      console.error(`regenerate lesson ${lessonId}: ${e.message}`)
+    }
+  })
+
+  // Пересоздать упражнения для ВСЕХ уроков со словами
+  fastify.post('/api/admin/regenerate-all', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+
+    // Уроки у которых есть слова но нет упражнений (или status pending)
+    const { rows } = await db.query(`
+      SELECT l.id, l.title, COUNT(DISTINCT w.id) AS words_count, COUNT(DISTINCT e.id) AS ex_count
+      FROM lessons l
+      LEFT JOIN words w ON w.lesson_id = l.id
+      LEFT JOIN exercises e ON e.lesson_id = l.id
+      GROUP BY l.id, l.title
+      HAVING COUNT(DISTINCT w.id) > 0 AND COUNT(DISTINCT e.id) = 0
+      ORDER BY l.id
+    `)
+    if (!rows.length) return { message: 'Все уроки уже имеют упражнения', count: 0 }
+
+    reply.code(202).send({ started: true, lessons: rows.map(r => ({ id: r.id, title: r.title, words: r.words_count })) })
+
+    for (const lesson of rows) {
+      try {
+        console.log(`regenerate-all: урок ${lesson.id} (${lesson.words_count} слов)`)
+        await regenerateExercisesFromDb(lesson.id)
+        console.log(`regenerate-all: урок ${lesson.id} готов`)
+      } catch (e) {
+        console.error(`regenerate-all: урок ${lesson.id} ошибка: ${e.message}`)
+      }
+    }
   })
 }

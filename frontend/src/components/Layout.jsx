@@ -51,6 +51,7 @@ export default function Layout({ children }) {
     { name: 'translate-sentences',       label: '🌐 ' + t.courses.opTranslate,          endpoint: '/admin/translate-sentences',       color: 'var(--good)',   hint: t.courses.opTranslateHint },
     { name: 'translate-words-all-langs', label: '🌍 ' + t.courses.opTranslateAllLangs,  endpoint: '/admin/translate-words-all-langs', color: '#7c3aed',       hint: t.courses.opTranslateAllLangsHint },
     { name: 'translate-exercises',       label: '📝 ' + t.courses.opTranslateExercises, endpoint: '/admin/translate-exercises',       color: '#0891b2',       hint: t.courses.opTranslateExercisesHint },
+    { name: 'regenerate-all',            label: '⚙️ Пересоздать упражнения',             endpoint: '/admin/regenerate-all',            color: '#64748b',       hint: 'Генерирует упражнения для уроков у которых есть слова но нет упражнений (без сканирования фото)' },
   ] : []
 
   // Закрываем drawer при смене роута
