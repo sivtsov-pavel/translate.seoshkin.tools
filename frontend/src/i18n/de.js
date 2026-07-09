@@ -78,14 +78,14 @@ export const de = {
       creating: 'Lektion erstellen...',
       uploading: 'Dateien hochladen...',
       processing: 'Claude verarbeitet die Lektion... (1-2 Minuten)',
-      done: '✓ Fertig! Übungen wurden erstellt.',
+      done: 'Fertig! Übungen wurden erstellt.',
     },
     mediaCount: (n) => `${n} Dateien`,
     status: {
       pending: 'Wartend',
-      processing: '⏳ Verarbeitung...',
-      done: '✓ Bereit',
-      error: '✗ Fehler',
+      processing: 'Verarbeitung...',
+      done: 'Bereit',
+      error: 'Fehler',
     },
   },
   // Wörterbuch

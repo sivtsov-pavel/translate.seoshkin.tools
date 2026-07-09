@@ -75,10 +75,10 @@ export const ar = {
       creating: 'جاري الإنشاء...',
       uploading: 'جاري الرفع...',
       processing: 'كلود يعالج... (١-٢ دقيقة)',
-      done: '✓ تم! التمارين جاهزة.',
+      done: 'تم! التمارين جاهزة.',
     },
     mediaCount: (n) => `${n} ملفات`,
-    status: { pending: 'انتظار', processing: '⏳ معالجة...', done: '✓ جاهز', error: '✗ خطأ' },
+    status: { pending: 'انتظار', processing: 'معالجة...', done: 'جاهز', error: 'خطأ' },
   },
   vocabulary: {
     title: 'المفردات',

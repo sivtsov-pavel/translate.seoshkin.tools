@@ -73,10 +73,10 @@ export const tr = {
       creating: 'Oluşturuluyor...',
       uploading: 'Yükleniyor...',
       processing: 'Claude işliyor... (1-2 dk)',
-      done: '✓ Hazır! Alıştırmalar oluşturuldu.',
+      done: 'Hazır! Alıştırmalar oluşturuldu.',
     },
     mediaCount: (n) => `${n} dosya`,
-    status: { pending: 'Bekliyor', processing: '⏳ İşleniyor...', done: '✓ Hazır', error: '✗ Hata' },
+    status: { pending: 'Bekliyor', processing: 'İşleniyor...', done: 'Hazır', error: 'Hata' },
   },
   vocabulary: {
     title: 'Kelimeler',

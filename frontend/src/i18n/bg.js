@@ -73,10 +73,10 @@ export const bg = {
       creating: 'Създаване...',
       uploading: 'Качване...',
       processing: 'Claude обработва... (1-2 мин)',
-      done: '✓ Готово! Упражненията са създадени.',
+      done: 'Готово! Упражненията са създадени.',
     },
     mediaCount: (n) => `${n} файла`,
-    status: { pending: 'Изчаква', processing: '⏳ Обработка...', done: '✓ Готов', error: '✗ Грешка' },
+    status: { pending: 'Изчаква', processing: 'Обработка...', done: 'Готов', error: 'Грешка' },
   },
   vocabulary: {
     title: 'Речник',

@@ -73,14 +73,14 @@ export const en = {
       creating: 'Creating lesson...',
       uploading: 'Uploading files...',
       processing: 'Claude is processing the lesson… (1–2 minutes)',
-      done: '✓ Done! Exercises created.',
+      done: 'Done! Exercises created.',
     },
     mediaCount: (n) => `${n} file${n === 1 ? '' : 's'}`,
     status: {
       pending: 'Pending',
-      processing: '⏳ Processing…',
-      done: '✓ Ready',
-      error: '✗ Error',
+      processing: 'Processing…',
+      done: 'Ready',
+      error: 'Error',
     },
   },
   vocabulary: {

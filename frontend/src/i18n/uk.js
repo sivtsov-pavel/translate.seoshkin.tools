@@ -73,14 +73,14 @@ export const uk = {
       creating: 'Створюємо урок...',
       uploading: 'Завантажуємо файли...',
       processing: 'Claude обробляє урок... (1–2 хвилини)',
-      done: '✓ Готово! Вправи створено.',
+      done: 'Готово! Вправи створено.',
     },
     mediaCount: (n) => `${n} файлів`,
     status: {
       pending: 'Очікує',
-      processing: '⏳ Обробка...',
-      done: '✓ Готовий',
-      error: '✗ Помилка',
+      processing: 'Обробка...',
+      done: 'Готовий',
+      error: 'Помилка',
     },
   },
   vocabulary: {

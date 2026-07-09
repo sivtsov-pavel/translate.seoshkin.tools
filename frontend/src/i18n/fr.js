@@ -73,10 +73,10 @@ export const fr = {
       creating: 'Création...',
       uploading: 'Upload...',
       processing: 'Claude traite... (1-2 min)',
-      done: '✓ Prêt ! Exercices créés.',
+      done: 'Prêt ! Exercices créés.',
     },
     mediaCount: (n) => `${n} fichiers`,
-    status: { pending: 'En attente', processing: '⏳ Traitement...', done: '✓ Prêt', error: '✗ Erreur' },
+    status: { pending: 'En attente', processing: 'Traitement...', done: 'Prêt', error: 'Erreur' },
   },
   vocabulary: {
     title: 'Vocabulaire',
