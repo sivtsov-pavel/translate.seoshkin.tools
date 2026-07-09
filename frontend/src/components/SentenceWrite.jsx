@@ -7,8 +7,9 @@ export default function SentenceWrite({ exercise, onAnswer }) {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const { word_de, translation_ru, hint_ru, example } = exercise.payload
+  const displayTranslation = exercise.translations?.[lang] || exercise.translation_ru || translation_ru
 
   const handleCheck = async (e) => {
     e.preventDefault()
@@ -42,7 +43,7 @@ export default function SentenceWrite({ exercise, onAnswer }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 10 }}>
           <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}>{word_de}</span>
-          <span style={{ fontSize: 18, color: 'var(--ink-soft)' }}>— {translation_ru}</span>
+          <span style={{ fontSize: 18, color: 'var(--ink-soft)' }}>— {displayTranslation}</span>
         </div>
         <p style={{ color: 'var(--accent)', fontSize: 15, margin: 0 }}>{hint_ru}</p>
         {example && (

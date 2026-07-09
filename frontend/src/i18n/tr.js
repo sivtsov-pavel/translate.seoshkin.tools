@@ -63,6 +63,8 @@ export const tr = {
     loading: 'Yükleniyor...',
     chooseTranslation: 'Doğru çeviriyi seç:',
     wordHints: 'Dersten kelimeler — eklemek için dokun:',
+    translationLabel: 'Çeviri',
+    listenAgain: 'Tekrar dinle',
     rememberWord: 'Almanca kelimeyi hatırla:',
     writeWordFull: 'Kelimenin tamamını yaz...',
   },

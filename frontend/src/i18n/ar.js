@@ -65,6 +65,8 @@ export const ar = {
     loading: 'جاري التحميل...',
     chooseTranslation: 'اختر الترجمة الصحيحة:',
     wordHints: 'كلمات من الدرس — انقر للإدراج:',
+    translationLabel: 'الترجمة',
+    listenAgain: 'استمع مرة أخرى',
     rememberWord: 'تذكر الكلمة الألمانية:',
     writeWordFull: 'اكتب الكلمة كاملة...',
   },

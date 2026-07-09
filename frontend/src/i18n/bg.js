@@ -63,6 +63,8 @@ export const bg = {
     loading: 'Зареждане...',
     chooseTranslation: 'Избери правилния превод:',
     wordHints: 'Думи от урока — натисни за вмъкване:',
+    translationLabel: 'Превод',
+    listenAgain: 'Слушай отново',
     rememberWord: 'Спомни си немската дума:',
     writeWordFull: 'Напиши цялата дума...',
   },

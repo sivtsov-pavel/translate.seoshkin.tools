@@ -5,7 +5,7 @@ import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
 export default function FillBlank({ payload, onAnswer, lessonTitle }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const inputRef = useRef(null)
 
   const isCorrect = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
@@ -53,7 +53,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
           </span>
           {afterBlank}
         </p>
-        {payload.sentence_ru && (
+        {payload.sentence_ru && lang === 'ru' && (
           <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '8px 0 0', fontStyle: 'italic' }}>
             {payload.sentence_ru}
           </p>

@@ -69,6 +69,8 @@ export const ru = {
     wordHints: 'Слова из урока — нажми чтобы вставить:',
     rememberWord: 'Вспомни немецкое слово:',
     writeWordFull: 'Напиши слово целиком...',
+    translationLabel: 'Перевод',
+    listenAgain: 'Слушать ещё раз',
   },
   // Уроки
   lessons: {

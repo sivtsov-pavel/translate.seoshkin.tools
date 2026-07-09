@@ -63,6 +63,8 @@ export const es = {
     loading: 'Cargando...',
     chooseTranslation: 'Elige la traducción correcta:',
     wordHints: 'Palabras de la lección — toca para insertar:',
+    translationLabel: 'Traducción',
+    listenAgain: 'Escuchar de nuevo',
     rememberWord: 'Recuerda la palabra alemana:',
     writeWordFull: 'Escribe la palabra completa...',
   },

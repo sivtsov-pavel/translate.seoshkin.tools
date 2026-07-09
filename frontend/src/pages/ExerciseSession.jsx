@@ -71,7 +71,7 @@ export default function ExerciseSession() {
       {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
       {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={ex.lesson_title} />}
       {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-      {ex.type === 'dictation'       && <Dictation      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} />}
+      {ex.type === 'dictation'       && <Dictation      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} translations={ex.translations} translationRu={ex.translation_ru} />}
     </div>
   )
 }

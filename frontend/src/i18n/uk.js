@@ -63,6 +63,8 @@ export const uk = {
     loading: 'Завантаження вправ...',
     chooseTranslation: 'Обери правильний переклад:',
     wordHints: 'Слова з уроку — натисни щоб вставити:',
+    translationLabel: 'Переклад',
+    listenAgain: 'Слухати ще раз',
     rememberWord: 'Згадай німецьке слово:',
     writeWordFull: 'Напиши слово повністю...',
   },

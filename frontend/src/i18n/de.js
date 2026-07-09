@@ -69,6 +69,8 @@ export const de = {
     wordHints: "Wörter aus der Lektion — tippen zum Einfügen:",
     rememberWord: "Erinnere dich an das deutsche Wort:",
     writeWordFull: "Schreibe das ganze Wort...",
+    translationLabel: "Übersetzung",
+    listenAgain: "Nochmal anhören",
   },
   // Lektionen
   lessons: {
