@@ -112,19 +112,7 @@ export default function LessonList() {
   const adminOp = useAdminOpStore()
   const navigate = useNavigate()
 
-  // Синхронизируем статус операции с бэкендом каждые 2 сек.
-  useEffect(() => {
-    if (user?.role !== 'owner') return
-    const sync = async () => {
-      try {
-        const s = await api.get('/admin/operation-status')
-        if (s.status !== 'idle' || adminOp.status === 'running') adminOp.sync(s)
-      } catch {}
-    }
-    sync()
-    const tid = setInterval(sync, 2000)
-    return () => clearInterval(tid)
-  }, [user?.role])
+
 
   const handleProcess = async (id) => {
     setProcessing(id)

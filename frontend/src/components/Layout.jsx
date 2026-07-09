@@ -19,6 +19,21 @@ export default function Layout({ children }) {
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
 
+  // Polling статуса — работает на любой странице, восстанавливает состояние после перезагрузки
+  useEffect(() => {
+    if (user?.role !== 'owner') return
+    let tid
+    const sync = async () => {
+      try {
+        const s = await api.get('/admin/operation-status')
+        adminOp.sync(s)
+      } catch {}
+    }
+    sync()
+    tid = setInterval(sync, 2000)
+    return () => clearInterval(tid)
+  }, [user?.role]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const runOp = async (name, endpoint) => {
     adminOp.start(name)
     try {
