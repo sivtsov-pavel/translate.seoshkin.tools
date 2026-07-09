@@ -71,6 +71,7 @@ export const ru = {
     sentenceExample: 'Пример',
     yourSentence: 'Ваше предложение',
     correctedVersion: 'Исправленный вариант',
+    yourAnswer: 'Твой ответ',
     loading: 'Загрузка упражнений...',
     chooseTranslation: 'Выбери правильный перевод:',
     wordHints: 'Слова из урока — нажми чтобы вставить:',

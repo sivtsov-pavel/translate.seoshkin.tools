@@ -67,6 +67,7 @@ export const bg = {
     sentenceExample: 'Пример',
     yourSentence: 'Твоето изречение',
     correctedVersion: 'Поправен вариант',
+    yourAnswer: 'Твоят отговор',
     loading: 'Зареждане...',
     chooseTranslation: 'Избери правилния превод:',
     wordHints: 'Думи от урока — натисни за вмъкване:',

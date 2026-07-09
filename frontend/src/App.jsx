@@ -12,6 +12,7 @@ import CourseList from './pages/CourseList.jsx'
 import CourseView from './pages/CourseView.jsx'
 import Wiki from './pages/Wiki.jsx'
 import TextReader from './pages/TextReader.jsx'
+import Report from './pages/Report.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/courses/:id" element={<ProtectedRoute><Layout><CourseView /></Layout></ProtectedRoute>} />
         <Route path="/wiki"        element={<ProtectedRoute><Layout><Wiki       /></Layout></ProtectedRoute>} />
         <Route path="/reader"      element={<ProtectedRoute><Layout><TextReader /></Layout></ProtectedRoute>} />
+        <Route path="/report"      element={<ProtectedRoute><Layout><Report     /></Layout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )

@@ -67,6 +67,7 @@ export const uk = {
     sentenceExample: 'Приклад',
     yourSentence: 'Ваше речення',
     correctedVersion: 'Виправлений варіант',
+    yourAnswer: 'Твоя відповідь',
     loading: 'Завантаження вправ...',
     chooseTranslation: 'Обери правильний переклад:',
     wordHints: 'Слова з уроку — натисни щоб вставити:',

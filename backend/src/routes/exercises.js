@@ -18,6 +18,32 @@ export async function exercisesRoutes(fastify) {
     return { ...adminOp }
   })
 
+  fastify.get('/api/admin/report', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const { rows } = await db.query(`
+      SELECT
+        (SELECT COUNT(*)::int FROM words) AS words_total,
+        (SELECT COUNT(*)::int FROM words WHERE image_url IS NOT NULL) AS words_with_images,
+        (SELECT COUNT(*)::int FROM words WHERE translations IS NOT NULL AND translations != '{}') AS words_translated,
+        (SELECT COUNT(*)::int FROM words WHERE translation_ru IS NOT NULL AND translation_ru != '') AS words_with_ru,
+        (SELECT COUNT(*)::int FROM words WHERE example_sentence IS NOT NULL) AS words_with_example,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'multiple_choice') AS mc_total,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'multiple_choice' AND payload_translations IS NOT NULL AND payload_translations != '{}') AS mc_translated,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'fill_blank') AS fb_total,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'fill_blank' AND payload_translations IS NOT NULL AND payload_translations != '{}') AS fb_translated,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'sentence_write') AS sw_total,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'sentence_write' AND payload_translations IS NOT NULL AND payload_translations != '{}') AS sw_translated,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'dictation') AS dict_total,
+        (SELECT COUNT(*)::int FROM exercises WHERE type = 'flashcard') AS fc_total,
+        (SELECT COUNT(*)::int FROM lessons) AS lessons_total,
+        (SELECT COUNT(*)::int FROM lessons WHERE status = 'done') AS lessons_done,
+        (SELECT COUNT(*)::int FROM lessons WHERE status = 'processing') AS lessons_processing
+    `)
+    return { ...rows[0], op: { ...adminOp } }
+  })
+
   // Упражнения на сегодня — прогресс берётся из user_exercise_progress для каждого юзера отдельно
   fastify.get('/api/exercises/today', {
     preHandler: [fastify.authenticate],

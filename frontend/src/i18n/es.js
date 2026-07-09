@@ -67,6 +67,7 @@ export const es = {
     sentenceExample: 'Ejemplo',
     yourSentence: 'Tu frase',
     correctedVersion: 'Versión corregida',
+    yourAnswer: 'Tu respuesta',
     loading: 'Cargando...',
     chooseTranslation: 'Elige la traducción correcta:',
     wordHints: 'Palabras de la lección — toca para insertar:',

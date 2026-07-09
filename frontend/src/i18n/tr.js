@@ -67,6 +67,7 @@ export const tr = {
     sentenceExample: 'Örnek',
     yourSentence: 'Senin cümlen',
     correctedVersion: 'Düzeltilmiş versiyon',
+    yourAnswer: 'Cevabın',
     loading: 'Yükleniyor...',
     chooseTranslation: 'Doğru çeviriyi seç:',
     wordHints: 'Dersten kelimeler — eklemek için dokun:',

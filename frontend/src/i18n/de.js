@@ -71,6 +71,7 @@ export const de = {
     sentenceExample: 'Beispiel',
     yourSentence: 'Dein Satz',
     correctedVersion: 'Korrigierte Version',
+    yourAnswer: 'Deine Antwort',
     loading: 'Übungen laden...',
     chooseTranslation: "Wähle die richtige Übersetzung:",
     wordHints: "Wörter aus der Lektion — tippen zum Einfügen:",

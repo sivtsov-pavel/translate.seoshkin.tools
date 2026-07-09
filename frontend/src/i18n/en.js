@@ -67,6 +67,7 @@ export const en = {
     sentenceExample: 'Example',
     yourSentence: 'Your sentence',
     correctedVersion: 'Corrected version',
+    yourAnswer: 'Your answer',
     loading: 'Loading exercises...',
     chooseTranslation: 'Choose the correct translation:',
     wordHints: 'Words from the lesson — tap to insert:',

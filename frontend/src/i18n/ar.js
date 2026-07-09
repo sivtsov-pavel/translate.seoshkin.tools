@@ -69,6 +69,7 @@ export const ar = {
     sentenceExample: 'مثال',
     yourSentence: 'جملتك',
     correctedVersion: 'النسخة المصححة',
+    yourAnswer: 'إجابتك',
     loading: 'جاري التحميل...',
     chooseTranslation: 'اختر الترجمة الصحيحة:',
     wordHints: 'كلمات من الدرس — انقر للإدراج:',
