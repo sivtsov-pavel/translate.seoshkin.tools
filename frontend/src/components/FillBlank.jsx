@@ -9,7 +9,16 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
   const inputRef = useRef(null)
 
   const isCorrect = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
+  // Многословный бланк ("Guten Morgen") → GPT ставит "___ ___", split даёт 3+ частей.
+  // Берём только до первого ___ и всё после последнего ___.
   const parts = payload.sentence.split('___')
+  const beforeBlank = parts[0]
+  const afterBlank  = parts[parts.length - 1]
+  // Дедупликация options: GPT часто включает правильный ответ в options
+  const uniqueOptions = [
+    payload.blank,
+    ...payload.options.filter(o => o.trim().toLowerCase() !== payload.blank.trim().toLowerCase()),
+  ]
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
@@ -20,7 +29,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
     setTimeout(() => speak(payload.blank), 300)
   }
 
-  const fullSentence = parts[0] + payload.blank + (parts[1] ?? '')
+  const fullSentence = beforeBlank + payload.blank + afterBlank
 
   return (
     <div style={{ border: '2px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 16, background: 'var(--surface)' }}>
@@ -34,7 +43,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
       {/* Предложение с пропуском */}
       <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
         <p style={{ fontSize: 19, margin: 0, lineHeight: 1.7, color: 'var(--ink)' }}>
-          {parts[0]}
+          {beforeBlank}
           <span style={{
             color: submitted ? (isCorrect ? 'var(--good)' : 'var(--red)') : 'var(--accent)',
             borderBottom: `2px solid ${submitted ? (isCorrect ? 'var(--good)' : 'var(--red)') : 'var(--accent)'}`,
@@ -42,7 +51,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
           }}>
             {submitted ? (answer || '___') : (answer || '   ')}
           </span>
-          {parts[1]}
+          {afterBlank}
         </p>
         {payload.sentence_ru && (
           <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '8px 0 0', fontStyle: 'italic' }}>
@@ -56,7 +65,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
         <div style={{ marginBottom: 14 }}>
           <span style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>Слова из урока — нажми чтобы вставить:</span>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {[payload.blank, ...payload.options].sort(() => Math.random() - 0.5).map((opt, i) => (
+            {uniqueOptions.sort(() => Math.random() - 0.5).map((opt, i) => (
               <button key={i} onClick={() => setAnswer(opt)}
                 style={{
                   fontSize: 14,
