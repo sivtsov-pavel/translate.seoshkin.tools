@@ -13,9 +13,11 @@ export async function processLesson(lessonId, ownerId) {
 
   try {
     const { rows: lessonRows } = await db.query(
-      'SELECT text_content FROM lessons WHERE id = $1', [lessonId]
+      'SELECT text_content, owner_id FROM lessons WHERE id = $1', [lessonId]
     )
     const textContent = lessonRows[0]?.text_content || null
+    // Слова всегда сохраняем под реальным владельцем урока
+    ownerId = lessonRows[0]?.owner_id ?? ownerId
 
     const { rows: mediaFiles } = await db.query(
       'SELECT * FROM lesson_media WHERE lesson_id = $1',

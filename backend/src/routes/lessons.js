@@ -163,6 +163,9 @@ export async function lessonsRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     const { id } = request.params
+    // owner видит любой урок; student — только если урок принадлежит его owner
+    const ownerFilter = request.user.role === 'owner' ? '' : 'AND l.owner_id = $2'
+    const params = request.user.role === 'owner' ? [id] : [id, request.user.id]
     const { rows } = await db.query(
       `SELECT l.*,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
@@ -170,9 +173,9 @@ export async function lessonsRoutes(fastify) {
        FROM lessons l
        LEFT JOIN exercises e ON e.lesson_id = l.id
        LEFT JOIN words w ON w.id = e.word_id
-       WHERE l.id = $1 AND l.owner_id = $2
+       WHERE l.id = $1 ${ownerFilter}
        GROUP BY l.id`,
-      [id, request.user.id]
+      params
     )
     if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
 
