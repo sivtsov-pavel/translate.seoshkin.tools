@@ -37,6 +37,13 @@ export const fr = {
     comeBack: 'Reviens demain pour réviser.',
     exercisesWaiting: (n) => `${n} exercices attendent`,
     startSession: 'Commencer →',
+    done: 'Terminé',
+    start: 'Commencer',
+    repeatAll: 'Tout revoir',
+    lessonWords: 'Mots de la leçon',
+    listen: 'Écouter',
+    lessons: 'Leçons',
+
     loading: 'Chargement...',
   },
   exercise: {

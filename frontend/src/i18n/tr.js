@@ -37,6 +37,13 @@ export const tr = {
     comeBack: 'Tekrar için yarın gel.',
     exercisesWaiting: (n) => `${n} alıştırma bekliyor`,
     startSession: 'Başla →',
+    done: 'Tamamlandı',
+    start: 'Başlat',
+    repeatAll: 'Hepsini tekrar et',
+    lessonWords: 'Ders kelimeleri',
+    listen: 'Dinle',
+    lessons: 'Dersler',
+
     loading: 'Yükleniyor...',
   },
   exercise: {

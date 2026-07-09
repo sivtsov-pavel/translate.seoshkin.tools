@@ -37,6 +37,13 @@ export const uk = {
     comeBack: 'Повертайся завтра для повторення.',
     exercisesWaiting: (n) => `${n} вправ чекають на повторення`,
     startSession: 'Почати повторення →',
+    done: 'Пройдено',
+    start: 'Почати',
+    repeatAll: 'Повторити все',
+    lessonWords: 'Слова уроку',
+    listen: 'Прослухати',
+    lessons: 'Уроки',
+
     loading: 'Завантаження...',
   },
   exercise: {

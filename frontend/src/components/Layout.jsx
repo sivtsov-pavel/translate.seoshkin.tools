@@ -38,7 +38,8 @@ export default function Layout({ children }) {
     adminOp.start(name)
     try {
       const res = await api.post(endpoint, {})
-      adminOp.finish(res)
+      // started:true → операция фоновая, прогресс отслеживается polling'ом
+      if (!res?.started) adminOp.finish(res)
     } catch (e) {
       adminOp.fail(e.message)
     }
@@ -191,6 +192,7 @@ export default function Layout({ children }) {
                   <button
                     onClick={() => runOp(op.name, op.endpoint)}
                     disabled={adminOp.status === 'running'}
+                    title={op.hint}
                     style={{
                       display: 'block', width: '100%', textAlign: 'left',
                       padding: '8px 12px', borderRadius: 10,
@@ -204,11 +206,6 @@ export default function Layout({ children }) {
                       ? `⏳ ${op.label} ${adminOp.total > 0 ? `${adminOp.done}/${adminOp.total}` : '...'}`
                       : done ? `✓ ${op.label}` : op.label}
                   </button>
-                  {op.hint && (
-                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', padding: '2px 12px 0', lineHeight: 1.4 }}>
-                      {op.hint}
-                    </div>
-                  )}
                 </div>
               )
             })}

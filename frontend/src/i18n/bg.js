@@ -37,6 +37,13 @@ export const bg = {
     comeBack: 'Върни се утре за повторение.',
     exercisesWaiting: (n) => `${n} упражнения чакат`,
     startSession: 'Започни →',
+    done: 'Изпълнено',
+    start: 'Старт',
+    repeatAll: 'Прегледай всичко',
+    lessonWords: 'Думи от урока',
+    listen: 'Слушай',
+    lessons: 'Уроци',
+
     loading: 'Зареждане...',
   },
   exercise: {

@@ -37,6 +37,13 @@ export const en = {
     comeBack: 'Come back tomorrow to keep practising.',
     exercisesWaiting: (n) => `${n} exercise${n === 1 ? '' : 's'} waiting for review`,
     startSession: 'Start review →',
+    done: 'Done',
+    start: 'Start',
+    repeatAll: 'Review all',
+    lessonWords: 'Lesson words',
+    listen: 'Listen',
+    lessons: 'Lessons',
+
     loading: 'Loading...',
   },
   exercise: {

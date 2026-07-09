@@ -8,7 +8,6 @@ import MultipleChoice from '../components/MultipleChoice.jsx'
 import SentenceWrite from '../components/SentenceWrite.jsx'
 import LetterFill from '../components/LetterFill.jsx'
 import Dictation from '../components/Dictation.jsx'
-import ProgressBar from '../components/ProgressBar.jsx'
 
 export default function ExerciseSession() {
   const [exercises, setExercises] = useState([])
@@ -62,7 +61,6 @@ export default function ExerciseSession() {
 
   return (
     <div style={{ paddingTop: 30 }}>
-      <ProgressBar current={current} total={exercises.length} />
       <div style={{ marginBottom: 10, color: 'var(--ink-soft)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation }[ex.type]}
       </div>

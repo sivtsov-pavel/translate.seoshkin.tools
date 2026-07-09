@@ -39,6 +39,13 @@ export const ar = {
     comeBack: 'عد غداً للمراجعة.',
     exercisesWaiting: (n) => `${n} تمارين بانتظارك`,
     startSession: 'ابدأ ←',
+    done: 'مكتمل',
+    start: 'ابدأ',
+    repeatAll: 'مراجعة الكل',
+    lessonWords: 'كلمات الدرس',
+    listen: 'استمع',
+    lessons: 'الدروس',
+
     loading: 'جاري التحميل...',
   },
   exercise: {

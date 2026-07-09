@@ -148,7 +148,8 @@ export async function lessonsRoutes(fastify) {
   }, async (request) => {
     const lessonId = parseInt(request.params.id)
     const { rows } = await db.query(
-      `SELECT DISTINCT ON (w.id) w.id, w.word_de, w.translation_ru, w.example_sentence
+      `SELECT DISTINCT ON (w.id) w.id, w.word_de, w.translation_ru,
+              COALESCE(w.translations, '{}') AS translations, w.example_sentence
        FROM exercises e
        JOIN words w ON w.id = e.word_id
        WHERE e.lesson_id = $1 AND e.word_id IS NOT NULL

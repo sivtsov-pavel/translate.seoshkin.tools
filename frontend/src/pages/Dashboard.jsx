@@ -7,34 +7,6 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'dictation']
 const TYPE_ICON  = { multiple_choice: 'bi-check-square-fill', flashcard: 'bi-card-text', letter_fill: 'bi-fonts', fill_blank: 'bi-pencil-fill', sentence_write: 'bi-pen-fill', dictation: 'bi-mic-fill' }
 
-// Кольцо прогресса
-function ProgressRing({ pct, done, total }) {
-  const size = 88
-  const r = 36
-  const circ = 2 * Math.PI * r
-  // Минимум 4% чтобы кольцо было видно даже при малом прогрессе
-  const dash = circ * (Math.max(pct, pct > 0 ? 4 : 0) / 100)
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        {/* Фон кольца */}
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--surface-2)" strokeWidth="7" />
-        {/* Прогресс */}
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--accent)" strokeWidth="7"
-          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-          style={{ transition: 'stroke-dasharray .8s cubic-bezier(.4,0,.2,1)' }} />
-      </svg>
-      <div style={{
-        position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: 0,
-      }}>
-        <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', lineHeight: 1 }}>{pct}%</span>
-        <span style={{ fontSize: 10, color: 'var(--ink-soft)', lineHeight: 1.4 }}>{done}/{done+total}</span>
-      </div>
-    </div>
-  )
-}
-
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
@@ -51,26 +23,12 @@ export default function Dashboard() {
     </div>
   )
 
-  const total   = stats?.total ?? 0
+  const total        = stats?.total ?? 0
   const lessons      = stats?.lessons ?? []
-  const done         = stats?.done ?? 0
-  const all          = total + done
-  const pct          = all > 0 ? Math.round((done / all) * 100) : 100
-  const lessonsTotal = stats?.lessonsTotal ?? 0
-  const lessonsDone  = stats?.lessonsDone ?? 0
-  const lessonsPct   = lessonsTotal > 0 ? Math.round((lessonsDone / lessonsTotal) * 100) : 0
 
   if (total === 0) {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-        {lessonsTotal > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <ProgressRing pct={lessonsPct} done={lessonsDone} total={lessonsTotal - lessonsDone} />
-              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.lessons.title}</span>
-            </div>
-          </div>
-        )}
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
         <div style={{ fontFamily: 'Georgia,serif', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
           {t.dashboard.allDone}
@@ -83,39 +41,20 @@ export default function Dashboard() {
   return (
     <div style={{ paddingBottom: 90 }}>
       <style>{`.chips-grid { grid-template-columns: 1fr; } @media (min-width: 480px) { .chips-grid { grid-template-columns: 1fr 1fr; } }`}</style>
-      {/* Hero */}
-      <div style={{ padding: '20px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          {/* Левая метрика — упражнения */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
-            <ProgressRing pct={pct} done={done} total={total} />
-            <div>
-              <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px', lineHeight: 1.1 }}>
-                {t.dashboard.title}
-              </h1>
-              <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 13 }}>
-                {t.dashboard.exercisesWaiting(total)}
-              </p>
-              <p style={{ margin: '2px 0 0', color: 'var(--ink-soft)', fontSize: 12 }}>
-                Пройдено: {done}
-              </p>
-            </div>
-          </div>
-          {/* Правая метрика — уроки */}
-          {lessonsTotal > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              <ProgressRing pct={lessonsPct} done={lessonsDone} total={lessonsTotal - lessonsDone} />
-              <span style={{ fontSize: 11, color: 'var(--ink-soft)', textAlign: 'center', letterSpacing: '0.5px' }}>
-                {t.lessons.title}
-              </span>
-            </div>
-          )}
-        </div>
+
+      {/* Hero — просто заголовок и счёт */}
+      <div style={{ padding: '20px 20px 14px' }}>
+        <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 6px', lineHeight: 1.2 }}>
+          {t.dashboard.title}
+        </h1>
+        <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>
+          {t.dashboard.exercisesWaiting(total)}
+        </p>
       </div>
 
-      {/* Уроки */}
+      {/* Секция уроков */}
       <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 20 }}>
-        Уроки
+        {t.dashboard.lessons}
       </div>
 
       <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -140,7 +79,7 @@ export default function Dashboard() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
           }}>
-          ▶ Повторить всё
+          ▶ {t.dashboard.repeatAll}
           <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 8, padding: '2px 10px', fontSize: 13 }}>
             {total}
           </span>
@@ -151,9 +90,10 @@ export default function Dashboard() {
 }
 
 function LessonCard({ lesson, navigate }) {
-  const { t } = useI18nStore()
-  const [words, setWords]       = useState(null)
+  const { t, lang } = useI18nStore()
+  const [words, setWords]         = useState(null)
   const [showWords, setShowWords] = useState(false)
+  const [listening, setListening] = useState(false)
 
   const typeLabels = {
     flashcard:       t.exercise.flashcard,
@@ -164,16 +104,39 @@ function LessonCard({ lesson, navigate }) {
     dictation:       t.exercise.dictation,
   }
 
-  const toggleWords = async () => {
-    if (!showWords && words === null) {
+  const loadWords = async () => {
+    if (words === null) {
       const data = await api.get(`/lessons/${lesson.lesson_id}/words`)
       setWords(data)
+      return data
     }
+    return words
+  }
+
+  const toggleWords = async () => {
+    await loadWords()
     setShowWords(v => !v)
   }
 
-  const total   = lesson.total
-  const chips   = TYPE_ORDER.filter(type => lesson.byType[type])
+  const handleListen = async () => {
+    const wordList = await loadWords()
+    if (!wordList?.length) return
+    setListening(true)
+    window.speechSynthesis.cancel()
+    let idx = 0
+    const speakNext = () => {
+      if (idx >= wordList.length) { setListening(false); return }
+      const utt = new SpeechSynthesisUtterance(wordList[idx].word_de)
+      utt.lang = 'de-DE'
+      utt.rate = 0.85
+      utt.onend = () => { idx++; setTimeout(speakNext, 500) }
+      window.speechSynthesis.speak(utt)
+    }
+    speakNext()
+  }
+
+  const chips = TYPE_ORDER.filter(type => lesson.byType[type])
+  const wordsCount = lesson.words_count || 0
 
   return (
     <div style={{
@@ -192,7 +155,7 @@ function LessonCard({ lesson, navigate }) {
             </div>
           )}
           <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4 }}>
-            {total} карточек ждут повторения
+            {t.dashboard.exercisesWaiting(lesson.total)}
           </div>
         </div>
         <button
@@ -204,11 +167,11 @@ function LessonCard({ lesson, navigate }) {
             display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
             flexShrink: 0,
           }}>
-          ▶ Начать
+          ▶ {t.dashboard.start}
         </button>
       </div>
 
-      {/* Чипы типов упражнений — 2 колонки на wide, 1 на мобиле */}
+      {/* Чипы типов упражнений */}
       <div className="chips-grid" style={{ display: 'grid', gap: 8, marginTop: 14 }}>
         {chips.map(type => (
           <button key={type}
@@ -231,33 +194,57 @@ function LessonCard({ lesson, navigate }) {
         ))}
       </div>
 
-      {/* Прогресс-бар */}
-      <div style={{ height: 4, borderRadius: 3, background: 'var(--red)', marginTop: 14, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: '40%', background: 'var(--accent)', borderRadius: 3 }} />
+      {/* Слова урока — нижняя панель */}
+      <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Кнопка Прослушать */}
+        {wordsCount > 0 && (
+          <button
+            onClick={handleListen}
+            disabled={listening}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: listening ? 'var(--accent-soft)' : 'var(--surface-2)',
+              border: `1px solid ${listening ? 'var(--accent)' : 'var(--line)'}`,
+              color: listening ? 'var(--accent)' : 'var(--ink-soft)',
+              borderRadius: 10, padding: '7px 12px', fontSize: 12.5,
+              cursor: listening ? 'default' : 'pointer', fontWeight: 500,
+              flexShrink: 0,
+            }}>
+            <i className={`bi ${listening ? 'bi-volume-up-fill' : 'bi-volume-up'}`} style={{ fontSize: 14 }} />
+            {t.dashboard.listen}
+          </button>
+        )}
+
+        {/* Раскрыть/скрыть слова */}
+        <button onClick={toggleWords} style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'none', border: 'none',
+          color: 'var(--ink-soft)', fontSize: 13,
+          cursor: 'pointer', padding: '7px 4px',
+        }}>
+          <span style={{ fontWeight: 500 }}>
+            {t.dashboard.lessonWords}
+            {wordsCount > 0 && <span style={{ marginLeft: 6, background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 6, padding: '1px 7px', fontSize: 12, color: 'var(--ink-soft)' }}>{wordsCount}</span>}
+          </span>
+          <span style={{ fontSize: 18, color: 'var(--accent)', fontWeight: 700, lineHeight: 1 }}>
+            {showWords ? '▲' : '▼'}
+          </span>
+        </button>
       </div>
 
-      {/* Слова урока */}
-      <button onClick={toggleWords} style={{
-        marginTop: 12, width: '100%', textAlign: 'left',
-        background: 'none', border: 'none', borderTop: '1px solid var(--line)',
-        paddingTop: 12, color: 'var(--ink-soft)', fontSize: 13,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        cursor: 'pointer',
-      }}>
-        Слова урока {words !== null ? `(${words.length})` : ''}
-        <span>{showWords ? '▲' : '▾'}</span>
-      </button>
-
       {showWords && words && (
-        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {words.map(w => (
-            <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
-              <span style={{ fontWeight: 700, fontSize: 15 }}>{w.word_de}</span>
-              <SpeakButton text={w.word_de} size={14} appendText={w.translation_ru} />
-              <span style={{ color: 'var(--ink-soft)' }}>—</span>
-              <span style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{w.translation_ru}</span>
-            </div>
-          ))}
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {words.map(w => {
+            const translation = w.translations?.[lang] || w.translation_ru
+            return (
+              <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
+                <span style={{ fontWeight: 700, fontSize: 15 }}>{w.word_de}</span>
+                <SpeakButton text={w.word_de} size={14} appendText={translation} />
+                <span style={{ color: 'var(--ink-soft)' }}>—</span>
+                <span style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{translation}</span>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

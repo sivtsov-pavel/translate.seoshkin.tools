@@ -40,6 +40,13 @@ export const ru = {
     comeBack: 'Возвращайся завтра для повторения.',
     exercisesWaiting: (n) => `${n} упражнений ждут повторения`,
     startSession: 'Начать повторение →',
+    done: 'Пройдено',
+    start: 'Начать',
+    repeatAll: 'Повторить всё',
+    lessonWords: 'Слова урока',
+    listen: 'Прослушать',
+    lessons: 'Уроки',
+
     loading: 'Загрузка...',
   },
   // Упражнения

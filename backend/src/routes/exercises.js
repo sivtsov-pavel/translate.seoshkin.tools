@@ -123,10 +123,23 @@ export async function exercisesRoutes(fastify) {
     const lessonsMap = {}
     for (const r of rows) {
       if (!lessonsMap[r.lesson_id]) {
-        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_description: r.lesson_description, total: 0, byType: {} }
+        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_description: r.lesson_description, total: 0, byType: {}, words_count: 0 }
       }
       lessonsMap[r.lesson_id].byType[r.type] = r.count
       lessonsMap[r.lesson_id].total += r.count
+    }
+    // Количество уникальных слов на урок
+    const lessonIds = Object.keys(lessonsMap).map(Number)
+    if (lessonIds.length > 0) {
+      const { rows: wRows } = await db.query(
+        `SELECT e.lesson_id, COUNT(DISTINCT e.word_id)::int AS words_count
+         FROM exercises e WHERE e.lesson_id = ANY($1) AND e.word_id IS NOT NULL
+         GROUP BY e.lesson_id`,
+        [lessonIds]
+      )
+      for (const r of wRows) {
+        if (lessonsMap[r.lesson_id]) lessonsMap[r.lesson_id].words_count = r.words_count
+      }
     }
     const lessons = Object.values(lessonsMap)
     const total   = lessons.reduce((s, l) => s + l.total, 0)
@@ -511,6 +524,7 @@ export async function exercisesRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (adminOp.status === 'running') return reply.status(409).send({ error: 'Операция уже выполняется' })
 
     const { rows } = await db.query(
       `SELECT id, word_de, translation_ru FROM words
@@ -520,22 +534,28 @@ export async function exercisesRoutes(fastify) {
     if (!rows.length) return { updated: 0, total: 0 }
 
     Object.assign(adminOp, { name: 'translate-words-all-langs', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
+    // Отвечаем немедленно — операция продолжается в фоне
+    reply.code(202).send({ started: true, total: rows.length })
 
-    const results = await translateWordsToAllLangs(rows)
-    for (const [id, t] of Object.entries(results)) {
-      await db.query('UPDATE words SET translations = $1 WHERE id = $2', [JSON.stringify(t), parseInt(id)])
-      adminOp.updated++
-      adminOp.done++
+    try {
+      const results = await translateWordsToAllLangs(rows)
+      for (const [id, t] of Object.entries(results)) {
+        await db.query('UPDATE words SET translations = $1 WHERE id = $2', [JSON.stringify(t), parseInt(id)])
+        adminOp.updated++
+        adminOp.done++
+      }
+      adminOp.status = 'done'
+    } catch (e) {
+      adminOp.status = 'error'
+      adminOp.error = e.message
     }
-
-    adminOp.status = 'done'
-    return { updated: adminOp.updated, total: rows.length }
   })
 
   fastify.post('/api/admin/translate-exercises', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (adminOp.status === 'running') return reply.status(409).send({ error: 'Операция уже выполняется' })
 
     const { rows } = await db.query(
       `SELECT id, type, payload FROM exercises
@@ -546,25 +566,30 @@ export async function exercisesRoutes(fastify) {
     if (!rows.length) return { updated: 0, total: 0 }
 
     Object.assign(adminOp, { name: 'translate-exercises', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
+    // Отвечаем немедленно — операция продолжается в фоне (до 10 минут)
+    reply.code(202).send({ started: true, total: rows.length })
 
-    const BATCH = 15
-    for (let i = 0; i < rows.length; i += BATCH) {
-      const batch = rows.slice(i, i + BATCH)
-      try {
-        const results = await translateExercisePayloads(batch)
-        for (const [id, langs] of Object.entries(results)) {
-          await db.query('UPDATE exercises SET payload_translations = $1 WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
-          adminOp.updated++
+    try {
+      const BATCH = 15
+      for (let i = 0; i < rows.length; i += BATCH) {
+        const batch = rows.slice(i, i + BATCH)
+        try {
+          const results = await translateExercisePayloads(batch)
+          for (const [id, langs] of Object.entries(results)) {
+            await db.query('UPDATE exercises SET payload_translations = $1 WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
+            adminOp.updated++
+          }
+        } catch (e) {
+          console.error(`translate-exercises батч ${i}: ${e.message}`)
+          adminOp.failed += batch.length
         }
-      } catch (e) {
-        console.error(`translate-exercises батч ${i}: ${e.message}`)
-        adminOp.failed += batch.length
+        adminOp.done = Math.min(i + BATCH, rows.length)
       }
-      adminOp.done = Math.min(i + BATCH, rows.length)
+      adminOp.status = 'done'
+    } catch (e) {
+      adminOp.status = 'error'
+      adminOp.error = e.message
     }
-
-    adminOp.status = 'done'
-    return { updated: adminOp.updated, total: rows.length }
   })
 
   // Поиск слова по написанию (для читалки)

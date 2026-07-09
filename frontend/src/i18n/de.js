@@ -40,6 +40,13 @@ export const de = {
     comeBack: 'Komm morgen wieder zum Wiederholen.',
     exercisesWaiting: (n) => `${n} Übungen warten auf Wiederholung`,
     startSession: 'Wiederholung starten →',
+    done: 'Erledigt',
+    start: 'Starten',
+    repeatAll: 'Alles üben',
+    lessonWords: 'Wörter der Lektion',
+    listen: 'Anhören',
+    lessons: 'Lektionen',
+
     loading: 'Laden...',
   },
   // Übungen
