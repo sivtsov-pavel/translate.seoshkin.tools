@@ -25,12 +25,20 @@ export async function processLesson(lessonId, ownerId) {
     const photos = mediaFiles.filter(m => m.type === 'photo')
     const audios = mediaFiles.filter(m => m.type === 'audio')
 
-    // 1. Обрабатываем каждое фото через Claude vision
+    // 1. Обрабатываем каждое фото через GPT-4o vision (пропускаем уже готовые из кэша)
     const photoExtractions = []
     for (let i = 0; i < photos.length; i++) {
-      await setProgress(lessonId, `Фото ${i + 1} из ${photos.length}...`)
-
       const photo = photos[i]
+
+      if (photo.processed && photo.raw_extraction) {
+        // Берём из БД — токены не тратим
+        photoExtractions.push(typeof photo.raw_extraction === 'string'
+          ? JSON.parse(photo.raw_extraction)
+          : photo.raw_extraction)
+        continue
+      }
+
+      await setProgress(lessonId, `Фото ${i + 1} из ${photos.length}...`)
       const filepath = join(config.uploadDir, photo.file_path)
       const extraction = await extractFromPhoto(filepath)
       photoExtractions.push(extraction)
