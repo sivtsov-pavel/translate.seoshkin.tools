@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
+import { useAdminOpStore } from '../store/adminOp.js'
 
 const STATUS_COLORS = { pending: 'var(--ink-soft)', processing: '#f59e0b', done: 'var(--good)', error: 'var(--red)' }
 const STATUS_ICONS  = { pending: '○', processing: '⏳', done: '✓', error: '✗' }
@@ -91,16 +92,16 @@ function EditForm({ lesson, onSave, onCancel }) {
 }
 
 const getOpNames = (t) => ({
-  'fetch-images':         '🖼️ ' + t.lessons.opFetchImages,
-  'enrich-words':         '🤖 ' + t.lessons.opEnrichWords,
-  'translate-sentences':  '🌐 ' + t.lessons.opTranslate,
+  'fetch-images':              '🖼️ ' + t.courses.opFetchImages,
+  'enrich-words':              '🤖 ' + t.courses.opEnrichWords,
+  'translate-sentences':       '🌐 ' + t.courses.opTranslate,
+  'translate-words-all-langs': '🌍 ' + t.courses.opTranslateAllLangs,
 })
 
 export default function LessonList() {
   const [lessons, setLessons]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [deleting, setDeleting]         = useState(null)
-  const [adminOp, setAdminOp]           = useState({ status: 'idle', name: null, done: 0, total: 0, updated: 0, failed: 0 })
   const [addingLetters, setAddingLetters]         = useState(null)
   const [addingDictation, setAddingDictation]     = useState(null)
   const [processing, setProcessing]               = useState(null)
@@ -108,54 +109,22 @@ export default function LessonList() {
   const { t } = useI18nStore()
   const OP_NAMES = getOpNames(t)
   const { user } = useAuthStore()
+  const adminOp = useAdminOpStore()
   const navigate = useNavigate()
 
-  // Синхронизируем статус с бэкендом — сразу при маунте и каждые 2 сек.
-  // Это позволяет восстановить прогресс после перезагрузки страницы.
+  // Синхронизируем статус операции с бэкендом каждые 2 сек.
   useEffect(() => {
     if (user?.role !== 'owner') return
     const sync = async () => {
       try {
         const s = await api.get('/admin/operation-status')
-        setAdminOp(prev => (s.status !== 'idle' || prev.status === 'running') ? s : prev)
+        if (s.status !== 'idle' || adminOp.status === 'running') adminOp.sync(s)
       } catch {}
     }
     sync()
     const tid = setInterval(sync, 2000)
     return () => clearInterval(tid)
   }, [user?.role])
-
-  const startOp = (name) => setAdminOp({ status: 'running', name, done: 0, total: 0, updated: 0, failed: 0 })
-
-  const handleFetchImages = async () => {
-    startOp('fetch-images')
-    try {
-      const res = await api.post('/admin/fetch-images', {})
-      setAdminOp(prev => ({ ...prev, ...res, status: 'done' }))
-    } catch (e) {
-      setAdminOp(prev => ({ ...prev, status: 'error', error: e.message }))
-    }
-  }
-
-  const handleEnrichWords = async () => {
-    startOp('enrich-words')
-    try {
-      const res = await api.post('/admin/enrich-words', {})
-      setAdminOp(prev => ({ ...prev, ...res, status: 'done' }))
-    } catch (e) {
-      setAdminOp(prev => ({ ...prev, status: 'error', error: e.message }))
-    }
-  }
-
-  const handleTranslateSentences = async () => {
-    startOp('translate-sentences')
-    try {
-      const res = await api.post('/admin/translate-sentences', {})
-      setAdminOp(prev => ({ ...prev, ...res, status: 'done' }))
-    } catch (e) {
-      setAdminOp(prev => ({ ...prev, status: 'error', error: e.message }))
-    }
-  }
 
   const handleProcess = async (id) => {
     setProcessing(id)
@@ -209,21 +178,8 @@ export default function LessonList() {
   return (
     <div>
       <div style={{ paddingLeft: 0, paddingRight: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8, padding: '0 0 8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, padding: '0 0 8px' }}>
         <h1 style={{ margin: 0 }}>{t.lessons.title}</h1>
-        {user?.role === 'owner' && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleFetchImages} disabled={adminOp.status === 'running'} style={adminBtn('var(--accent)', adminOp.name === 'fetch-images' && adminOp.status === 'running')}>
-              🖼️ Загрузить картинки
-            </button>
-            <button onClick={handleTranslateSentences} disabled={adminOp.status === 'running'} style={adminBtn('var(--good)', adminOp.name === 'translate-sentences' && adminOp.status === 'running')}>
-              🌐 Перевести предложения
-            </button>
-            <button onClick={handleEnrichWords} disabled={adminOp.status === 'running'} style={adminBtn('#d97706', adminOp.name === 'enrich-words' && adminOp.status === 'running')}>
-              🤖 Дополнить словарь
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Прогресс admin-операции */}
@@ -235,7 +191,7 @@ export default function LessonList() {
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{OP_NAMES[adminOp.name]}</span>
                 <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
                   {adminOp.total > 0
-                    ? `${adminOp.done} / ${adminOp.total} ${t.lessons.words}`
+                    ? `${adminOp.done} / ${adminOp.total} ${t.courses.words}`
                     : t.common.starting}
                 </span>
               </div>
@@ -261,14 +217,14 @@ export default function LessonList() {
                 ✓ {OP_NAMES[adminOp.name]} — обновлено: {adminOp.updated}
                 {adminOp.failed > 0 ? `, не найдено: ${adminOp.failed}` : ''}
               </span>
-              <button onClick={() => setAdminOp({ status: 'idle', name: null, done: 0, total: 0, updated: 0, failed: 0 })}
+              <button onClick={() => adminOp.reset()}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18, lineHeight: 1 }}>✕</button>
             </div>
           )}
           {adminOp.status === 'error' && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: 'var(--red)', fontSize: 14 }}>✗ {t.common.error}: {adminOp.error}</span>
-              <button onClick={() => setAdminOp({ status: 'idle', name: null, done: 0, total: 0, updated: 0, failed: 0 })}
+              <button onClick={() => adminOp.reset()}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18, lineHeight: 1 }}>✕</button>
             </div>
           )}

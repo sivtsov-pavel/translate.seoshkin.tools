@@ -67,6 +67,8 @@ export const de = {
     loading: 'Übungen laden...',
     chooseTranslation: "Wähle die richtige Übersetzung:",
     wordHints: "Wörter aus der Lektion — tippen zum Einfügen:",
+    rememberWord: "Erinnere dich an das deutsche Wort:",
+    writeWordFull: "Schreibe das ganze Wort...",
   },
   // Lektionen
   lessons: {
@@ -147,11 +149,15 @@ export const de = {
     opFetchImages: "Bilder laden",
     opEnrichWords: "Wörterbuch ergänzen",
     opTranslate: "Sätze übersetzen",
+    opTranslateAllLangs: "In alle Sprachen übersetzen",
     words: "Wörter",
   },
   common: {
     loading: 'Laden...',
     error: 'Fehler',
     cancel: 'Abbrechen',
+    save: 'Speichern',
+    starting: 'Starten...',
+    deleteLesson: 'Lektion löschen? Alle Wörter und Übungen werden dauerhaft gelöscht.',
   },
 }

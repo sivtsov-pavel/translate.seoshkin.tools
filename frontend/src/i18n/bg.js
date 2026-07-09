@@ -61,6 +61,10 @@ export const bg = {
     yourSentence: 'Твоето изречение',
     correctedVersion: 'Поправен вариант',
     loading: 'Зареждане...',
+    chooseTranslation: 'Избери правилния превод:',
+    wordHints: 'Думи от урока — натисни за вмъкване:',
+    rememberWord: 'Спомни си немската дума:',
+    writeWordFull: 'Напиши цялата дума...',
   },
   lessons: {
     title: 'Уроци',
@@ -134,7 +138,8 @@ export const bg = {
     opFetchImages: "Зареждане на изображения",
     opEnrichWords: "Обогатяване на речника",
     opTranslate: "Превод на изречения",
+    opTranslateAllLangs: "Превод на всички езици",
     words: "думи",
   },
-  common: { loading: 'Зареждане...', error: 'Грешка', cancel: 'Отказ', starting: "Стартиране...", deleteLesson: "Изтриване на урока? Всички думи и упражнения ще бъдат изтрити." },
+  common: { loading: 'Зареждане...', error: 'Грешка', cancel: 'Отказ', save: 'Запази', starting: "Стартиране...", deleteLesson: "Изтриване на урока? Всички думи и упражнения ще бъдат изтрити." },
 }

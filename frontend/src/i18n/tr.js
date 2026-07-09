@@ -61,6 +61,10 @@ export const tr = {
     yourSentence: 'Senin cümlen',
     correctedVersion: 'Düzeltilmiş versiyon',
     loading: 'Yükleniyor...',
+    chooseTranslation: 'Doğru çeviriyi seç:',
+    wordHints: 'Dersten kelimeler — eklemek için dokun:',
+    rememberWord: 'Almanca kelimeyi hatırla:',
+    writeWordFull: 'Kelimenin tamamını yaz...',
   },
   lessons: {
     title: 'Dersler',
@@ -134,7 +138,8 @@ export const tr = {
     opFetchImages: "Görseller yükleniyor",
     opEnrichWords: "Sözlük zenginleştiriliyor",
     opTranslate: "Cümleler çevriliyor",
+    opTranslateAllLangs: "Tüm dillere çevir",
     words: "kelime",
   },
-  common: { loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal', starting: "Başlıyor...", deleteLesson: "Ders silinsin mi? Tüm kelimeler ve alıştırmalar kalıcı olarak silinecek." },
+  common: { loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal', save: 'Kaydet', starting: "Başlıyor...", deleteLesson: "Ders silinsin mi? Tüm kelimeler ve alıştırmalar kalıcı olarak silinecek." },
 }

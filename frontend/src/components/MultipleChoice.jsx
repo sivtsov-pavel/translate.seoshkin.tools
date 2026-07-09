@@ -3,9 +3,10 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 
-export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl }) {
+export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu }) {
   const [selected, setSelected] = useState(null)
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
+  const correctAnswer = translations?.[lang] || translationRu || payload.options[payload.correct]
 
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
@@ -79,7 +80,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
           color: selected === payload.correct ? 'var(--good)' : 'var(--red)' }}>
           {selected === payload.correct
             ? `✓ ${t.exercise.correct}`
-            : `✗ ${t.exercise.wrong} — ${payload.options[payload.correct]}`}
+            : `✗ ${t.exercise.wrong} — ${correctAnswer}`}
         </p>
       )}
       </div>

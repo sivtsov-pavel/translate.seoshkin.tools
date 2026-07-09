@@ -61,6 +61,10 @@ export const uk = {
     yourSentence: 'Ваше речення',
     correctedVersion: 'Виправлений варіант',
     loading: 'Завантаження вправ...',
+    chooseTranslation: 'Обери правильний переклад:',
+    wordHints: 'Слова з уроку — натисни щоб вставити:',
+    rememberWord: 'Згадай німецьке слово:',
+    writeWordFull: 'Напиши слово повністю...',
   },
   lessons: {
     title: 'Уроки',
@@ -139,11 +143,15 @@ export const uk = {
     opFetchImages: "Завантаження зображень",
     opEnrichWords: "Доповнення словника",
     opTranslate: "Переклад речень",
+    opTranslateAllLangs: "Переклад на всі мови",
     words: "слів",
   },
   common: {
     loading: 'Завантаження...',
     error: 'Помилка',
     cancel: 'Скасувати',
+    save: 'Зберегти',
+    starting: 'Запускаємо...',
+    deleteLesson: 'Видалити урок? Усі слова та вправи будуть видалені назавжди.',
   },
 }

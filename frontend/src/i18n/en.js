@@ -63,6 +63,8 @@ export const en = {
     loading: 'Loading exercises...',
     chooseTranslation: 'Choose the correct translation:',
     wordHints: 'Words from the lesson — tap to insert:',
+    rememberWord: 'Remember the German word:',
+    writeWordFull: 'Write the full word...',
   },
   lessons: {
     title: 'Lessons',
@@ -141,11 +143,15 @@ export const en = {
     opFetchImages: "Loading images",
     opEnrichWords: "Enriching vocabulary",
     opTranslate: "Translating sentences",
+    opTranslateAllLangs: "Translate to all languages",
     words: "words",
   },
   common: {
     loading: 'Loading...',
     error: 'Error',
     cancel: 'Cancel',
+    save: 'Save',
+    starting: 'Starting...',
+    deleteLesson: 'Delete lesson? All words and exercises will be permanently deleted.',
   },
 }

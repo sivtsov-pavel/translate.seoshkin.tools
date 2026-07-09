@@ -67,6 +67,8 @@ export const ru = {
     loading: 'Загрузка упражнений...',
     chooseTranslation: 'Выбери правильный перевод:',
     wordHints: 'Слова из урока — нажми чтобы вставить:',
+    rememberWord: 'Вспомни немецкое слово:',
+    writeWordFull: 'Напиши слово целиком...',
   },
   // Уроки
   lessons: {
@@ -147,11 +149,15 @@ export const ru = {
     opFetchImages: "Загрузка картинок",
     opEnrichWords: "Дополнение словаря",
     opTranslate: "Перевод предложений",
+    opTranslateAllLangs: "Перевод на все языки",
     words: "слов",
   },
   common: {
     loading: 'Загрузка...',
     error: 'Ошибка',
     cancel: 'Отмена',
+    save: 'Сохранить',
+    starting: 'Запускаем...',
+    deleteLesson: 'Удалить урок? Все слова и упражнения будут удалены навсегда.',
   },
 }

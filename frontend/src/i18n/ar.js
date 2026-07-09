@@ -63,6 +63,10 @@ export const ar = {
     yourSentence: 'جملتك',
     correctedVersion: 'النسخة المصححة',
     loading: 'جاري التحميل...',
+    chooseTranslation: 'اختر الترجمة الصحيحة:',
+    wordHints: 'كلمات من الدرس — انقر للإدراج:',
+    rememberWord: 'تذكر الكلمة الألمانية:',
+    writeWordFull: 'اكتب الكلمة كاملة...',
   },
   lessons: {
     title: 'الدروس',
@@ -136,7 +140,8 @@ export const ar = {
     opFetchImages: "تحميل الصور",
     opEnrichWords: "إثراء المفردات",
     opTranslate: "ترجمة الجمل",
+    opTranslateAllLangs: "ترجمة لجميع اللغات",
     words: "كلمات",
   },
-  common: { loading: 'جاري التحميل...', error: 'خطأ', cancel: 'إلغاء', starting: "يبدأ...", deleteLesson: "حذف الدرس؟ سيتم حذف جميع الكلمات والتمارين نهائياً." },
+  common: { loading: 'جاري التحميل...', error: 'خطأ', cancel: 'إلغاء', save: 'حفظ', starting: "يبدأ...", deleteLesson: "حذف الدرس؟ سيتم حذف جميع الكلمات والتمارين نهائياً." },
 }

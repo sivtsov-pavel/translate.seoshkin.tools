@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { checkSentence, translateSentences, enrichWords } from '../services/claude.js'
+import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join, extname } from 'path'
@@ -28,7 +28,7 @@ export async function exercisesRoutes(fastify) {
 
     const SELECT = `
         SELECT e.*,
-               w.word_de, w.translation_ru,
+               w.word_de, w.translation_ru, COALESCE(w.translations, '{}') AS translations,
                COALESCE(w.image_url, e.image_url) AS image_url,
                l.title AS lesson_title,
                COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
@@ -191,16 +191,23 @@ export async function exercisesRoutes(fastify) {
         type: 'object',
         properties: {
           status: { type: 'string', enum: ['new', 'learning', 'known'] },
+          translation_ru: { type: 'string', minLength: 1 },
         },
       },
     },
   }, async (request, reply) => {
     const wordId = parseInt(request.params.id)
-    const { status } = request.body
+    const { status, translation_ru } = request.body
     const userId = request.user.id
 
     const { rows: wRows } = await db.query('SELECT id FROM words WHERE id = $1', [wordId])
     if (!wRows[0]) return reply.status(404).send({ error: 'Слово не найдено' })
+
+    if (translation_ru !== undefined) {
+      if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только учитель может редактировать перевод' })
+      await db.query('UPDATE words SET translation_ru = $1 WHERE id = $2', [translation_ru.trim(), wordId])
+      return { id: wordId, translation_ru: translation_ru.trim() }
+    }
 
     await db.query(
       `INSERT INTO user_word_status (user_id, word_id, status)
@@ -492,6 +499,31 @@ export async function exercisesRoutes(fastify) {
         adminOp.updated++
       }
       adminOp.done = Math.min(i + BATCH, rows.length)
+    }
+
+    adminOp.status = 'done'
+    return { updated: adminOp.updated, total: rows.length }
+  })
+
+  fastify.post('/api/admin/translate-words-all-langs', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+
+    const { rows } = await db.query(
+      `SELECT id, word_de, translation_ru FROM words
+       WHERE translations IS NULL OR translations = '{}'
+       ORDER BY id`
+    )
+    if (!rows.length) return { updated: 0, total: 0 }
+
+    Object.assign(adminOp, { name: 'translate-words-all-langs', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
+
+    const results = await translateWordsToAllLangs(rows)
+    for (const [id, t] of Object.entries(results)) {
+      await db.query('UPDATE words SET translations = $1 WHERE id = $2', [JSON.stringify(t), parseInt(id)])
+      adminOp.updated++
+      adminOp.done++
     }
 
     adminOp.status = 'done'

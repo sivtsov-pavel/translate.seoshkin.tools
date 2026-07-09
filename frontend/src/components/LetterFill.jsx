@@ -3,12 +3,13 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 
-export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl }) {
+export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
   const [input, setInput]       = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [correct, setCorrect]   = useState(false)
   const inputRef = useRef(null)
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
+  const hint = translations?.[lang] || translationRu || payload.translation_ru
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -56,7 +57,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl })
       )}
 
       <p style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 15, marginBottom: 16 }}>
-        Вспомни немецкое слово: <strong style={{ color: 'var(--ink)' }}>{payload.translation_ru}</strong>
+        {t.exercise.rememberWord} <strong style={{ color: 'var(--ink)' }}>{hint}</strong>
       </p>
 
       <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -81,7 +82,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl })
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKey}
           disabled={submitted}
-          placeholder="Напиши слово целиком..."
+          placeholder={t.exercise.writeWordFull}
           style={{ flex: 1, fontSize: 18, border: `2px solid ${submitted ? resultColor : 'var(--line)'}`, outline: 'none', fontFamily: 'inherit' }}
         />
         {!submitted && (

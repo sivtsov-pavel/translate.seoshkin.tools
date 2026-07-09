@@ -16,7 +16,7 @@ export default defineConfig({
       manifest: {
         name: 'Deutsch Lernen',
         short_name: 'Deutsch',
-        description: 'Закрепление немецкого языка / Deutsch Lernen',
+        description: 'Закрепление немецкого языка / Deutsch Lernen v2',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',

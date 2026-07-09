@@ -3,11 +3,13 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 
-export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl }) {
+export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
   const [revealed, setRevealed] = useState(false)
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
 
   useEffect(() => { speakAuto(payload.question) }, [payload.question])
+
+  const answer = translations?.[lang] || translationRu || payload.answer
 
   const reveal = () => { setRevealed(true) }
 
@@ -39,7 +41,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl }) 
 
         {revealed
           ? <div style={{ fontSize: 26, color: 'var(--accent)', textAlign: 'center', borderTop: '1px solid var(--line)', paddingTop: 16, width: '100%' }}>
-              {payload.answer}
+              {answer}
             </div>
           : <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{t.exercise.tapToReveal}</div>
         }

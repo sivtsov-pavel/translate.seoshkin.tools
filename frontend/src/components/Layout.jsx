@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useThemeStore } from '../store/theme.js'
+import { useAdminOpStore } from '../store/adminOp.js'
+import { api } from '../api/client.js'
 import LangSwitcher from './LangSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 
@@ -10,11 +12,29 @@ export default function Layout({ children }) {
   const { user, logout } = useAuthStore()
   const { t } = useI18nStore()
   const { theme, toggle: toggleTheme } = useThemeStore()
+  const adminOp = useAdminOpStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
+
+  const runOp = async (name, endpoint) => {
+    adminOp.start(name)
+    try {
+      const res = await api.post(endpoint, {})
+      adminOp.finish(res)
+    } catch (e) {
+      adminOp.fail(e.message)
+    }
+  }
+
+  const adminOps = user?.role === 'owner' ? [
+    { name: 'fetch-images',              label: '🖼️ ' + t.courses.opFetchImages,       endpoint: '/admin/fetch-images',              color: 'var(--accent)' },
+    { name: 'enrich-words',              label: '🤖 ' + t.courses.opEnrichWords,       endpoint: '/admin/enrich-words',              color: '#d97706' },
+    { name: 'translate-sentences',       label: '🌐 ' + t.courses.opTranslate,         endpoint: '/admin/translate-sentences',       color: 'var(--good)' },
+    { name: 'translate-words-all-langs', label: '🌍 ' + t.courses.opTranslateAllLangs, endpoint: '/admin/translate-words-all-langs', color: '#7c3aed' },
+  ] : []
 
   // Закрываем drawer при смене роута
   useEffect(() => { setOpen(false) }, [location.pathname])
@@ -140,6 +160,40 @@ export default function Layout({ children }) {
             </div>
           ))}
         </div>
+
+        {/* Admin-операции */}
+        {adminOps.length > 0 && (
+          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--line)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              Admin
+            </div>
+            {adminOps.map(op => {
+              const running = adminOp.status === 'running' && adminOp.name === op.name
+              const done    = adminOp.status === 'done'    && adminOp.name === op.name
+              return (
+                <button key={op.name}
+                  onClick={() => runOp(op.name, op.endpoint)}
+                  disabled={adminOp.status === 'running'}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '9px 12px', marginBottom: 4, borderRadius: 10,
+                    border: `1px solid ${running ? op.color : 'var(--line)'}`,
+                    background: running ? op.color + '18' : done ? 'rgba(78,154,110,0.08)' : 'var(--surface-2)',
+                    color: running ? op.color : 'var(--ink)', cursor: 'pointer',
+                    fontSize: 13, fontWeight: running ? 700 : 400,
+                    opacity: adminOp.status === 'running' && !running ? 0.5 : 1,
+                  }}>
+                  {running
+                    ? `⏳ ${op.label} ${adminOp.total > 0 ? `${adminOp.done}/${adminOp.total}` : '...'}`
+                    : done ? `✓ ${op.label}` : op.label}
+                </button>
+              )
+            })}
+            {adminOp.status === 'error' && (
+              <div style={{ fontSize: 12, color: 'var(--red)', marginTop: 4 }}>✗ {adminOp.error}</div>
+            )}
+          </div>
+        )}
 
         {/* Подвал drawer */}
         <div style={{ padding: '14px', borderTop: '1px solid var(--line)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>

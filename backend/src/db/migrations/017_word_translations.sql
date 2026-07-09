@@ -1,0 +1,1 @@
+ALTER TABLE words ADD COLUMN IF NOT EXISTS translations JSONB DEFAULT '{}';

@@ -235,11 +235,42 @@ export default function Vocabulary() {
 }
 
 function VocabWord({ word, statusLabels, onStatusChange }) {
-  const [imageUrl, setImageUrl]     = useState(word.image_url)
-  const [refreshing, setRefreshing] = useState(false)
-  const [uploading, setUploading]   = useState(false)
-  const fileRef                     = useRef(null)
+  const [imageUrl, setImageUrl]         = useState(word.image_url)
+  const [refreshing, setRefreshing]     = useState(false)
+  const [uploading, setUploading]       = useState(false)
+  const [editing, setEditing]           = useState(false)
+  const [editValue, setEditValue]       = useState(word.translation_ru)
+  const [translation, setTranslation]   = useState(word.translation_ru)
+  const [saving, setSaving]             = useState(false)
+  const fileRef                         = useRef(null)
+  const editRef                         = useRef(null)
   const { user } = useAuthStore()
+  const { t } = useI18nStore()
+
+  const startEdit = () => {
+    setEditValue(translation)
+    setEditing(true)
+    setTimeout(() => editRef.current?.focus(), 0)
+  }
+
+  const saveTranslation = async () => {
+    const val = editValue.trim()
+    if (!val || val === translation) { setEditing(false); return }
+    setSaving(true)
+    try {
+      await api.patch(`/words/${word.id}`, { translation_ru: val })
+      setTranslation(val)
+      setEditing(false)
+    } catch (err) {
+      alert(err?.message || t.common.error)
+    }
+    setSaving(false)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') saveTranslation()
+    if (e.key === 'Escape') setEditing(false)
+  }
 
   const refreshImage = async (e) => {
     e.stopPropagation()
@@ -308,9 +339,37 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--ink)' }}>{word.word_de}</span>
-          <SpeakButton text={word.word_de} appendText={word.translation_ru} />
+          <SpeakButton text={word.word_de} appendText={translation} />
           <span style={{ color: 'var(--ink-soft)' }}>—</span>
-          <span style={{ color: 'var(--ink)', fontSize: 15 }}>{word.translation_ru}</span>
+          {editing ? (
+            <>
+              <input
+                ref={editRef}
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                style={{ fontSize: 15, padding: '2px 8px', borderRadius: 6, width: 160 }}
+              />
+              <button onClick={saveTranslation} disabled={saving}
+                style={{ padding: '2px 10px', borderRadius: 6, background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                {saving ? '…' : t.common.save}
+              </button>
+              <button onClick={() => setEditing(false)}
+                style={{ padding: '2px 8px', borderRadius: 6, background: 'var(--surface-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)', cursor: 'pointer', fontSize: 13 }}>
+                {t.common.cancel}
+              </button>
+            </>
+          ) : (
+            <>
+              <span style={{ color: 'var(--ink)', fontSize: 15 }}>{translation}</span>
+              {user?.role === 'owner' && (
+                <button onClick={startEdit} title="Редактировать перевод"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--ink-soft)', padding: '0 2px', lineHeight: 1 }}>
+                  ✏️
+                </button>
+              )}
+            </>
+          )}
         </div>
         {word.example_sentence && (
           <div style={{ marginTop: 4 }}>

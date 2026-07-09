@@ -204,6 +204,31 @@ ${list}`, { max_tokens: 2048 })
   return words.map((w, i) => ({ id: w.id, ...results[i] }))
 }
 
+const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es']
+
+export async function translateWordsToAllLangs(words) {
+  const BATCH = 30
+  const results = {}
+  for (let i = 0; i < words.length; i += BATCH) {
+    const batch = words.slice(i, i + BATCH)
+    const list = batch.map(w => `${w.id}: ${w.word_de} → ${w.translation_ru}`).join('\n')
+    const text = await ask(
+      `Переведи эти немецкие слова на 7 языков (en, uk, fr, ar, bg, tr, es).
+Слова в формате "id: слово → перевод_на_русский".
+Верни ТОЛЬКО JSON (без markdown): { "<id>": { "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "..." } }
+Переводы должны быть краткими (слово или словосочетание), как в словаре.
+
+${list}`,
+      { max_tokens: 4096 }
+    )
+    const parsed = parseJson(text)
+    for (const [id, t] of Object.entries(parsed)) {
+      results[id] = t
+    }
+  }
+  return results
+}
+
 export async function translateSentences(pairs) {
   const BATCH = 25
   const all = []

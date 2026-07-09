@@ -61,6 +61,10 @@ export const fr = {
     yourSentence: 'Ta phrase',
     correctedVersion: 'Version corrigée',
     loading: 'Chargement...',
+    chooseTranslation: 'Choisis la bonne traduction :',
+    wordHints: 'Mots de la leçon — appuie pour insérer :',
+    rememberWord: 'Rappelle-toi le mot allemand :',
+    writeWordFull: 'Écris le mot entier...',
   },
   lessons: {
     title: 'Leçons',
@@ -134,7 +138,8 @@ export const fr = {
     opFetchImages: "Chargement des images",
     opEnrichWords: "Enrichissement du vocabulaire",
     opTranslate: "Traduction des phrases",
+    opTranslateAllLangs: "Traduire dans toutes les langues",
     words: "mots",
   },
-  common: { loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler', starting: "Démarrage...", deleteLesson: "Supprimer la leçon? Tous les mots et exercices seront définitivement supprimés." },
+  common: { loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler', save: 'Enregistrer', starting: "Démarrage...", deleteLesson: "Supprimer la leçon? Tous les mots et exercices seront définitivement supprimés." },
 }
