@@ -215,6 +215,15 @@ export default function LessonList() {
                     </div>
                     <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 3 }}>
                       {dateStr} · {t.lessons.mediaCount(lesson.media_count)}
+                      {lesson.words_total > 0 && (
+                        <span style={{
+                          marginLeft: 8,
+                          color: lesson.words_with_images === lesson.words_total ? 'var(--good)' : 'var(--ink-soft)',
+                          fontWeight: lesson.words_with_images > 0 ? 600 : 400,
+                        }}>
+                          🖼️ {lesson.words_with_images}/{lesson.words_total}
+                        </span>
+                      )}
                       {lesson.description && (
                         <span style={{ marginLeft: 8, color: 'var(--ink-soft)' }}>— {lesson.description}</span>
                       )}

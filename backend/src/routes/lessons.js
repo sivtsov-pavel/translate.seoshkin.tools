@@ -35,9 +35,14 @@ export async function lessonsRoutes(fastify) {
     const filter = role === 'owner' ? '' : "WHERE l.status = 'done'"
 
     const { rows } = await db.query(
-      `SELECT l.*, COUNT(lm.id)::int AS media_count
+      `SELECT l.*,
+          COUNT(DISTINCT lm.id)::int AS media_count,
+          COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
+          COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images
        FROM lessons l
        LEFT JOIN lesson_media lm ON lm.lesson_id = l.id
+       LEFT JOIN exercises e ON e.lesson_id = l.id
+       LEFT JOIN words w ON w.id = e.word_id
        ${filter}
        GROUP BY l.id
        ORDER BY l.date DESC`
@@ -159,15 +164,20 @@ export async function lessonsRoutes(fastify) {
   }, async (request, reply) => {
     const { id } = request.params
     const { rows } = await db.query(
-      'SELECT * FROM lessons WHERE id = $1 AND owner_id = $2',
+      `SELECT l.*,
+          COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
+          COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images
+       FROM lessons l
+       LEFT JOIN exercises e ON e.lesson_id = l.id
+       LEFT JOIN words w ON w.id = e.word_id
+       WHERE l.id = $1 AND l.owner_id = $2
+       GROUP BY l.id`,
       [id, request.user.id]
     )
     if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
 
-    // Добавляем медиафайлы урока
     const { rows: media } = await db.query(
-      'SELECT * FROM lesson_media WHERE lesson_id = $1',
-      [id]
+      'SELECT * FROM lesson_media WHERE lesson_id = $1', [id]
     )
     return { ...rows[0], media }
   })
