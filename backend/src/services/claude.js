@@ -155,13 +155,21 @@ export async function generateLetterFill(words) {
   return all
 }
 
+function shuffleOptions(ex) {
+  if (ex.type !== 'multiple_choice' || !Array.isArray(ex.payload?.options)) return ex
+  const { options, correct } = ex.payload
+  const correctAnswer = options[correct ?? 0]
+  const shuffled = [...options].sort(() => Math.random() - 0.5)
+  return { ...ex, payload: { ...ex.payload, options: shuffled, correct: shuffled.indexOf(correctAnswer) } }
+}
+
 export async function generateExercises(words, grammar_points) {
   const allExercises = []
   for (let i = 0; i < words.length; i += BATCH_SIZE) {
     const batch = words.slice(i, i + BATCH_SIZE)
     const input = JSON.stringify({ words: batch, grammar_points }, null, 2)
     const text = await ask(`${EXERCISES_PROMPT}\n\nКонспект урока:\n${input}`, { max_tokens: 8192 })
-    allExercises.push(...parseJson(text))
+    allExercises.push(...parseJson(text).map(shuffleOptions))
   }
   return allExercises
 }

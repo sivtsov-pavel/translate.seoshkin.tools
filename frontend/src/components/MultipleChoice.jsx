@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
@@ -6,8 +6,16 @@ import WordImage from './WordImage.jsx'
 export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu }) {
   const [selected, setSelected] = useState(null)
   const { t, lang } = useI18nStore()
-  const correctAnswer = translations?.[lang] || translationRu || payload.options[payload.correct]
 
+  // Перемешиваем опции один раз при монтировании — исправляет и старые упражнения (где correct всегда 0)
+  const { options, correctIdx } = useMemo(() => {
+    const orig = payload.options ?? []
+    const correctAnswer = orig[payload.correct ?? 0]
+    const shuffled = [...orig].sort(() => Math.random() - 0.5)
+    return { options: shuffled, correctIdx: shuffled.indexOf(correctAnswer) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const correctAnswer = translations?.[lang] || translationRu || options[correctIdx]
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
   useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])
@@ -15,7 +23,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   const handleSelect = (idx) => {
     if (selected !== null) return
     setSelected(idx)
-    setTimeout(() => onAnswer(idx === payload.correct ? 5 : 1), 1100)
+    setTimeout(() => onAnswer(idx === correctIdx ? 5 : 1), 1100)
   }
 
   const getStyle = (idx) => {
@@ -25,14 +33,14 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
       transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 8,
     }
     if (selected === null) return { ...base, borderColor: 'var(--line)', background: 'var(--surface-2)', color: 'var(--ink)' }
-    if (idx === payload.correct) return { ...base, borderColor: 'var(--good)', background: 'rgba(78,154,110,0.15)', cursor: 'default', color: 'var(--ink)' }
-    if (idx === selected)        return { ...base, borderColor: 'var(--red)',  background: 'rgba(179,56,44,0.12)',  cursor: 'default', color: 'var(--ink)' }
+    if (idx === correctIdx) return { ...base, borderColor: 'var(--good)', background: 'rgba(78,154,110,0.15)', cursor: 'default', color: 'var(--ink)' }
+    if (idx === selected)   return { ...base, borderColor: 'var(--red)',  background: 'rgba(179,56,44,0.12)',  cursor: 'default', color: 'var(--ink)' }
     return { ...base, borderColor: 'var(--line)', background: 'var(--surface-2)', cursor: 'default', opacity: 0.5, color: 'var(--ink)' }
   }
 
   const badgeColor = (idx) => {
     if (selected === null) return 'var(--surface)'
-    if (idx === payload.correct) return 'var(--good)'
+    if (idx === correctIdx) return 'var(--good)'
     if (idx === selected) return 'var(--red)'
     return 'var(--surface)'
   }
@@ -57,19 +65,19 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
         <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0' }}>{t.exercise.chooseTranslation}</p>
       </div>
 
-      {payload.options.map((opt, idx) => (
+      {options.map((opt, idx) => (
         <button key={idx} style={getStyle(idx)} onClick={() => handleSelect(idx)}>
           <span style={{
             width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
             background: badgeColor(idx),
-            color: selected !== null && (idx === payload.correct || idx === selected) ? '#fff' : 'var(--ink-soft)',
+            color: selected !== null && (idx === correctIdx || idx === selected) ? '#fff' : 'var(--ink-soft)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 13, fontWeight: 700, border: '1px solid var(--line)',
           }}>
             {String.fromCharCode(65 + idx)}
           </span>
           {opt}
-          {selected !== null && idx === payload.correct && (
+          {selected !== null && idx === correctIdx && (
             <span style={{ marginLeft: 'auto', color: 'var(--good)', fontWeight: 700 }}>✓</span>
           )}
         </button>
@@ -77,8 +85,8 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
 
       {selected !== null && (
         <p style={{ marginTop: 10, fontSize: 15, fontWeight: 700,
-          color: selected === payload.correct ? 'var(--good)' : 'var(--red)' }}>
-          {selected === payload.correct
+          color: selected === correctIdx ? 'var(--good)' : 'var(--red)' }}>
+          {selected === correctIdx
             ? `✓ ${t.exercise.correct}`
             : `✗ ${t.exercise.wrong} — ${correctAnswer}`}
         </p>
