@@ -233,7 +233,9 @@ export default function LessonList() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{OP_NAMES[adminOp.name]}</span>
                 <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
-                  {adminOp.total > 0 ? `${adminOp.done} / ${adminOp.total}` : 'Запускаю...'}
+                  {adminOp.total > 0
+                    ? `${adminOp.done} / ${adminOp.total} слов`
+                    : 'Запускаю...'}
                 </span>
               </div>
               <div style={{ height: 8, background: 'var(--line)', borderRadius: 4, overflow: 'hidden' }}>

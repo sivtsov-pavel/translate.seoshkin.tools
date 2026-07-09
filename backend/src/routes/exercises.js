@@ -393,59 +393,26 @@ export async function exercisesRoutes(fastify) {
     return { image_url: imageUrl }
   })
 
-  // Загрузка картинок: сначала слова, потом упражнения без image_url
+  // Загрузка картинок для слов без image_url
   fastify.post('/api/admin/fetch-images', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
 
-    // Оба запроса до начала обработки — чтобы знать total сразу
     const { rows: words } = await db.query(
-      `SELECT id, word_de FROM words WHERE image_url IS NULL ORDER BY id`
+      `SELECT id, word_de, translation_ru FROM words WHERE image_url IS NULL ORDER BY id`
     )
-    const { rows: exs } = await db.query(`
-      SELECT e.id, e.word_id, e.type,
-        COALESCE(w.word_de,
-          e.payload->>'question',
-          e.payload->>'word_de',
-          e.payload->>'blank'
-        ) AS word_de
-      FROM exercises e
-      LEFT JOIN words w ON w.id = e.word_id
-      WHERE e.image_url IS NULL
-        AND COALESCE(w.image_url, '') = ''
-      ORDER BY e.id
-    `)
 
-    Object.assign(adminOp, { name: 'fetch-images', done: 0, total: words.length + exs.length, status: 'running', updated: 0, failed: 0 })
+    Object.assign(adminOp, { name: 'fetch-images', done: 0, total: words.length, status: 'running', updated: 0, failed: 0 })
 
     for (const word of words) {
       try {
-        const remoteUrl = await fetchImageUrl(word.word_de)
+        // Ищем по русскому переводу — Unsplash лучше находит конкретные образы
+        const searchQuery = word.translation_ru || word.word_de
+        const remoteUrl = await fetchImageUrl(searchQuery)
         if (remoteUrl) {
           const localUrl = await downloadAndSave(remoteUrl, word.id)
           await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [localUrl, word.id])
-          adminOp.updated++
-        } else { adminOp.failed++ }
-        await new Promise(r => setTimeout(r, 250))
-      } catch { adminOp.failed++ }
-      adminOp.done++
-    }
-
-    for (const ex of exs) {
-      if (!ex.word_de) { adminOp.failed++; adminOp.done++; continue }
-      try {
-        const { rows: cached } = await db.query(
-          `SELECT image_url FROM words WHERE LOWER(word_de) = LOWER($1) AND image_url IS NOT NULL LIMIT 1`,
-          [ex.word_de]
-        )
-        const url = cached[0]?.image_url ?? await fetchImageUrl(ex.word_de)
-        if (url) {
-          await db.query('UPDATE exercises SET image_url = $1 WHERE id = $2', [url, ex.id])
-          // Если есть привязка к слову — пишем и в words, чтобы словарь тоже показывал картинку
-          if (ex.word_id) {
-            await db.query('UPDATE words SET image_url = $1 WHERE id = $2 AND image_url IS NULL', [url, ex.word_id])
-          }
           adminOp.updated++
         } else { adminOp.failed++ }
         await new Promise(r => setTimeout(r, 250))
