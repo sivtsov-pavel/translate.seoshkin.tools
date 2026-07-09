@@ -238,19 +238,23 @@ ${list}`,
   return words.map((w, i) => ({ id: w.id, ...results[i] }))
 }
 
-// Перевод примеров предложений батчем
+// Перевод примеров предложений батчами по 25
 export async function translateSentences(pairs) {
-  const list = pairs.map((p, i) => `${i + 1}. ${p.sentence}`).join('\n')
-
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: `Переведи каждое немецкое предложение на русский язык. Верни ТОЛЬКО JSON-массив строк в том же порядке, без пояснений:\n${list}`,
-    }],
-  })
-
-  const translations = parseJson(response.content[0].text)
-  return pairs.map((p, i) => ({ id: p.id, translation: translations[i] || null }))
+  const BATCH = 25
+  const all = []
+  for (let i = 0; i < pairs.length; i += BATCH) {
+    const batch = pairs.slice(i, i + BATCH)
+    const list = batch.map((p, j) => `${j + 1}. ${p.sentence}`).join('\n')
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 4096,
+      messages: [{
+        role: 'user',
+        content: `Переведи каждое немецкое предложение на русский язык. Верни ТОЛЬКО JSON-массив строк в том же порядке, без пояснений:\n${list}`,
+      }],
+    })
+    const translations = parseJson(response.content[0].text)
+    batch.forEach((p, j) => all.push({ id: p.id, translation: translations[j] || null }))
+  }
+  return all
 }
