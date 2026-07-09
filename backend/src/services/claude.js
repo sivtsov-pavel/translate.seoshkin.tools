@@ -69,17 +69,19 @@ const MERGE_PROMPT = `Объедини данные из нескольких ф
 {"words": [{"word_de": "...", "translation_ru": "...", "example_sentence": "..."}], "grammar_points": [{"description": "...", "example": "..."}]}`
 
 async function mergeChunk(extractions, transcription = null) {
-  const input = JSON.stringify({ extractions, transcription }, null, 2)
+  // Оставляем только нужные поля — raw_text и example_sentences не нужны для мержа
+  const slim = extractions.map(e => ({ words: e.words || [], grammar_points: e.grammar_points || [] }))
+  const input = JSON.stringify({ extractions: slim, transcription }, null, 2)
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 8192,
+    max_tokens: 4096,
     messages: [{ role: 'user', content: `${MERGE_PROMPT}\n\nДанные:\n${input}` }],
   })
   return parseJson(response.content[0].text)
 }
 
 export async function mergeLesson(extractions, transcription = null) {
-  const CHUNK = 12
+  const CHUNK = 6
   if (extractions.length <= CHUNK) {
     return mergeChunk(extractions, transcription)
   }
