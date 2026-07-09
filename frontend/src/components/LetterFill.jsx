@@ -46,7 +46,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl })
 
   return (
     <div style={{ border: '2px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
-      <WordImage imageUrl={imageUrl} bleed />
+      <WordImage imageUrl={imageUrl} wordDe={payload.word_de} bleed />
 
       <div style={{ padding: 24 }}>
       {lessonTitle && (

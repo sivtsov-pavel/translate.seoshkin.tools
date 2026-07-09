@@ -39,7 +39,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   return (
     <div style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
 
-      <WordImage imageUrl={imageUrl} bleed />
+      <WordImage imageUrl={imageUrl} wordDe={wordDe} bleed />
 
       <div style={{ padding: 24 }}>
       {lessonTitle && (

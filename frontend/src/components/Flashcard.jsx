@@ -27,7 +27,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl }) 
           background: 'var(--surface)', marginBottom: 16, userSelect: 'none',
         }}
       >
-        <WordImage imageUrl={imageUrl} bleed />
+        <WordImage imageUrl={imageUrl} wordDe={payload.question} bleed />
 
         <div style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>

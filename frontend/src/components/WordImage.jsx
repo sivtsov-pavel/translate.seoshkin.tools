@@ -1,10 +1,33 @@
 import { useState } from 'react'
 
-export default function WordImage({ imageUrl, bleed = false }) {
+function TextPlaceholder({ wordDe, bleed }) {
+  const label = wordDe ? wordDe.replace(/^(der|die|das|ein|eine)\s+/i, '') : ''
+  if (bleed) {
+    return (
+      <div style={{
+        width: '100%', aspectRatio: '16/9', background: 'var(--surface-2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink-soft)', textAlign: 'center', padding: 8 }}>{label}</span>
+      </div>
+    )
+  }
+  return (
+    <div style={{
+      width: 120, maxWidth: '100%', borderRadius: 10, margin: '0 auto 12px',
+      aspectRatio: '4/3', background: 'var(--surface-2)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-soft)', textAlign: 'center', padding: 6 }}>{label}</span>
+    </div>
+  )
+}
+
+export default function WordImage({ imageUrl, wordDe, bleed = false }) {
   const [status, setStatus] = useState('loading')
 
-  if (!imageUrl) return null
-  if (status === 'error') return null
+  if (!imageUrl || status === 'error') return <TextPlaceholder wordDe={wordDe} bleed={bleed} />
 
   if (bleed) {
     return (

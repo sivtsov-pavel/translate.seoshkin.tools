@@ -276,7 +276,16 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
             <img src={imageUrl} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         ) : (
-          <div style={{ width: 80, flexShrink: 0 }} />
+          <div style={{
+            width: 80, height: 80, borderRadius: 10, flexShrink: 0,
+            background: 'var(--surface-2)', border: '1px solid var(--line)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, fontWeight: 700, color: 'var(--ink-soft)',
+            textAlign: 'center', padding: 4, boxSizing: 'border-box',
+            lineHeight: 1.2,
+          }}>
+            {word.word_de.replace(/^(der|die|das|ein|eine)\s+/i, '')}
+          </div>
         )}
         {user?.role === 'owner' && (
           <div style={{ display: 'flex', gap: 4 }}>
