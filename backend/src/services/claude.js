@@ -84,21 +84,38 @@ export async function mergeLesson(extractions, transcription = null) {
     return mergeChunk(extractions, transcription)
   }
 
-  // Большой урок — мержим батчами, потом финальный мерж
+  // Большой урок — мержим батчами, финальную дедупликацию делаем в JS
+  // (финальный Claude-мерж тоже упирается в 8192 токенов вывода)
   const chunks = []
   for (let i = 0; i < extractions.length; i += CHUNK) {
     chunks.push(extractions.slice(i, i + CHUNK))
   }
+
   const partials = []
-  for (const chunk of chunks) {
-    const partial = await mergeChunk(chunk, null)
-    // передаём результат как одну "экстракцию" для финального мержа
-    partials.push({ words: partial.words, grammar_points: partial.grammar_points })
+  for (let i = 0; i < chunks.length; i++) {
+    const partial = await mergeChunk(chunks[i], i === 0 ? transcription : null)
+    partials.push(partial)
   }
-  // Финальный мерж объединяет все частичные результаты
-  const allWords = partials.flatMap(p => p.words || [])
-  const allGrammar = partials.flatMap(p => p.grammar_points || [])
-  return mergeChunk([{ words: allWords, grammar_points: allGrammar }], transcription)
+
+  // JS-дедупликация: первое встреченное слово побеждает
+  const seenWords = new Map()
+  for (const p of partials) {
+    for (const w of (p.words || [])) {
+      const key = w.word_de?.toLowerCase().trim()
+      if (key && !seenWords.has(key)) seenWords.set(key, w)
+    }
+  }
+
+  const seenGrammar = new Set()
+  const grammar_points = []
+  for (const p of partials) {
+    for (const g of (p.grammar_points || [])) {
+      const key = g.description?.slice(0, 50)
+      if (key && !seenGrammar.has(key)) { seenGrammar.add(key); grammar_points.push(g) }
+    }
+  }
+
+  return { words: [...seenWords.values()], grammar_points }
 }
 
 const EXERCISES_PROMPT = `На основе слов и грамматики урока немецкого (A1) создай упражнения для школьника.
