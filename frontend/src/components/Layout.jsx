@@ -48,7 +48,8 @@ export default function Layout({ children }) {
     { name: 'fetch-images',              label: '🖼️ ' + t.courses.opFetchImages,       endpoint: '/admin/fetch-images',              color: 'var(--accent)' },
     { name: 'enrich-words',              label: '🤖 ' + t.courses.opEnrichWords,       endpoint: '/admin/enrich-words',              color: '#d97706' },
     { name: 'translate-sentences',       label: '🌐 ' + t.courses.opTranslate,         endpoint: '/admin/translate-sentences',       color: 'var(--good)' },
-    { name: 'translate-words-all-langs', label: '🌍 ' + t.courses.opTranslateAllLangs, endpoint: '/admin/translate-words-all-langs', color: '#7c3aed' },
+    { name: 'translate-words-all-langs', label: '🌍 ' + t.courses.opTranslateAllLangs,  endpoint: '/admin/translate-words-all-langs', color: '#7c3aed' },
+    { name: 'translate-exercises',       label: '📝 ' + t.courses.opTranslateExercises, endpoint: '/admin/translate-exercises',       color: '#0891b2' },
   ] : []
 
   // Закрываем drawer при смене роута

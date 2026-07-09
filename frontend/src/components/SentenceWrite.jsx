@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 
-export default function SentenceWrite({ exercise, onAnswer }) {
+export default function SentenceWrite({ exercise, onAnswer, payloadTranslations }) {
   const [sentence, setSentence] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const { t, lang } = useI18nStore()
+  const pTranslations = payloadTranslations || exercise.payload_translations
   const { word_de, translation_ru, hint_ru, example } = exercise.payload
   const displayTranslation = exercise.translations?.[lang] || exercise.translation_ru || translation_ru
+  const displayHint = pTranslations?.[lang] || hint_ru
 
   const handleCheck = async (e) => {
     e.preventDefault()
@@ -17,7 +19,7 @@ export default function SentenceWrite({ exercise, onAnswer }) {
     setLoading(true)
     setError('')
     try {
-      const res = await api.post(`/exercises/${exercise.id}/check-sentence`, { sentence })
+      const res = await api.post(`/exercises/${exercise.id}/check-sentence`, { sentence, lang })
       setResult(res)
     } catch (err) {
       setError(err.message)
@@ -45,7 +47,7 @@ export default function SentenceWrite({ exercise, onAnswer }) {
           <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}>{word_de}</span>
           <span style={{ fontSize: 18, color: 'var(--ink-soft)' }}>— {displayTranslation}</span>
         </div>
-        <p style={{ color: 'var(--accent)', fontSize: 15, margin: 0 }}>{hint_ru}</p>
+        {displayHint && <p style={{ color: 'var(--accent)', fontSize: 15, margin: 0 }}>{displayHint}</p>}
         {example && (
           <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 6, fontStyle: 'italic' }}>
             {t.exercise.sentenceExample}: {example}

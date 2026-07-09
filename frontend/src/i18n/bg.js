@@ -140,6 +140,7 @@ export const bg = {
     opFetchImages: "Зареждане на изображения",
     opEnrichWords: "Обогатяване на речника",
     opTranslate: "Превод на изречения",
+    opTranslateExercises: "Превод на упражнения",
     opTranslateAllLangs: "Превод на всички езици",
     words: "думи",
   },

@@ -174,23 +174,26 @@ export async function generateExercises(words, grammar_points) {
   return allExercises
 }
 
-export async function checkSentence(wordDe, translationRu, userSentence) {
-  const prompt = `Ты учитель немецкого языка. Ученик (уровень A1) написал предложение.
+const LANG_NAMES = { ru: 'русском', en: 'English', uk: 'українською', de: 'Deutsch', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español' }
 
-Слово для использования: "${wordDe}" (${translationRu})
-Предложение ученика: "${userSentence}"
+export async function checkSentence(wordDe, translationRu, userSentence, lang = 'ru') {
+  const langName = LANG_NAMES[lang] || 'русском'
+  const prompt = `You are a German language teacher. A student (level A1) wrote a sentence.
 
-Оцени по критериям:
-1. Слово "${wordDe}" присутствует в предложении (или его правильная форма)
-2. Предложение грамматически приемлемо для уровня A1
-3. Смысл понятен
+Word to use: "${wordDe}" (${translationRu})
+Student's sentence: "${userSentence}"
 
-Верни ТОЛЬКО JSON без markdown:
+Evaluate:
+1. Word "${wordDe}" is present (or its correct form)
+2. Sentence is grammatically acceptable for A1 level
+3. Meaning is clear
+
+Reply ONLY with JSON (no markdown), feedback in ${langName}:
 {
   "correct": true/false,
   "quality": 0-5,
-  "feedback_ru": "Краткий комментарий на русском (1-2 предложения). Если ошибка — укажи что именно.",
-  "corrected": "Исправленный вариант если есть ошибки, иначе null"
+  "feedback_ru": "Brief comment in ${langName} (1-2 sentences). If error — explain what exactly.",
+  "corrected": "Corrected version if there are errors, otherwise null"
 }
 
 Шкала quality: 5=отлично, 4=хорошо, 3=приемлемо с мелкими ошибками, 2=понятно но с ошибками, 1=слово есть но много ошибок, 0=слово не использовано или непонятно`
@@ -237,6 +240,45 @@ ${list}`,
     } catch (e) {
       // Пропускаем битый батч — переводы для этих слов останутся пустыми
       console.error(`translateWordsToAllLangs: батч ${i}-${i + BATCH} пропущен: ${e.message}`)
+    }
+  }
+  return results
+}
+
+// Возвращает объект { id: { en: {...}, fr: {...} } } для упражнений
+// Для каждого упражнения переводим только русские строки в payload
+export async function translateExercisePayloads(exercises) {
+  const BATCH = 15
+  const results = {}
+
+  for (let i = 0; i < exercises.length; i += BATCH) {
+    const batch = exercises.slice(i, i + BATCH)
+    const items = batch.map(ex => {
+      if (ex.type === 'multiple_choice') return { id: ex.id, type: ex.type, data: ex.payload.options }
+      if (ex.type === 'fill_blank')      return { id: ex.id, type: ex.type, data: ex.payload.sentence_ru || '' }
+      if (ex.type === 'sentence_write')  return { id: ex.id, type: ex.type, data: ex.payload.hint_ru || '' }
+      return null
+    }).filter(Boolean)
+
+    if (!items.length) continue
+
+    const list = items.map(it => `${it.id}|${it.type}: ${JSON.stringify(it.data)}`).join('\n')
+
+    try {
+      const text = await ask(
+        `Переведи следующие фрагменты текста с русского на 7 языков (en, uk, fr, ar, bg, tr, es).
+Для multiple_choice — массив вариантов, сохрани порядок.
+Для fill_blank и sentence_write — одна строка.
+Верни ТОЛЬКО JSON (без markdown):
+{ "<id>": { "en": <перевод>, "uk": <перевод>, "fr": <перевод>, "ar": <перевод>, "bg": <перевод>, "tr": <перевод>, "es": <перевод> } }
+
+${list}`,
+        { max_tokens: 4096 }
+      )
+      const parsed = parseJson(text)
+      for (const [id, langs] of Object.entries(parsed)) results[id] = langs
+    } catch (e) {
+      console.error(`translateExercisePayloads: батч ${i}-${i + BATCH} пропущен: ${e.message}`)
     }
   }
   return results

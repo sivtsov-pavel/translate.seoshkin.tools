@@ -16,7 +16,7 @@ export default function ExerciseSession() {
   const [loading, setLoading]     = useState(true)
   const navigate                  = useNavigate()
   const [searchParams]            = useSearchParams()
-  const { t }                     = useI18nStore()
+  const { t, lang }               = useI18nStore()
 
   useEffect(() => {
     const type      = searchParams.get('type')
@@ -41,7 +41,7 @@ export default function ExerciseSession() {
     const ex = exercises[current]
     if (ex.type !== 'sentence_write') {
       try {
-        await api.post(`/exercises/${ex.id}/attempt`, { userAnswer: String(userAnswer), quality })
+        await api.post(`/exercises/${ex.id}/attempt`, { userAnswer: String(userAnswer), quality, lang })
       } catch (e) {
         console.error('Ошибка сохранения попытки:', e)
       }
@@ -67,9 +67,9 @@ export default function ExerciseSession() {
         {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation }[ex.type]}
       </div>
       {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-      {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} />}
-      {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-      {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={ex.lesson_title} />}
+      {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} payloadTranslations={ex.payload_translations} />}
+      {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} />}
+      {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={ex.lesson_title} payloadTranslations={ex.payload_translations} />}
       {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
       {ex.type === 'dictation'       && <Dictation      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} translations={ex.translations} translationRu={ex.translation_ru} />}
     </div>

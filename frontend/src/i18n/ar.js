@@ -142,6 +142,7 @@ export const ar = {
     opFetchImages: "تحميل الصور",
     opEnrichWords: "إثراء المفردات",
     opTranslate: "ترجمة الجمل",
+    opTranslateExercises: "ترجمة التمارين",
     opTranslateAllLangs: "ترجمة لجميع اللغات",
     words: "كلمات",
   },

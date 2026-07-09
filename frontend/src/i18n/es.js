@@ -140,6 +140,7 @@ export const es = {
     opFetchImages: "Cargando imágenes",
     opEnrichWords: "Enriqueciendo vocabulario",
     opTranslate: "Traduciendo frases",
+    opTranslateExercises: "Traducir ejercicios",
     opTranslateAllLangs: "Traducir a todos los idiomas",
     words: "palabras",
   },

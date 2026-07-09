@@ -151,6 +151,7 @@ export const ru = {
     opFetchImages: "Загрузка картинок",
     opEnrichWords: "Дополнение словаря",
     opTranslate: "Перевод предложений",
+    opTranslateExercises: "Перевод упражнений",
     opTranslateAllLangs: "Перевод на все языки",
     words: "слов",
   },

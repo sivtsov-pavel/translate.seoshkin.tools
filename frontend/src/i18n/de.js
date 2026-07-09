@@ -151,6 +151,7 @@ export const de = {
     opFetchImages: "Bilder laden",
     opEnrichWords: "Wörterbuch ergänzen",
     opTranslate: "Sätze übersetzen",
+    opTranslateExercises: "Übungen übersetzen",
     opTranslateAllLangs: "In alle Sprachen übersetzen",
     words: "Wörter",
   },

@@ -140,6 +140,7 @@ export const tr = {
     opFetchImages: "Görseller yükleniyor",
     opEnrichWords: "Sözlük zenginleştiriliyor",
     opTranslate: "Cümleler çevriliyor",
+    opTranslateExercises: "Alıştırmaları çevir",
     opTranslateAllLangs: "Tüm dillere çevir",
     words: "kelime",
   },

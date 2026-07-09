@@ -140,6 +140,7 @@ export const fr = {
     opFetchImages: "Chargement des images",
     opEnrichWords: "Enrichissement du vocabulaire",
     opTranslate: "Traduction des phrases",
+    opTranslateExercises: "Traduire les exercices",
     opTranslateAllLangs: "Traduire dans toutes les langues",
     words: "mots",
   },

@@ -3,19 +3,27 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 
-export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu }) {
+export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations }) {
   const [selected, setSelected] = useState(null)
   const { t, lang } = useI18nStore()
 
-  // Перемешиваем опции один раз при монтировании — исправляет и старые упражнения (где correct всегда 0)
+  // Локализованные варианты: если есть payloadTranslations[lang] — массив переводов вариантов
   const { options, correctIdx } = useMemo(() => {
     const orig = payload.options ?? []
     const correctAnswer = orig[payload.correct ?? 0]
-    const shuffled = [...orig].sort(() => Math.random() - 0.5)
-    return { options: shuffled, correctIdx: shuffled.indexOf(correctAnswer) }
+    const localized = payloadTranslations?.[lang]
+    // Если есть переводы всех вариантов — используем их (сохраняем оригинальный порядок для correctIdx)
+    const displayOpts = Array.isArray(localized) ? localized : orig
+    const shuffled = [...displayOpts].sort(() => Math.random() - 0.5)
+    // Правильный ответ: локализованный или из translations, fallback на оригинал
+    const correctLocalized = Array.isArray(localized)
+      ? localized[payload.correct ?? 0]
+      : (translations?.[lang] || translationRu || correctAnswer)
+    return { options: shuffled, correctIdx: shuffled.indexOf(correctLocalized) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const correctAnswer = translations?.[lang] || translationRu || options[correctIdx]
+  const correctAnswer = payloadTranslations?.[lang]?.[payload.correct ?? 0]
+    || translations?.[lang] || translationRu || options[correctIdx]
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
   useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])

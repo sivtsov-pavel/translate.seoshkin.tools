@@ -145,6 +145,7 @@ export const en = {
     opFetchImages: "Loading images",
     opEnrichWords: "Enriching vocabulary",
     opTranslate: "Translating sentences",
+    opTranslateExercises: "Translate exercises",
     opTranslateAllLangs: "Translate to all languages",
     words: "words",
   },

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
 
-export default function FillBlank({ payload, onAnswer, lessonTitle }) {
+export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTranslations }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const { t, lang } = useI18nStore()
@@ -53,9 +53,9 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
           </span>
           {afterBlank}
         </p>
-        {payload.sentence_ru && lang === 'ru' && (
+        {(payloadTranslations?.[lang] || (lang === 'ru' && payload.sentence_ru)) && (
           <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '8px 0 0', fontStyle: 'italic' }}>
-            {payload.sentence_ru}
+            {payloadTranslations?.[lang] || payload.sentence_ru}
           </p>
         )}
       </div>

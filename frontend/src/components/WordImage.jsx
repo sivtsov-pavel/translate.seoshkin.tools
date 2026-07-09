@@ -1,25 +1,32 @@
 import { useState } from 'react'
 
 function TextPlaceholder({ wordDe, bleed }) {
+  const article = wordDe?.match(/^(der|die|das|ein|eine)\s+/i)?.[1] || ''
   const label = wordDe ? wordDe.replace(/^(der|die|das|ein|eine)\s+/i, '') : ''
+  const articleColor = { der: '#4f8ef7', die: '#e05c8a', das: '#2bb07a', ein: '#888', eine: '#e05c8a' }[article.toLowerCase()] || 'var(--ink-soft)'
+
   if (bleed) {
     return (
       <div style={{
-        width: '100%', aspectRatio: '16/9', background: 'var(--surface-2)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
+        width: '100%', aspectRatio: '16/9', flexShrink: 0,
+        background: 'linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        borderBottom: '1px solid var(--line)',
       }}>
-        <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink-soft)', textAlign: 'center', padding: 8 }}>{label}</span>
+        {article && <span style={{ fontSize: 13, fontWeight: 600, color: articleColor, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>{article}</span>}
+        <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', fontFamily: 'Georgia,serif', textAlign: 'center', padding: '0 16px' }}>{label}</span>
       </div>
     )
   }
   return (
     <div style={{
       width: 120, maxWidth: '100%', borderRadius: 10, margin: '0 auto 12px',
-      aspectRatio: '4/3', background: 'var(--surface-2)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      aspectRatio: '4/3', border: '1px solid var(--line)',
+      background: 'linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
     }}>
-      <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-soft)', textAlign: 'center', padding: 6 }}>{label}</span>
+      {article && <span style={{ fontSize: 10, fontWeight: 700, color: articleColor, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{article}</span>}
+      <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', fontFamily: 'Georgia,serif', textAlign: 'center', padding: '0 6px', lineHeight: 1.2 }}>{label}</span>
     </div>
   )
 }

@@ -145,6 +145,7 @@ export const uk = {
     opFetchImages: "Завантаження зображень",
     opEnrichWords: "Доповнення словника",
     opTranslate: "Переклад речень",
+    opTranslateExercises: "Переклад вправ",
     opTranslateAllLangs: "Переклад на всі мови",
     words: "слів",
   },

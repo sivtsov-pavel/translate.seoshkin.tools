@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs } from '../services/claude.js'
+import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join, extname } from 'path'
@@ -29,6 +29,7 @@ export async function exercisesRoutes(fastify) {
     const SELECT = `
         SELECT e.*,
                w.word_de, w.translation_ru, COALESCE(w.translations, '{}') AS translations,
+               COALESCE(e.payload_translations, '{}') AS payload_translations,
                COALESCE(w.image_url, e.image_url) AS image_url,
                l.title AS lesson_title,
                COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
@@ -296,12 +297,13 @@ export async function exercisesRoutes(fastify) {
         required: ['sentence'],
         properties: {
           sentence: { type: 'string', minLength: 1 },
+          lang: { type: 'string' },
         },
       },
     },
   }, async (request, reply) => {
     const exerciseId = parseInt(request.params.id)
-    const { sentence } = request.body
+    const { sentence, lang } = request.body
     const userId = request.user.id
 
     const { rows: exRows } = await db.query(
@@ -312,7 +314,7 @@ export async function exercisesRoutes(fastify) {
     const ex = exRows[0]
     const { word_de, translation_ru } = ex.payload
 
-    const result = await checkSentence(word_de, translation_ru, sentence)
+    const result = await checkSentence(word_de, translation_ru, sentence, lang || 'ru')
 
     const { rows: progRows } = await db.query(
       `SELECT * FROM user_exercise_progress WHERE user_id = $1 AND exercise_id = $2`,
@@ -524,6 +526,41 @@ export async function exercisesRoutes(fastify) {
       await db.query('UPDATE words SET translations = $1 WHERE id = $2', [JSON.stringify(t), parseInt(id)])
       adminOp.updated++
       adminOp.done++
+    }
+
+    adminOp.status = 'done'
+    return { updated: adminOp.updated, total: rows.length }
+  })
+
+  fastify.post('/api/admin/translate-exercises', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+
+    const { rows } = await db.query(
+      `SELECT id, type, payload FROM exercises
+       WHERE type IN ('multiple_choice', 'fill_blank', 'sentence_write')
+         AND (payload_translations IS NULL OR payload_translations = '{}')
+       ORDER BY id`
+    )
+    if (!rows.length) return { updated: 0, total: 0 }
+
+    Object.assign(adminOp, { name: 'translate-exercises', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
+
+    const BATCH = 15
+    for (let i = 0; i < rows.length; i += BATCH) {
+      const batch = rows.slice(i, i + BATCH)
+      try {
+        const results = await translateExercisePayloads(batch)
+        for (const [id, langs] of Object.entries(results)) {
+          await db.query('UPDATE exercises SET payload_translations = $1 WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
+          adminOp.updated++
+        }
+      } catch (e) {
+        console.error(`translate-exercises батч ${i}: ${e.message}`)
+        adminOp.failed += batch.length
+      }
+      adminOp.done = Math.min(i + BATCH, rows.length)
     }
 
     adminOp.status = 'done'
