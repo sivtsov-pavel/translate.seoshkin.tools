@@ -9,6 +9,7 @@ export const uk = {
     newLesson: 'Новый урок',
     learningWords: 'Вивчаю',
     logout: 'Вийти',
+    appName: 'Deutsch Lernen 🇩🇪',
     reader: "Читалка",
     more: "Ще",
     themeLight: "Світла",
@@ -36,7 +37,8 @@ export const uk = {
     comeBack: 'Повертайся завтра для повторення.',
     exercisesWaiting: (n) => `${n} вправ чекають на повторення`,
     startSession: 'Почати повторення →',
-
+    loading: 'Завантаження...',
+  },
   exercise: {
     flashcard: 'Картка',
     fillBlank: 'Заповни пропуск',
@@ -58,9 +60,8 @@ export const uk = {
     sentenceExample: 'Приклад',
     yourSentence: 'Ваше речення',
     correctedVersion: 'Виправлений варіант',
-    chooseTranslation: "Вибери правильний переклад:",
-    wordHints: "Слова з уроку — натисни щоб вставити:",
-
+    loading: 'Завантаження вправ...',
+  },
   lessons: {
     title: 'Уроки',
     empty: 'Уроків поки немає. Завантажте перший урок!',

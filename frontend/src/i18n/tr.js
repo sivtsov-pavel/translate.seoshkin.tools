@@ -9,6 +9,7 @@ export const tr = {
     newLesson: 'Yeni Ders',
     learningWords: 'Öğreniyorum',
     logout: 'Çıkış',
+    appName: 'Almanca 🇩🇪',
     reader: "Okuyucu",
     more: "Daha",
     themeLight: "Açık",
@@ -36,7 +37,8 @@ export const tr = {
     comeBack: 'Tekrar için yarın gel.',
     exercisesWaiting: (n) => `${n} alıştırma bekliyor`,
     startSession: 'Başla →',
-
+    loading: 'Yükleniyor...',
+  },
   exercise: {
     flashcard: 'Kart',
     fillBlank: 'Boşluğu doldur',
@@ -58,9 +60,8 @@ export const tr = {
     sentenceExample: 'Örnek',
     yourSentence: 'Senin cümlen',
     correctedVersion: 'Düzeltilmiş versiyon',
-    chooseTranslation: "Doğru çeviriyi seç:",
-    wordHints: "Dersteki kelimeler — eklemek için dokun:",
-
+    loading: 'Yükleniyor...',
+  },
   lessons: {
     title: 'Dersler',
     empty: 'Ders yok. İlk dersi yükleyin!',
