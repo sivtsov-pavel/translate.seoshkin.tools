@@ -360,11 +360,14 @@ export async function exercisesRoutes(fastify) {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const wordId = parseInt(request.params.id)
 
-    const { rows } = await db.query('SELECT id, word_de FROM words WHERE id = $1', [wordId])
+    const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE id = $1', [wordId])
     if (!rows[0]) return reply.status(404).send({ error: 'Слово не найдено' })
 
-    const remoteUrl = await fetchRandomImageUrl(rows[0].word_de)
-    if (!remoteUrl) return reply.status(502).send({ error: 'Unsplash не вернул картинку' })
+    const { word_de, translation_ru } = rows[0]
+    const remoteUrl = (translation_ru ? await fetchImageUrl(translation_ru) : null)
+      ?? await fetchImageUrl(word_de)
+      ?? await fetchRandomImageUrl(word_de)
+    if (!remoteUrl) return reply.status(502).send({ error: 'Unsplash не нашёл картинку' })
 
     const imageUrl = await downloadAndSave(remoteUrl, wordId)
     await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [imageUrl, wordId])

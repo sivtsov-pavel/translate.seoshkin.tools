@@ -246,7 +246,9 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
     try {
       const res = await api.post(`/words/${word.id}/refresh-image`, {})
       setImageUrl(res.image_url)
-    } catch {}
+    } catch (err) {
+      alert(err?.message || 'Не удалось найти картинку')
+    }
     setRefreshing(false)
   }
 

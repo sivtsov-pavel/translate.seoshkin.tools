@@ -78,7 +78,7 @@ const MERGE_PROMPT = `Объедини данные из нескольких ф
 async function mergeChunk(extractions, transcription = null) {
   const slim = extractions.map(e => ({ words: e.words || [], grammar_points: e.grammar_points || [] }))
   const input = JSON.stringify({ extractions: slim, transcription }, null, 2)
-  return parseJson(await ask(`${MERGE_PROMPT}\n\nДанные:\n${input}`, { max_tokens: 4096 }))
+  return parseJson(await ask(`${MERGE_PROMPT}\n\nДанные:\n${input}`, { max_tokens: 8192 }))
 }
 
 export async function mergeLesson(extractions, transcription = null) {
