@@ -152,6 +152,12 @@ export const ru = {
     opEnrichWords: "Дополнение словаря",
     opTranslate: "Перевод предложений",
     opTranslateExercises: "Перевод упражнений",
+    opFetchImagesHint: "Загружает картинки с Unsplash для слов без фото",
+    opEnrichWordsHint: "Добавляет примеры предложений через GPT",
+    opTranslateHint: "Переводит немецкие предложения на русский",
+    opTranslateAllLangsHint: "Переводит слова словаря на 7 языков (для локалей учеников)",
+    opTranslateExercisesHint: "Переводит варианты и подсказки в упражнениях на 7 языков",
+
     opTranslateAllLangs: "Перевод на все языки",
     words: "слов",
   },

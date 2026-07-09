@@ -143,6 +143,12 @@ export const ar = {
     opEnrichWords: "إثراء المفردات",
     opTranslate: "ترجمة الجمل",
     opTranslateExercises: "ترجمة التمارين",
+    opFetchImagesHint: "يحمّل صورًا من Unsplash للكلمات بدون صورة",
+    opEnrichWordsHint: "يضيف جملًا تمثيلية عبر GPT",
+    opTranslateHint: "يترجم الجمل الألمانية إلى الروسية",
+    opTranslateAllLangsHint: "يترجم المفردات إلى 7 لغات (للطلاب)",
+    opTranslateExercisesHint: "يترجم خيارات التمارين والتلميحات إلى 7 لغات",
+
     opTranslateAllLangs: "ترجمة لجميع اللغات",
     words: "كلمات",
   },

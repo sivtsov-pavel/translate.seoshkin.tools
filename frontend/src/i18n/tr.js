@@ -141,6 +141,12 @@ export const tr = {
     opEnrichWords: "Sözlük zenginleştiriliyor",
     opTranslate: "Cümleler çevriliyor",
     opTranslateExercises: "Alıştırmaları çevir",
+    opFetchImagesHint: "Fotoğrafı olmayan kelimeler için Unsplash'tan görsel indirir",
+    opEnrichWordsHint: "GPT ile örnek cümleler ekler",
+    opTranslateHint: "Almanca cümleleri Rusçaya çevirir",
+    opTranslateAllLangsHint: "Sözlük kelimelerini 7 dile çevirir (öğrenciler için)",
+    opTranslateExercisesHint: "Alıştırmalardaki seçenekleri ve ipuçlarını 7 dile çevirir",
+
     opTranslateAllLangs: "Tüm dillere çevir",
     words: "kelime",
   },

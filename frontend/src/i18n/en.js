@@ -146,6 +146,12 @@ export const en = {
     opEnrichWords: "Enriching vocabulary",
     opTranslate: "Translating sentences",
     opTranslateExercises: "Translate exercises",
+    opFetchImagesHint: "Downloads images from Unsplash for words without photos",
+    opEnrichWordsHint: "Adds example sentences via GPT",
+    opTranslateHint: "Translates German sentences to Russian",
+    opTranslateAllLangsHint: "Translates vocabulary words to 7 languages (for student locales)",
+    opTranslateExercisesHint: "Translates exercise options and hints to 7 languages",
+
     opTranslateAllLangs: "Translate to all languages",
     words: "words",
   },

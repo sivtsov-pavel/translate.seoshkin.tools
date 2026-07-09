@@ -146,6 +146,12 @@ export const uk = {
     opEnrichWords: "Доповнення словника",
     opTranslate: "Переклад речень",
     opTranslateExercises: "Переклад вправ",
+    opFetchImagesHint: "Завантажує зображення з Unsplash для слів без фото",
+    opEnrichWordsHint: "Додає приклади речень через GPT",
+    opTranslateHint: "Перекладає німецькі речення на російську",
+    opTranslateAllLangsHint: "Перекладає слова словника на 7 мов (для локалей учнів)",
+    opTranslateExercisesHint: "Перекладає варіанти й підказки у вправах на 7 мов",
+
     opTranslateAllLangs: "Переклад на всі мови",
     words: "слів",
   },

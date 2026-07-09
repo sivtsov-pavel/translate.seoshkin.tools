@@ -141,6 +141,12 @@ export const bg = {
     opEnrichWords: "Обогатяване на речника",
     opTranslate: "Превод на изречения",
     opTranslateExercises: "Превод на упражнения",
+    opFetchImagesHint: "Изтегля снимки от Unsplash за думи без снимка",
+    opEnrichWordsHint: "Добавя примерни изречения чрез GPT",
+    opTranslateHint: "Превежда немски изречения на руски",
+    opTranslateAllLangsHint: "Превежда речника на 7 езика (за учениците)",
+    opTranslateExercisesHint: "Превежда варианти и подсказки в упражненията на 7 езика",
+
     opTranslateAllLangs: "Превод на всички езици",
     words: "думи",
   },

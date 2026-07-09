@@ -152,6 +152,12 @@ export const de = {
     opEnrichWords: "Wörterbuch ergänzen",
     opTranslate: "Sätze übersetzen",
     opTranslateExercises: "Übungen übersetzen",
+    opFetchImagesHint: "Lädt Bilder von Unsplash für Wörter ohne Foto",
+    opEnrichWordsHint: "Fügt Beispielsätze per GPT hinzu",
+    opTranslateHint: "Übersetzt deutsche Sätze ins Russische",
+    opTranslateAllLangsHint: "Übersetzt Vokabeln in 7 Sprachen (für Schüler-Sprachen)",
+    opTranslateExercisesHint: "Übersetzt Optionen und Hinweise in Übungen in 7 Sprachen",
+
     opTranslateAllLangs: "In alle Sprachen übersetzen",
     words: "Wörter",
   },

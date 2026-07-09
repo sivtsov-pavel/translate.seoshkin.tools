@@ -45,11 +45,11 @@ export default function Layout({ children }) {
   }
 
   const adminOps = user?.role === 'owner' ? [
-    { name: 'fetch-images',              label: '🖼️ ' + t.courses.opFetchImages,       endpoint: '/admin/fetch-images',              color: 'var(--accent)' },
-    { name: 'enrich-words',              label: '🤖 ' + t.courses.opEnrichWords,       endpoint: '/admin/enrich-words',              color: '#d97706' },
-    { name: 'translate-sentences',       label: '🌐 ' + t.courses.opTranslate,         endpoint: '/admin/translate-sentences',       color: 'var(--good)' },
-    { name: 'translate-words-all-langs', label: '🌍 ' + t.courses.opTranslateAllLangs,  endpoint: '/admin/translate-words-all-langs', color: '#7c3aed' },
-    { name: 'translate-exercises',       label: '📝 ' + t.courses.opTranslateExercises, endpoint: '/admin/translate-exercises',       color: '#0891b2' },
+    { name: 'fetch-images',              label: '🖼️ ' + t.courses.opFetchImages,        endpoint: '/admin/fetch-images',              color: 'var(--accent)', hint: t.courses.opFetchImagesHint },
+    { name: 'enrich-words',              label: '🤖 ' + t.courses.opEnrichWords,        endpoint: '/admin/enrich-words',              color: '#d97706',       hint: t.courses.opEnrichWordsHint },
+    { name: 'translate-sentences',       label: '🌐 ' + t.courses.opTranslate,          endpoint: '/admin/translate-sentences',       color: 'var(--good)',   hint: t.courses.opTranslateHint },
+    { name: 'translate-words-all-langs', label: '🌍 ' + t.courses.opTranslateAllLangs,  endpoint: '/admin/translate-words-all-langs', color: '#7c3aed',       hint: t.courses.opTranslateAllLangsHint },
+    { name: 'translate-exercises',       label: '📝 ' + t.courses.opTranslateExercises, endpoint: '/admin/translate-exercises',       color: '#0891b2',       hint: t.courses.opTranslateExercisesHint },
   ] : []
 
   // Закрываем drawer при смене роута
@@ -187,22 +187,29 @@ export default function Layout({ children }) {
               const running = adminOp.status === 'running' && adminOp.name === op.name
               const done    = adminOp.status === 'done'    && adminOp.name === op.name
               return (
-                <button key={op.name}
-                  onClick={() => runOp(op.name, op.endpoint)}
-                  disabled={adminOp.status === 'running'}
-                  style={{
-                    display: 'block', width: '100%', textAlign: 'left',
-                    padding: '9px 12px', marginBottom: 4, borderRadius: 10,
-                    border: `1px solid ${running ? op.color : 'var(--line)'}`,
-                    background: running ? op.color + '18' : done ? 'rgba(78,154,110,0.08)' : 'var(--surface-2)',
-                    color: running ? op.color : 'var(--ink)', cursor: 'pointer',
-                    fontSize: 13, fontWeight: running ? 700 : 400,
-                    opacity: adminOp.status === 'running' && !running ? 0.5 : 1,
-                  }}>
-                  {running
-                    ? `⏳ ${op.label} ${adminOp.total > 0 ? `${adminOp.done}/${adminOp.total}` : '...'}`
-                    : done ? `✓ ${op.label}` : op.label}
-                </button>
+                <div key={op.name} style={{ marginBottom: 6 }}>
+                  <button
+                    onClick={() => runOp(op.name, op.endpoint)}
+                    disabled={adminOp.status === 'running'}
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'left',
+                      padding: '8px 12px', borderRadius: 10,
+                      border: `1px solid ${running ? op.color : 'var(--line)'}`,
+                      background: running ? op.color + '18' : done ? 'rgba(78,154,110,0.08)' : 'var(--surface-2)',
+                      color: running ? op.color : 'var(--ink)', cursor: 'pointer',
+                      fontSize: 13, fontWeight: running ? 700 : 500,
+                      opacity: adminOp.status === 'running' && !running ? 0.5 : 1,
+                    }}>
+                    {running
+                      ? `⏳ ${op.label} ${adminOp.total > 0 ? `${adminOp.done}/${adminOp.total}` : '...'}`
+                      : done ? `✓ ${op.label}` : op.label}
+                  </button>
+                  {op.hint && (
+                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', padding: '2px 12px 0', lineHeight: 1.4 }}>
+                      {op.hint}
+                    </div>
+                  )}
+                </div>
               )
             })}
             {adminOp.status === 'error' && (
