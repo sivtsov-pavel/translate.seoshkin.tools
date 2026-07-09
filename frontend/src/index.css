@@ -91,10 +91,11 @@ a { color: var(--accent); text-decoration: none; }
     display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    z-index: 100;
+    z-index: 200;
     background: var(--surface);
     border-top: 1px solid var(--line);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-transform: translateZ(0);
   }
 }
 

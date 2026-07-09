@@ -53,7 +53,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
           <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}>{germanWord}</span>
           <SpeakButton text={germanWord} size={24} />
         </div>
-        <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0' }}>Выбери правильный перевод:</p>
+        <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0' }}>{t.exercise.chooseTranslation}</p>
       </div>
 
       {payload.options.map((opt, idx) => (

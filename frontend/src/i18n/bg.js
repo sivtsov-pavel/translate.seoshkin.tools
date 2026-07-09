@@ -9,7 +9,12 @@ export const bg = {
     newLesson: 'Новый урок',
     learningWords: 'Уча',
     logout: 'Изход',
-    appName: 'Немски 🇩🇪',
+    reader: "Четец",
+    more: "Още",
+    themeLight: "Светла",
+    themeDark: "Тъмна",
+    teacher: "👨‍🏫 Учител",
+    student: "👨‍🎓 Ученик",
   },
   auth: {
     login: 'Вход',
@@ -31,8 +36,7 @@ export const bg = {
     comeBack: 'Върни се утре за повторение.',
     exercisesWaiting: (n) => `${n} упражнения чакат`,
     startSession: 'Започни →',
-    loading: 'Зареждане...',
-  },
+
   exercise: {
     flashcard: 'Карта',
     fillBlank: 'Попълни пропуска',
@@ -54,8 +58,9 @@ export const bg = {
     sentenceExample: 'Пример',
     yourSentence: 'Твоето изречение',
     correctedVersion: 'Поправен вариант',
-    loading: 'Зареждане...',
-  },
+    chooseTranslation: "Изберете правилния превод:",
+    wordHints: "Думи от урока — натиснете за вмъкване:",
+
   lessons: {
     title: 'Уроци',
     empty: 'Няма уроци. Качете първия!',

@@ -9,7 +9,12 @@ export const es = {
     newLesson: 'Nueva lección',
     learningWords: 'Aprendiendo',
     logout: 'Salir',
-    appName: 'Alemán 🇩🇪',
+    reader: "Lector",
+    more: "Más",
+    themeLight: "Claro",
+    themeDark: "Oscuro",
+    teacher: "👨‍🏫 Profesor",
+    student: "👨‍🎓 Estudiante",
   },
   auth: {
     login: 'Entrar',
@@ -31,8 +36,7 @@ export const es = {
     comeBack: 'Vuelve mañana para repasar.',
     exercisesWaiting: (n) => `${n} ejercicios esperan`,
     startSession: 'Empezar →',
-    loading: 'Cargando...',
-  },
+
   exercise: {
     flashcard: 'Tarjeta',
     fillBlank: 'Rellena el hueco',
@@ -54,8 +58,9 @@ export const es = {
     sentenceExample: 'Ejemplo',
     yourSentence: 'Tu frase',
     correctedVersion: 'Versión corregida',
-    loading: 'Cargando...',
-  },
+    chooseTranslation: "Elige la traducción correcta:",
+    wordHints: "Palabras de la lección — toca para insertar:",
+
   lessons: {
     title: 'Lecciones',
     empty: 'No hay lecciones. ¡Sube la primera!',

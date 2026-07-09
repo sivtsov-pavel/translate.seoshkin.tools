@@ -94,7 +94,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl })
 
       {submitted && (
         <div style={{ textAlign: 'center', marginTop: 14, fontSize: 16, fontWeight: 700, color: resultColor }}>
-          {correct ? `✓ Верно! ${payload.answer}` : `✗ Правильно: ${payload.answer}`}
+          {correct ? `✓ ${t.exercise.correct} ${payload.answer}` : `✗ ${t.exercise.wrong} ${payload.answer}`}
         </div>
       )}
       </div>

@@ -40,7 +40,7 @@ export default function Layout({ children }) {
     { to: '/vocabulary',icon: 'bi-card-list',          label: t.nav.vocabulary },
     { to: '/vocabulary?status=learning', icon: 'bi-journal-bookmark-fill', label: t.nav.learningWords },
     ...(user?.role === 'owner' ? [{ to: '/students', icon: 'bi-people-fill', label: t.nav.students }] : []),
-    { to: '/reader',    icon: 'bi-eyeglasses',         label: 'Читалка' },
+    { to: '/reader',    icon: 'bi-eyeglasses',         label: t.nav.reader },
     { to: '/wiki',      icon: 'bi-question-circle-fill', label: t.nav.wiki },
     ...(user?.role === 'owner' ? [{ to: '/lessons/new', icon: 'bi-plus-circle-fill', label: t.nav.newLesson, divider: true }] : []),
   ]
@@ -114,7 +114,7 @@ export default function Layout({ children }) {
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{user.email.split('@')[0]}</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>{user.role === 'owner' ? '👨‍🏫 Учитель' : '👨‍🎓 Ученик'}</div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>{user.role === 'owner' ? t.nav.teacher : t.nav.student}</div>
               </div>
             </div>
           )}
@@ -145,7 +145,7 @@ export default function Layout({ children }) {
         <div style={{ padding: '14px', borderTop: '1px solid var(--line)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={toggleTheme} style={pill} title="Переключить тему">
             <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
-            {theme === 'dark' ? ' Светлая' : ' Тёмная'}
+            {' '}{theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}
           </button>
           <AutoSpeakToggle pill />
           <SpeakTranslationToggle />
@@ -166,8 +166,8 @@ export default function Layout({ children }) {
         {[
           { to: '/',           icon: 'bi-house-door-fill',           label: t.nav.today },
           { to: '/vocabulary', icon: 'bi-card-list',                 label: t.nav.vocabulary },
-          { to: '/reader',     icon: 'bi-book-half',                 label: 'Читалка' },
-          { to: '/wiki',       icon: 'bi-question-circle-fill',      label: 'Справка' },
+          { to: '/reader',     icon: 'bi-book-half',                 label: t.nav.reader },
+          { to: '/wiki',       icon: 'bi-question-circle-fill',      label: t.nav.wiki },
         ].map(item => {
           const active = item.to.includes('?')
             ? location.pathname + location.search === item.to
@@ -192,7 +192,7 @@ export default function Layout({ children }) {
           color: 'var(--ink-soft)', fontSize: 10,
         }}>
           <i className="bi bi-three-dots" style={{ fontSize: 20 }} />
-          <span>Ещё</span>
+          <span>{t.nav.more}</span>
         </button>
       </nav>
     </div>

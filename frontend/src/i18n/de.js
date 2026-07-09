@@ -10,7 +10,12 @@ export const de = {
     newLesson: 'Neue Lektion',
     learningWords: 'Lerne',
     logout: 'Abmelden',
-    appName: 'Deutsch Lernen 🇩🇪',
+    reader: "Lesegerät",
+    more: "Mehr",
+    themeLight: "Hell",
+    themeDark: "Dunkel",
+    teacher: "👨‍🏫 Lehrer",
+    student: "👨‍🎓 Schüler",
   },
   // Authentifizierung
   auth: {
@@ -34,8 +39,7 @@ export const de = {
     comeBack: 'Komm morgen wieder zum Wiederholen.',
     exercisesWaiting: (n) => `${n} Übungen warten auf Wiederholung`,
     startSession: 'Wiederholung starten →',
-    loading: 'Laden...',
-  },
+
   // Übungen
   exercise: {
     flashcard: 'Lernkarte',
@@ -58,8 +62,9 @@ export const de = {
     sentenceExample: 'Beispiel',
     yourSentence: 'Dein Satz',
     correctedVersion: 'Korrigierte Version',
-    loading: 'Übungen laden...',
-  },
+    chooseTranslation: "Wähle die richtige Übersetzung:",
+    wordHints: "Wörter aus der Lektion — tippen zum Einfügen:",
+
   // Lektionen
   lessons: {
     title: 'Lektionen',

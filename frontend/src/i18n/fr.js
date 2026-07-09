@@ -9,7 +9,12 @@ export const fr = {
     newLesson: 'Nouvelle leçon',
     learningWords: "J'apprends",
     logout: 'Déconnexion',
-    appName: 'Allemand 🇩🇪',
+    reader: "Lecteur",
+    more: "Plus",
+    themeLight: "Claire",
+    themeDark: "Sombre",
+    teacher: "👨‍🏫 Professeur",
+    student: "👨‍🎓 Élève",
   },
   auth: {
     login: 'Connexion',
@@ -31,8 +36,7 @@ export const fr = {
     comeBack: 'Reviens demain pour réviser.',
     exercisesWaiting: (n) => `${n} exercices attendent`,
     startSession: 'Commencer →',
-    loading: 'Chargement...',
-  },
+
   exercise: {
     flashcard: 'Carte',
     fillBlank: 'Complète le blanc',
@@ -54,8 +58,9 @@ export const fr = {
     sentenceExample: 'Exemple',
     yourSentence: 'Ta phrase',
     correctedVersion: 'Version corrigée',
-    loading: 'Chargement...',
-  },
+    chooseTranslation: "Choisissez la bonne traduction:",
+    wordHints: "Mots de la leçon — appuie pour insérer:",
+
   lessons: {
     title: 'Leçons',
     empty: "Pas de leçons. Uploadez la première !",

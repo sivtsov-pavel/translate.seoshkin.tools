@@ -11,7 +11,12 @@ export const ar = {
     newLesson: 'درس جديد',
     learningWords: 'أتعلم',
     logout: 'خروج',
-    appName: 'الألمانية 🇩🇪',
+    reader: "قارئ",
+    more: "المزيد",
+    themeLight: "فاتح",
+    themeDark: "داكن",
+    teacher: "👨‍🏫 معلم",
+    student: "👨‍🎓 طالب",
   },
   auth: {
     login: 'دخول',
@@ -33,8 +38,7 @@ export const ar = {
     comeBack: 'عد غداً للمراجعة.',
     exercisesWaiting: (n) => `${n} تمارين بانتظارك`,
     startSession: 'ابدأ ←',
-    loading: 'جاري التحميل...',
-  },
+
   exercise: {
     flashcard: 'بطاقة',
     fillBlank: 'أكمل الفراغ',
@@ -56,8 +60,9 @@ export const ar = {
     sentenceExample: 'مثال',
     yourSentence: 'جملتك',
     correctedVersion: 'النسخة المصححة',
-    loading: 'جاري التحميل...',
-  },
+    chooseTranslation: "اختر الترجمة الصحيحة:",
+    wordHints: "كلمات الدرس — اضغط للإدراج:",
+
   lessons: {
     title: 'الدروس',
     empty: 'لا توجد دروس. ارفع الدرس الأول!',

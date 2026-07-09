@@ -11,6 +11,12 @@ export const ru = {
     learningWords: 'Изучаю',
     logout: 'Выйти',
     appName: 'Немецкий 🇩🇪',
+    reader: 'Читалка',
+    more: 'Ещё',
+    themeLight: 'Светлая',
+    themeDark: 'Тёмная',
+    teacher: '👨‍🏫 Учитель',
+    student: '👨‍🎓 Ученик',
   },
   // Авторизация
   auth: {
@@ -59,6 +65,8 @@ export const ru = {
     yourSentence: 'Ваше предложение',
     correctedVersion: 'Исправленный вариант',
     loading: 'Загрузка упражнений...',
+    chooseTranslation: 'Выбери правильный перевод:',
+    wordHints: 'Слова из урока — нажми чтобы вставить:',
   },
   // Уроки
   lessons: {

@@ -10,6 +10,12 @@ export const en = {
     learningWords: 'Learning',
     logout: 'Log out',
     appName: 'Deutsch Lernen 🇩🇪',
+    reader: 'Reader',
+    more: 'More',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    teacher: '👨‍🏫 Teacher',
+    student: '👨‍🎓 Student',
   },
   auth: {
     login: 'Log in',
@@ -55,6 +61,8 @@ export const en = {
     yourSentence: 'Your sentence',
     correctedVersion: 'Corrected version',
     loading: 'Loading exercises...',
+    chooseTranslation: 'Choose the correct translation:',
+    wordHints: 'Words from the lesson — tap to insert:',
   },
   lessons: {
     title: 'Lessons',

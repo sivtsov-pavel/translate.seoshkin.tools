@@ -63,7 +63,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle }) {
       {/* Слова-подсказки */}
       {!submitted && payload.options?.length > 0 && (
         <div style={{ marginBottom: 14 }}>
-          <span style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>Слова из урока — нажми чтобы вставить:</span>
+          <span style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>{t.exercise.wordHints}</span>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {uniqueOptions.sort(() => Math.random() - 0.5).map((opt, i) => (
               <button key={i} onClick={() => setAnswer(opt)}
