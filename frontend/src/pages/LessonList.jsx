@@ -109,24 +109,19 @@ export default function LessonList() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
-  // Опрос статуса пока операция работает
-  useEffect(() => {
-    if (adminOp.status !== 'running') return
-    const tid = setInterval(async () => {
-      try {
-        const s = await api.get('/admin/operation-status')
-        if (s.status !== 'idle') setAdminOp(s)
-      } catch {}
-    }, 2000)
-    return () => clearInterval(tid)
-  }, [adminOp.status])
-
-  // Проверяем при загрузке — вдруг операция уже идёт
+  // Синхронизируем статус с бэкендом — сразу при маунте и каждые 2 сек.
+  // Это позволяет восстановить прогресс после перезагрузки страницы.
   useEffect(() => {
     if (user?.role !== 'owner') return
-    api.get('/admin/operation-status').then(s => {
-      if (s.status === 'running') setAdminOp(s)
-    }).catch(() => {})
+    const sync = async () => {
+      try {
+        const s = await api.get('/admin/operation-status')
+        setAdminOp(prev => (s.status !== 'idle' || prev.status === 'running') ? s : prev)
+      } catch {}
+    }
+    sync()
+    const tid = setInterval(sync, 2000)
+    return () => clearInterval(tid)
   }, [user?.role])
 
   const startOp = (name) => setAdminOp({ status: 'running', name, done: 0, total: 0, updated: 0, failed: 0 })
