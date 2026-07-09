@@ -164,10 +164,10 @@ export default function Layout({ children }) {
       {/* Нижняя панель — только мобиль */}
       <nav className="bottom-nav">
         {[
-          { to: '/',                        icon: 'bi-house-door-fill',         label: t.nav.today },
-          { to: '/vocabulary',              icon: 'bi-card-list',               label: t.nav.vocabulary },
-          { to: '/vocabulary?status=learning', icon: 'bi-journal-bookmark-fill', label: t.nav.learningWords },
-          { to: '/reader',                  icon: 'bi-book-half',               label: 'Читалка' },
+          { to: '/',           icon: 'bi-house-door-fill',           label: t.nav.today },
+          { to: '/vocabulary', icon: 'bi-card-list',                 label: t.nav.vocabulary },
+          { to: '/reader',     icon: 'bi-book-half',                 label: 'Читалка' },
+          { to: '/wiki',       icon: 'bi-question-circle-fill',      label: 'Справка' },
         ].map(item => {
           const active = item.to.includes('?')
             ? location.pathname + location.search === item.to
