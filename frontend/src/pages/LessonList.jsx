@@ -301,10 +301,17 @@ export default function LessonList() {
                       {lesson.description && (
                         <span style={{ marginLeft: 8, color: 'var(--ink-soft)' }}>— {lesson.description}</span>
                       )}
-                      {lesson.progress && status !== 'done' && (
-                        <span style={{ marginLeft: 8, color: STATUS_COLORS[status] }}>{lesson.progress}</span>
-                      )}
                     </div>
+                    {lesson.progress && status === 'processing' && (
+                      <div style={{ marginTop: 6, padding: '8px 12px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--accent)', fontSize: 13, color: STATUS_COLORS.processing, wordBreak: 'break-word' }}>
+                        ⏳ {lesson.progress}
+                      </div>
+                    )}
+                    {lesson.progress && status === 'error' && (
+                      <div style={{ marginTop: 6, padding: '8px 12px', background: 'rgba(179,56,44,0.08)', borderRadius: 8, border: '1px solid var(--red)', fontSize: 13, color: 'var(--red)', wordBreak: 'break-word' }}>
+                        ✗ {lesson.progress}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
