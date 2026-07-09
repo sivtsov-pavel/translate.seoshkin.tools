@@ -104,6 +104,7 @@ export default function LessonList() {
   const [deleting, setDeleting]         = useState(null)
   const [addingLetters, setAddingLetters]         = useState(null)
   const [addingDictation, setAddingDictation]     = useState(null)
+  const [regenId, setRegenId]                     = useState(null)
   const [processing, setProcessing]               = useState(null)
   const [editingId, setEditingId]       = useState(null)
   const { t } = useI18nStore()
@@ -141,6 +142,21 @@ export default function LessonList() {
       const res = await api.post(`/lessons/${id}/add-dictation`, {})
       alert(`Добавлено ${res.added} упражнений "Диктант"!`)
     } catch (e) { alert(e.message) } finally { setAddingDictation(null) }
+  }
+
+  const handleRegen = async (lesson) => {
+    if (!window.confirm(`Пересоздать упражнения для «${lesson.title}»?\nСтарые упражнения и прогресс удалятся.`)) return
+    setRegenId(lesson.id)
+    setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, status: 'processing', progress: 'Генерирую упражнения...' } : l))
+    try {
+      await api.post(`/lessons/${lesson.id}/regenerate`, {})
+      // Поллинг статуса пока не завершится
+      const poll = setInterval(async () => {
+        const updated = await api.get(`/lessons/${lesson.id}`)
+        setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, ...updated } : l))
+        if (updated.status !== 'processing') { clearInterval(poll); setRegenId(null) }
+      }, 3000)
+    } catch (e) { alert('Ошибка: ' + e.message); setRegenId(null) }
   }
 
   useEffect(() => {
@@ -286,6 +302,13 @@ export default function LessonList() {
                           style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: isEditing ? 'var(--accent-soft)' : 'var(--surface)', color: isEditing ? 'var(--accent)' : 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
                           ✏️
                         </button>
+                        {lesson.words_total > 0 && (
+                          <button onClick={() => handleRegen(lesson)} disabled={regenId === lesson.id || status === 'processing'}
+                            title="Пересоздать упражнения из существующих слов (без сканирования фото)"
+                            style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
+                            {regenId === lesson.id ? '⏳' : '⚙️'}
+                          </button>
+                        )}
                         {status === 'done' && (
                           <>
                             <button onClick={() => handleAddLetterFill(lesson.id)} disabled={addingLetters === lesson.id}
