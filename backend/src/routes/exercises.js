@@ -162,6 +162,10 @@ export async function exercisesRoutes(fastify) {
 
     let query = `
       SELECT w.*,
+             COALESCE(w.image_url, (
+               SELECT e.image_url FROM exercises e
+               WHERE e.word_id = w.id AND e.image_url IS NOT NULL LIMIT 1
+             )) AS image_url,
              l.title AS lesson_title,
              COALESCE(uws.status, w.status, 'new') AS status
       FROM words w
@@ -400,7 +404,7 @@ export async function exercisesRoutes(fastify) {
       `SELECT id, word_de FROM words WHERE image_url IS NULL ORDER BY id`
     )
     const { rows: exs } = await db.query(`
-      SELECT e.id, e.type,
+      SELECT e.id, e.word_id, e.type,
         COALESCE(w.word_de,
           e.payload->>'question',
           e.payload->>'word_de',
@@ -438,6 +442,10 @@ export async function exercisesRoutes(fastify) {
         const url = cached[0]?.image_url ?? await fetchImageUrl(ex.word_de)
         if (url) {
           await db.query('UPDATE exercises SET image_url = $1 WHERE id = $2', [url, ex.id])
+          // Если есть привязка к слову — пишем и в words, чтобы словарь тоже показывал картинку
+          if (ex.word_id) {
+            await db.query('UPDATE words SET image_url = $1 WHERE id = $2 AND image_url IS NULL', [url, ex.word_id])
+          }
           adminOp.updated++
         } else { adminOp.failed++ }
         await new Promise(r => setTimeout(r, 250))
