@@ -30,7 +30,7 @@ const WIKI = {
       },
       {
         icon: '4️⃣', title: 'Что создаётся автоматически',
-        body: 'Из каждого слова урока ИИ создаёт 6 типов упражнений:\n\n🃏 Флеш-карта — перевернуть и оценить себя\n✏️ Заполни пропуск — вписать слово в предложение\n☑️ Выбор ответа — 4 варианта\n✍️ Напиши предложение — ИИ проверит\n🔤 Добавь букву — угадать пропущенную букву\n🎙️ Диктант — слово произносится вслух, нужно написать',
+        body: 'Из каждого слова урока ИИ создаёт 7 типов упражнений:\n\n🃏 Флеш-карта — перевернуть и оценить себя\n✏️ Заполни пропуск — вписать слово в предложение\n☑️ Выбор ответа — 4 варианта\n✍️ Напиши предложение — ИИ проверит\n🔤 Добавь букву — угадать пропущенную букву\n🎙️ Диктант — слово произносится вслух, нужно написать\n🗣️ Произношение — скажи слово вслух, система проверит правильность',
       },
       {
         icon: '5️⃣', title: 'Ученики',
@@ -38,7 +38,7 @@ const WIKI = {
       },
       {
         icon: '📖', title: 'Читалка',
-        body: 'Раздел «Читалка» — для работы с немецкими текстами. Вставьте текст → нажмите «Разбить» → каждое слово становится кликабельным: покажет перевод и произношение.\n\nУдобно для работы с текстами из учебника на уроке.',
+        body: 'Раздел «Читалка» — три режима работы с текстами:\n\n▶ Читать — кликабельный текст с TTS (скорость 0.7×–1.2×). Нажми на слово — перевод из словаря.\n\n🌐 Двуязычный — ИИ переводит абзацы. Выбери любую языковую пару из 8 языков (де→ру, ру→ен и т.д.). Модели: ⚡ Быстро (GPT-4o-mini) или ✨ Точно (GPT-4o).\n\n💬 Разговор — режим как в Google Translate. Два участника по очереди говорят в микрофон — система переводит и произносит ответ. Работает только в Chrome.',
       },
       {
         icon: '💬', title: 'Разговорник',
@@ -50,7 +50,7 @@ const WIKI = {
       },
       {
         icon: '⚙️', title: 'Admin-операции',
-        body: 'В боковой панели (десктоп) или меню есть admin-кнопки для массовых операций:\n\n• Загрузить картинки — фото для слов из Unsplash\n• Обогатить слова — примеры предложений через ИИ\n• Перевести на все языки — слова и упражнения\n• Пересоздать упражнения — если нужно обновить\n\nОперации работают в фоне, прогресс виден в «Отчёте».',
+        body: 'В боковой панели (десктоп) или меню есть admin-кнопки для массовых операций:\n\n• 🖼 Картинки — фото для слов из Unsplash\n• ⭐ Словарь++ — примеры предложений через ИИ\n• 🌐 Слова → 10 языков — перевод словаря\n• 📝 Упражнения → языки — перевод вариантов ответов\n• 🔤 Названия → языки — перевод заголовков уроков\n• 🔊 Произношение — добавить голосовые упражнения всем урокам\n• 🔄 Пересоздать всё — обновить все упражнения (сбросит прогресс!)\n\nОперации работают в фоне с прогрессом «сделано/всего». Состояние видно прямо в меню.',
       },
     ],
     student: [
@@ -91,8 +91,12 @@ const WIKI = {
         body: 'Слово произносится вслух по-немецки. Ты его слышишь, но не видишь — нужно написать правильно!\n\n1. Слушай внимательно 🎵\n2. Нажми ◄ если хочешь услышать ещё раз\n3. Напечатай слово\n4. Нажми «Проверить»\n\nЭто самое сложное упражнение — оно проверяет и слух, и правописание!',
       },
       {
-        icon: '📖', title: 'Читалка — читаем немецкие тексты',
-        body: 'Раздел «Читалка» — для чтения немецких текстов.\n\n1. Вставь немецкий текст в поле\n2. Нажми «Разбить» — текст станет кликабельным\n3. Нажми на любое слово → увидишь перевод и произношение\n4. Нажми на слово снова → уберёшь его из панели\n5. Кнопка 🔊 рядом со словом — произнесёт его вслух\n\nМожно слушать целые предложения!',
+        icon: '🗣️', title: 'Произношение — говори по-немецки',
+        body: 'Тебе показывают перевод слова на русском — ты должен СКАЗАТЬ немецкое слово вслух.\n\n1. Прочитай русский перевод\n2. Нажми на кнопку 🎤 (или скажи сразу — кнопка появится сама)\n3. Произнеси немецкое слово в микрофон\n4. Система покажет что услышала и совпадение\n\n✅ Правильно — идём дальше\n😕 Неточно — попробуй ещё раз или нажми «Пропустить»\n\n⚠️ Работает в Chrome на Android/ПК. На iPhone пока только чтение.\n\n💡 Совет: нажми кнопку 🔊 чтобы сначала услышать как звучит слово правильно.',
+      },
+      {
+        icon: '📖', title: 'Читалка — читаем и переводим тексты',
+        body: 'Раздел «Читалка» — три режима:\n\n▶ Читать — вставь текст, нажми кнопку и слушай. Нажми на слово — увидишь перевод из словаря.\n\n🌐 Двуязычный — ИИ переводит текст абзац за абзацем. Выбери языки (например немецкий → русский). Нажми «Перевести».\n\n💬 Разговор — как Google Translate! Два человека говорят по очереди в микрофон — система переводит и произносит вслух. Удобно на уроке или для разговора с носителем языка.\n\n⚠️ Режимы с микрофоном работают только в Chrome.',
       },
       {
         icon: '💬', title: 'Разговорник — твои фразы',
@@ -140,9 +144,9 @@ const WIKI = {
       { icon: '2️⃣', title: 'Create a course', body: 'Go to "Courses" → "+ Course". Enter a name (e.g. "Grade 6, 2024/2025"). A course is a folder for lessons.' },
       { icon: '3️⃣', title: 'Upload a lesson', body: '1. Click "+ Add lesson" inside a course\n2. Photo the textbook/notebook pages (multiple photos OK)\n3. Optionally add an audio recording\n4. Click "Process lesson"' },
       { icon: '⏳', title: 'Processing', body: 'AI reads each photo and extracts words, grammar, example sentences.\n• ~10 sec per photo\n• 24 photos ≈ 5-8 minutes\n• Progress shown on screen' },
-      { icon: '4️⃣', title: 'What is created', body: 'For each word the AI creates 6 exercise types:\n🃏 Flashcard\n✏️ Fill in the blank\n☑️ Multiple choice\n✍️ Write a sentence\n🔤 Add the letter\n🎙️ Dictation' },
+      { icon: '4️⃣', title: 'What is created', body: 'For each word the AI creates 7 exercise types:\n🃏 Flashcard\n✏️ Fill in the blank\n☑️ Multiple choice\n✍️ Write a sentence\n🔤 Add the letter\n🎙️ Dictation\n🗣️ Speaking — say the word aloud, the system checks pronunciation' },
       { icon: '5️⃣', title: 'Students', body: 'Students register themselves. View their progress under "Students": words learned, attempts today, which lessons they study.' },
-      { icon: '📖', title: 'Reader', body: 'The Reader section is for working with German texts. Paste text → click "Split" → each word becomes clickable showing translation and pronunciation.' },
+      { icon: '📖', title: 'Reader', body: 'Three modes:\n▶ Read — clickable text with TTS playback, click a word to see its translation.\n🌐 Bilingual — AI translates paragraphs in any of 8 language pairs. Choose ⚡ Fast (GPT-4o-mini) or ✨ Accurate (GPT-4o).\n💬 Conversation — like Google Translate: two people speak into the mic in turn, the system translates and reads the answer aloud. Chrome only.' },
       { icon: '💬', title: 'Phrasebook', body: 'Students save phrases from exercises with the 📖 button. Or add them manually — when a German phrase is typed, AI auto-translates it.' },
     ],
     student: [
@@ -155,7 +159,8 @@ const WIKI = {
       { icon: '✍️', title: 'Write a sentence', body: 'You get a German word and a hint. Write ANY simple German sentence with that word. AI checks it and gives a star rating.' },
       { icon: '🔤', title: 'Add the letter', body: 'A German word with a missing letter. Guess which letter is missing.\n\nExample: "_aus" → "H" → "Haus" ✓\n\nHelps you remember spelling of words with umlauts (ä, ö, ü).' },
       { icon: '🎙️', title: 'Dictation', body: 'A word is spoken aloud in German. You hear it but don\'t see it — type it correctly!\n\n1. Listen carefully 🎵\n2. Press ◄ to hear again\n3. Type the word\n4. Press "Check"\n\nThe hardest exercise — tests both listening and spelling!' },
-      { icon: '📖', title: 'Reader', body: '1. Paste German text\n2. Click "Split" — words become clickable\n3. Click a word → see translation and hear pronunciation\n4. Click again to deselect' },
+      { icon: '🗣️', title: 'Speaking — say it aloud', body: 'You see the Russian translation — say the German word aloud into the microphone.\n\n1. Read the translation\n2. Press the 🎤 button\n3. Speak the German word\n4. System shows what it heard and the match score\n\n✅ Correct — move on\n😕 Off — try again or skip\n\n⚠️ Works in Chrome (Android / PC). Tip: press 🔊 first to hear the correct pronunciation.' },
+      { icon: '📖', title: 'Reader', body: '▶ Read — paste text, click Split, click any word to see its translation.\n🌐 Bilingual — AI translates paragraph by paragraph (8 language pairs, 2 model options).\n💬 Conversation — two people speak in turns, AI translates and reads the reply aloud. Great for class or talking with a native speaker. Chrome only.' },
       { icon: '💬', title: 'Phrasebook', body: 'Save phrases from exercises with 📖. Or add manually — type German, tab out, AI translates automatically. Mark ✅ when you\'ve learned it.' },
     ],
     install: [

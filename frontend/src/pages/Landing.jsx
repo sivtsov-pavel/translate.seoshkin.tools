@@ -66,9 +66,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Флеш-карты', desc: 'Классические карточки с произношением и SM-2 интервальным повторением' },
       { icon: '🎙️', title: 'Диктант', desc: 'Тренировка на слух — слушаешь немецкое слово, пишешь его' },
+      { icon: '🗣️', title: 'Произношение', desc: 'Скажи слово в микрофон — система проверит правильность. Голосовые тренировки', isNew: true },
       { icon: '✏️', title: 'Вставь букву', desc: 'Упражнение на правописание: ä, ö, ü, ß — частые трудности' },
       { icon: '💬', title: 'Разговорник', desc: 'Сохраняй полезные фразы из уроков и учи их отдельно' },
-      { icon: '📖', title: 'Читалка', desc: 'Немецкие тексты с переводом слов по клику и ИИ-разбором' },
+      { icon: '📖', title: 'Читалка', desc: 'Двуязычный режим, кликабельные слова и 💬 Разговор с переводом речи в реальном времени', isNew: true },
       { icon: '📊', title: 'Аналитика', desc: 'Прогресс по дням, лучшая серия, слова в изучении' },
     ],
     steps: {
@@ -100,9 +101,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Flashcards', desc: 'Classic cards with pronunciation and SM-2 spaced repetition' },
       { icon: '🎙️', title: 'Dictation', desc: 'Listen to the German word and write it down' },
+      { icon: '🗣️', title: 'Speaking', desc: 'Say the word into the microphone — the system checks your pronunciation', isNew: true },
       { icon: '✏️', title: 'Letter Fill', desc: 'Spelling practice: ä, ö, ü, ß — the tricky ones' },
       { icon: '💬', title: 'Phrasebook', desc: 'Save useful phrases from lessons and study them separately' },
-      { icon: '📖', title: 'Text Reader', desc: 'German texts with click-to-translate and AI analysis' },
+      { icon: '📖', title: 'Text Reader', desc: 'Bilingual mode, clickable words and 💬 Conversation: translate speech in real time', isNew: true },
       { icon: '📊', title: 'Analytics', desc: 'Daily progress, best streaks, words in learning' },
     ],
     steps: {
@@ -134,9 +136,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Lernkarten', desc: 'Klassische Karten mit Aussprache und SM-2 Wiederholung' },
       { icon: '🎙️', title: 'Diktat', desc: 'Höre das deutsche Wort und schreibe es auf' },
+      { icon: '🗣️', title: 'Aussprache', desc: 'Sprich das Wort ins Mikrofon — das System prüft deine Aussprache', isNew: true },
       { icon: '✏️', title: 'Buchstabe ergänzen', desc: 'Rechtschreibübung: ä, ö, ü, ß — die schwierigen' },
       { icon: '💬', title: 'Sprachführer', desc: 'Speichere nützliche Phrasen und lerne sie separat' },
-      { icon: '📖', title: 'Lesegerät', desc: 'Deutsche Texte mit Klick-Übersetzung und KI-Analyse' },
+      { icon: '📖', title: 'Lesegerät', desc: 'Zweisprachiger Modus, klickbare Wörter und 💬 Gespräch mit Echtzeit-Übersetzung', isNew: true },
       { icon: '📊', title: 'Analytik', desc: 'Tagesfortschritt, beste Serie, Wörter im Lernen' },
     ],
     steps: {
@@ -168,9 +171,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Флеш-картки', desc: 'Класичні картки з вимовою та SM-2 інтервальним повторенням' },
       { icon: '🎙️', title: 'Диктант', desc: 'Тренування на слух — слухаєш слово, пишеш його' },
+      { icon: '🗣️', title: 'Вимова', desc: 'Скажи слово у мікрофон — система перевірить правильність', isNew: true },
       { icon: '✏️', title: 'Встав букву', desc: 'Вправа на правопис: ä, ö, ü, ß — типові труднощі' },
       { icon: '💬', title: 'Розмовник', desc: 'Зберігай корисні фрази з уроків та вчи їх окремо' },
-      { icon: '📖', title: 'Читалка', desc: 'Німецькі тексти з перекладом за кліком та ШІ-розбором' },
+      { icon: '📖', title: 'Читалка', desc: 'Двомовний режим, клікабельні слова та 💬 Розмова з перекладом мовлення в реальному часі', isNew: true },
       { icon: '📊', title: 'Аналітика', desc: 'Прогрес по днях, найкраща серія, слова у вивченні' },
     ],
     steps: {
@@ -202,9 +206,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Флашкарти', desc: 'Класически карти с произношение и SM-2 интервално повторение' },
       { icon: '🎙️', title: 'Диктовка', desc: 'Слушай немската дума и я напиши' },
+      { icon: '🗣️', title: 'Произношение', desc: 'Кажи думата в микрофона — системата проверява правилността', isNew: true },
       { icon: '✏️', title: 'Вмъкни буква', desc: 'Упражнение по правопис: ä, ö, ü, ß' },
       { icon: '💬', title: 'Разговорник', desc: 'Запазвай полезни фрази и ги учи отделно' },
-      { icon: '📖', title: 'Четец', desc: 'Немски текстове с превод при клик и AI анализ' },
+      { icon: '📖', title: 'Четец', desc: 'Двуезичен режим, кликабелни думи и 💬 Разговор с превод в реално време', isNew: true },
       { icon: '📊', title: 'Аналитика', desc: 'Прогрес по дни, най-добра серия, думи в обучение' },
     ],
     steps: {
@@ -236,9 +241,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Flaş Kartlar', desc: 'Telaffuzlu klasik kartlar ve SM-2 aralıklı tekrar' },
       { icon: '🎙️', title: 'Dikte', desc: 'Almanca kelimeyi dinle ve yaz' },
+      { icon: '🗣️', title: 'Telaffuz', desc: 'Kelimeyi mikrofona söyle — sistem doğruluğunu kontrol eder', isNew: true },
       { icon: '✏️', title: 'Harf Doldur', desc: 'Yazım alıştırması: ä, ö, ü, ß' },
       { icon: '💬', title: 'Konuşma Kılavuzu', desc: 'Derslerden faydalı ifadeleri kaydet ve ayrıca öğren' },
-      { icon: '📖', title: 'Metin Okuyucu', desc: 'Tıklamayla çeviri ve AI analiziyle Almanca metinler' },
+      { icon: '📖', title: 'Metin Okuyucu', desc: 'İki dilli mod, tıklanabilir kelimeler ve 💬 gerçek zamanlı konuşma çevirisi', isNew: true },
       { icon: '📊', title: 'Analitik', desc: 'Günlük ilerleme, en iyi seri, öğrenilen kelimeler' },
     ],
     steps: {
@@ -270,9 +276,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'بطاقات تعليمية', desc: 'بطاقات كلاسيكية مع النطق وتكرار SM-2' },
       { icon: '🎙️', title: 'الإملاء', desc: 'استمع إلى الكلمة الألمانية واكتبها' },
+      { icon: '🗣️', title: 'النطق', desc: 'قل الكلمة في الميكروفون — يتحقق النظام من صحة نطقك', isNew: true },
       { icon: '✏️', title: 'أكمل الحرف', desc: 'تدريب على الإملاء: ä، ö، ü، ß' },
       { icon: '💬', title: 'كتاب المحادثة', desc: 'احفظ العبارات المفيدة من الدروس' },
-      { icon: '📖', title: 'قارئ النصوص', desc: 'نصوص ألمانية مع ترجمة بالنقر وتحليل الذكاء الاصطناعي' },
+      { icon: '📖', title: 'قارئ النصوص', desc: 'وضع ثنائي اللغة، كلمات قابلة للنقر، و💬 ترجمة الكلام في الوقت الفعلي', isNew: true },
       { icon: '📊', title: 'التحليلات', desc: 'التقدم اليومي، أفضل سلسلة، الكلمات قيد التعلم' },
     ],
     steps: {
@@ -304,9 +311,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Tarjetas', desc: 'Tarjetas clásicas con pronunciación y repetición espaciada SM-2' },
       { icon: '🎙️', title: 'Dictado', desc: 'Escucha la palabra alemana y escríbela' },
+      { icon: '🗣️', title: 'Pronunciación', desc: 'Di la palabra al micrófono — el sistema comprueba tu pronunciación', isNew: true },
       { icon: '✏️', title: 'Rellena la letra', desc: 'Práctica de ortografía: ä, ö, ü, ß' },
       { icon: '💬', title: 'Diccionario de frases', desc: 'Guarda frases útiles de las lecciones' },
-      { icon: '📖', title: 'Lector de textos', desc: 'Textos alemanes con traducción al clic y análisis IA' },
+      { icon: '📖', title: 'Lector de textos', desc: 'Modo bilingüe, palabras clicables y 💬 conversación con traducción en tiempo real', isNew: true },
       { icon: '📊', title: 'Analítica', desc: 'Progreso diario, mejor racha, palabras en aprendizaje' },
     ],
     steps: {
@@ -338,9 +346,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Cartes flash', desc: 'Cartes classiques avec prononciation et répétition espacée SM-2' },
       { icon: '🎙️', title: 'Dictée', desc: 'Écoute le mot allemand et écris-le' },
+      { icon: '🗣️', title: 'Prononciation', desc: 'Dis le mot dans le microphone — le système vérifie ta prononciation', isNew: true },
       { icon: '✏️', title: 'Compléter la lettre', desc: 'Exercice d\'orthographe: ä, ö, ü, ß' },
       { icon: '💬', title: 'Guide de conversation', desc: 'Enregistre des phrases utiles des leçons' },
-      { icon: '📖', title: 'Lecteur de texte', desc: 'Textes allemands avec traduction au clic et analyse IA' },
+      { icon: '📖', title: 'Lecteur de texte', desc: 'Mode bilingue, mots cliquables et 💬 conversation avec traduction en temps réel', isNew: true },
       { icon: '📊', title: 'Analytique', desc: 'Progrès quotidien, meilleure série, mots en apprentissage' },
     ],
     steps: {
@@ -372,9 +381,10 @@ const L = {
     modules: [
       { icon: '🃏', title: 'Karta mësimi', desc: 'Karta klasike me shqiptim dhe përsëritje SM-2' },
       { icon: '🎙️', title: 'Diktim', desc: 'Dëgjo fjalën gjermane dhe shkruaje' },
+      { icon: '🗣️', title: 'Shqiptim', desc: 'Thuaj fjalën në mikrofon — sistemi kontrollon saktësinë', isNew: true },
       { icon: '✏️', title: 'Plotëso shkronjën', desc: 'Ushtrim drejtshkrimi: ä, ö, ü, ß' },
       { icon: '💬', title: 'Udhëzues bisede', desc: 'Ruaj fraza të dobishme nga mësimet' },
-      { icon: '📖', title: 'Lexues teksti', desc: 'Tekste gjermane me përkthim me klik dhe analizë AI' },
+      { icon: '📖', title: 'Lexues teksti', desc: 'Mënyra dysgjuhëshe, fjalë të klikueshme dhe 💬 bisedë me përkthim në kohë reale', isNew: true },
       { icon: '📊', title: 'Analitikë', desc: 'Progresi ditor, seria më e mirë, fjalët në mësim' },
     ],
     steps: {
@@ -483,14 +493,22 @@ export default function Landing() {
           {c.modules.map((m, i) => (
             <Link to="/docs" key={i} style={{ textDecoration: 'none' }}>
               <div style={{
-                background: 'var(--surface)', border: '1px solid var(--line)',
+                background: 'var(--surface)', border: `1px solid ${m.isNew ? 'var(--accent)' : 'var(--line)'}`,
                 borderRadius: 16, padding: '20px 20px 18px',
                 transition: 'border-color .2s, transform .15s',
-                cursor: 'pointer',
+                cursor: 'pointer', position: 'relative', overflow: 'hidden',
               }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = m.isNew ? 'var(--accent)' : 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}
               >
+                {m.isNew && (
+                  <span style={{
+                    position: 'absolute', top: 10, right: 10,
+                    background: 'var(--accent)', color: 'var(--accent-ink)',
+                    fontSize: 10, fontWeight: 800, letterSpacing: '0.5px',
+                    padding: '2px 7px', borderRadius: 20,
+                  }}>NEW</span>
+                )}
                 <div style={{ fontSize: 32, marginBottom: 10 }}>{m.icon}</div>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6, color: 'var(--ink)' }}>{m.title}</div>
                 <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>{m.desc}</div>
