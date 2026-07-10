@@ -349,14 +349,14 @@ ${list}`,
   return results
 }
 
-const LANG_NAMES = {
+const LANG_NAMES_EN = {
   de: 'German', ru: 'Russian', en: 'English', uk: 'Ukrainian',
   fr: 'French', es: 'Spanish', tr: 'Turkish', ar: 'Arabic', bg: 'Bulgarian', sq: 'Albanian',
 }
 
 export async function translateParagraphs(paragraphs, sourceLang = 'de', targetLang = 'ru', model = 'gpt-4o-mini') {
-  const from = LANG_NAMES[sourceLang] || sourceLang
-  const to   = LANG_NAMES[targetLang] || targetLang
+  const from = LANG_NAMES_EN[sourceLang] || sourceLang
+  const to   = LANG_NAMES_EN[targetLang] || targetLang
   const list = paragraphs.map((p, i) => `${i + 1}: ${p}`).join('\n\n')
   const text = await ask(
     `Translate the following ${from} paragraphs to ${to}.
@@ -369,8 +369,8 @@ ${list}`,
 }
 
 export async function translateSingle(text, sourceLang, targetLang, model = 'gpt-4o-mini') {
-  const from = LANG_NAMES[sourceLang] || sourceLang
-  const to   = LANG_NAMES[targetLang] || targetLang
+  const from = LANG_NAMES_EN[sourceLang] || sourceLang
+  const to   = LANG_NAMES_EN[targetLang] || targetLang
   const result = await ask(
     `Translate this ${from} text to ${to}. Return only the translation, nothing else:\n\n${text}`,
     { model, max_tokens: 1024 }
