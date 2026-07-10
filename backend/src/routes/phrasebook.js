@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { explainGrammarError } from '../services/claude.js'
+import { explainGrammarError, translateText } from '../services/claude.js'
 
 export async function phrasebookRoutes(fastify) {
 
@@ -40,6 +40,22 @@ export async function phrasebookRoutes(fastify) {
     return reply.status(201).send(rows[0])
   })
 
+  // Редактировать фразу (de, ru, category)
+  fastify.patch('/api/phrasebook/:id', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    const { de, ru, category } = request.body
+    if (!de || !ru) return reply.status(400).send({ error: 'de и ru обязательны' })
+    const { rows } = await db.query(
+      `UPDATE phrasebook SET de = $1, ru = $2, category = $3
+       WHERE id = $4 AND user_id = $5
+       RETURNING id, de, ru, category, source, exercise_id, learned, created_at`,
+      [de.trim(), ru.trim(), category || null, parseInt(request.params.id), request.user.id]
+    )
+    if (!rows[0]) return reply.status(404).send({ error: 'Не найдено' })
+    return rows[0]
+  })
+
   // Переключить статус "Выучил"
   fastify.patch('/api/phrasebook/:id/learned', {
     preHandler: [fastify.authenticate],
@@ -63,6 +79,20 @@ export async function phrasebookRoutes(fastify) {
     )
     if (!rows[0]) return reply.status(404).send({ error: 'Не найдено' })
     return reply.status(204).send()
+  })
+
+  // Автоперевод фразы (DE → целевой язык, по умолчанию RU)
+  fastify.post('/api/translate-text', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    const { text, from = 'de', to = 'ru' } = request.body
+    if (!text?.trim()) return reply.status(400).send({ error: 'text обязателен' })
+    try {
+      const translation = await translateText(text.trim(), from, to)
+      return { translation }
+    } catch (e) {
+      return reply.status(500).send({ error: e.message })
+    }
   })
 
   // ─── Объяснение ошибки ───

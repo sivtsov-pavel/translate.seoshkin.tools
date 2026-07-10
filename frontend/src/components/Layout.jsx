@@ -86,6 +86,7 @@ export default function Layout({ children }) {
     { to: '/vocabulary?status=learning',  icon: 'bi-journal-bookmark-fill',     label: t.nav.learningWords },
     { to: '/reader',                      icon: 'bi-eyeglasses',                label: t.nav.reader },
     { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
+    { to: '/translations',               icon: 'bi-globe2',                    label: 'Переводы' },
   ]
 
   const classItems = user?.role === 'owner' ? [

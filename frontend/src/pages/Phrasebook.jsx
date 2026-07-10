@@ -8,20 +8,35 @@ const CATEGORIES = [
 ]
 
 export default function Phrasebook() {
-  const [phrases, setPhrases]       = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [filter, setFilter]         = useState('all')   // 'all' | 'learned' | 'new'
-  const [search, setSearch]         = useState('')
-  const [catFilter, setCatFilter]   = useState('')
-  const [showAdd, setShowAdd]       = useState(false)
-  const [newDe, setNewDe]           = useState('')
-  const [newRu, setNewRu]           = useState('')
-  const [newCat, setNewCat]         = useState('')
-  const [adding, setAdding]         = useState(false)
+  const [phrases, setPhrases]     = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [filter, setFilter]       = useState('all')
+  const [search, setSearch]       = useState('')
+  const [catFilter, setCatFilter] = useState('')
+  const [showAdd, setShowAdd]     = useState(false)
+
+  // Поля формы добавления
+  const [newDe, setNewDe]       = useState('')
+  const [newRu, setNewRu]       = useState('')
+  const [newCat, setNewCat]     = useState('')
+  const [adding, setAdding]     = useState(false)
+  const [translating, setTranslating] = useState(false)
 
   useEffect(() => {
     api.get('/phrasebook').then(data => { setPhrases(data); setLoading(false) }).catch(() => setLoading(false))
   }, [])
+
+  // Автоперевод DE→RU при blur из поля немецкого текста
+  const autoTranslate = async () => {
+    const text = newDe.trim()
+    if (!text || newRu.trim()) return // не перезаписываем если уже заполнено
+    setTranslating(true)
+    try {
+      const res = await api.post('/translate-text', { text, from: 'de', to: 'ru' })
+      if (res.translation) setNewRu(res.translation)
+    } catch {}
+    setTranslating(false)
+  }
 
   const toggleLearned = async (id) => {
     const res = await api.patch(`/phrasebook/${id}/learned`, {})
@@ -31,6 +46,10 @@ export default function Phrasebook() {
   const deletePhrase = async (id) => {
     await api.delete(`/phrasebook/${id}`)
     setPhrases(prev => prev.filter(p => p.id !== id))
+  }
+
+  const updatePhrase = (updated) => {
+    setPhrases(prev => prev.map(p => p.id === updated.id ? updated : p))
   }
 
   const addPhrase = async () => {
@@ -44,7 +63,6 @@ export default function Phrasebook() {
     setAdding(false)
   }
 
-  // фильтрация
   const visible = phrases.filter(p => {
     if (filter === 'learned' && !p.learned) return false
     if (filter === 'new' && p.learned) return false
@@ -56,7 +74,6 @@ export default function Phrasebook() {
     return true
   })
 
-  // группировка по категории
   const grouped = {}
   for (const p of visible) {
     const cat = p.category || 'Разное'
@@ -64,7 +81,6 @@ export default function Phrasebook() {
     grouped[cat].push(p)
   }
   const sortedCats = Object.keys(grouped).sort()
-
   const cats = [...new Set(phrases.map(p => p.category).filter(Boolean))]
   const learnedCount = phrases.filter(p => p.learned).length
 
@@ -90,14 +106,24 @@ export default function Phrasebook() {
       {/* Форма добавления */}
       {showAdd && (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 14, padding: 16, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input value={newDe} onChange={e => setNewDe(e.target.value)}
-            placeholder="Немецкая фраза..."
-            style={{ fontSize: 15 }} autoFocus
-          />
-          <input value={newRu} onChange={e => setNewRu(e.target.value)}
-            placeholder="Перевод на русский..."
-            style={{ fontSize: 15 }}
-          />
+          <div style={{ position: 'relative' }}>
+            <input value={newDe} onChange={e => setNewDe(e.target.value)}
+              onBlur={autoTranslate}
+              placeholder="Немецкая фраза…"
+              style={{ fontSize: 15, width: '100%' }} autoFocus
+            />
+          </div>
+          <div style={{ position: 'relative' }}>
+            <input value={newRu} onChange={e => setNewRu(e.target.value)}
+              placeholder={translating ? 'Перевожу…' : 'Перевод на русский (ИИ заполнит автоматически)…'}
+              style={{ fontSize: 15, width: '100%', opacity: translating ? 0.6 : 1 }}
+            />
+            {translating && (
+              <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--accent)' }}>
+                ⏳
+              </span>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <select value={newCat} onChange={e => setNewCat(e.target.value)}
               style={{ flex: 1, fontSize: 14, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
@@ -108,7 +134,7 @@ export default function Phrasebook() {
               style={{ padding: '8px 20px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
               {adding ? '…' : '✓ Сохранить'}
             </button>
-            <button onClick={() => setShowAdd(false)}
+            <button onClick={() => { setShowAdd(false); setNewDe(''); setNewRu(''); setNewCat('') }}
               style={{ padding: '8px 12px', background: 'var(--surface-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
               ✕
             </button>
@@ -118,7 +144,6 @@ export default function Phrasebook() {
 
       {/* Фильтры */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        {/* Статус */}
         <div style={{ display: 'flex', gap: 4, background: 'var(--surface-2)', borderRadius: 10, padding: 3 }}>
           {[['all', 'Все'], ['new', 'Учить'], ['learned', 'Выучил']].map(([key, label]) => (
             <button key={key} onClick={() => setFilter(key)} style={{
@@ -130,7 +155,6 @@ export default function Phrasebook() {
           ))}
         </div>
 
-        {/* Категория */}
         {cats.length > 0 && (
           <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
             style={{ fontSize: 13, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
@@ -139,14 +163,12 @@ export default function Phrasebook() {
           </select>
         )}
 
-        {/* Поиск */}
         <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍 Поиск..."
+          placeholder="🔍 Поиск…"
           style={{ flex: 1, minWidth: 140, fontSize: 14, padding: '6px 12px', borderRadius: 8 }}
         />
       </div>
 
-      {/* Пустое состояние */}
       {phrases.length === 0 && (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 40, textAlign: 'center', color: 'var(--ink-soft)' }}>
           <p style={{ fontSize: 40, margin: '0 0 12px' }}>💬</p>
@@ -155,7 +177,6 @@ export default function Phrasebook() {
         </div>
       )}
 
-      {/* Список по категориям */}
       {sortedCats.map(cat => (
         <div key={cat} style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>
@@ -163,7 +184,7 @@ export default function Phrasebook() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {grouped[cat].map(p => (
-              <PhraseCard key={p.id} phrase={p} onToggle={toggleLearned} onDelete={deletePhrase} />
+              <PhraseCard key={p.id} phrase={p} onToggle={toggleLearned} onDelete={deletePhrase} onUpdate={updatePhrase} />
             ))}
           </div>
         </div>
@@ -178,7 +199,77 @@ export default function Phrasebook() {
   )
 }
 
-function PhraseCard({ phrase, onToggle, onDelete }) {
+function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
+  const [editing, setEditing]   = useState(false)
+  const [editDe, setEditDe]     = useState(phrase.de)
+  const [editRu, setEditRu]     = useState(phrase.ru)
+  const [editCat, setEditCat]   = useState(phrase.category || '')
+  const [saving, setSaving]     = useState(false)
+  const [translating, setTranslating] = useState(false)
+
+  const startEdit = () => { setEditDe(phrase.de); setEditRu(phrase.ru); setEditCat(phrase.category || ''); setEditing(true) }
+  const cancelEdit = () => setEditing(false)
+
+  const autoTranslateEdit = async () => {
+    const text = editDe.trim()
+    if (!text) return
+    setTranslating(true)
+    try {
+      const res = await api.post('/translate-text', { text, from: 'de', to: 'ru' })
+      if (res.translation) setEditRu(res.translation)
+    } catch {}
+    setTranslating(false)
+  }
+
+  const save = async () => {
+    if (!editDe.trim() || !editRu.trim()) return
+    setSaving(true)
+    try {
+      const updated = await api.patch(`/phrasebook/${phrase.id}`, { de: editDe.trim(), ru: editRu.trim(), category: editCat || null })
+      onUpdate(updated)
+      setEditing(false)
+    } catch (e) { alert('Ошибка: ' + e.message) }
+    setSaving(false)
+  }
+
+  if (editing) {
+    return (
+      <div style={{ border: '1px solid var(--accent)', borderRadius: 12, padding: '12px 14px', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ position: 'relative' }}>
+          <input value={editDe} onChange={e => setEditDe(e.target.value)}
+            onBlur={autoTranslateEdit}
+            placeholder="Немецкая фраза…"
+            style={{ fontSize: 15, fontWeight: 700, width: '100%' }}
+          />
+        </div>
+        <div style={{ position: 'relative' }}>
+          <input value={editRu} onChange={e => setEditRu(e.target.value)}
+            placeholder={translating ? 'Перевожу…' : 'Перевод…'}
+            style={{ fontSize: 14, width: '100%', color: 'var(--accent)', opacity: translating ? 0.6 : 1 }}
+          />
+          {translating && (
+            <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--accent)' }}>⏳</span>
+          )}
+        </div>
+        <select value={editCat} onChange={e => setEditCat(e.target.value)}
+          style={{ fontSize: 13, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
+          <option value="">— Категория —</option>
+          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={save} disabled={saving || !editDe.trim() || !editRu.trim()}
+            style={{ flex: 1, padding: '7px 0', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+            {saving ? '…' : '✓ Сохранить'}
+          </button>
+          <button onClick={cancelEdit}
+            style={{ padding: '7px 14px', background: 'var(--surface-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+            Отмена
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12,
@@ -187,13 +278,11 @@ function PhraseCard({ phrase, onToggle, onDelete }) {
       opacity: phrase.learned ? 0.65 : 1,
       transition: 'opacity .2s',
     }}>
-      {/* Кнопка выучил */}
       <button onClick={() => onToggle(phrase.id)} title={phrase.learned ? 'Снять отметку' : 'Отметить как выученное'}
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, lineHeight: 1, flexShrink: 0 }}>
         {phrase.learned ? '✅' : '⬜'}
       </button>
 
-      {/* Текст */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', textDecoration: phrase.learned ? 'line-through' : 'none' }}>
@@ -209,7 +298,10 @@ function PhraseCard({ phrase, onToggle, onDelete }) {
         )}
       </div>
 
-      {/* Удалить */}
+      <button onClick={startEdit} title="Редактировать"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 16, flexShrink: 0, padding: '0 4px' }}>
+        <i className="bi bi-pencil" />
+      </button>
       <button onClick={() => onDelete(phrase.id)}
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18, flexShrink: 0, padding: '0 4px' }}>
         ×
