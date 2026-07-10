@@ -6,6 +6,13 @@ import { writeFileSync, mkdirSync } from 'fs'
 import { join, extname } from 'path'
 import { config } from '../config.js'
 
+async function getUserDailyLimit(userId) {
+  const { rows } = await db.query(
+    `SELECT daily_limit FROM user_settings WHERE user_id = $1`, [userId]
+  )
+  return rows[0]?.daily_limit ?? 50
+}
+
 export async function exercisesRoutes(fastify) {
 
   // Трекер прогресса admin-операций (одна за раз, in-memory)
@@ -51,6 +58,7 @@ export async function exercisesRoutes(fastify) {
     const { id: userId, role } = request.user
     const today = new Date().toISOString().slice(0, 10)
     const { type, lesson_id } = request.query
+    const dailyLimit = await getUserDailyLimit(userId)
 
     const SELECT = `
         SELECT e.*,
@@ -78,7 +86,7 @@ export async function exercisesRoutes(fastify) {
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT 50`
+        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT ${dailyLimit}`
     } else {
       params = [userId, today]
       if (type)      params.push(type)
@@ -89,7 +97,7 @@ export async function exercisesRoutes(fastify) {
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT 50`
+        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT ${dailyLimit}`
     }
 
     const { rows } = await db.query(query, params)

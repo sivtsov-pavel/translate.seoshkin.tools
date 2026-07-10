@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useThemeStore } from '../store/theme.js'
 import { useAdminOpStore } from '../store/adminOp.js'
+import { useSettingsStore } from '../store/settings.js'
 import { api } from '../api/client.js'
 import LangSwitcher from './LangSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
@@ -15,11 +16,15 @@ export default function Layout({ children }) {
   const { t } = useI18nStore()
   const { theme, toggle: toggleTheme } = useThemeStore()
   const adminOp = useAdminOpStore()
+  const { fetchSettings } = useSettingsStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
+
+  // Загружаем серверные настройки один раз при старте
+  useEffect(() => { fetchSettings() }, [])
 
   // Polling статуса операций — работает на любой странице
   useEffect(() => {
@@ -160,8 +165,9 @@ export default function Layout({ children }) {
             </>
           )}
 
-          {/* Справка */}
+          {/* Настройки и справка */}
           <div style={{ height: 1, background: 'var(--line)', margin: '8px 12px' }} />
+          <NavItem item={{ to: '/settings', icon: 'bi-gear-fill', label: 'Настройки' }} onClick={close} />
           <NavItem item={{ to: '/wiki', icon: 'bi-question-circle-fill', label: t.nav.wiki }} onClick={close} />
         </div>
 

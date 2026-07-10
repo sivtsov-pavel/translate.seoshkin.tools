@@ -33,14 +33,19 @@ function pickVoice() {
       || voices[0]
 }
 
-export function speak(text, lang = 'de-DE', rate = 0.9) {
+function getSavedRate() {
+  const v = parseFloat(localStorage.getItem('voice_rate'))
+  return isNaN(v) ? 0.9 : Math.max(0.5, Math.min(1.5, v))
+}
+
+export function speak(text, lang = 'de-DE', rate = null) {
   if (!synth) return
   synth.cancel()
   // Chrome bug: cancel() и speak() в одном тике → utterance молча сбрасывается
   setTimeout(() => {
     const utt = new SpeechSynthesisUtterance(text)
     utt.lang = lang
-    utt.rate = rate
+    utt.rate = rate ?? getSavedRate()
     const v = pickVoice()
     if (v) utt.voice = v
     synth.speak(utt)

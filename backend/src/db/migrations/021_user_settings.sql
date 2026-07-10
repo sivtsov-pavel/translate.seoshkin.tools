@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS user_settings (
+  user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  daily_limit INTEGER NOT NULL DEFAULT 50,
+  openai_key  TEXT,
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
