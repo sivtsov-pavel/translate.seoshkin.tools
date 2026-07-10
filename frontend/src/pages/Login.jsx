@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
-import LangSwitcher from '../components/LangSwitcher.jsx'
+import PublicHeader from '../components/PublicHeader.jsx'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -30,11 +30,9 @@ export default function Login() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '60px auto', padding: '0 16px' }}>
-      <div style={{ textAlign: 'right', marginBottom: 24 }}>
-        <LangSwitcher />
-      </div>
-      <h1 style={{ marginBottom: 24 }}>{t.nav.appName}</h1>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
+      <PublicHeader />
+      <div style={{ maxWidth: 400, margin: '60px auto', padding: '0 16px' }}>
       <h2 style={{ marginBottom: 20 }}>{t.auth.login}</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 14 }}>
@@ -55,6 +53,7 @@ export default function Login() {
       <p style={{ marginTop: 16, color: 'var(--ink-soft)' }}>
         {t.auth.noAccount} <Link to="/register">{t.auth.register}</Link>
       </p>
+      </div>
     </div>
   )
 }

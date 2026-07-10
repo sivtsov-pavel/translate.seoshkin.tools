@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
-import LangSwitcher from '../components/LangSwitcher.jsx'
+import PublicHeader from '../components/PublicHeader.jsx'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -33,11 +33,9 @@ export default function Register() {
   const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg|OPR|YaBrowser/.test(navigator.userAgent)
 
   return (
-    <div style={{ maxWidth: 400, margin: '60px auto', padding: '0 16px' }}>
-      <div style={{ textAlign: 'right', marginBottom: 24 }}>
-        <LangSwitcher />
-      </div>
-      <h1 style={{ marginBottom: 24 }}>{t.nav.appName}</h1>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
+      <PublicHeader />
+      <div style={{ maxWidth: 400, margin: '60px auto', padding: '0 16px' }}>
 
       {/* Рекомендация Chrome — только если не Chrome */}
       {!isChrome && (
@@ -84,6 +82,7 @@ export default function Register() {
       <p style={{ marginTop: 16, color: 'var(--ink-soft)' }}>
         {t.auth.hasAccount} <Link to="/login">{t.auth.login}</Link>
       </p>
+      </div>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PublicHeader from '../components/PublicHeader.jsx'
 
 // Публичная страница — доступна без авторизации
 // URL: /docs
@@ -267,7 +268,9 @@ export default function Docs() {
     : SECTIONS
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px 80px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
+      <PublicHeader />
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px 80px' }}>
       {/* Шапка */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <div style={{ fontSize: 48, marginBottom: 8 }}>📚</div>
@@ -277,14 +280,6 @@ export default function Docs() {
         <p style={{ fontSize: 15, color: 'var(--ink-soft)', margin: 0 }}>
           Как работает система обучения немецкому языку
         </p>
-        <div style={{ marginTop: 16, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/register" style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
-            Зарегистрироваться
-          </a>
-          <a href="/login" style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--line)', color: 'var(--ink)', fontSize: 14, textDecoration: 'none' }}>
-            Войти
-          </a>
-        </div>
       </div>
 
       {/* Поиск */}
@@ -327,6 +322,7 @@ export default function Docs() {
       <div style={{ marginTop: 40, textAlign: 'center', fontSize: 13, color: 'var(--ink-soft)' }}>
         <p>Deutsch Lernen — Платформа для изучения немецкого языка</p>
         <p>Есть вопрос? <a href="/login" style={{ color: 'var(--accent)' }}>Войдите</a> и напишите учителю.</p>
+      </div>
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import PublicHeader from '../components/PublicHeader.jsx'
 
 const UPDATED = '10 июля 2026 г.'
 const APP     = 'translate.seoshkin.tools'
@@ -6,10 +7,9 @@ const EMAIL   = 'sivtsov.pavel@gmail.com'
 
 export default function Terms() {
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 80px', lineHeight: 1.75, color: 'var(--ink)', fontFamily: 'Georgia,serif' }}>
-      <Link to="/" style={{ fontSize: 13, color: 'var(--ink-soft)', textDecoration: 'none', display: 'inline-block', marginBottom: 28 }}>
-        ← На главную
-      </Link>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
+      <PublicHeader />
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 80px', lineHeight: 1.75, fontFamily: 'Georgia,serif' }}>
 
       <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 28, fontWeight: 700, marginBottom: 6 }}>Условия использования</h1>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 32 }}>Последнее обновление: {UPDATED}</p>
@@ -89,6 +89,7 @@ export default function Terms() {
         <Link to="/privacy" style={{ color: 'var(--ink-soft)' }}>Политика конфиденциальности</Link>
         <Link to="/cookies" style={{ color: 'var(--ink-soft)' }}>Политика cookies</Link>
         <Link to="/docs"    style={{ color: 'var(--ink-soft)' }}>Документация</Link>
+      </div>
       </div>
     </div>
   )
