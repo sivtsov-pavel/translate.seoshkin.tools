@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.js'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import Landing from './pages/Landing.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import LessonList from './pages/LessonList.jsx'
 import NewLesson from './pages/NewLesson.jsx'
@@ -17,11 +18,17 @@ import Phrasebook from './pages/Phrasebook.jsx'
 import Translations from './pages/Translations.jsx'
 import Settings from './pages/Settings.jsx'
 import Docs from './pages/Docs.jsx'
+import Chat from './pages/Chat.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuthStore()
   return token ? children : <Navigate to="/login" replace />
+}
+
+function HomeRoute() {
+  const { token } = useAuthStore()
+  return token ? <Layout><Dashboard /></Layout> : <Landing />
 }
 
 export default function App() {
@@ -30,7 +37,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+        <Route path="/" element={<HomeRoute />} />
         <Route path="/lessons" element={<ProtectedRoute><Layout><LessonList /></Layout></ProtectedRoute>} />
         <Route path="/lessons/new" element={<ProtectedRoute><Layout><NewLesson /></Layout></ProtectedRoute>} />
         <Route path="/exercise-session" element={<ProtectedRoute><Layout><ExerciseSession /></Layout></ProtectedRoute>} />
@@ -44,6 +51,7 @@ export default function App() {
         <Route path="/phrasebook"    element={<ProtectedRoute><Layout><Phrasebook    /></Layout></ProtectedRoute>} />
         <Route path="/translations"  element={<ProtectedRoute><Layout><Translations  /></Layout></ProtectedRoute>} />
         <Route path="/settings"      element={<ProtectedRoute><Layout><Settings      /></Layout></ProtectedRoute>} />
+        <Route path="/chat"          element={<ProtectedRoute><Layout><Chat           /></Layout></ProtectedRoute>} />
         <Route path="/docs"          element={<Docs />} />
       </Routes>
     </BrowserRouter>

@@ -20,11 +20,26 @@ export default function Layout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
+  const [unreadChat, setUnreadChat] = useState(0)
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
 
   // Загружаем серверные настройки один раз при старте
   useEffect(() => { fetchSettings() }, [])
+
+  // Бейдж непрочитанных сообщений — опрос каждые 30 сек
+  useEffect(() => {
+    if (!user) return
+    const poll = async () => {
+      try {
+        const data = await api.get('/chat/unread')
+        setUnreadChat(data.count || 0)
+      } catch {}
+    }
+    poll()
+    const tid = setInterval(poll, 30_000)
+    return () => clearInterval(tid)
+  }, [user])
 
   // Polling статуса операций — работает на любой странице
   useEffect(() => {
@@ -165,8 +180,31 @@ export default function Layout({ children }) {
             </>
           )}
 
-          {/* Настройки и справка */}
+          {/* Настройки, чат и справка */}
           <div style={{ height: 1, background: 'var(--line)', margin: '8px 12px' }} />
+          {/* Чат с бейджем */}
+          <Link to="/chat" onClick={close} style={{
+            display: 'flex', alignItems: 'center', gap: 11,
+            padding: '9px 12px', borderRadius: 10, fontSize: 14,
+            textDecoration: 'none',
+            color: isActive('/chat') ? 'var(--accent)' : 'var(--ink)',
+            background: isActive('/chat') ? 'var(--accent-soft)' : 'transparent',
+            fontWeight: isActive('/chat') ? 700 : 400,
+            transition: 'background .15s',
+            justifyContent: 'space-between',
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+              <i className="bi bi-chat-dots-fill" style={{ width: 17, textAlign: 'center', fontSize: 15, flexShrink: 0 }} />
+              Чат
+            </span>
+            {unreadChat > 0 && (
+              <span style={{
+                background: 'var(--red)', color: '#fff', borderRadius: '50%',
+                width: 20, height: 20, display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0,
+              }}>{unreadChat > 9 ? '9+' : unreadChat}</span>
+            )}
+          </Link>
           <NavItem item={{ to: '/settings', icon: 'bi-gear-fill', label: 'Настройки' }} onClick={close} />
           <NavItem item={{ to: '/wiki', icon: 'bi-question-circle-fill', label: t.nav.wiki }} onClick={close} />
         </div>

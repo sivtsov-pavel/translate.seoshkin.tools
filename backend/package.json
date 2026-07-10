@@ -17,6 +17,7 @@
     "bcryptjs": "^2.4.3",
     "fastify": "^4.28.0",
     "fastify-plugin": "^4.5.1",
+    "nodemailer": "^9.0.3",
     "openai": "^4.67.0",
     "pg": "^8.13.0"
   },

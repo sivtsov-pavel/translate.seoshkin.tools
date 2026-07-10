@@ -26,6 +26,17 @@ services:
       PORT: 8090
       HOST: 0.0.0.0
       UPLOAD_DIR: /data/uploads
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-sivtsov.pavel@gmail.com}
+      TELEGRAM_SUPPORT_BOT_TOKEN: ${TELEGRAM_SUPPORT_BOT_TOKEN:-}
+      TELEGRAM_SUPPORT_CHAT_ID: ${TELEGRAM_SUPPORT_CHAT_ID:-}
+      TELEGRAM_TEACHER_BOT_TOKEN: ${TELEGRAM_TEACHER_BOT_TOKEN:-}
+      TELEGRAM_TEACHER_CHAT_ID: ${TELEGRAM_TEACHER_CHAT_ID:-}
     volumes:
       - uploads_data:/data/uploads
     depends_on:

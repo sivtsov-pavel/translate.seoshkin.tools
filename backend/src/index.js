@@ -16,6 +16,7 @@ import { phraseSetsRoutes } from './routes/phraseSets.js'
 import { readerRoutes } from './routes/reader.js'
 import { phrasebookRoutes } from './routes/phrasebook.js'
 import { settingsRoutes } from './routes/settings.js'
+import { chatRoutes } from './routes/chat.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
 // Регистрация плагинов — выделено для переиспользования в тестах
@@ -41,6 +42,7 @@ async function registerRoutes(app) {
   await app.register(readerRoutes)
   await app.register(phrasebookRoutes)
   await app.register(settingsRoutes)
+  await app.register(chatRoutes)
   await app.register(mediaRoutes)
 }
 
