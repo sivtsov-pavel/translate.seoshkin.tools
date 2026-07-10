@@ -1,3 +1,16 @@
+// fetch handler обязателен для Chrome PWA install prompt
+self.addEventListener('fetch', (event) => {
+  // Для API-запросов — всегда сеть
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request))
+    return
+  }
+  // Для остального — network-first (обновления сразу видны)
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
+  )
+})
+
 self.addEventListener('push', (event) => {
   let data = {}
   try { data = event.data.json() } catch {}

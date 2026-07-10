@@ -229,17 +229,26 @@ const WIKI = {
 
 // ─── Компонент ───────────────────────────────────────────────────────────────
 
+const TAB_SUBTITLES = {
+  ru: ['Инструкции для учителей и родителей', 'Инструкции для учеников', 'Как установить приложение'],
+  en: ['Instructions for teachers and parents', 'Instructions for students', 'How to install the app'],
+  de: ['Anleitungen für Lehrer und Eltern', 'Anleitungen für Schüler', 'App installieren'],
+  uk: ['Інструкції для вчителів і батьків', 'Інструкції для учнів', 'Як встановити додаток'],
+}
+
 export default function Wiki() {
   const { lang } = useI18nStore()
   const [tab, setTab] = useState(0)
-  const content = WIKI[lang] || WIKI.ru
+  // Для языков без перевода — EN как fallback (не RU)
+  const content = WIKI[lang] || WIKI.en
+  const subtitles = TAB_SUBTITLES[lang] || TAB_SUBTITLES.en
   const sections = tab === 0 ? content.teacher : tab === 1 ? content.student : content.install
 
   return (
     <div style={{ paddingTop: 24, paddingBottom: 60 }}>
       <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 6px' }}>{content.title}</h1>
       <p style={{ color: 'var(--ink-soft)', fontSize: 13, margin: '0 0 20px' }}>
-        {tab === 0 ? 'Инструкции для учителей и родителей' : tab === 1 ? 'Инструкции для учеников' : 'Как установить приложение на телефон или ноутбук'}
+        {subtitles[tab]}
       </p>
 
       {/* Вкладки */}

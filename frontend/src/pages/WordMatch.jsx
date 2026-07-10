@@ -30,9 +30,9 @@ function buildCards(words, lang) {
 }
 
 // Одна карточка
-function Card({ card, onClick, disabled }) {
+function Card({ card, onClick, disabled, showAll }) {
   const isDE = card.side === 'de'
-  const visible = card.flipped || card.matched
+  const visible = showAll || card.flipped || card.matched
 
   return (
     <div
@@ -101,8 +101,11 @@ export default function WordMatch() {
   const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [preview, setPreview] = useState(false)   // фаза предпросмотра
+  const [previewSec, setPreviewSec] = useState(4)  // обратный отсчёт
   const lockRef = useRef(false)
   const timerRef = useRef(null)
+  const previewRef = useRef(null)
 
   // Загружаем список уроков
   useEffect(() => {
@@ -129,12 +132,28 @@ export default function WordMatch() {
       setMoves(0)
       setSeconds(0)
       setFinished(false)
-      setRunning(true)
-      lockRef.current = false
+      setRunning(false)
+      lockRef.current = true
+      // Фаза предпросмотра: все карточки открыты 4 секунды
+      setPreview(true)
+      setPreviewSec(4)
     } finally {
       setLoading(false)
     }
   }, [lessonId, lang])
+
+  // Обратный отсчёт предпросмотра
+  useEffect(() => {
+    if (!preview) return
+    if (previewSec <= 0) {
+      setPreview(false)
+      setRunning(true)
+      lockRef.current = false
+      return
+    }
+    const t = setTimeout(() => setPreviewSec(s => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [preview, previewSec])
 
   // Таймер
   useEffect(() => {
@@ -282,10 +301,21 @@ export default function WordMatch() {
         <div style={{ height: '100%', background: 'var(--accent)', borderRadius: 2, width: `${(matchedCount / 8) * 100}%`, transition: 'width .3s' }} />
       </div>
 
+      {/* Баннер предпросмотра */}
+      {preview && (
+        <div style={{
+          textAlign: 'center', marginBottom: 10, padding: '8px 16px',
+          background: 'var(--accent)', color: 'var(--accent-ink)',
+          borderRadius: 10, fontWeight: 700, fontSize: 14,
+        }}>
+          Запоминай! Игра начнётся через {previewSec}…
+        </div>
+      )}
+
       {/* Сетка 4×4 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
         {cards.map(card => (
-          <Card key={card.uid} card={card} onClick={handleFlip} disabled={lockRef.current} />
+          <Card key={card.uid} card={card} onClick={handleFlip} disabled={lockRef.current} showAll={preview} />
         ))}
       </div>
 

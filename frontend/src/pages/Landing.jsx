@@ -71,6 +71,7 @@ const L = {
       { icon: '💬', title: 'Разговорник', desc: 'Сохраняй полезные фразы из уроков и учи их отдельно' },
       { icon: '📖', title: 'Читалка', desc: 'Двуязычный режим, кликабельные слова и 💬 Разговор с переводом речи в реальном времени', isNew: true },
       { icon: '📊', title: 'Аналитика', desc: 'Прогресс по дням, лучшая серия, слова в изучении' },
+      { icon: '🃏', title: 'Словопара', desc: 'Мини-игра: найди пары немецких слов и переводов. 8 пар, таймер, 4×4 поле', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'Как начать',
@@ -106,6 +107,7 @@ const L = {
       { icon: '💬', title: 'Phrasebook', desc: 'Save useful phrases from lessons and study them separately' },
       { icon: '📖', title: 'Text Reader', desc: 'Bilingual mode, clickable words and 💬 Conversation: translate speech in real time', isNew: true },
       { icon: '📊', title: 'Analytics', desc: 'Daily progress, best streaks, words in learning' },
+      { icon: '🃏', title: 'WordPair', desc: 'Mini-game: match German words with their translations. 8 pairs, timer, 4×4 grid', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'How to start',
@@ -141,6 +143,7 @@ const L = {
       { icon: '💬', title: 'Sprachführer', desc: 'Speichere nützliche Phrasen und lerne sie separat' },
       { icon: '📖', title: 'Lesegerät', desc: 'Zweisprachiger Modus, klickbare Wörter und 💬 Gespräch mit Echtzeit-Übersetzung', isNew: true },
       { icon: '📊', title: 'Analytik', desc: 'Tagesfortschritt, beste Serie, Wörter im Lernen' },
+      { icon: '🃏', title: 'Wortpaar', desc: 'Mini-Spiel: Ordne deutschen Wörtern ihre Übersetzungen zu. 8 Paare, Timer, 4×4 Feld', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'So fängst du an',
@@ -176,6 +179,7 @@ const L = {
       { icon: '💬', title: 'Розмовник', desc: 'Зберігай корисні фрази з уроків та вчи їх окремо' },
       { icon: '📖', title: 'Читалка', desc: 'Двомовний режим, клікабельні слова та 💬 Розмова з перекладом мовлення в реальному часі', isNew: true },
       { icon: '📊', title: 'Аналітика', desc: 'Прогрес по днях, найкраща серія, слова у вивченні' },
+      { icon: '🃏', title: 'Словопара', desc: 'Міні-гра: знайди пари німецьких слів і перекладів. 8 пар, таймер, поле 4×4', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'Як почати',
@@ -211,6 +215,7 @@ const L = {
       { icon: '💬', title: 'Разговорник', desc: 'Запазвай полезни фрази и ги учи отделно' },
       { icon: '📖', title: 'Четец', desc: 'Двуезичен режим, кликабелни думи и 💬 Разговор с превод в реално време', isNew: true },
       { icon: '📊', title: 'Аналитика', desc: 'Прогрес по дни, най-добра серия, думи в обучение' },
+      { icon: '🃏', title: 'Двойка думи', desc: 'Мини-игра: намери двойките немски думи и преводи. 8 двойки, таймер, поле 4×4', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'Как да започнеш',
@@ -246,6 +251,7 @@ const L = {
       { icon: '💬', title: 'Konuşma Kılavuzu', desc: 'Derslerden faydalı ifadeleri kaydet ve ayrıca öğren' },
       { icon: '📖', title: 'Metin Okuyucu', desc: 'İki dilli mod, tıklanabilir kelimeler ve 💬 gerçek zamanlı konuşma çevirisi', isNew: true },
       { icon: '📊', title: 'Analitik', desc: 'Günlük ilerleme, en iyi seri, öğrenilen kelimeler' },
+      { icon: '🃏', title: 'Kelime Çifti', desc: 'Mini oyun: Almanca kelimelerle çevirilerini eşleştir. 8 çift, zamanlayıcı, 4×4 alan', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'Nasıl başlanır',
@@ -281,6 +287,7 @@ const L = {
       { icon: '💬', title: 'كتاب المحادثة', desc: 'احفظ العبارات المفيدة من الدروس' },
       { icon: '📖', title: 'قارئ النصوص', desc: 'وضع ثنائي اللغة، كلمات قابلة للنقر، و💬 ترجمة الكلام في الوقت الفعلي', isNew: true },
       { icon: '📊', title: 'التحليلات', desc: 'التقدم اليومي، أفضل سلسلة، الكلمات قيد التعلم' },
+      { icon: '🃏', title: 'أزواج الكلمات', desc: 'لعبة صغيرة: طابق الكلمات الألمانية مع ترجماتها. 8 أزواج، مؤقت، شبكة 4×4', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'كيف تبدأ',
@@ -316,6 +323,7 @@ const L = {
       { icon: '💬', title: 'Diccionario de frases', desc: 'Guarda frases útiles de las lecciones' },
       { icon: '📖', title: 'Lector de textos', desc: 'Modo bilingüe, palabras clicables y 💬 conversación con traducción en tiempo real', isNew: true },
       { icon: '📊', title: 'Analítica', desc: 'Progreso diario, mejor racha, palabras en aprendizaje' },
+      { icon: '🃏', title: 'Par de Palabras', desc: 'Minijuego: empareja palabras alemanas con sus traducciones. 8 pares, cronómetro, campo 4×4', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'Cómo empezar',
@@ -351,6 +359,7 @@ const L = {
       { icon: '💬', title: 'Guide de conversation', desc: 'Enregistre des phrases utiles des leçons' },
       { icon: '📖', title: 'Lecteur de texte', desc: 'Mode bilingue, mots cliquables et 💬 conversation avec traduction en temps réel', isNew: true },
       { icon: '📊', title: 'Analytique', desc: 'Progrès quotidien, meilleure série, mots en apprentissage' },
+      { icon: '🃏', title: 'Paire de mots', desc: 'Mini-jeu: associe les mots allemands à leurs traductions. 8 paires, minuteur, grille 4×4', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'Comment commencer',
@@ -386,6 +395,7 @@ const L = {
       { icon: '💬', title: 'Udhëzues bisede', desc: 'Ruaj fraza të dobishme nga mësimet' },
       { icon: '📖', title: 'Lexues teksti', desc: 'Mënyra dysgjuhëshe, fjalë të klikueshme dhe 💬 bisedë me përkthim në kohë reale', isNew: true },
       { icon: '📊', title: 'Analitikë', desc: 'Progresi ditor, seria më e mirë, fjalët në mësim' },
+      { icon: '🃏', title: 'Çift Fjalësh', desc: 'Mini-lojë: gjej çiftet e fjalëve gjermane dhe përkthimeve. 8 çifte, kohëmatës, fushë 4×4', isNew: true, link: '/game/match' },
     ],
     steps: {
       title: 'Si të fillosh',
@@ -491,7 +501,7 @@ export default function Landing() {
           gap: 16,
         }}>
           {c.modules.map((m, i) => (
-            <Link to="/docs" key={i} style={{ textDecoration: 'none' }}>
+            <Link to={m.link || '/docs'} key={i} style={{ textDecoration: 'none' }}>
               <div style={{
                 background: 'var(--surface)', border: `1px solid ${m.isNew ? 'var(--accent)' : 'var(--line)'}`,
                 borderRadius: 16, padding: '20px 20px 18px',
