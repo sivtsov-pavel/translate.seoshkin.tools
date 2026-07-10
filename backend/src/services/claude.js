@@ -378,11 +378,11 @@ export async function explainGrammarError({ de, type, userAnswer, correctAnswer 
   return text.trim()
 }
 
-const LANG_NAMES = { ru: 'русский', en: 'английский', de: 'немецкий', uk: 'украинский', fr: 'французский', ar: 'арабский', bg: 'болгарский', tr: 'турецкий', es: 'испанский', sq: 'албанский' }
+const LANG_NAMES_RU = { ru: 'русский', en: 'английский', de: 'немецкий', uk: 'украинский', fr: 'французский', ar: 'арабский', bg: 'болгарский', tr: 'турецкий', es: 'испанский', sq: 'албанский' }
 
 export async function translateText(text, from = 'de', to = 'ru') {
-  const fromName = LANG_NAMES[from] || from
-  const toName   = LANG_NAMES[to]   || to
+  const fromName = LANG_NAMES_RU[from] || from
+  const toName   = LANG_NAMES_RU[to]   || to
   const result = await ask(
     `Переведи следующий текст с ${fromName} на ${toName}. Верни ТОЛЬКО перевод, без кавычек, пояснений и комментариев.\n\nТекст: ${text}`,
     { max_tokens: 256 }
