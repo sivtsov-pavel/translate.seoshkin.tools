@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
-import { SpeakButton } from '../hooks/useSpeech.jsx'
+import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 import ProgressRing from '../components/ProgressRing.jsx'
 
 const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
@@ -37,6 +37,7 @@ const STATUS_BG     = {
 export default function Vocabulary() {
   const location = useLocation()
   const [words, setWords]         = useState([])
+  const [view, setView] = useState('words') // 'words' | 'alphabet'
   const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(location.search).get('status') || '')
   const [lessonFilter, setLessonFilter] = useState('')
   const [grammarFilter, setGrammarFilter] = useState('')
@@ -112,20 +113,37 @@ export default function Vocabulary() {
 
   return (
     <div style={{ paddingBottom: 12 }}>
-      {words.length > 0 && (
+      {words.length > 0 && view === 'words' && (
         <div className="hide-mobile">
           <ProgressRing pct={vocabPct} done={knownCount} total={words.length} label="Словарь" />
         </div>
       )}
       <div style={{ padding: '0 14px 10px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 24 }}>{t.vocabulary.title}</h1>
-        <button onClick={sendToReader} disabled={sending}
-          style={{ padding: '6px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--accent)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-          {sending ? '...' : '📖 В Читалку'}
-        </button>
+        {/* Переключатель вид */}
+        <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)' }}>
+          {[{ id: 'words', label: '📚 Слова' }, { id: 'alphabet', label: '🔤 Алфавит' }].map(tab => (
+            <button key={tab.id} onClick={() => setView(tab.id)}
+              style={{
+                padding: '6px 14px', fontSize: 13, fontWeight: view === tab.id ? 700 : 400, cursor: 'pointer',
+                border: 'none', background: view === tab.id ? 'var(--accent)' : 'var(--surface-2)',
+                color: view === tab.id ? 'var(--accent-ink)' : 'var(--ink)',
+              }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {view === 'words' && (
+          <button onClick={sendToReader} disabled={sending}
+            style={{ padding: '6px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--accent)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            {sending ? '...' : '📖 В Читалку'}
+          </button>
+        )}
       </div>
 
-      <div style={{ padding: '0 14px' }}>
+      {view === 'alphabet' && <GermanAlphabet />}
+
+      {view === 'words' && <div style={{ padding: '0 14px' }}>
       {/* Поиск */}
       <div style={{ position: 'relative', marginBottom: 12 }}>
         <input
@@ -229,8 +247,152 @@ export default function Vocabulary() {
           <p>Слова появятся после обработки урока</p>
         </div>
       )}
+      </div>}
+    </div>
+  )
+}
+
+// ── Немецкий алфавит ─────────────────────────────────────────────────────────
+
+const DE_ALPHABET = [
+  { letter: 'A', ipa: '[aː]',         ru: 'аа',        word: 'Apfel',      wordRu: 'яблоко' },
+  { letter: 'B', ipa: '[beː]',        ru: 'бэ',        word: 'Brief',      wordRu: 'письмо' },
+  { letter: 'C', ipa: '[tseː]',       ru: 'цэ',        word: 'Computer',   wordRu: 'компьютер' },
+  { letter: 'D', ipa: '[deː]',        ru: 'дэ',        word: 'Deutsch',    wordRu: 'немецкий' },
+  { letter: 'E', ipa: '[eː]',         ru: 'э',         word: 'Essen',      wordRu: 'еда' },
+  { letter: 'F', ipa: '[ɛf]',         ru: 'эф',        word: 'Fisch',      wordRu: 'рыба' },
+  { letter: 'G', ipa: '[ɡeː]',        ru: 'гэ',        word: 'Garten',     wordRu: 'сад' },
+  { letter: 'H', ipa: '[haː]',        ru: 'хаа',       word: 'Haus',       wordRu: 'дом' },
+  { letter: 'I', ipa: '[iː]',         ru: 'ии',        word: 'Insel',      wordRu: 'остров' },
+  { letter: 'J', ipa: '[jɔt]',        ru: 'йот',       word: 'Jahr',       wordRu: 'год' },
+  { letter: 'K', ipa: '[kaː]',        ru: 'каа',       word: 'Kind',       wordRu: 'ребёнок' },
+  { letter: 'L', ipa: '[ɛl]',         ru: 'эль',       word: 'Licht',      wordRu: 'свет' },
+  { letter: 'M', ipa: '[ɛm]',         ru: 'эм',        word: 'Mutter',     wordRu: 'мать' },
+  { letter: 'N', ipa: '[ɛn]',         ru: 'эн',        word: 'Nacht',      wordRu: 'ночь' },
+  { letter: 'O', ipa: '[oː]',         ru: 'оо',        word: 'Ohr',        wordRu: 'ухо' },
+  { letter: 'P', ipa: '[peː]',        ru: 'пэ',        word: 'Pause',      wordRu: 'пауза' },
+  { letter: 'Q', ipa: '[kuː]',        ru: 'куу',       word: 'Quelle',     wordRu: 'источник' },
+  { letter: 'R', ipa: '[ɛʁ]',         ru: 'эр',        word: 'Rot',        wordRu: 'красный' },
+  { letter: 'S', ipa: '[ɛs]',         ru: 'эс',        word: 'Sonne',      wordRu: 'солнце' },
+  { letter: 'T', ipa: '[teː]',        ru: 'тэ',        word: 'Tisch',      wordRu: 'стол' },
+  { letter: 'U', ipa: '[uː]',         ru: 'уу',        word: 'Uhr',        wordRu: 'часы' },
+  { letter: 'V', ipa: '[faʊ̯]',        ru: 'фау',       word: 'Vogel',      wordRu: 'птица' },
+  { letter: 'W', ipa: '[veː]',        ru: 'вэ',        word: 'Wasser',     wordRu: 'вода' },
+  { letter: 'X', ipa: '[ɪks]',        ru: 'икс',       word: 'Xylophon',   wordRu: 'ксилофон' },
+  { letter: 'Y', ipa: '[ˈʏpsilɔn]',   ru: 'юпсилон',   word: 'Yoga',       wordRu: 'йога' },
+  { letter: 'Z', ipa: '[tsɛt]',       ru: 'цэт',       word: 'Zeit',       wordRu: 'время' },
+  { letter: 'Ä', ipa: '[ɛː]',         ru: 'э-умлаут',  word: 'Äpfel',      wordRu: 'яблоки', umlaut: true },
+  { letter: 'Ö', ipa: '[øː]',         ru: 'о-умлаут',  word: 'Öl',         wordRu: 'масло',  umlaut: true },
+  { letter: 'Ü', ipa: '[yː]',         ru: 'у-умлаут',  word: 'Über',       wordRu: 'над/через', umlaut: true },
+  { letter: 'ß', ipa: '[ɛsˈtsɛt]',    ru: 'эс-цэт',    word: 'Straße',     wordRu: 'улица',  umlaut: true },
+]
+
+function GermanAlphabet() {
+  const [active, setActive] = useState(null)
+
+  return (
+    <div style={{ padding: '0 14px 20px' }}>
+      <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 16px' }}>
+        Немецкий алфавит — 26 букв + умлауты Ä Ö Ü и лигатура ß.
+        Нажми на карточку чтобы услышать произношение названия буквы.
+      </p>
+
+      {/* Основные буквы */}
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+        Основные буквы (A–Z)
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8, marginBottom: 20 }}>
+        {DE_ALPHABET.filter(l => !l.umlaut).map(item => (
+          <LetterCard key={item.letter} item={item} active={active === item.letter} onToggle={setActive} />
+        ))}
+      </div>
+
+      {/* Умлауты */}
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+        Умлауты и особые символы
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8, marginBottom: 20 }}>
+        {DE_ALPHABET.filter(l => l.umlaut).map(item => (
+          <LetterCard key={item.letter} item={item} active={active === item.letter} onToggle={setActive} />
+        ))}
+      </div>
+
+      {/* Подсказка по звукам */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: 16, fontSize: 13 }}>
+        <div style={{ fontWeight: 700, marginBottom: 10 }}>💡 Особенности немецкого произношения</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8, color: 'var(--ink)', lineHeight: 1.6 }}>
+          {[
+            ['ch', 'После а, о, у, au — [х] как в «лох», иначе — мягкий [хь]'],
+            ['sch', '[ш] — Schule, Schüler'],
+            ['ei', '[ай] — mein, Stein, drei'],
+            ['ie', '[ии] — lieben, Bier, viel'],
+            ['eu / äu', '[ой] — neu, Häuser'],
+            ['ck', '[кк] — backen, Ecke'],
+            ['pf', '[пф] — Pferd, Apfel'],
+            ['qu', '[кв] — Quelle, quer'],
+            ['sp / st (в начале)', '[шп] / [шт] — Sport, Stadt'],
+            ['tion', '[цьон] — Nation, Situation'],
+            ['v', 'Чаще [ф] — Vogel, viel, vier'],
+            ['w', 'Всегда [в] — Wasser, Winter'],
+            ['z', 'Всегда [ц] — Zeit, Zug'],
+            ['ß', '[с] — острая с — Straße, Fuß'],
+          ].map(([rule, hint]) => (
+            <div key={rule} style={{ display: 'flex', gap: 8 }}>
+              <span style={{ fontWeight: 700, color: 'var(--accent)', minWidth: 60, fontFamily: 'monospace' }}>{rule}</span>
+              <span style={{ color: 'var(--ink-soft)', fontSize: 12 }}>{hint}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
+  )
+}
+
+function LetterCard({ item, active, onToggle }) {
+  const handleClick = () => {
+    onToggle(active ? null : item.letter)
+    speak(item.letter, 'de-DE')
+  }
+
+  return (
+    <button onClick={handleClick}
+      style={{
+        border: `2px solid ${active ? 'var(--accent)' : 'var(--line)'}`,
+        borderRadius: 12,
+        background: active ? 'var(--accent-soft)' : 'var(--surface)',
+        cursor: 'pointer',
+        padding: '10px 6px',
+        textAlign: 'center',
+        transition: 'border-color .15s, background .15s',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4,
+      }}>
+      {/* Буква */}
+      <span style={{ fontSize: 28, fontWeight: 700, lineHeight: 1, color: active ? 'var(--accent)' : 'var(--ink)', fontFamily: 'Georgia, serif' }}>
+        {item.letter}
+      </span>
+      {/* Строчная */}
+      <span style={{ fontSize: 16, color: 'var(--ink-soft)', lineHeight: 1 }}>
+        {item.letter.toLowerCase()}
+      </span>
+      {/* IPA */}
+      <span style={{ fontSize: 11, color: 'var(--accent)', fontFamily: 'monospace', marginTop: 2 }}>
+        {item.ipa}
+      </span>
+      {/* Как читается по-русски */}
+      <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>
+        «{item.ru}»
+      </span>
+      {/* Пример слова */}
+      {active && (
+        <div style={{ marginTop: 6, borderTop: '1px solid var(--line)', paddingTop: 6, width: '100%' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{item.word}</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{item.wordRu}</div>
+        </div>
+      )}
+    </button>
   )
 }
 
