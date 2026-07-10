@@ -1,13 +1,19 @@
 {
+  "id": "/",
   "name": "Deutsch Lernen",
   "short_name": "Deutsch",
   "description": "Учи немецкий с умным повторением, диктантами и ИИ-объяснениями",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#0f0f0f",
   "theme_color": "#C9A54A",
   "orientation": "portrait-primary",
-  "lang": "ru",
+  "lang": "de",
+  "categories": ["education", "utilities"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -27,6 +33,18 @@
       "name": "Начать повторение",
       "url": "/",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Словарь",
+      "url": "/vocabulary",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/vocabulary",
+    "method": "GET",
+    "params": {
+      "text": "q"
+    }
+  }
 }

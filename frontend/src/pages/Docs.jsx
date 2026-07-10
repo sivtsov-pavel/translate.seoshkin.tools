@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import PublicHeader from '../components/PublicHeader.jsx'
+import { useI18nStore } from '../store/i18n.js'
 
 // Публичная страница — доступна без авторизации
 // URL: /docs
 
-const SECTIONS = [
+const SECTIONS_RU = [
   {
     id: 'srs',
     icon: '🧠',
@@ -40,35 +41,29 @@ const SECTIONS = [
     id: 'exercises',
     icon: '✏️',
     title: 'Типы упражнений',
-    body: `В системе 6 типов упражнений. Для каждого слова создаются все 6 автоматически.
+    body: `В системе 7 типов упражнений. Для каждого слова создаются все автоматически.
 
 🃏 ФЛЕШ-КАРТА
 Видишь немецкое слово → вспоминаешь перевод → переворачиваешь карточку.
 Оцениваешь себя: ❌ не помню / 😐 с трудом / 🙂 нормально / ✅ легко.
-Самый базовый тип — подходит для первого знакомства.
 
 ✏️ ЗАПОЛНИ ПРОПУСК
 Немецкое предложение с пропуском ___. Нужно вписать правильное слово.
-Регистр не важен: «Haus» и «haus» засчитываются одинаково.
-Учит использовать слово в контексте.
 
 ☑️ ВЫБОР ОТВЕТА
 Вопрос и 4 варианта ответа. Нажми правильный.
-Варианты подбираются из похожих слов — нельзя угадать случайно.
 
 ✍️ НАПИШИ ПРЕДЛОЖЕНИЕ
-Тебе дают слово и подсказку. Напиши любое простое предложение по-немецки.
-ИИ проверяет: правильно ли использовано слово, нет ли грубых ошибок.
-Ставит оценку ★–★★★★★ и объясняет что не так.
+Напиши предложение по-немецки. ИИ проверяет и объясняет ошибки.
 
 🔤 ДОБАВЬ БУКВУ
-Слово с пропущенной буквой: «_aus». Угадай что пропущено → «H» → «Haus».
-Помогает запомнить правописание, особенно умлауты ä, ö, ü.
+Слово с пропущенной буквой: «_aus» → «H» → «Haus».
 
 🎙️ ДИКТАНТ
-Слово произносится вслух. Ты слышишь, но не видишь — нужно написать.
-Самое сложное: проверяет и слух, и правописание одновременно.
-Кнопка ◄ — послушать ещё раз.`,
+Слово произносится вслух — нужно написать, не видя его.
+
+🗣️ ПРОИЗНОШЕНИЕ
+Скажи слово в микрофон — система проверит правильность произношения.`,
   },
   {
     id: 'progress',
@@ -76,26 +71,17 @@ const SECTIONS = [
     title: 'Прогресс и статистика',
     body: `Статус слова:
 • 🔵 Новое — ещё не изучалось
-• 🟡 Изучается — в процессе (next_review_date в будущем)
-• 🟢 Выучено — когда слово отвечено правильно несколько раз подряд
+• 🟡 Изучается — в процессе (следующий показ в будущем)
+• 🟢 Выучено — отвечено правильно несколько раз подряд
 
-Как считается прогресс урока:
-  % = (упражнения с next_review_date > сегодня) / (все упражнения урока) × 100
+На главной «Сегодня»:
+  Показываются упражнения с датой ≤ сегодня + все новые.
+  Лимит задаётся в Настройках (по умолчанию 50 в день).
 
-На главной странице "Сегодня":
-  Показываются упражнения у которых next_review_date ≤ сегодня
-  + все новые (next_review_date = NULL)
-  Лимит: задаётся в Настройках (по умолчанию 50 в день)
-
-Отчёт (страница /report):
+Отчёт (/report):
   • Количество попыток по дням (за 30 дней)
-  • Правильных / неправильных ответов
   • Прогресс по каждому уроку
-  • Активность учеников (для учителя)
-
-"Всё выучено на сегодня!" появляется когда:
-  Нет ни одного упражнения с next_review_date ≤ сегодня
-  Это нормально — значит пора отдохнуть и вернуться завтра`,
+  • Активность учеников (для учителя)`,
   },
   {
     id: 'import',
@@ -109,23 +95,16 @@ const SECTIONS = [
 
 Требования к фото:
 • Чёткое, не размытое
-• Хорошее освещение (не в темноте, не с бликами)
+• Хорошее освещение
 • Текст занимает бо́льшую часть кадра
-• Можно несколько страниц за раз — загружай пакетом
 
-Что делает ИИ при обработке:
+Что делает ИИ:
 1. Читает текст (GPT-4o Vision)
 2. Выделяет немецкие слова и переводы
-3. Определяет грамматику (артикли, часть речи)
-4. Создаёт 6 упражнений на каждое слово
-5. Переводит на все доступные языки
+3. Создаёт упражнения на каждое слово
+4. Переводит на все доступные языки
 
-Время обработки: ~10 секунд на фото, 24 фото ≈ 5–8 минут.
-Статус виден в разделе «Уроки».
-
-Если ИИ ошибся:
-• Перевод можно поправить вручную в Словаре
-• Картинку заменить кнопкой 🔄 у слова`,
+Время обработки: ~10 сек на фото, 24 фото ≈ 5–8 минут.`,
   },
   {
     id: 'roles',
@@ -135,104 +114,254 @@ const SECTIONS = [
 • Создаёт курсы и уроки
 • Загружает фото учебников
 • Видит всех учеников и их прогресс
-• Запускает admin-операции (перевод, обогащение)
-• Имеет доступ ко всем страницам
 • Настраивает API-ключи
 
 УЧЕНИК (student):
-• Видит упражнения из уроков своего курса
 • Делает задания на странице «Сегодня»
-• Ведёт разговорник
 • Видит свой прогресс
+• Пишет в чат учителю
 
 Как прикрепить ученика к курсу:
-  1. Ученик регистрируется сам
-  2. Учитель открывает «Ученики» → находит нужного → прикрепляет к курсу
-  3. После этого ученик видит уроки курса
-
-Важно: ученик видит только уроки со статусом «Готово» (done).
-Пока урок обрабатывается — он недоступен для учеников.`,
+  1. Ученик регистрируется
+  2. Учитель → «Ученики» → прикрепить к курсу
+  3. Ученик видит уроки курса`,
   },
   {
     id: 'justify',
     icon: '💡',
-    title: 'Кнопка «Обоснуй» — почему именно этот ответ',
-    body: `В каждом упражнении есть кнопка 💡 Обоснуй (или 💡 Подсказка).
+    title: 'Кнопка «Обоснуй»',
+    body: `В каждом упражнении есть кнопка 💡 Обоснуй.
 
 ИИ объясняет:
 • Что слово означает буквально
-• Все его значения (если слово многозначное)
-• В каких ситуациях реально используется
-• Живой пример из жизни (не из учебника)
+• Все его значения
+• В каких ситуациях используется
+• Живой пример из жизни
 
-Кнопка доступна ДО и ПОСЛЕ ответа:
-  До ответа → работает как подсказка
-  После ответа → помогает понять контекст
+До ответа → работает как подсказка.
+После ответа → помогает понять контекст.
 
-Это НЕ грамматика.
-Если ошибка → есть отдельная кнопка ❓ Почему ошибка? которая объясняет грамматическое правило.
-
-Пример:
-  Слово: «der Zug»
-  💡 Обоснуй → "«Zug» буквально означает «тяга/тянуть».
-  В обычной речи это поезд — то, что «тянут» по рельсам.
-  Но Zug может означать: поезд, сквозняк, глоток (Schluck), ход в шахматах.
-  В контексте транспорта: Ich nehme den Zug = Я еду на поезде."`,
+Если ошибка → кнопка ❓ Почему ошибка? объясняет грамматическое правило.`,
   },
   {
     id: 'install',
     icon: '📱',
     title: 'Установка приложения',
-    body: `Приложение работает как PWA (Progressive Web App) — устанавливается прямо из браузера.
-
-Android (Chrome):
+    body: `Android (Chrome):
   1. Открой сайт в Chrome
-  2. Подожди 10-15 секунд
-  3. Появится плашка «Установить» внизу экрана
-  4. Или: ⋮ → «Добавить на главный экран»
+  2. Нажми ⊕ в адресной строке или ⋮ → «Установить приложение»
 
 iPhone / iPad (Safari):
-  1. Открой в Safari (не Chrome!)
-  2. Нажми кнопку «Поделиться» ⬆️
-  3. «На экран "Домой"» → «Добавить»
+  1. Открой в Safari
+  2. Кнопка «Поделиться» ⬆️ → «На экран "Домой"»
 
-Windows / Mac (Chrome или Edge):
-  1. Открой сайт
-  2. Нажми значок ⊕ в адресной строке
-  3. «Установить»
+Windows / Mac (Chrome/Edge):
+  1. Нажми значок ⊕ в адресной строке → «Установить»
 
-После установки:
-  ✅ Запускается без браузера
-  ✅ Работает полноэкранно
-  ✅ Обновляется автоматически`,
+После установки: запускается без браузера, работает полноэкранно.`,
   },
   {
     id: 'faq',
     icon: '❓',
     title: 'Частые вопросы',
     body: `Нет упражнений на сегодня?
-→ Все задания выполнены — приходи завтра. Это нормально!
-→ Или ты не прикреплён к курсу — спроси учителя.
+→ Все задания выполнены — приходи завтра!
+→ Или не прикреплён к курсу — спроси учителя.
 
 Приложение не произносит слова?
-→ В браузерах нужны немецкие голоса. Они загружаются автоматически.
-→ Попробуй сменить голос в боковом меню → кнопка «Google Deutsch».
+→ Нужны немецкие голоса — загружаются автоматически.
 
 ИИ не проверяет предложения?
-→ Нужен OpenAI API-ключ. Если его нет — функция недоступна.
-→ Обратись к учителю.
+→ Нужен OpenAI API-ключ. Обратись к учителю.
 
 Как сменить язык интерфейса?
-→ Кнопка с флагом внизу бокового меню (или внизу экрана на телефоне).
-
-Потерял пароль?
-→ Сейчас: обратись к учителю — он создаст новый аккаунт.
-→ Скоро: восстановление через email.
-
-Работает ли без интернета?
-→ Частично: загруженные страницы кешируются. Но для новых упражнений нужен интернет.`,
+→ Кнопка с флагом в меню.`,
   },
 ]
+
+const SECTIONS_EN = [
+  {
+    id: 'srs',
+    icon: '🧠',
+    title: 'How Spaced Repetition (SRS) Works',
+    body: `The system uses the SM-2 algorithm (SuperMemo 2) — the same one used in Anki and Duolingo.
+
+Idea: the better you remember a word, the less often you need to review it.
+
+SM-2 algorithm:
+• After each answer you rate yourself from 0 to 5
+• The algorithm calculates the next interval: interval_new = interval_old × EF
+• EF (Easiness Factor) starts at 2.5
+• Good answer → EF grows → longer interval
+• Bad answer → EF drops → word comes back sooner
+
+Typical intervals:
+  1st time: 1 day
+  2nd time: 6 days
+  3rd time: ~2 weeks
+  4th time: ~1 month
+  ...exponentially growing
+
+Example: word "Apfel"
+  Day 1: first encounter → next review in 1 day
+  Day 2: remembered well → next in 6 days
+  Day 8: remembered → next in 15 days
+  Day 23: remembered → next in 35 days
+  Forgot → interval resets
+
+Result: 20 minutes a day = 1000+ words per year.`,
+  },
+  {
+    id: 'exercises',
+    icon: '✏️',
+    title: 'Exercise Types',
+    body: `There are 7 exercise types. All are generated automatically for each word.
+
+🃏 FLASHCARD
+See the German word → recall the translation → flip the card.
+Rate yourself: ❌ forgot / 😐 hard / 🙂 okay / ✅ easy.
+
+✏️ FILL IN THE BLANK
+A German sentence with a gap ___. Type the correct word.
+
+☑️ MULTIPLE CHOICE
+A question with 4 options. Tap the correct one.
+
+✍️ WRITE A SENTENCE
+Write any simple sentence in German. AI checks and explains mistakes.
+
+🔤 ADD THE LETTER
+Word with a missing letter: "_aus" → "H" → "Haus".
+
+🎙️ DICTATION
+The word is spoken aloud — write it without seeing it.
+
+🗣️ PRONUNCIATION
+Say the word into the microphone — the system checks your pronunciation.`,
+  },
+  {
+    id: 'progress',
+    icon: '📊',
+    title: 'Progress & Statistics',
+    body: `Word status:
+• 🔵 New — not yet studied
+• 🟡 Learning — in progress (next review in the future)
+• 🟢 Mastered — answered correctly several times in a row
+
+Today's page shows:
+  Exercises due today + all new ones.
+  Daily limit set in Settings (default: 50).
+
+Report (/report):
+  • Attempts by day (last 30 days)
+  • Progress per lesson
+  • Student activity (teacher view)`,
+  },
+  {
+    id: 'import',
+    icon: '📷',
+    title: 'Uploading Lessons — Photo Requirements',
+    body: `What you can photograph:
+✅ Textbook pages (word lists, dialogues, texts)
+✅ Teacher's handwritten notes
+✅ Printed materials and cards
+✅ Screen with text (screenshot)
+
+Photo requirements:
+• Sharp, not blurry
+• Good lighting
+• Text fills most of the frame
+
+What the AI does:
+1. Reads the text (GPT-4o Vision)
+2. Extracts German words and translations
+3. Creates exercises for each word
+4. Translates into all available languages
+
+Processing time: ~10 sec per photo, 24 photos ≈ 5–8 minutes.`,
+  },
+  {
+    id: 'roles',
+    icon: '👥',
+    title: 'User Roles',
+    body: `TEACHER / PARENT (owner):
+• Creates courses and lessons
+• Uploads textbook photos
+• Sees all students and their progress
+• Configures API keys
+
+STUDENT:
+• Does exercises on the "Today" page
+• Sees their own progress
+• Chats with the teacher
+
+How to assign a student to a course:
+  1. Student registers
+  2. Teacher → "Students" → assign to course
+  3. Student sees the course lessons`,
+  },
+  {
+    id: 'justify',
+    icon: '💡',
+    title: '"Explain" Button',
+    body: `Every exercise has a 💡 Explain button.
+
+The AI explains:
+• What the word literally means
+• All its meanings
+• When it's actually used in real life
+• A real-life example
+
+Before answering → works as a hint.
+After answering → helps understand context.
+
+Wrong answer → ❓ "Why wrong?" button explains the grammar rule.`,
+  },
+  {
+    id: 'install',
+    icon: '📱',
+    title: 'Installing the App',
+    body: `Android (Chrome):
+  1. Open the site in Chrome
+  2. Tap ⊕ in the address bar or ⋮ → "Install app"
+
+iPhone / iPad (Safari):
+  1. Open in Safari
+  2. Share button ⬆️ → "Add to Home Screen"
+
+Windows / Mac (Chrome/Edge):
+  1. Click the ⊕ icon in the address bar → "Install"
+
+After installing: launches without browser, works fullscreen.`,
+  },
+  {
+    id: 'faq',
+    icon: '❓',
+    title: 'FAQ',
+    body: `No exercises today?
+→ All done — come back tomorrow!
+→ Or you're not assigned to a course — ask your teacher.
+
+App doesn't speak words?
+→ German voices need to download automatically.
+
+AI doesn't check sentences?
+→ Requires an OpenAI API key. Contact your teacher.
+
+How to change the interface language?
+→ Flag button in the sidebar menu.`,
+  },
+]
+
+// Для языков кроме RU — используем EN
+function getSections(lang) {
+  return lang === 'ru' ? SECTIONS_RU : SECTIONS_EN
+}
+
+const UI = {
+  ru: { title: 'Deutsch Lernen — Документация', subtitle: 'Как работает система обучения немецкому языку', search: 'Поиск по документации…', empty: 'Ничего не найдено', footer1: 'Deutsch Lernen — Платформа для изучения немецкого языка', footer2: 'Есть вопрос?', footer3: 'Войдите', footer4: 'и напишите учителю.' },
+  en: { title: 'Deutsch Lernen — Documentation', subtitle: 'How the German learning system works', search: 'Search documentation…', empty: 'Nothing found', footer1: 'Deutsch Lernen — German learning platform', footer2: 'Have a question?', footer3: 'Log in', footer4: 'and write to your teacher.' },
+}
 
 function DocSection({ section }) {
   const [open, setOpen] = useState(false)
@@ -249,9 +378,8 @@ function DocSection({ section }) {
       </button>
       {open && (
         <div style={{
-          padding: '0 20px 20px 56px', color: 'var(--ink)', fontSize: 14,
+          padding: '16px 20px 20px 56px', color: 'var(--ink)', fontSize: 14,
           lineHeight: 1.75, whiteSpace: 'pre-line', borderTop: '1px solid var(--line)',
-          paddingTop: 16,
         }}>
           {section.body}
         </div>
@@ -261,6 +389,9 @@ function DocSection({ section }) {
 }
 
 export default function Docs() {
+  const { lang } = useI18nStore()
+  const ui = UI[lang] || UI.en
+  const SECTIONS = getSections(lang)
   const [search, setSearch] = useState('')
   const q = search.trim().toLowerCase()
   const filtered = q
@@ -271,58 +402,53 @@ export default function Docs() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
       <PublicHeader />
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px 80px' }}>
-      {/* Шапка */}
-      <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div style={{ fontSize: 48, marginBottom: 8 }}>📚</div>
-        <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 28, margin: '0 0 8px', color: 'var(--ink)' }}>
-          Deutsch Lernen — Документация
-        </h1>
-        <p style={{ fontSize: 15, color: 'var(--ink-soft)', margin: 0 }}>
-          Как работает система обучения немецкому языку
-        </p>
-      </div>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ fontSize: 48, marginBottom: 8 }}>📚</div>
+          <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 28, margin: '0 0 8px', color: 'var(--ink)' }}>
+            {ui.title}
+          </h1>
+          <p style={{ fontSize: 15, color: 'var(--ink-soft)', margin: 0 }}>
+            {ui.subtitle}
+          </p>
+        </div>
 
-      {/* Поиск */}
-      <div style={{ position: 'relative', marginBottom: 24 }}>
-        <i className="bi bi-search" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)' }} />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Поиск по документации…"
-          style={{ width: '100%', paddingLeft: 40, fontSize: 15 }}
-        />
-        {search && (
-          <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18 }}>×</button>
+        <div style={{ position: 'relative', marginBottom: 24 }}>
+          <i className="bi bi-search" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)' }} />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={ui.search}
+            style={{ width: '100%', paddingLeft: 40, fontSize: 15 }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18 }}>×</button>
+          )}
+        </div>
+
+        {!q && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+            {SECTIONS.map(s => (
+              <a key={s.id} href={`#${s.id}`} onClick={e => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' }) }}
+                style={{ padding: '6px 14px', borderRadius: 20, fontSize: 13, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', cursor: 'pointer', textDecoration: 'none' }}>
+                {s.icon} {s.title.split(' ').slice(0, 2).join(' ')}
+              </a>
+            ))}
+          </div>
         )}
-      </div>
 
-      {/* Быстрые ссылки */}
-      {!q && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-          {SECTIONS.map(s => (
-            <a key={s.id} href={`#${s.id}`} onClick={e => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' }) }}
-              style={{ padding: '6px 14px', borderRadius: 20, fontSize: 13, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', cursor: 'pointer', textDecoration: 'none' }}>
-              {s.icon} {s.title.split(' ')[0]} {s.title.split(' ')[1]}
-            </a>
-          ))}
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-soft)' }}>{ui.empty}</div>
+        )}
+        {filtered.map(s => (
+          <div key={s.id} id={s.id}>
+            <DocSection section={s} />
+          </div>
+        ))}
+
+        <div style={{ marginTop: 40, textAlign: 'center', fontSize: 13, color: 'var(--ink-soft)' }}>
+          <p>{ui.footer1}</p>
+          <p>{ui.footer2} <a href="/login" style={{ color: 'var(--accent)' }}>{ui.footer3}</a> {ui.footer4}</p>
         </div>
-      )}
-
-      {/* Секции */}
-      {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-soft)' }}>Ничего не найдено</div>
-      )}
-      {filtered.map(s => (
-        <div key={s.id} id={s.id}>
-          <DocSection section={s} />
-        </div>
-      ))}
-
-      {/* Футер */}
-      <div style={{ marginTop: 40, textAlign: 'center', fontSize: 13, color: 'var(--ink-soft)' }}>
-        <p>Deutsch Lernen — Платформа для изучения немецкого языка</p>
-        <p>Есть вопрос? <a href="/login" style={{ color: 'var(--accent)' }}>Войдите</a> и напишите учителю.</p>
-      </div>
       </div>
     </div>
   )

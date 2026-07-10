@@ -1,16 +1,16 @@
 import { useI18nStore } from '../store/i18n.js'
 
 const LANGS = [
-  { code: 'ru', label: '🇷🇺 RU' },
+  { code: 'de', label: '🇩🇪 DE' },
   { code: 'uk', label: '🇺🇦 UK' },
   { code: 'bg', label: '🇧🇬 BG' },
   { code: 'tr', label: '🇹🇷 TR' },
   { code: 'ar', label: '🇸🇦 AR' },
   { code: 'es', label: '🇪🇸 ES' },
   { code: 'fr', label: '🇫🇷 FR' },
-  { code: 'de', label: '🇩🇪 DE' },
   { code: 'sq', label: '🇦🇱 SQ' },
   { code: 'en', label: '🇬🇧 EN' },
+  { code: 'ru', label: '🇷🇺 RU' },
 ]
 
 export default function LangSwitcher({ pill = false, dark = false }) {

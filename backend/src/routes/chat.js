@@ -1,6 +1,7 @@
 import { db } from '../db/index.js'
 import { sendNewMessageEmail } from '../services/email.js'
 import { sendTelegramNotification } from '../services/telegram.js'
+import { sendToUser, sendToAll } from '../services/push.js'
 
 export async function chatRoutes(fastify) {
 
@@ -115,16 +116,36 @@ export async function chatRoutes(fastify) {
     // Обновляем updated_at беседы
     await db.query('UPDATE chat_conversations SET updated_at = NOW() WHERE id = $1', [convId])
 
-    // Уведомления только на входящие от студента (owner отвечает — уведомлять не нужно)
-    if (role !== 'owner') {
-      const senderName = request.user.email
-      const chatType   = conv.rows[0].type
+    // Уведомления: студент пишет → учителю; учитель отвечает → студенту
+    const senderName = request.user.email
+    const chatType   = conv.rows[0].type
+    const studentId  = conv.rows[0].student_id
 
-      // Запускаем параллельно, не ждём
+    if (role !== 'owner') {
+      // Студент написал — уведомляем учителя (email + Telegram + push всем owner)
       Promise.all([
         sendNewMessageEmail({ senderName, chatType, body: body.trim(), conversationId: convId }),
         sendTelegramNotification({ senderName, chatType, body: body.trim() }),
+        (async () => {
+          const { rows: owners } = await db.query(`SELECT id FROM users WHERE role = 'owner' LIMIT 5`)
+          for (const o of owners) {
+            await sendToUser(o.id, {
+              title: `💬 Сообщение от ${senderName.split('@')[0]}`,
+              body: body.trim().slice(0, 80),
+              icon: '/icons/icon-192.png',
+              url: '/chat',
+            })
+          }
+        })(),
       ]).catch(e => console.error('[notify] Ошибка уведомления:', e.message))
+    } else {
+      // Учитель ответил — уведомляем студента
+      sendToUser(studentId, {
+        title: '💬 Ответ учителя',
+        body: body.trim().slice(0, 80),
+        icon: '/icons/icon-192.png',
+        url: '/chat',
+      }).catch(() => {})
     }
 
     return reply.status(201).send(rows[0])
