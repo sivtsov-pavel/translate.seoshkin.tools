@@ -28,6 +28,21 @@ async function getSmtpConfig() {
   }
 }
 
+export async function sendEmail({ to, subject, html, text }) {
+  const cfg = await getSmtpConfig()
+  if (!cfg) return
+  const transport = nodemailer.createTransport({
+    host: cfg.smtp_host, port: cfg.smtp_port || 587,
+    secure: cfg.smtp_secure || false,
+    auth: { user: cfg.smtp_user, pass: cfg.smtp_pass },
+  })
+  try {
+    await transport.sendMail({ from: `"Deutsch.lernen" <${cfg.smtp_from || cfg.smtp_user}>`, to, subject, html, text })
+  } catch (e) {
+    console.error('[email] Ошибка отправки:', e.message)
+  }
+}
+
 export async function sendNewMessageEmail({ senderName, chatType, body, conversationId }) {
   const cfg = await getSmtpConfig()
   if (!cfg) {
