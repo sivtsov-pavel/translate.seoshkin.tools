@@ -3,6 +3,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 import { getTranslation } from '../utils/translation.js'
+import { JustifyHint } from './ExerciseActions.jsx'
 
 export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
   const [revealed, setRevealed] = useState(false)
@@ -49,8 +50,11 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
         </div>
       </div>
 
+      {/* Подсказка «Обоснуй» — доступна до и после переворота */}
+      <JustifyHint wordDe={payload.question} correctAnswer={payload.answer} type="flashcard" />
+
       {revealed && (
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           <button onClick={() => onAnswer(1)} style={{ ...answerBtn, background: 'var(--red)' }}>
             {t.exercise.forgot}
           </button>

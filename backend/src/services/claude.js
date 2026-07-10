@@ -378,6 +378,28 @@ export async function explainGrammarError({ de, type, userAnswer, correctAnswer 
   return text.trim()
 }
 
+export async function justifyAnswer({ wordDe, correctAnswer, sentence, type }) {
+  const typeNames = { fill_blank: 'заполни пропуск', multiple_choice: 'выбор ответа', dictation: 'диктант', letter_fill: 'добавь букву', flashcard: 'карточка', sentence_write: 'напиши предложение' }
+  const text = await ask(
+    `Ты объясняешь немецкое слово/фразу ученику уровня A1 простым языком — как другу, не как учителю.
+
+Слово / правильный ответ: "${correctAnswer}"
+${wordDe && wordDe !== correctAnswer ? `Контекст / предложение: "${wordDe}"` : ''}
+${sentence ? `Предложение: "${sentence}"` : ''}
+Тип упражнения: ${typeNames[type] || type}
+
+Объясни в 3–5 предложениях на русском:
+1. Что это слово значит буквально и в каких ситуациях используется
+2. Если у слова несколько значений — перечисли основные
+3. Дай один живой пример из реальной жизни (не из учебника)
+4. НЕ объясняй грамматику — только смысл и контекст употребления
+
+Пиши просто, как объясняешь ребёнку 10 лет.`,
+    { max_tokens: 400 }
+  )
+  return text.trim()
+}
+
 const LANG_NAMES_RU = { ru: 'русский', en: 'английский', de: 'немецкий', uk: 'украинский', fr: 'французский', ar: 'арабский', bg: 'болгарский', tr: 'турецкий', es: 'испанский', sq: 'албанский' }
 
 export async function translateText(text, from = 'de', to = 'ru') {

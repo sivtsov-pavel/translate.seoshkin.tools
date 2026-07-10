@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { explainGrammarError, translateText } from '../services/claude.js'
+import { explainGrammarError, translateText, justifyAnswer } from '../services/claude.js'
 
 export async function phrasebookRoutes(fastify) {
 
@@ -90,6 +90,21 @@ export async function phrasebookRoutes(fastify) {
     try {
       const translation = await translateText(text.trim(), from, to)
       return { translation }
+    } catch (e) {
+      return reply.status(500).send({ error: e.message })
+    }
+  })
+
+  // ─── Обоснование правильного ответа ───
+
+  fastify.post('/api/justify-answer', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    const { wordDe, correctAnswer, sentence, type } = request.body
+    if (!correctAnswer) return reply.status(400).send({ error: 'correctAnswer обязателен' })
+    try {
+      const explanation = await justifyAnswer({ wordDe, correctAnswer, sentence, type })
+      return { explanation }
     } catch (e) {
       return reply.status(500).send({ error: e.message })
     }

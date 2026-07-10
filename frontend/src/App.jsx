@@ -16,6 +16,7 @@ import Report from './pages/Report.jsx'
 import Phrasebook from './pages/Phrasebook.jsx'
 import Translations from './pages/Translations.jsx'
 import Settings from './pages/Settings.jsx'
+import Docs from './pages/Docs.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/phrasebook"    element={<ProtectedRoute><Layout><Phrasebook    /></Layout></ProtectedRoute>} />
         <Route path="/translations"  element={<ProtectedRoute><Layout><Translations  /></Layout></ProtectedRoute>} />
         <Route path="/settings"      element={<ProtectedRoute><Layout><Settings      /></Layout></ProtectedRoute>} />
+        <Route path="/docs"          element={<Docs />} />
       </Routes>
     </BrowserRouter>
   )
