@@ -12,23 +12,24 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   // Локализованные варианты: если есть payloadTranslations[lang] — массив переводов вариантов
   const { options, correctIdx } = useMemo(() => {
     const orig = payload.options ?? []
-    const correctAnswer = orig[payload.correct ?? 0]
-    // Учитываем fallback для 'de' → 'en' и других языков без ключа
     const effectiveLang = getEffectiveLang(payloadTranslations, lang)
     const localized = effectiveLang ? payloadTranslations[effectiveLang] : null
-    // Если есть переводы всех вариантов — используем их (сохраняем оригинальный порядок для correctIdx)
-    const displayOpts = Array.isArray(localized) ? localized : orig
-    const shuffled = [...displayOpts].sort(() => Math.random() - 0.5)
-    // Правильный ответ: локализованный или из translations, fallback на оригинал
-    const correctLocalized = Array.isArray(localized)
-      ? localized[payload.correct ?? 0]
-      : getTranslation(translations, lang, translationRu || correctAnswer)
-    return { options: shuffled, correctIdx: shuffled.indexOf(correctLocalized) }
+    const displayOpts = Array.isArray(localized) && localized.length ? localized : orig
+    // Перемешиваем с сохранением исходного индекса — избегаем indexOf по строке (ломается на "сорок" vs "сорок (40)")
+    const indexed = displayOpts.map((opt, i) => ({ opt, i }))
+    indexed.sort(() => Math.random() - 0.5)
+    const correctOrigIdx = payload.correct ?? 0
+    return {
+      options: indexed.map(x => x.opt),
+      correctIdx: indexed.findIndex(x => x.i === correctOrigIdx),
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const effectiveLang = getEffectiveLang(payloadTranslations, lang)
-  const correctAnswer = (effectiveLang && payloadTranslations[effectiveLang]?.[payload.correct ?? 0])
-    || getTranslation(translations, lang, translationRu || options[correctIdx])
+  // Показываем именно тот вариант который в массиве options, чтобы сообщение об ошибке совпадало с опцией
+  const correctAnswer = options[correctIdx]
+    || (effectiveLang && payloadTranslations[effectiveLang]?.[payload.correct ?? 0])
+    || getTranslation(translations, lang, translationRu || (payload.options ?? [])[payload.correct ?? 0])
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
   useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])
