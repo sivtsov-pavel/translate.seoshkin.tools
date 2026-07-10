@@ -174,7 +174,7 @@ export async function generateExercises(words, grammar_points) {
   return allExercises
 }
 
-const LANG_NAMES = { ru: 'русском', en: 'English', uk: 'українською', de: 'Deutsch', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español' }
+const LANG_NAMES = { ru: 'русском', en: 'English', uk: 'українською', de: 'Deutsch', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español', sq: 'shqip' }
 
 export async function checkSentence(wordDe, translationRu, userSentence, lang = 'ru') {
   const langName = LANG_NAMES[lang] || 'русском'
@@ -217,7 +217,7 @@ ${list}`, { max_tokens: 2048 })
   return words.map((w, i) => ({ id: w.id, ...results[i] }))
 }
 
-const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es']
+const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
 
 export async function translateWordsToAllLangs(words) {
   const BATCH = 20
@@ -227,9 +227,9 @@ export async function translateWordsToAllLangs(words) {
     const list = batch.map(w => `${w.id}: ${w.word_de} → ${w.translation_ru}`).join('\n')
     try {
       const text = await ask(
-        `Переведи эти немецкие слова на 7 языков (en, uk, fr, ar, bg, tr, es).
+        `Переведи эти немецкие слова на 8 языков (en, uk, fr, ar, bg, tr, es, sq).
 Слова в формате "id: слово → перевод_на_русский".
-Верни ТОЛЬКО JSON (без markdown): { "<id>": { "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "..." } }
+Верни ТОЛЬКО JSON (без markdown): { "<id>": { "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "...", "sq": "..." } }
 Переводы должны быть краткими (слово или словосочетание), как в словаре.
 
 ${list}`,
@@ -246,42 +246,136 @@ ${list}`,
 }
 
 // Возвращает объект { id: { en: {...}, fr: {...} } } для упражнений
-// Для каждого упражнения переводим только русские строки в payload
+// fill_blank: переводим немецкое предложение на 8 языков (включая ru)
+// multiple_choice + sentence_write: переводим русский текст на 7 языков
 export async function translateExercisePayloads(exercises) {
   const BATCH = 15
   const results = {}
 
   for (let i = 0; i < exercises.length; i += BATCH) {
     const batch = exercises.slice(i, i + BATCH)
-    const items = batch.map(ex => {
+
+    // fill_blank переводим отдельно: немецкое → ru + 7 языков
+    const fbItems = batch.filter(ex => ex.type === 'fill_blank')
+    // mc и sw переводим вместе: русский → 7 языков
+    const ruItems = batch.filter(ex => ex.type !== 'fill_blank').map(ex => {
       if (ex.type === 'multiple_choice') return { id: ex.id, type: ex.type, data: ex.payload.options }
-      if (ex.type === 'fill_blank')      return { id: ex.id, type: ex.type, data: ex.payload.sentence_ru || '' }
       if (ex.type === 'sentence_write')  return { id: ex.id, type: ex.type, data: ex.payload.hint_ru || '' }
       return null
     }).filter(Boolean)
 
-    if (!items.length) continue
+    // Перевод fill_blank (немецкое предложение → ru, en, uk, fr, ar, bg, tr, es)
+    if (fbItems.length) {
+      const list = fbItems.map(ex => `${ex.id}: ${JSON.stringify(ex.payload.sentence || '')}`).join('\n')
+      try {
+        const text = await ask(
+          `Переведи следующие немецкие предложения на 9 языков (ru, en, uk, fr, ar, bg, tr, es, sq).
+Каждое предложение содержит ___ (пропуск) — сохрани его в переводе.
+Верни ТОЛЬКО JSON (без markdown):
+{ "<id>": { "ru": "...", "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "...", "sq": "..." } }
 
-    const list = items.map(it => `${it.id}|${it.type}: ${JSON.stringify(it.data)}`).join('\n')
+${list}`,
+          { max_tokens: 4096 }
+        )
+        const parsed = parseJson(text)
+        for (const [id, langs] of Object.entries(parsed)) results[id] = langs
+      } catch (e) {
+        console.error(`translateExercisePayloads fill_blank батч ${i}: ${e.message}`)
+      }
+    }
 
+    // Перевод mc + sentence_write (русский → 7 языков)
+    if (ruItems.length) {
+      const list = ruItems.map(it => `${it.id}|${it.type}: ${JSON.stringify(it.data)}`).join('\n')
+      try {
+        const text = await ask(
+          `Переведи следующие фрагменты текста с русского на 8 языков (en, uk, fr, ar, bg, tr, es, sq).
+Для multiple_choice — массив вариантов, сохрани порядок.
+Для sentence_write — одна строка.
+Верни ТОЛЬКО JSON (без markdown):
+{ "<id>": { "en": <перевод>, "uk": <перевод>, "fr": <перевод>, "ar": <перевод>, "bg": <перевод>, "tr": <перевод>, "es": <перевод>, "sq": <перевод> } }
+
+${list}`,
+          { max_tokens: 4096 }
+        )
+        const parsed = parseJson(text)
+        for (const [id, langs] of Object.entries(parsed)) results[id] = langs
+      } catch (e) {
+        console.error(`translateExercisePayloads ru батч ${i}: ${e.message}`)
+      }
+    }
+  }
+  return results
+}
+
+const LESSON_LANGS = ['de', 'en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
+
+// Переводим заголовки уроков на 9 языков (включая de — немецкий и sq — албанский)
+export async function translateLessonTitles(lessons) {
+  const list = lessons.map(l => `${l.id}: ${l.title}`).join('\n')
+  const text = await ask(
+    `Переведи следующие названия уроков немецкого языка на 9 языков.
+Верни ТОЛЬКО JSON (без markdown):
+{ "<id>": { "de": "...", "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "...", "sq": "..." } }
+
+${list}`,
+    { max_tokens: 4096 }
+  )
+  return parseJson(text)
+}
+
+// Переводим варианты multiple_choice с русского на немецкий (для проверки учителем)
+export async function translateMcOptionsToGerman(exercises) {
+  const BATCH = 20
+  const results = {}
+  for (let i = 0; i < exercises.length; i += BATCH) {
+    const batch = exercises.slice(i, i + BATCH)
+    const list = batch.map(ex => `${ex.id}: ${JSON.stringify(ex.payload.options)}`).join('\n')
     try {
       const text = await ask(
-        `Переведи следующие фрагменты текста с русского на 7 языков (en, uk, fr, ar, bg, tr, es).
-Для multiple_choice — массив вариантов, сохрани порядок.
-Для fill_blank и sentence_write — одна строка.
-Верни ТОЛЬКО JSON (без markdown):
-{ "<id>": { "en": <перевод>, "uk": <перевод>, "fr": <перевод>, "ar": <перевод>, "bg": <перевод>, "tr": <перевод>, "es": <перевод> } }
+        `Переведи следующие массивы вариантов ответов с русского на немецкий язык.
+Сохрани порядок вариантов. Верни ТОЛЬКО JSON (без markdown):
+{ "<id>": ["вариант1_de", "вариант2_de", "вариант3_de", "вариант4_de"] }
 
 ${list}`,
         { max_tokens: 4096 }
       )
       const parsed = parseJson(text)
-      for (const [id, langs] of Object.entries(parsed)) results[id] = langs
+      for (const [id, opts] of Object.entries(parsed)) results[id] = opts
     } catch (e) {
-      console.error(`translateExercisePayloads: батч ${i}-${i + BATCH} пропущен: ${e.message}`)
+      console.error(`translateMcOptionsToGerman батч ${i}: ${e.message}`)
     }
   }
   return results
+}
+
+export async function translateParagraphs(paragraphs) {
+  const list = paragraphs.map((p, i) => `${i + 1}: ${p}`).join('\n\n')
+  const text = await ask(
+    `Переведи следующие немецкие абзацы на русский язык.
+Верни ТОЛЬКО JSON-массив строк в том же порядке (без markdown): ["перевод1", "перевод2", ...]
+
+${list}`,
+    { max_tokens: 4096 }
+  )
+  return parseJson(text)
+}
+
+export async function explainGrammarError({ de, type, userAnswer, correctAnswer }) {
+  const typeNames = { fill_blank: 'Вставить слово', multiple_choice: 'Выбор ответа', dictation: 'Диктант', letter_fill: 'Вставить буквы', sentence_write: 'Написать предложение' }
+  const typeName = typeNames[type] || type
+  const text = await ask(
+    `Ученик изучает немецкий (уровень A1).
+Тип упражнения: ${typeName}.
+Фраза/слово: "${de}"
+Ответ ученика: "${userAnswer}"
+Правильный ответ: "${correctAnswer}"
+
+Объясни коротко (2-3 предложения на русском) почему правильный ответ именно "${correctAnswer}".
+Назови грамматическое правило если есть. Только русский язык, без немецких терминов.`,
+    { max_tokens: 300 }
+  )
+  return text.trim()
 }
 
 export async function translateSentences(pairs) {

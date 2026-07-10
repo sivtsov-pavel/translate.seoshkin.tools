@@ -68,7 +68,7 @@ export default function Report() {
   const { op } = data
 
   return (
-    <div style={{ padding: '16px 12px 80px', maxWidth: 640, margin: '0 auto' }}>
+    <div style={{ padding: '16px 12px 80px' }}>
       <div style={{ fontFamily: 'Georgia,serif', fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
         📊 Отчёт по контенту
       </div>

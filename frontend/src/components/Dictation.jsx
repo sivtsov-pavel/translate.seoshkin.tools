@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
+import { ExerciseActions } from './ExerciseActions.jsx'
 
-export default function Dictation({ payload, onAnswer, lessonTitle, translations, translationRu }) {
+export default function Dictation({ payload, onAnswer, lessonTitle, translations, translationRu, exerciseId }) {
   const { word_de, translation_ru } = payload
   const [input, setInput]     = useState('')
   const [checked, setChecked] = useState(false)
@@ -11,7 +12,10 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
   const inputRef              = useRef(null)
   const { t, lang }           = useI18nStore()
 
-  const displayTranslation = getTranslation(translations, lang, translationRu || translation_ru)
+  // В немецкой локали показываем само немецкое слово (fallback de→ru не нужен для диктанта)
+  const displayTranslation = lang === 'de'
+    ? word_de
+    : getTranslation(translations, lang, translationRu || translation_ru)
 
   useEffect(() => {
     setTimeout(() => speak(word_de, 'de-DE', 0.8), 300)
@@ -43,13 +47,13 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
           {t.exercise.translationLabel}
         </div>
-        <div style={{ fontFamily: 'Georgia,serif', fontSize: 28, fontWeight: 700, color: 'var(--ink)' }}>
+        <div style={{ fontFamily: 'Georgia,serif', fontSize: 34, fontWeight: 700, color: 'var(--accent)' }} dir="ltr">
           {displayTranslation}
         </div>
         <button
           onClick={() => speak(word_de, 'de-DE', 0.8)}
-          style={{ marginTop: 14, padding: '6px 16px', borderRadius: 20, border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink-soft)', fontSize: 13, cursor: 'pointer' }}>
-          🔊 {t.exercise.listenAgain}
+          style={{ marginTop: 12, padding: '4px 14px', borderRadius: 20, border: 'none', background: 'transparent', color: 'var(--accent)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+          ◄ {t.exercise.listenAgain}
         </button>
       </div>
 
@@ -60,6 +64,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
         onKeyDown={handleKeyDown}
         placeholder={t.exercise.enterWord}
         disabled={checked}
+        dir="ltr"
         style={{
           width: '100%', padding: '14px 16px', fontSize: 20,
           borderRadius: 12, textAlign: 'center', fontFamily: 'Georgia,serif',
@@ -86,6 +91,15 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
               <div style={{ color: 'var(--ink)', fontSize: 22, fontWeight: 700, fontFamily: 'Georgia,serif' }}>{word_de}</div>
             </div>
           )}
+          <ExerciseActions
+            de={word_de}
+            ru={displayTranslation}
+            type="dictation"
+            exerciseId={exerciseId}
+            userAnswer={input.trim()}
+            correctAnswer={word_de}
+            isCorrect={correct}
+          />
           <button onClick={() => onAnswer(correct ? 5 : 1, input.trim())}
             style={{ padding: '14px', borderRadius: 12, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
             {t.exercise.next}

@@ -8,8 +8,9 @@ import { tr } from '../i18n/tr.js'
 import { ar } from '../i18n/ar.js'
 import { es } from '../i18n/es.js'
 import { fr } from '../i18n/fr.js'
+import { sq } from '../i18n/sq.js'
 
-const translations = { ru, de, en, uk, bg, tr, ar, es, fr }
+const translations = { ru, de, en, uk, bg, tr, ar, es, fr, sq }
 
 const savedLang = localStorage.getItem('lang') || 'ru'
 

@@ -66,19 +66,18 @@ input:focus, textarea:focus, select:focus {
 
 a { color: var(--accent); text-decoration: none; }
 
-/* Основной контент */
+/* Основной контент — мобиль/планшет */
 .main-content {
-  padding-top: 80px;
-  padding-left: 30px;
-  padding-right: 30px;
+  padding-top: 56px;
+  padding-left: 16px;
+  padding-right: 16px;
   min-height: 100vh;
-  max-width: 50vw;
-  margin: 0 auto;
 }
 
-/* Нижняя панель — скрыта на десктопе */
+/* Нижняя панель — скрыта на планшете+ */
 .bottom-nav { display: none; }
 
+/* Мобиль ≤640px — нижняя панель и полная ширина */
 @media (max-width: 640px) {
   .hide-mobile { display: none; }
   .main-content {
@@ -99,6 +98,51 @@ a { color: var(--accent); text-decoration: none; }
   }
 }
 
+/* Десктоп ≥1024px — постоянный сайдбар */
+@media (min-width: 1024px) {
+  .layout-topbar  { display: none !important; }
+  .layout-drawer  { display: none !important; }
+  .layout-overlay { display: none !important; }
+  .layout-sidebar { display: flex !important; flex-direction: column; }
+  .main-content {
+    margin-left: 220px;
+    padding-top: 20px;
+    padding-left: 32px;
+    padding-right: 32px;
+    max-width: none;
+  }
+  .bottom-nav { display: none !important; }
+}
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+
+/* ── Сплит-вью: Словарь + Читалка ── */
+.vocab-reader-right { display: none; }
+
+@media (min-width: 1024px) {
+  .vocab-reader-split {
+    display: flex;
+    gap: 0;
+    /* отменяем padding main-content, чтобы разделитель шёл на всю высоту */
+    margin: -20px -32px;
+    height: calc(100vh - 20px);
+    overflow: hidden;
+  }
+  .vocab-reader-left {
+    flex: 2;
+    min-width: 0;
+    overflow-y: auto;
+    height: 100%;
+    padding: 20px 24px;
+    border-right: 1px solid var(--line);
+  }
+  .vocab-reader-right {
+    display: block;
+    flex: 3;
+    min-width: 0;
+    overflow-y: auto;
+    height: 100%;
+  }
+}

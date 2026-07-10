@@ -34,7 +34,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
         <div style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
-          <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center', color: 'var(--ink)' }}>
+          <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center', color: 'var(--ink)' }} dir="ltr">
             {payload.question}
           </div>
           <SpeakButton text={payload.question} size={22} />

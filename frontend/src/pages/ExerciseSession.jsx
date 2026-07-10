@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
+import { getLessonTitle } from '../utils/translation.js'
 import Flashcard from '../components/Flashcard.jsx'
 import FillBlank from '../components/FillBlank.jsx'
 import MultipleChoice from '../components/MultipleChoice.jsx'
@@ -58,18 +59,19 @@ export default function ExerciseSession() {
   if (exercises.length === 0) { navigate('/'); return null }
 
   const ex = exercises[current]
+  const lessonTitle = getLessonTitle(ex.lesson_title, ex.lesson_title_translations, lang)
 
   return (
     <div style={{ paddingTop: 30 }}>
       <div style={{ marginBottom: 10, color: 'var(--ink-soft)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation }[ex.type]}
       </div>
-      {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-      {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} payloadTranslations={ex.payload_translations} />}
-      {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} />}
-      {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={ex.lesson_title} payloadTranslations={ex.payload_translations} />}
-      {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-      {ex.type === 'dictation'       && <Dictation      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={ex.lesson_title} translations={ex.translations} translationRu={ex.translation_ru} />}
+      {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
+      {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
+      {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
+      {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} />}
+      {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
+      {ex.type === 'dictation'       && <Dictation      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} />}
     </div>
   )
 }

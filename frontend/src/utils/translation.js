@@ -1,5 +1,14 @@
-// Промежуточные fallback для редких случаев (de не нужен — слова уже немецкие, fallback → ru)
-const LANG_FALLBACK = {}
+// для 'de' локали показываем русский перевод (если нет de-перевода) — так пользователь видит что перевода нет
+const LANG_FALLBACK = { de: 'ru' }
+
+// Получить локализованный заголовок урока
+export function getLessonTitle(title, titleTranslations, lang) {
+  if (!titleTranslations || typeof titleTranslations !== 'object') return title
+  if (titleTranslations[lang]) return titleTranslations[lang]
+  const fb = LANG_FALLBACK[lang]
+  if (fb && titleTranslations[fb]) return titleTranslations[fb]
+  return title
+}
 
 // Получить перевод строки (слова, предложения, подсказки) на нужный язык
 export function getTranslation(translations, lang, fallbackRu) {

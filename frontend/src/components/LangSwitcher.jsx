@@ -9,6 +9,7 @@ const LANGS = [
   { code: 'es', label: '🇪🇸 ES' },
   { code: 'fr', label: '🇫🇷 FR' },
   { code: 'de', label: '🇩🇪 DE' },
+  { code: 'sq', label: '🇦🇱 SQ' },
   { code: 'en', label: '🇬🇧 EN' },
 ]
 

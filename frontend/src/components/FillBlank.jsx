@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation } from '../utils/translation.js'
+import { ExerciseActions } from './ExerciseActions.jsx'
 
-export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTranslations }) {
+export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTranslations, exerciseId }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const { t, lang } = useI18nStore()
@@ -51,7 +52,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
 
       {/* Предложение с пропуском */}
       <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
-        <p style={{ fontSize: 21, margin: 0, lineHeight: 1.7, color: 'var(--ink)' }}>
+        <p style={{ fontSize: 21, margin: 0, lineHeight: 1.7, color: 'var(--ink)' }} dir="ltr">
           {beforeBlank}
           <span style={{
             color: submitted ? (isCorrect ? 'var(--good)' : 'var(--red)') : 'var(--accent)',
@@ -94,6 +95,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
         <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
           <input
             ref={inputRef}
+            dir="ltr"
             value={answer}
             onChange={e => setAnswer(e.target.value)}
             placeholder={t.exercise.enterWord}
@@ -148,9 +150,18 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
               </div>
             </div>
           )}
+          <ExerciseActions
+            de={fullSentence}
+            ru={sentenceTranslation}
+            type="fill_blank"
+            exerciseId={exerciseId}
+            userAnswer={answer}
+            correctAnswer={payload.blank}
+            isCorrect={isCorrect}
+          />
           <button
             onClick={() => onAnswer(isCorrect ? 5 : 1, answer)}
-            style={{ padding: '12px 28px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>
+            style={{ marginTop: 10, padding: '12px 28px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>
             {t.exercise.next} →
           </button>
         </div>

@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads } from '../services/claude.js'
+import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join, extname } from 'path'
@@ -58,6 +58,7 @@ export async function exercisesRoutes(fastify) {
                COALESCE(e.payload_translations, '{}') AS payload_translations,
                COALESCE(w.image_url, e.image_url) AS image_url,
                l.title AS lesson_title,
+               COALESCE(l.title_translations, '{}') AS lesson_title_translations,
                COALESCE(uep.easiness_factor,  2.5)         AS easiness_factor,
                COALESCE(uep.interval_days,    0)            AS interval_days,
                COALESCE(uep.repetitions,      0)            AS repetitions,
@@ -107,24 +108,26 @@ export async function exercisesRoutes(fastify) {
       params = [userId, today]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
+               COALESCE(l.title_translations, '{}') AS lesson_title_translations,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, l.description, e.type
+        GROUP BY l.id, l.title, l.description, l.title_translations, e.type
         ORDER BY l.id, e.type`
     } else {
       params = [userId, today]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
+               COALESCE(l.title_translations, '{}') AS lesson_title_translations,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.status = 'done'
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, l.description, e.type
+        GROUP BY l.id, l.title, l.description, l.title_translations, e.type
         ORDER BY l.id, e.type`
     }
 
@@ -149,12 +152,12 @@ export async function exercisesRoutes(fastify) {
     const lessonsMap = {}
     for (const r of rows) {
       if (!lessonsMap[r.lesson_id]) {
-        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_description: r.lesson_description, total: 0, byType: {}, words_count: 0 }
+        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_title_translations: r.lesson_title_translations, lesson_description: r.lesson_description, total: 0, byType: {}, words_count: 0 }
       }
       lessonsMap[r.lesson_id].byType[r.type] = r.count
       lessonsMap[r.lesson_id].total += r.count
     }
-    // Количество уникальных слов на урок
+    // Количество уникальных слов на урок + сколько уже изучено (next_review > today)
     const lessonIds = Object.keys(lessonsMap).map(Number)
     if (lessonIds.length > 0) {
       const { rows: wRows } = await db.query(
@@ -165,6 +168,24 @@ export async function exercisesRoutes(fastify) {
       )
       for (const r of wRows) {
         if (lessonsMap[r.lesson_id]) lessonsMap[r.lesson_id].words_count = r.words_count
+      }
+      // Сколько упражнений по уроку уже "в будущем" (изучены, не требуют повторения сегодня)
+      const { rows: doneByLesson } = await db.query(
+        `SELECT e.lesson_id,
+                COUNT(*)::int AS total_ex,
+                COUNT(*) FILTER (WHERE uep.next_review_date > $2)::int AS done_ex
+         FROM exercises e
+         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+         WHERE e.lesson_id = ANY($3)
+         GROUP BY e.lesson_id`,
+        [userId, today, lessonIds]
+      )
+      for (const r of doneByLesson) {
+        if (lessonsMap[r.lesson_id]) {
+          lessonsMap[r.lesson_id].total_ex = r.total_ex
+          lessonsMap[r.lesson_id].done_ex  = r.done_ex
+          lessonsMap[r.lesson_id].done_pct = r.total_ex > 0 ? Math.round(r.done_ex / r.total_ex * 100) : 0
+        }
       }
     }
     const lessons = Object.values(lessonsMap)
@@ -207,6 +228,7 @@ export async function exercisesRoutes(fastify) {
                WHERE e.word_id = w.id AND e.image_url IS NOT NULL LIMIT 1
              )) AS image_url,
              l.title AS lesson_title,
+             COALESCE(l.title_translations, '{}') AS lesson_title_translations,
              COALESCE(uws.status, w.status, 'new') AS status
       FROM words w
       LEFT JOIN lessons l ON l.id = w.lesson_id
@@ -554,7 +576,7 @@ export async function exercisesRoutes(fastify) {
 
     const { rows } = await db.query(
       `SELECT id, word_de, translation_ru FROM words
-       WHERE translations IS NULL OR translations = '{}'
+       WHERE translations IS NULL OR translations = '{}' OR NOT (translations ? 'sq')
        ORDER BY id`
     )
     if (!rows.length) return { updated: 0, total: 0 }
@@ -566,7 +588,7 @@ export async function exercisesRoutes(fastify) {
     try {
       const results = await translateWordsToAllLangs(rows)
       for (const [id, t] of Object.entries(results)) {
-        await db.query('UPDATE words SET translations = $1 WHERE id = $2', [JSON.stringify(t), parseInt(id)])
+        await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(t), parseInt(id)])
         adminOp.updated++
         adminOp.done++
       }
@@ -586,7 +608,13 @@ export async function exercisesRoutes(fastify) {
     const { rows } = await db.query(
       `SELECT id, type, payload FROM exercises
        WHERE type IN ('multiple_choice', 'fill_blank', 'sentence_write')
-         AND (payload_translations IS NULL OR payload_translations = '{}')
+         AND (
+           payload_translations IS NULL
+           OR payload_translations = '{}'
+           OR (type = 'fill_blank' AND (payload_translations->>'ru') IS NULL)
+           OR (type = 'fill_blank' AND (payload_translations->>'ru') = '')
+           OR NOT (payload_translations ? 'sq')
+         )
        ORDER BY id`
     )
     if (!rows.length) return { updated: 0, total: 0 }
@@ -602,11 +630,86 @@ export async function exercisesRoutes(fastify) {
         try {
           const results = await translateExercisePayloads(batch)
           for (const [id, langs] of Object.entries(results)) {
-            await db.query('UPDATE exercises SET payload_translations = $1 WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
+            await db.query('UPDATE exercises SET payload_translations = COALESCE(payload_translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
             adminOp.updated++
           }
         } catch (e) {
           console.error(`translate-exercises батч ${i}: ${e.message}`)
+          adminOp.failed += batch.length
+        }
+        adminOp.done = Math.min(i + BATCH, rows.length)
+      }
+      adminOp.status = 'done'
+    } catch (e) {
+      adminOp.status = 'error'
+      adminOp.error = e.message
+    }
+  })
+
+  // Перевод заголовков уроков на все языки
+  fastify.post('/api/admin/translate-lesson-titles', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (adminOp.status === 'running') return reply.status(409).send({ error: 'Операция уже выполняется' })
+
+    const { rows } = await db.query(
+      `SELECT id, title FROM lessons
+       WHERE title_translations IS NULL OR title_translations = '{}' OR NOT (title_translations ? 'sq')
+       ORDER BY id`
+    )
+    if (!rows.length) return { updated: 0, total: 0 }
+
+    Object.assign(adminOp, { name: 'translate-lesson-titles', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
+    reply.code(202).send({ started: true, total: rows.length })
+
+    try {
+      const results = await translateLessonTitles(rows)
+      for (const [id, langs] of Object.entries(results)) {
+        await db.query('UPDATE lessons SET title_translations = COALESCE(title_translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
+        adminOp.updated++
+      }
+      adminOp.done = rows.length
+      adminOp.status = 'done'
+    } catch (e) {
+      adminOp.status = 'error'
+      adminOp.error = e.message
+    }
+  })
+
+  // Перевод вариантов multiple_choice на немецкий (для проверки учителем)
+  fastify.post('/api/admin/translate-mc-to-german', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (adminOp.status === 'running') return reply.status(409).send({ error: 'Операция уже выполняется' })
+
+    const { rows } = await db.query(
+      `SELECT id, payload FROM exercises
+       WHERE type = 'multiple_choice'
+         AND (payload_translations->>'de') IS NULL
+       ORDER BY id`
+    )
+    if (!rows.length) return { updated: 0, total: 0 }
+
+    Object.assign(adminOp, { name: 'translate-mc-to-german', done: 0, total: rows.length, status: 'running', updated: 0, failed: 0 })
+    reply.code(202).send({ started: true, total: rows.length })
+
+    try {
+      const BATCH = 20
+      for (let i = 0; i < rows.length; i += BATCH) {
+        const batch = rows.slice(i, i + BATCH)
+        try {
+          const results = await translateMcOptionsToGerman(batch)
+          for (const [id, deOpts] of Object.entries(results)) {
+            await db.query(
+              `UPDATE exercises SET payload_translations = payload_translations || jsonb_build_object('de', $1::jsonb) WHERE id = $2`,
+              [JSON.stringify(deOpts), parseInt(id)]
+            )
+            adminOp.updated++
+          }
+        } catch (e) {
+          console.error(`translate-mc-to-german батч ${i}: ${e.message}`)
           adminOp.failed += batch.length
         }
         adminOp.done = Math.min(i + BATCH, rows.length)

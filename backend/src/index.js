@@ -13,6 +13,8 @@ import { exercisesRoutes } from './routes/exercises.js'
 import { studentsRoutes } from './routes/students.js'
 import { coursesRoutes } from './routes/courses.js'
 import { phraseSetsRoutes } from './routes/phraseSets.js'
+import { readerRoutes } from './routes/reader.js'
+import { phrasebookRoutes } from './routes/phrasebook.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
 // Регистрация плагинов — выделено для переиспользования в тестах
@@ -35,6 +37,8 @@ async function registerRoutes(app) {
   await app.register(studentsRoutes)
   await app.register(coursesRoutes)
   await app.register(phraseSetsRoutes)
+  await app.register(readerRoutes)
+  await app.register(phrasebookRoutes)
   await app.register(mediaRoutes)
 }
 

@@ -3,8 +3,9 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 import { getTranslation, getEffectiveLang } from '../utils/translation.js'
+import { ExerciseActions } from './ExerciseActions.jsx'
 
-export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations }) {
+export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations, exerciseId }) {
   const [selected, setSelected] = useState(null)
   const { t, lang } = useI18nStore()
 
@@ -35,7 +36,8 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   const handleSelect = (idx) => {
     if (selected !== null) return
     setSelected(idx)
-    setTimeout(() => onAnswer(idx === correctIdx ? 5 : 1), 1100)
+    // При правильном ответе — автопереход через 1.2с, при ошибке — ждём ручного нажатия
+    if (idx === correctIdx) setTimeout(() => onAnswer(5), 1200)
   }
 
   const getStyle = (idx) => {
@@ -71,7 +73,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
 
       <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 20px', marginBottom: 18, textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-          <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}>{germanWord}</span>
+          <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }} dir="ltr">{germanWord}</span>
           <SpeakButton text={germanWord} size={24} />
         </div>
         <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0' }}>{t.exercise.chooseTranslation}</p>
@@ -96,12 +98,29 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
       ))}
 
       {selected !== null && (
-        <p style={{ marginTop: 10, fontSize: 15, fontWeight: 700,
-          color: selected === correctIdx ? 'var(--good)' : 'var(--red)' }}>
-          {selected === correctIdx
-            ? `✓ ${t.exercise.correct}`
-            : `✗ ${t.exercise.wrong} — ${correctAnswer}`}
-        </p>
+        <div style={{ marginTop: 10 }}>
+          <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700,
+            color: selected === correctIdx ? 'var(--good)' : 'var(--red)' }}>
+            {selected === correctIdx
+              ? `✓ ${t.exercise.correct}`
+              : `✗ ${t.exercise.wrong} — ${correctAnswer}`}
+          </p>
+          <ExerciseActions
+            de={germanWord}
+            ru={correctAnswer}
+            type="multiple_choice"
+            exerciseId={exerciseId}
+            userAnswer={options[selected]}
+            correctAnswer={correctAnswer}
+            isCorrect={selected === correctIdx}
+          />
+          {selected !== correctIdx && (
+            <button onClick={() => onAnswer(1)}
+              style={{ marginTop: 12, padding: '10px 24px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>
+              {t.exercise.next}
+            </button>
+          )}
+        </div>
       )}
       </div>
     </div>

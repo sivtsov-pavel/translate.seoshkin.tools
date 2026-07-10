@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
-import { getTranslation } from '../utils/translation.js'
+import { getTranslation, getLessonTitle } from '../utils/translation.js'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'dictation']
 const TYPE_ICON  = { multiple_choice: 'bi-check-square-fill', flashcard: 'bi-card-text', letter_fill: 'bi-fonts', fill_blank: 'bi-pencil-fill', sentence_write: 'bi-pen-fill', dictation: 'bi-mic-fill' }
@@ -75,7 +75,7 @@ export default function Dashboard() {
           onClick={() => navigate('/exercise-session')}
           style={{
             width: '100%', padding: '16px', borderRadius: 16,
-            background: 'var(--ink)', color: 'var(--bg)',
+            background: 'var(--accent)', color: 'var(--accent-ink)',
             border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 15,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
@@ -139,6 +139,14 @@ function LessonCard({ lesson, navigate }) {
   const chips = TYPE_ORDER.filter(type => lesson.byType[type])
   const wordsCount = lesson.words_count || 0
 
+  // Бейдж прогресса урока
+  const pct = lesson.done_pct ?? 0
+  const badge = pct >= 80
+    ? { label: `выучено ${pct}%`, bg: 'rgba(78,154,110,0.15)', color: 'var(--good)' }
+    : pct > 0
+    ? { label: 'в процессе', bg: 'rgba(201,165,74,0.15)', color: 'var(--accent)' }
+    : { label: 'новое', bg: 'var(--surface-2)', color: 'var(--ink-soft)' }
+
   return (
     <div style={{
       background: 'var(--surface)', border: '1px solid var(--line)',
@@ -147,11 +155,16 @@ function LessonCard({ lesson, navigate }) {
       {/* Шапка */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'Georgia,serif', fontSize: 19, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            📚 {lesson.lesson_title || `Урок #${lesson.lesson_id}`}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+            <div style={{ fontFamily: 'Georgia,serif', fontSize: 18, fontWeight: 700 }}>
+              {getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || `Урок #${lesson.lesson_id}`}
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: badge.bg, color: badge.color, flexShrink: 0 }}>
+              {badge.label}
+            </span>
           </div>
           {lesson.lesson_description && (
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2, fontStyle: 'italic' }}>
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', fontStyle: 'italic' }}>
               {lesson.lesson_description}
             </div>
           )}

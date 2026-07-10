@@ -61,7 +61,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
       </p>
 
       <div style={{ textAlign: 'center', marginBottom: 20 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 0, fontSize: 38, fontWeight: 700, letterSpacing: 2 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 0, fontSize: 38, fontWeight: 700, letterSpacing: 2 }} dir="ltr">
           {parts.map((part, i) => (
             part.blank
               ? <span key={i} style={{ color: 'var(--accent)', borderBottom: '3px solid var(--accent)', minWidth: part.text.length * 22, display: 'inline-block', textAlign: 'center', opacity: 0.6 }}>
