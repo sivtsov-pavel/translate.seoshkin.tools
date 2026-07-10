@@ -5,21 +5,35 @@ import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { useAdminOpStore } from '../store/adminOp.js'
 
+const TITLE_LANGS = [
+  { code: 'ru', label: 'RU' }, { code: 'en', label: 'EN' }, { code: 'de', label: 'DE' },
+  { code: 'uk', label: 'UK' }, { code: 'bg', label: 'BG' }, { code: 'tr', label: 'TR' },
+  { code: 'ar', label: 'AR' }, { code: 'es', label: 'ES' }, { code: 'fr', label: 'FR' },
+  { code: 'sq', label: 'SQ' },
+]
+
 function EditForm({ lesson, onSave, onCancel }) {
   const [title, setTitle]       = useState(lesson.title || '')
   const [desc, setDesc]         = useState(lesson.description || '')
   const [textContent, setTextContent] = useState(lesson.text_content || '')
+  const [titleTrans, setTitleTrans]   = useState(lesson.title_translations || {})
   const [saving, setSaving]     = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [showTrans, setShowTrans] = useState(false)
   const fileRef = useRef()
 
   const save = async () => {
     setSaving(true)
     try {
+      // Отправляем только непустые переводы
+      const transToSend = Object.fromEntries(
+        Object.entries(titleTrans).filter(([, v]) => v && v.trim())
+      )
       const updated = await api.patch(`/lessons/${lesson.id}`, {
         title: title.trim() || null,
         description: desc.trim() || null,
         text_content: textContent.trim() || null,
+        title_translations: Object.keys(transToSend).length ? transToSend : undefined,
       })
       onSave(updated)
     } catch (e) {
@@ -50,6 +64,32 @@ function EditForm({ lesson, onSave, onCancel }) {
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Название урока</label>
         <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="Например: Lektion 1" style={{ width: '100%', boxSizing: 'border-box' }} />
       </div>
+
+      {/* Переводы заголовка */}
+      <div style={{ marginBottom: 10 }}>
+        <button onClick={() => setShowTrans(v => !v)}
+          style={{ fontSize: 11, color: 'var(--ink-soft)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <i className={`bi ${showTrans ? 'bi-chevron-up' : 'bi-chevron-down'}`} style={{ fontSize: 10 }} />
+          Переводы названия ({TITLE_LANGS.filter(l => titleTrans[l.code]).length}/{TITLE_LANGS.length})
+        </button>
+        {showTrans && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px 8px', marginTop: 6 }}>
+            {TITLE_LANGS.map(({ code, label }) => (
+              <div key={code} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-soft)', width: 22, flexShrink: 0 }}>{label}</span>
+                <input
+                  value={titleTrans[code] || ''}
+                  onChange={e => setTitleTrans(prev => ({ ...prev, [code]: e.target.value }))}
+                  placeholder={code === 'de' ? 'оригинал (нем.)' : ''}
+                  style={{ flex: 1, fontSize: 12, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' }}
+                  dir={code === 'ar' ? 'rtl' : 'ltr'}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div style={{ marginBottom: 10 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Описание</label>
         <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Тема урока, особенности группы..." rows={2}
@@ -90,6 +130,7 @@ export default function LessonList() {
   const [deleting, setDeleting]       = useState(null)
   const [addingLetters, setAddingLetters] = useState(null)
   const [addingDictation, setAddingDictation] = useState(null)
+  const [addingSpeech, setAddingSpeech]       = useState(null)
   const [regenId, setRegenId]         = useState(null)
   const [processing, setProcessing]   = useState(null)
   const [editingId, setEditingId]     = useState(null)
@@ -129,6 +170,20 @@ export default function LessonList() {
       const res = await api.post(`/lessons/${id}/add-dictation`, {})
       alert(`Добавлено ${res.added} упражнений "Диктант"!`)
     } catch (e) { alert(e.message) } finally { setAddingDictation(null) }
+  }
+
+  const handleAddSpeech = async (id) => {
+    setAddingSpeech(id)
+    try {
+      const res = await api.post(`/lessons/${id}/add-speech`, {})
+      alert(`Добавлено ${res.added} упражнений "Произношение"!`)
+    } catch (e) {
+      if (e.message && e.message.includes('уже добавлен')) {
+        alert('✓ Упражнения на произношение уже добавлены в этот урок')
+      } else {
+        alert('Ошибка: ' + e.message)
+      }
+    } finally { setAddingSpeech(null) }
   }
 
   const handleRegen = async (lesson) => {

@@ -144,6 +144,45 @@ export async function lessonsRoutes(fastify) {
     return { added }
   })
 
+  // Добавить упражнения на произношение (speech) к уроку без сброса прогресса
+  fastify.post('/api/lessons/:id/add-speech', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+
+    const { rows: lessonRows } = await db.query('SELECT id FROM lessons WHERE id = $1', [lessonId])
+    if (!lessonRows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+
+    const { rows: already } = await db.query(
+      `SELECT COUNT(*) cnt FROM exercises WHERE lesson_id = $1 AND type = 'speech'`, [lessonId]
+    )
+    if (parseInt(already[0].cnt) > 0) return reply.status(409).send({ error: 'Упражнения на произношение уже добавлены' })
+
+    const { rows: wordRows } = await db.query(
+      `SELECT DISTINCT ON (e.payload->>'question')
+         e.word_id,
+         COALESCE(w.word_de, e.payload->>'question') AS word_de,
+         COALESCE(w.translation_ru, e.payload->>'answer') AS translation_ru
+       FROM exercises e
+       LEFT JOIN words w ON w.id = e.word_id
+       WHERE e.lesson_id = $1 AND e.type = 'flashcard'
+       ORDER BY e.payload->>'question'`,
+      [lessonId]
+    )
+    if (!wordRows.length) return reply.status(400).send({ error: 'Нет слов в уроке' })
+
+    let added = 0
+    for (const w of wordRows) {
+      await db.query(
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        [lessonId, w.word_id, 'speech', JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })]
+      )
+      added++
+    }
+    return { added }
+  })
+
   // Слова урока — через упражнения (не через words.lesson_id, т.к. там дедупликация)
   fastify.get('/api/lessons/:id/words', {
     preHandler: [fastify.authenticate],
@@ -195,25 +234,31 @@ export async function lessonsRoutes(fastify) {
       body: {
         type: 'object',
         properties: {
-          title:        { type: 'string' },
-          description:  { type: 'string' },
-          text_content: { type: 'string' },
+          title:              { type: 'string' },
+          description:        { type: 'string' },
+          text_content:       { type: 'string' },
+          title_translations: { type: 'object' },
         },
       },
     },
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const lessonId = parseInt(request.params.id)
-    const { title, description, text_content } = request.body
+    const { title, description, text_content, title_translations } = request.body
 
     const { rows } = await db.query(
       `UPDATE lessons SET
-         title        = COALESCE($1, title),
-         description  = COALESCE($2, description),
-         text_content = COALESCE($3, text_content)
-       WHERE id = $4
+         title              = COALESCE($1, title),
+         description        = COALESCE($2, description),
+         text_content       = COALESCE($3, text_content),
+         title_translations = CASE WHEN $4::jsonb IS NOT NULL
+                                THEN COALESCE(title_translations, '{}'::jsonb) || $4::jsonb
+                                ELSE title_translations END
+       WHERE id = $5
        RETURNING *`,
-      [title ?? null, description ?? null, text_content ?? null, lessonId]
+      [title ?? null, description ?? null, text_content ?? null,
+       title_translations ? JSON.stringify(title_translations) : null,
+       lessonId]
     )
     if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
     return rows[0]

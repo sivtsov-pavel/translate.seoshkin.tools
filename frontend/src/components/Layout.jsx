@@ -20,6 +20,7 @@ export default function Layout({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
+  const [adminExpanded, setAdminExpanded] = useState(false)
   const [unreadChat, setUnreadChat] = useState(0)
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
@@ -72,10 +73,38 @@ export default function Layout({ children }) {
     { name: 'translate-sentences',       label: t.courses.opTranslate,          endpoint: '/admin/translate-sentences' },
     { name: 'translate-words-all-langs', label: t.courses.opTranslateAllLangs,  endpoint: '/admin/translate-words-all-langs' },
     { name: 'translate-exercises',       label: t.courses.opTranslateExercises, endpoint: '/admin/translate-exercises' },
+    { name: 'add-speech-all',            label: 'Произношение всем урокам',     endpoint: '/admin/add-speech-all' },
+    { name: 'translate-lesson-titles',   label: 'Перевести названия уроков',    endpoint: '/admin/translate-lesson-titles' },
     { name: 'regenerate-all',            label: 'Пересоздать упражнения',        endpoint: '/admin/regenerate-all' },
   ] : []
 
   useEffect(() => { setOpen(false) }, [location.pathname])
+
+  // Измеряем высоту топбара и нижней панели — выставляем CSS-переменные для full-page-layout
+  useEffect(() => {
+    const measure = () => {
+      const topbar = document.querySelector('.layout-topbar')
+      const bottomNav = document.querySelector('.bottom-nav')
+      const root = document.documentElement
+      if (topbar) {
+        const b = topbar.getBoundingClientRect().bottom
+        if (b > 0) root.style.setProperty('--topbar-h', Math.ceil(b) + 'px')
+      }
+      if (bottomNav) {
+        const h = bottomNav.getBoundingClientRect().height
+        if (h > 0) root.style.setProperty('--bottom-nav-h', Math.ceil(h) + 'px')
+      }
+    }
+    // Safari завершает layout позже — измеряем через rAF и повторно через 200ms
+    const scheduleMeasure = () => requestAnimationFrame(() => { measure(); setTimeout(measure, 200) })
+    scheduleMeasure()
+    window.addEventListener('resize', measure)
+    window.addEventListener('orientationchange', scheduleMeasure)
+    return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('orientationchange', scheduleMeasure)
+    }
+  }, [])
 
   useEffect(() => {
     const el = drawerRef.current
@@ -110,11 +139,14 @@ export default function Layout({ children }) {
   ]
 
   const classItems = user?.role === 'owner' ? [
-    { to: '/courses',      icon: 'bi-mortarboard-fill',   label: t.nav.courses },
-    { to: '/students',     icon: 'bi-people-fill',        label: t.nav.students },
-    { to: '/report',       icon: 'bi-bar-chart-fill',     label: 'Отчёт' },
-    { to: '/lessons/new',  icon: 'bi-plus-circle-fill',   label: t.nav.newLesson },
-    { to: '/register',     icon: 'bi-person-plus-fill',   label: t.nav.addStudent },
+    { to: '/courses',   icon: 'bi-mortarboard-fill', label: t.nav.courses },
+    { to: '/students',  icon: 'bi-people-fill',      label: t.nav.students },
+    { to: '/report',    icon: 'bi-bar-chart-fill',   label: 'Отчёт' },
+  ] : []
+
+  const adminLinks = user?.role === 'owner' ? [
+    { to: '/lessons/new', label: '+ ' + (t.nav.newLesson  || 'Новый урок') },
+    { to: '/register',    label: '+ ' + (t.nav.addStudent || 'Новый ученик') },
   ] : []
 
   const NavItem = ({ item, onClick }) => {
@@ -147,8 +179,15 @@ export default function Layout({ children }) {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {/* Шапка */}
         <div style={{ padding: '16px 16px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', gap: 8 }}>
-            🇩🇪 {t.nav.appName}
+          <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span>🇩🇪 {t.nav.appName}</span>
+            {inDrawer && (
+              <button onClick={() => setOpen(false)} style={{
+                background: 'rgba(0,0,0,0.18)', border: 'none', borderRadius: 10, width: 32, height: 32,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'var(--accent-ink)', fontSize: 18, flexShrink: 0,
+              }}>✕</button>
+            )}
           </div>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
@@ -209,36 +248,65 @@ export default function Layout({ children }) {
           <NavItem item={{ to: '/wiki', icon: 'bi-question-circle-fill', label: t.nav.wiki }} onClick={close} />
         </div>
 
-        {/* Admin-операции */}
-        {adminOps.length > 0 && (
-          <div style={{ padding: '8px 12px 6px', borderTop: '1px solid var(--line)', flexShrink: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>Admin</div>
-            {adminOps.map(op => {
-              const running = adminOp.status === 'running' && adminOp.name === op.name
-              const done    = adminOp.status === 'done'    && adminOp.name === op.name
-              return (
-                <button key={op.name}
-                  onClick={() => runOp(op.name, op.endpoint)}
-                  disabled={adminOp.status === 'running'}
-                  title={op.label}
-                  style={{
-                    display: 'block', width: '100%', textAlign: 'left',
-                    padding: '5px 8px', borderRadius: 7,
-                    border: 'none', background: 'transparent',
-                    color: running ? 'var(--accent)' : done ? 'var(--good)' : 'var(--ink-soft)',
-                    cursor: adminOp.status === 'running' ? 'default' : 'pointer',
-                    fontSize: 12, fontWeight: running ? 700 : 400,
-                    opacity: adminOp.status === 'running' && !running ? 0.4 : 1,
-                    marginBottom: 1,
-                  }}>
-                  {running
-                    ? `⏳ ${op.label} ${adminOp.total > 0 ? `${adminOp.done}/${adminOp.total}` : '...'}`
-                    : done ? `✓ ${op.label}` : op.label}
-                </button>
-              )
-            })}
-            {adminOp.status === 'error' && (
-              <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 3 }}>✗ {adminOp.error}</div>
+        {/* Admin-операции — сворачиваемый блок */}
+        {(adminOps.length > 0 || adminLinks.length > 0) && (
+          <div style={{ borderTop: '1px solid var(--line)', flexShrink: 0 }}>
+            <button
+              onClick={() => setAdminExpanded(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', padding: '7px 12px',
+                background: 'none', border: 'none', cursor: 'pointer',
+              }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                Admin{adminOp.status === 'running' ? ' ⏳' : adminOp.status === 'done' ? ' ✓' : ''}
+              </span>
+              <i className={`bi ${adminExpanded ? 'bi-chevron-up' : 'bi-chevron-down'}`} style={{ fontSize: 11, color: 'var(--ink-soft)' }} />
+            </button>
+            {adminExpanded && (
+              <div style={{ padding: '0 12px 6px' }}>
+                {adminLinks.length > 0 && (
+                  <div style={{ marginBottom: adminOps.length ? 4 : 0, paddingBottom: adminOps.length ? 4 : 0, borderBottom: adminOps.length ? '1px solid var(--line)' : 'none' }}>
+                    {adminLinks.map(link => (
+                      <Link key={link.to} to={link.to} onClick={close}
+                        style={{
+                          display: 'block', padding: '5px 8px', borderRadius: 7,
+                          fontSize: 12, color: 'var(--accent)', textDecoration: 'none',
+                          fontWeight: 600, marginBottom: 1,
+                        }}>
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {adminOps.map(op => {
+                  const running = adminOp.status === 'running' && adminOp.name === op.name
+                  const done    = adminOp.status === 'done'    && adminOp.name === op.name
+                  return (
+                    <button key={op.name}
+                      onClick={() => runOp(op.name, op.endpoint)}
+                      disabled={adminOp.status === 'running'}
+                      title={op.label}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        padding: '5px 8px', borderRadius: 7,
+                        border: 'none', background: 'transparent',
+                        color: running ? 'var(--accent)' : done ? 'var(--good)' : 'var(--ink-soft)',
+                        cursor: adminOp.status === 'running' ? 'default' : 'pointer',
+                        fontSize: 12, fontWeight: running ? 700 : 400,
+                        opacity: adminOp.status === 'running' && !running ? 0.4 : 1,
+                        marginBottom: 1,
+                      }}>
+                      {running
+                        ? `⏳ ${op.label} ${adminOp.total > 0 ? `${adminOp.done}/${adminOp.total}` : '...'}`
+                        : done ? `✓ ${op.label}` : op.label}
+                    </button>
+                  )
+                })}
+                {adminOp.status === 'error' && (
+                  <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 3 }}>✗ {adminOp.error}</div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -288,7 +356,7 @@ export default function Layout({ children }) {
         borderBottom: '1px solid var(--line)',
         minHeight: 50,
       }}>
-        <button onClick={() => setOpen(true)} style={iconBtn} aria-label="Меню">
+        <button onClick={() => setOpen(true)} className="layout-hamburger" style={iconBtn} aria-label="Меню">
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
             <rect width="18" height="2" rx="1" fill="currentColor"/>
             <rect y="6" width="12" height="2" rx="1" fill="currentColor"/>
@@ -298,28 +366,127 @@ export default function Layout({ children }) {
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: 18 }}>
           🇩🇪 {t.nav.appName}
         </Link>
-        <div style={{ width: 40 }} />
+        {location.pathname !== '/' ? (
+          <button onClick={() => navigate(-1)} style={{
+            ...iconBtn, fontSize: 13, fontWeight: 700, color: 'var(--accent)',
+            padding: '0 10px', width: 'auto', gap: 4,
+          }}>
+            ← Назад
+          </button>
+        ) : (
+          <div style={{ width: 40 }} />
+        )}
       </header>
 
-      {/* Overlay (мобильный drawer) */}
-      <div className="layout-overlay" onClick={() => setOpen(false)} style={{
-        position: 'fixed', inset: 0, zIndex: 150,
-        background: 'rgba(0,0,0,0.55)',
-        opacity: open ? 1 : 0,
-        pointerEvents: open ? 'auto' : 'none',
-        transition: 'opacity .25s ease',
-      }} />
-
-      {/* Drawer (мобиль/планшет) */}
+      {/* Full-screen меню (мобиль/планшет) — скрыт на ≥1024px через CSS */}
       <nav ref={drawerRef} className="layout-drawer" style={{
-        position: 'fixed', top: 0, bottom: 0, left: 0, zIndex: 160,
-        width: 280, background: 'var(--surface)',
+        position: 'fixed', inset: 0, zIndex: 160,
+        background: 'var(--surface)',
         transform: open ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform .28s cubic-bezier(.32,.72,0,1)',
-        borderRadius: '0 22px 22px 0', overflow: 'hidden',
+        overflow: 'hidden', display: 'flex', flexDirection: 'column',
       }}>
         <SidebarContent inDrawer />
       </nav>
+
+      {/* Узкая иконочная полоса — только планшет 641-1023px (CSS управляет видимостью) */}
+      <nav className="layout-narrow-strip" style={{
+        display: 'none',
+        flexDirection: 'column', alignItems: 'center',
+        position: 'fixed', top: 3, left: 0, bottom: 0, zIndex: 100,
+        width: 60, background: 'var(--surface)', borderRight: '1px solid var(--line)',
+        paddingTop: 10, gap: 4, overflowY: 'auto',
+      }}>
+        {/* Логотип */}
+        <Link to="/" title={t.nav.today} style={{ fontSize: 22, textDecoration: 'none', marginBottom: 4, lineHeight: 1 }}>🇩🇪</Link>
+        <div style={{ width: 32, height: 1, background: 'var(--line)', marginBottom: 2 }} />
+
+        {/* Основные пункты */}
+        {[
+          { to: '/',           icon: 'bi-house-door-fill',      label: t.nav.today },
+          { to: '/lessons',    icon: 'bi-book-fill',            label: t.nav.lessons },
+          { to: '/vocabulary', icon: 'bi-card-list',            label: t.nav.vocabulary },
+          { to: '/reader',     icon: 'bi-eyeglasses',           label: t.nav.reader },
+          { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: 'Разговорник' },
+          { to: '/wiki',       icon: 'bi-question-circle-fill', label: t.nav.wiki },
+        ].map(item => {
+          const active = isActive(item.to)
+          return (
+            <Link key={item.to} to={item.to} title={item.label} style={{
+              width: 44, height: 44, borderRadius: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18, textDecoration: 'none',
+              color: active ? 'var(--accent)' : 'var(--ink-soft)',
+              background: active ? 'var(--accent-soft)' : 'transparent',
+              transition: 'all .15s',
+            }}>
+              <i className={`bi ${item.icon}`} />
+            </Link>
+          )
+        })}
+
+        {/* Чат с бейджем */}
+        <Link to="/chat" title="Чат" style={{
+          width: 44, height: 44, borderRadius: 12, position: 'relative',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 18, textDecoration: 'none',
+          color: isActive('/chat') ? 'var(--accent)' : 'var(--ink-soft)',
+          background: isActive('/chat') ? 'var(--accent-soft)' : 'transparent',
+          transition: 'all .15s',
+        }}>
+          <i className="bi bi-chat-dots-fill" />
+          {unreadChat > 0 && (
+            <span style={{
+              position: 'absolute', top: 4, right: 4,
+              background: 'var(--red)', color: '#fff', borderRadius: 10,
+              padding: '0 4px', fontSize: 9, fontWeight: 700, minWidth: 14, textAlign: 'center',
+            }}>{unreadChat > 9 ? '9+' : unreadChat}</span>
+          )}
+        </Link>
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Настройки */}
+        <Link to="/settings" title="Настройки" style={{
+          width: 44, height: 44, borderRadius: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 18, textDecoration: 'none',
+          color: isActive('/settings') ? 'var(--accent)' : 'var(--ink-soft)',
+          background: isActive('/settings') ? 'var(--accent-soft)' : 'transparent',
+          transition: 'all .15s',
+        }}>
+          <i className="bi bi-gear-fill" />
+        </Link>
+
+        {/* Кнопка «Ещё» — открывает полное меню */}
+        <button onClick={() => setOpen(true)} title="Меню" style={{
+          width: 44, height: 44, borderRadius: 12, marginBottom: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 18, border: 'none', background: 'transparent',
+          cursor: 'pointer', color: 'var(--ink-soft)',
+        }}>
+          <i className="bi bi-three-dots-vertical" />
+        </button>
+      </nav>
+
+      {/* Десктопный мини-хедер — кнопка «Назад» (только ≥1024px, CSS управляет видимостью) */}
+      <header className="layout-desktop-topbar">
+        {location.pathname !== '/' ? (
+          <button onClick={() => navigate(-1)} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--accent)', fontWeight: 700, fontSize: 14,
+            padding: '6px 10px', borderRadius: 8,
+          }}>
+            ← Назад
+          </button>
+        ) : (
+          <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>
+            🇩🇪 Deutsch lernen
+          </span>
+        )}
+      </header>
 
       {/* Основной контент */}
       <main className="main-content">
@@ -345,8 +512,17 @@ export default function Layout({ children }) {
               textDecoration: 'none',
               color: active ? 'var(--accent)' : 'var(--ink-soft)',
               fontSize: 10, fontWeight: active ? 700 : 400,
+              position: 'relative',
             }}>
               <i className={`bi ${item.icon}`} style={{ fontSize: 20 }} />
+              {item.badge > 0 && (
+                <span style={{
+                  position: 'absolute', top: 4, right: '50%', transform: 'translateX(10px)',
+                  background: 'var(--red)', color: '#fff', borderRadius: 10,
+                  minWidth: 16, height: 16, fontSize: 10, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+                }}>{item.badge > 9 ? '9+' : item.badge}</span>
+              )}
               <span>{item.label}</span>
             </Link>
           )
