@@ -1,24 +1,39 @@
 import { useEffect, useState, useMemo } from 'react'
 import { api } from '../api/client.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
+import { useAuthStore } from '../store/auth.js'
 import { ru } from '../i18n/ru.js'
 import { en } from '../i18n/en.js'
 import { de } from '../i18n/de.js'
 import { uk } from '../i18n/uk.js'
+import { fr } from '../i18n/fr.js'
+import { tr } from '../i18n/tr.js'
+import { ar } from '../i18n/ar.js'
+import { bg } from '../i18n/bg.js'
+import { es } from '../i18n/es.js'
+import { sq } from '../i18n/sq.js'
 
-// Разворачиваем вложенный объект i18n в плоский список { key, ru, en, de, uk }
+const ALL_I18N = { ru, en, de, uk, fr, tr, ar, bg, es, sq }
+
+// Разворачиваем вложенный объект i18n в плоский список
 function flattenI18n(obj, prefix = '') {
   const result = []
   for (const [k, v] of Object.entries(obj)) {
     const key = prefix ? `${prefix}.${k}` : k
     if (typeof v === 'string') {
-      result.push({ key, ru: v })
+      result.push({ key })
     } else if (v && typeof v === 'object' && !Array.isArray(v)) {
       result.push(...flattenI18n(v, key))
     }
     // пропускаем функции (exercisesWaiting и т.п.)
   }
   return result
+}
+
+function getNestedValue(obj, keys) {
+  let v = obj
+  for (const k of keys) v = v?.[k]
+  return typeof v === 'string' ? v : ''
 }
 
 const LANGS = [
@@ -34,28 +49,15 @@ const LANGS = [
   { code: 'sq', label: 'SQ', flag: '🇦🇱' },
 ]
 
-// Интерфейсные переводы (из локальных i18n файлов)
-const I18N_FLAT = flattenI18n(ru).map(row => ({
-  ...row,
-  en: (() => {
-    const keys = row.key.split('.')
-    let v = en
-    for (const k of keys) v = v?.[k]
-    return typeof v === 'string' ? v : ''
-  })(),
-  de: (() => {
-    const keys = row.key.split('.')
-    let v = de
-    for (const k of keys) v = v?.[k]
-    return typeof v === 'string' ? v : ''
-  })(),
-  uk: (() => {
-    const keys = row.key.split('.')
-    let v = uk
-    for (const k of keys) v = v?.[k]
-    return typeof v === 'string' ? v : ''
-  })(),
-}))
+// Интерфейсные переводы (из всех 10 локальных i18n файлов)
+const I18N_FLAT = flattenI18n(ru).map(row => {
+  const keys = row.key.split('.')
+  const entry = { key: row.key }
+  for (const [code, translations] of Object.entries(ALL_I18N)) {
+    entry[code] = getNestedValue(translations, keys)
+  }
+  return entry
+})
 
 const GROUPS = [
   { id: 'words',     icon: '📖', label: 'Слова словаря',      desc: 'Немецкие слова с переводами на все языки' },
@@ -80,6 +82,7 @@ function hl(text, q) {
 }
 
 export default function Translations() {
+  const { user } = useAuthStore()
   const [words, setWords]         = useState([])
   const [lessons, setLessons]     = useState([])
   const [phrases, setPhrases]     = useState([])
@@ -221,7 +224,10 @@ export default function Translations() {
         <WordsTable words={filteredWords} visibleLangs={visibleLangs} q={q} />
       )}
       {activeGroup === 'lessons' && (
-        <LessonsTable lessons={filteredLessons} visibleLangs={visibleLangs} q={q} />
+        <LessonsTable lessons={filteredLessons} visibleLangs={visibleLangs} q={q}
+          isOwner={user?.role === 'owner'}
+          onUpdate={updated => setLessons(prev => prev.map(l => l.id === updated.id ? { ...l, ...updated } : l))}
+        />
       )}
       {activeGroup === 'phrasebook' && (
         <PhrasesTable phrases={filteredPhrases} q={q} />
@@ -275,38 +281,114 @@ function WordsTable({ words, visibleLangs, q }) {
   )
 }
 
-function LessonsTable({ lessons, visibleLangs, q }) {
+const ALL_LANGS = ['ru', 'en', 'de', 'uk', 'fr', 'tr', 'ar', 'bg', 'es', 'sq']
+
+function LessonsTable({ lessons, visibleLangs, q, isOwner, onUpdate }) {
+  const [editingId, setEditingId] = useState(null)
+  const [editTrans, setEditTrans] = useState({})
+  const [saving, setSaving]       = useState(false)
+
   if (!lessons.length) return <Empty q={q} />
-  const SHOW_LANGS = ['de', 'en', 'ru', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
-  const effective = visibleLangs.filter(l => SHOW_LANGS.includes(l))
+
+  const startEdit = (lesson) => {
+    setEditingId(lesson.id)
+    setEditTrans(lesson.title_translations || {})
+  }
+
+  const cancelEdit = () => { setEditingId(null); setEditTrans({}) }
+
+  const saveEdit = async (lessonId) => {
+    setSaving(true)
+    try {
+      const body = Object.fromEntries(Object.entries(editTrans).filter(([, v]) => v && v.trim()))
+      const updated = await api.patch(`/lessons/${lessonId}`, { title_translations: body })
+      onUpdate(updated)
+      cancelEdit()
+    } catch (e) {
+      alert('Ошибка: ' + e.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {lessons.map(l => {
-        const tr = l.title_translations || {}
+      {lessons.map(lesson => {
+        const trans = lesson.title_translations || {}
+        const isEditing = editingId === lesson.id
+        const filled = ALL_LANGS.filter(c => trans[c]).length
         return (
-          <div key={l.id} style={{ border: '1px solid var(--line)', borderRadius: 10, background: 'var(--surface)', overflow: 'hidden' }}>
-            <div style={{ padding: '10px 14px', background: 'var(--surface-2)', borderBottom: '1px solid var(--line)', fontWeight: 700, fontSize: 14 }}>
-              {hl(l.title, q)}
+          <div key={lesson.id} style={{ border: '1px solid var(--line)', borderRadius: 10, background: 'var(--surface)', overflow: 'hidden' }}>
+            {/* Заголовок урока */}
+            <div style={{ padding: '10px 14px', background: 'var(--surface-2)', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>{hl(lesson.title, q)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{filled}/{ALL_LANGS.length}</span>
+                {isOwner && !isEditing && (
+                  <button onClick={() => startEdit(lesson)}
+                    title="Редактировать переводы"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: '2px 6px', borderRadius: 6, fontSize: 13 }}>
+                    <i className="bi bi-pencil-fill" />
+                  </button>
+                )}
+              </div>
             </div>
-            {l.description && (
+
+            {lesson.description && (
               <div style={{ padding: '6px 14px', fontSize: 12, color: 'var(--ink-soft)', borderBottom: '1px solid var(--line)' }}>
-                {hl(l.description, q)}
+                {hl(lesson.description, q)}
               </div>
             )}
-            <div style={{ padding: '8px 14px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {effective.map(code => {
-                const v = tr[code]
-                if (!v) return null
-                const lang = LANGS.find(x => x.code === code)
-                return (
-                  <span key={code} style={{ fontSize: 12, background: 'var(--surface-2)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)' }}>
-                    <span style={{ opacity: 0.5, marginRight: 4 }}>{lang?.flag}</span>
-                    {hl(v, q)}
-                  </span>
-                )
-              })}
-              {effective.every(c => !tr[c]) && <span style={{ color: 'var(--ink-soft)', fontSize: 12 }}>Переводы не добавлены</span>}
-            </div>
+
+            {/* Режим просмотра */}
+            {!isEditing && (
+              <div style={{ padding: '8px 14px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {ALL_LANGS.filter(c => visibleLangs.includes(c)).map(code => {
+                  const v = trans[code]
+                  if (!v) return null
+                  const lang = LANGS.find(x => x.code === code)
+                  return (
+                    <span key={code} style={{ fontSize: 12, background: 'var(--surface-2)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)' }}>
+                      <span style={{ opacity: 0.5, marginRight: 4 }}>{lang?.flag}</span>
+                      {hl(v, q)}
+                    </span>
+                  )
+                })}
+                {ALL_LANGS.filter(c => visibleLangs.includes(c)).every(c => !trans[c]) && (
+                  <span style={{ color: 'var(--ink-soft)', fontSize: 12 }}>Переводы не добавлены</span>
+                )}
+              </div>
+            )}
+
+            {/* Режим редактирования (только owner) */}
+            {isEditing && (
+              <div style={{ padding: '10px 14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '5px 12px', marginBottom: 10 }}>
+                  {LANGS.map(({ code, flag, label }) => (
+                    <div key={code} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 12, width: 32, flexShrink: 0, color: 'var(--ink-soft)' }}>{flag} {label}</span>
+                      <input
+                        value={editTrans[code] || ''}
+                        onChange={e => setEditTrans(prev => ({ ...prev, [code]: e.target.value }))}
+                        style={{ flex: 1, fontSize: 13, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' }}
+                        dir={code === 'ar' ? 'rtl' : 'ltr'}
+                        placeholder={code === 'de' ? 'оригинал (нем.)' : ''}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => saveEdit(lesson.id)} disabled={saving}
+                    style={{ padding: '6px 16px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+                    {saving ? '...' : '✓ Сохранить'}
+                  </button>
+                  <button onClick={cancelEdit}
+                    style={{ padding: '6px 12px', background: 'none', color: 'var(--ink-soft)', border: 'none', cursor: 'pointer', fontSize: 13 }}>
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )
       })}
@@ -333,24 +415,17 @@ function PhrasesTable({ phrases, q }) {
 
 function InterfaceTable({ rows, visibleLangs, q }) {
   if (!rows.length) return <Empty q={q} />
-  // Показываем только ru/en/de/uk (у нас есть эти файлы локально)
-  const local = visibleLangs.filter(l => ['ru', 'en', 'de', 'uk'].includes(l))
-  if (!local.length) return (
-    <div style={{ padding: 20, textAlign: 'center', color: 'var(--ink-soft)', fontSize: 14 }}>
-      Выбери RU, EN, DE или UK — только они доступны для интерфейса
-    </div>
-  )
   return (
     <div>
-      <ColHeader langs={local} />
+      <ColHeader langs={visibleLangs} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {rows.map(row => (
-          <div key={row.key} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${local.length}, 1fr)`, gap: 0, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', overflow: 'hidden', fontSize: 12 }}>
+          <div key={row.key} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${visibleLangs.length}, 1fr)`, gap: 0, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', overflow: 'hidden', fontSize: 12 }}>
             <div style={{ padding: '7px 10px', background: 'var(--surface-2)', borderRight: '1px solid var(--line)', fontFamily: 'monospace', color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {hl(row.key, q)}
             </div>
-            {local.map((code, i) => (
-              <div key={code} style={{ padding: '7px 10px', borderRight: i < local.length - 1 ? '1px solid var(--line)' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {visibleLangs.map((code, i) => (
+              <div key={code} style={{ padding: '7px 10px', borderRight: i < visibleLangs.length - 1 ? '1px solid var(--line)' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', dir: code === 'ar' ? 'rtl' : undefined }}>
                 {hl(row[code] || '', q) || <span style={{ opacity: 0.3 }}>—</span>}
               </div>
             ))}

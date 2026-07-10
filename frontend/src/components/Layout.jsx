@@ -68,14 +68,14 @@ export default function Layout({ children }) {
   }
 
   const adminOps = user?.role === 'owner' ? [
-    { name: 'fetch-images',              label: t.courses.opFetchImages,        endpoint: '/admin/fetch-images' },
-    { name: 'enrich-words',              label: t.courses.opEnrichWords,        endpoint: '/admin/enrich-words' },
-    { name: 'translate-sentences',       label: t.courses.opTranslate,          endpoint: '/admin/translate-sentences' },
-    { name: 'translate-words-all-langs', label: t.courses.opTranslateAllLangs,  endpoint: '/admin/translate-words-all-langs' },
-    { name: 'translate-exercises',       label: t.courses.opTranslateExercises, endpoint: '/admin/translate-exercises' },
-    { name: 'add-speech-all',            label: 'Произношение всем урокам',     endpoint: '/admin/add-speech-all' },
-    { name: 'translate-lesson-titles',   label: 'Перевести названия уроков',    endpoint: '/admin/translate-lesson-titles' },
-    { name: 'regenerate-all',            label: 'Пересоздать упражнения',        endpoint: '/admin/regenerate-all' },
+    { name: 'fetch-images',              icon: 'bi-image-fill',              label: 'Картинки',           hint: 'Скачивает картинки Unsplash для слов без фото',                endpoint: '/admin/fetch-images' },
+    { name: 'enrich-words',              icon: 'bi-stars',                   label: 'Словарь++',          hint: 'Добавляет примеры предложений через GPT',                      endpoint: '/admin/enrich-words' },
+    { name: 'translate-sentences',       icon: 'bi-translate',               label: 'Фразы → RU',         hint: 'Переводит немецкие предложения на русский язык',               endpoint: '/admin/translate-sentences' },
+    { name: 'translate-words-all-langs', icon: 'bi-globe2',                  label: 'Слова → 10 языков',  hint: 'Переводит слова словаря на все 10 языков интерфейса',           endpoint: '/admin/translate-words-all-langs' },
+    { name: 'translate-exercises',       icon: 'bi-journal-richtext',        label: 'Упражнения → языки', hint: 'Переводит варианты и подсказки в упражнениях',                 endpoint: '/admin/translate-exercises' },
+    { name: 'add-speech-all',            icon: 'bi-soundwave',               label: 'Произношение',       hint: 'Добавляет упражнения на произношение ко всем урокам',          endpoint: '/admin/add-speech-all' },
+    { name: 'translate-lesson-titles',   icon: 'bi-card-heading',            label: 'Названия → языки',   hint: 'Переводит названия уроков на все 10 языков',                   endpoint: '/admin/translate-lesson-titles' },
+    { name: 'regenerate-all',            icon: 'bi-arrow-counterclockwise',  label: 'Пересоздать всё',    hint: '⚠️ Удаляет прогресс и пересоздаёт упражнения для ВСЕХ уроков', endpoint: '/admin/regenerate-all' },
   ] : []
 
   useEffect(() => { setOpen(false) }, [location.pathname])
@@ -135,18 +135,18 @@ export default function Layout({ children }) {
     { to: '/vocabulary?status=learning',  icon: 'bi-journal-bookmark-fill',     label: t.nav.learningWords },
     { to: '/reader',                      icon: 'bi-eyeglasses',                label: t.nav.reader },
     { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
-    { to: '/translations',               icon: 'bi-globe2',                    label: 'Переводы' },
   ]
 
   const classItems = user?.role === 'owner' ? [
-    { to: '/courses',   icon: 'bi-mortarboard-fill', label: t.nav.courses },
-    { to: '/students',  icon: 'bi-people-fill',      label: t.nav.students },
-    { to: '/report',    icon: 'bi-bar-chart-fill',   label: 'Отчёт' },
+    { to: '/courses',      icon: 'bi-mortarboard-fill', label: t.nav.courses },
+    { to: '/students',     icon: 'bi-people-fill',      label: t.nav.students },
+    { to: '/translations', icon: 'bi-globe2',           label: 'Переводы' },
+    { to: '/report',       icon: 'bi-bar-chart-fill',   label: 'Отчёт' },
   ] : []
 
   const adminLinks = user?.role === 'owner' ? [
-    { to: '/lessons/new', label: '+ ' + (t.nav.newLesson  || 'Новый урок') },
-    { to: '/register',    label: '+ ' + (t.nav.addStudent || 'Новый ученик') },
+    { to: '/lessons/new', icon: 'bi-plus-circle-fill', label: t.nav.newLesson  || 'Новый урок' },
+    { to: '/register',    icon: 'bi-person-plus-fill', label: t.nav.addStudent || 'Новый ученик' },
   ] : []
 
   const NavItem = ({ item, onClick }) => {
@@ -264,21 +264,26 @@ export default function Layout({ children }) {
               <i className={`bi ${adminExpanded ? 'bi-chevron-up' : 'bi-chevron-down'}`} style={{ fontSize: 11, color: 'var(--ink-soft)' }} />
             </button>
             {adminExpanded && (
-              <div style={{ padding: '0 12px 6px' }}>
+              <div style={{ padding: '2px 8px 8px' }}>
+                {/* Ссылки — Новый урок / Новый ученик */}
                 {adminLinks.length > 0 && (
-                  <div style={{ marginBottom: adminOps.length ? 4 : 0, paddingBottom: adminOps.length ? 4 : 0, borderBottom: adminOps.length ? '1px solid var(--line)' : 'none' }}>
+                  <div style={{ marginBottom: 2, paddingBottom: 6, borderBottom: '1px solid var(--line)' }}>
                     {adminLinks.map(link => (
                       <Link key={link.to} to={link.to} onClick={close}
                         style={{
-                          display: 'block', padding: '5px 8px', borderRadius: 7,
-                          fontSize: 12, color: 'var(--accent)', textDecoration: 'none',
-                          fontWeight: 600, marginBottom: 1,
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '7px 10px', borderRadius: 9,
+                          textDecoration: 'none', color: 'var(--accent)',
+                          fontWeight: 600, fontSize: 13, marginBottom: 1,
+                          transition: 'background .15s',
                         }}>
+                        <i className={`bi ${link.icon}`} style={{ width: 17, textAlign: 'center', fontSize: 14, flexShrink: 0 }} />
                         {link.label}
                       </Link>
                     ))}
                   </div>
                 )}
+                {/* Операции */}
                 {adminOps.map(op => {
                   const running = adminOp.status === 'running' && adminOp.name === op.name
                   const done    = adminOp.status === 'done'    && adminOp.name === op.name
@@ -286,25 +291,32 @@ export default function Layout({ children }) {
                     <button key={op.name}
                       onClick={() => runOp(op.name, op.endpoint)}
                       disabled={adminOp.status === 'running'}
-                      title={op.label}
+                      title={op.hint}
                       style={{
-                        display: 'block', width: '100%', textAlign: 'left',
-                        padding: '5px 8px', borderRadius: 7,
-                        border: 'none', background: 'transparent',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        width: '100%', textAlign: 'left',
+                        padding: '7px 10px', borderRadius: 9,
+                        border: 'none',
+                        background: running ? 'var(--accent-soft)' : done ? 'var(--good-soft, rgba(34,197,94,.12))' : 'transparent',
                         color: running ? 'var(--accent)' : done ? 'var(--good)' : 'var(--ink-soft)',
-                        cursor: adminOp.status === 'running' ? 'default' : 'pointer',
-                        fontSize: 12, fontWeight: running ? 700 : 400,
-                        opacity: adminOp.status === 'running' && !running ? 0.4 : 1,
-                        marginBottom: 1,
+                        cursor: adminOp.status === 'running' && !running ? 'default' : 'pointer',
+                        fontSize: 13, fontWeight: running ? 700 : 400,
+                        opacity: adminOp.status === 'running' && !running ? 0.35 : 1,
+                        marginBottom: 1, transition: 'background .15s',
                       }}>
-                      {running
-                        ? `⏳ ${op.label} ${adminOp.total > 0 ? `${adminOp.done}/${adminOp.total}` : '...'}`
-                        : done ? `✓ ${op.label}` : op.label}
+                      <i className={`bi ${running ? 'bi-hourglass-split' : done ? 'bi-check2-circle' : op.icon}`}
+                         style={{ width: 17, textAlign: 'center', fontSize: 14, flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 12, lineHeight: 1.2 }}>
+                        {running && adminOp.total > 0 ? `${op.label} ${adminOp.done}/${adminOp.total}` : op.label}
+                      </span>
                     </button>
                   )
                 })}
                 {adminOp.status === 'error' && (
-                  <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 3 }}>✗ {adminOp.error}</div>
+                  <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="bi bi-exclamation-circle-fill" style={{ flexShrink: 0 }} />
+                    {adminOp.error}
+                  </div>
                 )}
               </div>
             )}
