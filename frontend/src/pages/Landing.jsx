@@ -2,6 +2,58 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18nStore } from '../store/i18n.js'
 import LangSwitcher from '../components/LangSwitcher.jsx'
+import { speak } from '../hooks/useSpeech.jsx'
+
+const ALPHA_PREVIEW = [
+  { l: 'A', n: 'a',    ipa: 'аа' }, { l: 'B', n: 'be',   ipa: 'бэ' },
+  { l: 'D', n: 'de',   ipa: 'дэ' }, { l: 'E', n: 'e',    ipa: 'э'  },
+  { l: 'G', n: 'ge',   ipa: 'гэ' }, { l: 'H', n: 'ha',   ipa: 'хаа'},
+  { l: 'I', n: 'i',    ipa: 'ии' }, { l: 'K', n: 'ka',   ipa: 'каа'},
+  { l: 'O', n: 'o',    ipa: 'оо' }, { l: 'R', n: 'er',   ipa: 'эр' },
+  { l: 'S', n: 'es',   ipa: 'эс' }, { l: 'T', n: 'te',   ipa: 'тэ' },
+  { l: 'U', n: 'u',    ipa: 'уу' }, { l: 'W', n: 'we',   ipa: 'вэ' },
+  { l: 'Z', n: 'zet',  ipa: 'цэт'}, { l: 'Ä', n: 'ä',   ipa: 'э↑' },
+  { l: 'Ö', n: 'ö',    ipa: 'о↑' }, { l: 'Ü', n: 'ü',   ipa: 'у↑' },
+]
+
+function AlphabetPreview() {
+  const [active, setActive] = useState(null)
+  const play = (item) => {
+    speak(item.n, 'de-DE')
+    setActive(item.l)
+    setTimeout(() => setActive(null), 1000)
+  }
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+      {ALPHA_PREVIEW.map(item => (
+        <button key={item.l} onClick={() => play(item)}
+          style={{
+            width: 70, padding: '10px 4px',
+            border: `2px solid ${active === item.l ? 'var(--accent)' : 'var(--line)'}`,
+            borderRadius: 12, background: active === item.l ? 'var(--accent-soft)' : 'var(--surface)',
+            cursor: 'pointer', textAlign: 'center',
+            transition: 'all .15s',
+          }}>
+          <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--ink)', fontFamily: 'Georgia,serif', lineHeight: 1 }}>
+            {item.l}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>«{item.ipa}»</div>
+          <div style={{ fontSize: 10, color: 'var(--ink-soft)', marginTop: 1 }}>{item.n}</div>
+        </button>
+      ))}
+      <Link to="/register" style={{
+        width: 70, padding: '10px 4px',
+        border: '2px dashed var(--accent)', borderRadius: 12,
+        background: 'transparent', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 4,
+        textDecoration: 'none', color: 'var(--accent)', fontSize: 12, fontWeight: 700,
+      }}>
+        <span style={{ fontSize: 20 }}>+</span>
+        <span>Все 30</span>
+      </Link>
+    </div>
+  )
+}
 
 // Контент лендинга на всех поддерживаемых языках
 const L = {
@@ -497,6 +549,17 @@ export default function Landing() {
             {c.cta} →
           </Link>
         </div>
+      </section>
+
+      {/* Алфавит с произношением */}
+      <section style={{ maxWidth: 900, margin: '0 auto 48px', padding: '0 16px' }}>
+        <h2 style={{ textAlign: 'center', fontWeight: 800, fontSize: 22, marginBottom: 6, color: 'var(--ink)' }}>
+          🔤 Алфавит с произношением
+        </h2>
+        <p style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 14, marginBottom: 20 }}>
+          Нажми на букву — услышишь как она называется по-немецки
+        </p>
+        <AlphabetPreview />
       </section>
 
       {/* Установка как PWA */}

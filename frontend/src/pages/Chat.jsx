@@ -3,17 +3,11 @@ import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 
-const POLL_INTERVAL = 15_000 // 15 секунд
+const POLL_INTERVAL = 15_000
 
-const TYPE_LABELS = {
-  ru: { support: '🛠️ Техподдержка', teacher: '👨‍🏫 Учителю' },
-  en: { support: '🛠️ Support', teacher: '👨‍🏫 Teacher' },
-  de: { support: '🛠️ Support', teacher: '👨‍🏫 Lehrer' },
-  uk: { support: '🛠️ Підтримка', teacher: '👨‍🏫 Вчителю' },
-}
-
-function typeLabel(lang, type) {
-  return (TYPE_LABELS[lang] || TYPE_LABELS.en)[type] || type
+const TYPE_META = {
+  support: { icon: '🛠️', label: 'Техподдержка', labelEn: 'Support' },
+  teacher: { icon: '👨‍🏫', label: 'Учителю', labelEn: 'Teacher' },
 }
 
 export default function Chat() {
@@ -22,21 +16,21 @@ export default function Chat() {
   const isOwner = user?.role === 'owner'
 
   const [conversations, setConversations] = useState([])
-  const [activeId, setActiveId] = useState(null)
-  const [messages, setMessages]   = useState([])
-  const [body, setBody]           = useState('')
-  const [sending, setSending]     = useState(false)
-  const [loading, setLoading]     = useState(true)
+  const [activeId, setActiveId]     = useState(null)
+  const [messages, setMessages]     = useState([])
+  const [body, setBody]             = useState('')
+  const [sending, setSending]       = useState(false)
+  const [loading, setLoading]       = useState(true)
+  const [mobileView, setMobileView] = useState('list') // 'list' | 'chat'
   const messagesEndRef = useRef(null)
+  const textareaRef    = useRef(null)
   const pollRef        = useRef(null)
 
   const loadConversations = useCallback(async () => {
     try {
       const data = await api.get('/chat/conversations')
       setConversations(data)
-    } catch (e) {
-      console.error('chat conversations:', e)
-    }
+    } catch (e) { console.error('chat/conversations:', e) }
   }, [])
 
   const loadMessages = useCallback(async (id) => {
@@ -44,52 +38,40 @@ export default function Chat() {
     try {
       const data = await api.get(`/chat/conversations/${id}/messages`)
       setMessages(data)
-    } catch (e) {
-      console.error('chat messages:', e)
-    }
+    } catch (e) { console.error('chat/messages:', e) }
   }, [])
 
-  // Первичная загрузка
   useEffect(() => {
     loadConversations().finally(() => setLoading(false))
   }, [loadConversations])
 
-  // Если ученик — авто-открываем первую беседу или создаём поддержку
-  useEffect(() => {
-    if (isOwner || loading) return
-    if (conversations.length > 0 && !activeId) {
-      setActiveId(conversations[0].id)
-    }
-  }, [conversations, isOwner, loading, activeId])
-
-  // Загрузка сообщений при смене беседы
   useEffect(() => {
     if (!activeId) return
     loadMessages(activeId)
-
-    // Поллинг
     clearInterval(pollRef.current)
     pollRef.current = setInterval(() => {
       loadMessages(activeId)
       loadConversations()
     }, POLL_INTERVAL)
-
     return () => clearInterval(pollRef.current)
   }, [activeId, loadMessages, loadConversations])
 
-  // Скролл вниз при новых сообщениях
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const openOrCreateConversation = async (type) => {
+  const openOrCreate = async (type) => {
     try {
       const conv = await api.post('/chat/conversations', { type })
       await loadConversations()
-      setActiveId(conv.id)
-    } catch (e) {
-      alert(e.message)
-    }
+      selectConv(conv.id)
+    } catch (e) { alert(e.message) }
+  }
+
+  const selectConv = (id) => {
+    setActiveId(id)
+    setMobileView('chat')
+    setTimeout(() => textareaRef.current?.focus(), 100)
   }
 
   const send = async (e) => {
@@ -98,113 +80,152 @@ export default function Chat() {
     setSending(true)
     try {
       const msg = await api.post(`/chat/conversations/${activeId}/messages`, { body: body.trim() })
-      setMessages(prev => [...prev, { ...msg, sender_name: user.name || user.email, sender_role: user.role }])
+      setMessages(prev => [...prev, { ...msg, sender_name: user?.name || user?.email, sender_role: user?.role }])
       setBody('')
-    } catch (err) {
-      alert(err.message)
-    }
+      setTimeout(() => textareaRef.current?.focus(), 50)
+    } catch (err) { alert(err.message) }
     setSending(false)
   }
 
   const activeConv = conversations.find(c => c.id === activeId)
 
-  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: 'var(--ink-soft)' }}>Загрузка...</div>
+  if (loading) return (
+    <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)', fontSize: 15 }}>
+      Загрузка...
+    </div>
+  )
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
-      {/* Боковая панель */}
+    <div className="full-page-layout" style={{ display: 'flex', background: 'var(--bg)' }}>
+
+      {/* ── Боковая панель (список бесед) ── */}
       <aside style={{
-        width: 260, flexShrink: 0, borderRight: '1px solid var(--line)',
-        background: 'var(--surface)', display: 'flex', flexDirection: 'column',
-      }}>
-        <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid var(--line)' }}>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10, color: 'var(--ink)' }}>
+        width: 260, flexShrink: 0,
+        borderRight: '1px solid var(--line)',
+        background: 'var(--surface)',
+        display: 'flex', flexDirection: 'column',
+        // на мобиле: показываем только при mobileView === 'list'
+        ...(mobileView === 'chat' ? { display: 'none' } : {}),
+      }}
+        className="chat-sidebar"
+      >
+        {/* Шапка списка */}
+        <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
             💬 Чат
           </div>
-          {/* Кнопки создания бесед (для студента) */}
           {!isOwner && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <button onClick={() => openOrCreateConversation('support')} style={newChatBtn}>
-                🛠️ Техподдержка
+              <button onClick={() => openOrCreate('support')} style={newBtn}>
+                🛠️ Написать в поддержку
               </button>
-              <button onClick={() => openOrCreateConversation('teacher')} style={newChatBtn}>
+              <button onClick={() => openOrCreate('teacher')} style={newBtn}>
                 👨‍🏫 Написать учителю
               </button>
             </div>
           )}
-        </div>
-
-        {/* Список бесед */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {conversations.length === 0 && (
-            <div style={{ padding: 16, color: 'var(--ink-soft)', fontSize: 13 }}>
-              Нет бесед. Начни первую!
+          {isOwner && (
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
+              Все входящие обращения
             </div>
           )}
-          {conversations.map(c => (
-            <div key={c.id} onClick={() => setActiveId(c.id)} style={{
-              padding: '12px 16px', cursor: 'pointer',
-              borderBottom: '1px solid var(--line)',
-              background: c.id === activeId ? 'var(--accent-soft)' : 'transparent',
-              borderLeft: c.id === activeId ? '3px solid var(--accent)' : '3px solid transparent',
-              transition: 'background .15s',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>
-                  {typeLabel(lang, c.type)}
-                </span>
-                {parseInt(c.unread) > 0 && (
-                  <span style={{
-                    background: 'var(--accent)', color: 'var(--accent-ink)',
-                    borderRadius: '50%', width: 20, height: 20,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 700,
-                  }}>
-                    {c.unread}
-                  </span>
-                )}
-              </div>
-              {isOwner && c.student_name && (
-                <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>
-                  {c.student_name}
-                </div>
-              )}
-              <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>
-                {new Date(c.updated_at).toLocaleDateString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-              </div>
+        </div>
+
+        {/* Список */}
+        <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          {conversations.length === 0 && !isOwner && (
+            <div style={{ padding: '20px 16px', color: 'var(--ink-soft)', fontSize: 13, lineHeight: 1.6 }}>
+              Нажми кнопку выше, чтобы написать в поддержку или учителю.
             </div>
-          ))}
+          )}
+          {conversations.length === 0 && isOwner && (
+            <div style={{ padding: '20px 16px', color: 'var(--ink-soft)', fontSize: 13 }}>
+              Пока нет обращений
+            </div>
+          )}
+          {conversations.map(c => {
+            const meta = TYPE_META[c.type] || {}
+            const unread = parseInt(c.unread) || 0
+            return (
+              <div key={c.id} onClick={() => selectConv(c.id)} style={{
+                padding: '11px 14px', cursor: 'pointer',
+                borderBottom: '1px solid var(--line)',
+                background: c.id === activeId ? 'var(--accent-soft)' : 'transparent',
+                borderLeft: `3px solid ${c.id === activeId ? 'var(--accent)' : 'transparent'}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
+                  <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>
+                    {meta.icon} {meta.label}
+                  </span>
+                  {unread > 0 && (
+                    <span style={{
+                      background: 'var(--red)', color: '#fff', borderRadius: 20,
+                      padding: '1px 7px', fontSize: 11, fontWeight: 700, flexShrink: 0,
+                    }}>{unread}</span>
+                  )}
+                </div>
+                {isOwner && c.student_name && (
+                  <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
+                    {c.student_name}
+                  </div>
+                )}
+                <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 3 }}>
+                  {new Date(c.updated_at).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </aside>
 
-      {/* Область переписки */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* ── Область переписки ── */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0,
+        // на мобиле: показываем только при mobileView === 'chat'
+        ...(mobileView === 'list' ? { display: 'none' } : {}),
+      }}
+        className="chat-messages-pane"
+      >
         {!activeId ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontSize: 40 }}>💬</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, color: 'var(--ink-soft)' }}>
+            <span style={{ fontSize: 48 }}>💬</span>
             <div style={{ fontSize: 15 }}>Выбери беседу слева</div>
           </div>
         ) : (
           <>
             {/* Шапка чата */}
             <div style={{
-              padding: '12px 20px', borderBottom: '1px solid var(--line)',
-              background: 'var(--surface)', fontWeight: 700, fontSize: 15,
-              color: 'var(--ink)',
+              padding: '12px 16px', borderBottom: '1px solid var(--line)',
+              background: 'var(--surface)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
             }}>
-              {activeConv && typeLabel(lang, activeConv.type)}
-              {isOwner && activeConv?.student_name && (
-                <span style={{ fontWeight: 400, fontSize: 13, color: 'var(--ink-soft)', marginLeft: 8 }}>
-                  · {activeConv.student_name}
-                </span>
-              )}
+              {/* Кнопка "назад" — только мобиль */}
+              <button onClick={() => setMobileView('list')} className="chat-back-btn"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px',
+                  color: 'var(--accent)', fontSize: 16, fontWeight: 700, flexShrink: 0,
+                }}>
+                ← Назад
+              </button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>
+                  {activeConv && `${TYPE_META[activeConv.type]?.icon} ${TYPE_META[activeConv.type]?.label}`}
+                </div>
+                {isOwner && activeConv?.student_name && (
+                  <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
+                    {activeConv.student_name}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Сообщения */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{
+              flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+              padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 8,
+            }}>
               {messages.length === 0 && (
-                <div style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 13, marginTop: 32 }}>
-                  Нет сообщений. Напиши первым!
+                <div style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 13, marginTop: 40 }}>
+                  Начни разговор — напиши первое сообщение ниже
                 </div>
               )}
               {messages.map(m => {
@@ -212,21 +233,21 @@ export default function Chat() {
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     <div style={{
-                      maxWidth: '75%', padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                      maxWidth: '78%', padding: '9px 13px',
+                      borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                       background: isMine ? 'var(--accent)' : 'var(--surface-2)',
                       color: isMine ? 'var(--accent-ink)' : 'var(--ink)',
                       fontSize: 14, lineHeight: 1.55,
                     }}>
                       {!isMine && (
-                        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, opacity: 0.7 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 3, opacity: 0.7 }}>
                           {m.sender_name}
                         </div>
                       )}
                       <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.body}</div>
-                      <div style={{ fontSize: 10, opacity: 0.6, marginTop: 4, textAlign: 'right' }}>
+                      <div style={{ fontSize: 10, opacity: 0.55, marginTop: 3, textAlign: 'right' }}>
                         {new Date(m.created_at).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
-                        {isMine && m.read_at && ' ✓✓'}
-                        {isMine && !m.read_at && ' ✓'}
+                        {isMine && (m.read_at ? ' ✓✓' : ' ✓')}
                       </div>
                     </div>
                   </div>
@@ -235,29 +256,31 @@ export default function Chat() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Поле ввода */}
+            {/* Ввод сообщения */}
             <form onSubmit={send} style={{
-              padding: '12px 16px', borderTop: '1px solid var(--line)',
-              background: 'var(--surface)', display: 'flex', gap: 10,
+              padding: '10px 12px', borderTop: '1px solid var(--line)',
+              background: 'var(--surface)', display: 'flex', gap: 8, flexShrink: 0,
             }}>
               <textarea
+                ref={textareaRef}
                 value={body}
                 onChange={e => setBody(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e) } }}
-                placeholder="Напиши сообщение… (Enter — отправить)"
+                placeholder="Сообщение… (Enter — отправить, Shift+Enter — перенос)"
                 rows={2}
                 style={{
-                  flex: 1, resize: 'none', borderRadius: 12, padding: '10px 14px',
-                  fontSize: 14, border: '1px solid var(--line)',
-                  background: 'var(--surface-2)', color: 'var(--ink)',
+                  flex: 1, resize: 'none', borderRadius: 12, padding: '9px 13px',
+                  fontSize: 14, border: '1px solid var(--line)', fontFamily: 'inherit',
+                  background: 'var(--surface-2)', color: 'var(--ink)', outline: 'none',
+                  WebkitAppearance: 'none',
                 }}
               />
               <button type="submit" disabled={!body.trim() || sending} style={{
-                padding: '0 20px', borderRadius: 12,
+                padding: '0 18px', borderRadius: 12, border: 'none', fontSize: 18,
                 background: body.trim() ? 'var(--accent)' : 'var(--surface-2)',
                 color: body.trim() ? 'var(--accent-ink)' : 'var(--ink-soft)',
-                border: 'none', fontWeight: 700, fontSize: 15, cursor: body.trim() ? 'pointer' : 'default',
-                transition: 'background .15s',
+                cursor: body.trim() ? 'pointer' : 'default',
+                transition: 'background .15s', flexShrink: 0, alignSelf: 'stretch',
               }}>
                 {sending ? '⏳' : '→'}
               </button>
@@ -265,12 +288,28 @@ export default function Chat() {
           </>
         )}
       </div>
+
+      {/* Стили для адаптивности */}
+      <style>{`
+        /* На мобиле: полноэкранные панели по очереди */
+        @media (max-width: 767px) {
+          .chat-sidebar { width: 100% !important; }
+          .chat-messages-pane { }
+          .chat-back-btn { display: inline-block !important; }
+        }
+        /* На десктопе: обе панели рядом, кнопка назад скрыта */
+        @media (min-width: 768px) {
+          .chat-sidebar { display: flex !important; }
+          .chat-messages-pane { display: flex !important; }
+          .chat-back-btn { display: none !important; }
+        }
+      `}</style>
     </div>
   )
 }
 
-const newChatBtn = {
-  width: '100%', padding: '8px 12px', borderRadius: 8, fontSize: 13,
+const newBtn = {
+  width: '100%', padding: '9px 12px', borderRadius: 9, fontSize: 13,
   background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)',
-  cursor: 'pointer', fontWeight: 600, textAlign: 'left',
+  cursor: 'pointer', fontWeight: 600, textAlign: 'left', lineHeight: 1.4,
 }

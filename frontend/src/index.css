@@ -120,6 +120,25 @@ a { color: var(--accent); text-decoration: none; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 
+/* Полноэкранный контент (чат и др.) — убирает паддинги main-content */
+.full-page-layout {
+  margin: -56px -10px -76px; /* мобиль: убираем padding-top, sides и nav */
+  height: 100dvh;
+  overflow: hidden;
+}
+@media (min-width: 641px) {
+  .full-page-layout {
+    margin: -56px -16px 0;
+    height: calc(100dvh - 56px);
+  }
+}
+@media (min-width: 1024px) {
+  .full-page-layout {
+    margin: -20px -32px;
+    height: calc(100dvh - 20px);
+  }
+}
+
 /* ── Сплит-вью: Словарь + Читалка ── */
 .vocab-reader-right { display: none; }
 

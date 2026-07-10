@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSettingsStore } from '../store/settings.js'
+import { useAuthStore } from '../store/auth.js'
 
 const FONTS = [
   { id: 'Roboto',       label: 'Roboto',       sample: 'Стандартный шрифт приложения' },
@@ -50,10 +51,12 @@ function Row({ label, hint, children }) {
 
 export default function Settings() {
   const store = useSettingsStore()
+  const { user } = useAuthStore()
+  const isOwner = user?.role === 'owner'
   const [saved, setSaved] = useState(false)
-  const [keyVisible, setKeyVisible] = useState(false)
+  const [keyVisible, setKeyVisible]   = useState(false)
+  const [smtpPassVisible, setSmtpPassVisible] = useState(false)
 
-  // Локальный черновик — применяем в реальном времени только визуальные
   const [draft, setDraft] = useState({
     daily_limit: store.daily_limit,
     openai_key:  store.openai_key,
@@ -61,6 +64,12 @@ export default function Settings() {
     fontFamily:  store.fontFamily,
     accentColor: store.accentColor,
     voiceRate:   store.voiceRate,
+    smtp_host:   store.smtp_host   || '',
+    smtp_port:   store.smtp_port   || 587,
+    smtp_secure: store.smtp_secure || false,
+    smtp_user:   store.smtp_user   || '',
+    smtp_pass:   store.smtp_pass   || '',
+    smtp_from:   store.smtp_from   || '',
   })
 
   useEffect(() => {
@@ -75,6 +84,12 @@ export default function Settings() {
       fontFamily:  store.fontFamily,
       accentColor: store.accentColor,
       voiceRate:   store.voiceRate,
+      smtp_host:   store.smtp_host   || '',
+      smtp_port:   store.smtp_port   || 587,
+      smtp_secure: store.smtp_secure || false,
+      smtp_user:   store.smtp_user   || '',
+      smtp_pass:   store.smtp_pass   || '',
+      smtp_from:   store.smtp_from   || '',
     })
   }, [store.loaded])
 
@@ -248,17 +263,70 @@ export default function Settings() {
               <i className={`bi bi-eye${keyVisible ? '-slash' : ''}`} />
             </button>
           </div>
-          {draft.openai_key && (
-            <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 4 }}>
-              ✓ Ключ задан — ИИ будет использовать ваш аккаунт
-            </div>
-          )}
-          {!draft.openai_key && (
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>
-              Если не задан — используется ключ сервера
-            </div>
-          )}
+          {draft.openai_key && <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 4 }}>✓ Ключ задан</div>}
+          {!draft.openai_key && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>Если не задан — используется ключ сервера. Получить: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a></div>}
         </Row>
+
+        {/* SMTP — только для owner */}
+        {isOwner && (
+          <Row label="Email уведомления (SMTP)"
+            hint="Уведомления о новых сообщениях чата отправляются на sivtsov.pavel@gmail.com">
+            <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 16px', marginBottom: 8 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'var(--accent)' }}>
+                📧 Как получить Gmail App Password:
+              </div>
+              <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--ink-soft)', lineHeight: 1.8 }}>
+                <li>Открой <b>myaccount.google.com</b> → Безопасность</li>
+                <li>Включи двухэтапную аутентификацию (если не включена)</li>
+                <li>Перейди в <b>Безопасность → Пароли приложений</b></li>
+                <li>Создай новый: «Другое приложение» → «Deutsch.lernen»</li>
+                <li>Скопируй 16-символьный пароль — вставь ниже</li>
+              </ol>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 2 }}>
+                  <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>SMTP хост</label>
+                  <input value={draft.smtp_host} onChange={e => update('smtp_host', e.target.value)}
+                    placeholder="smtp.gmail.com" style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>Порт</label>
+                  <input type="number" value={draft.smtp_port} onChange={e => update('smtp_port', parseInt(e.target.value))}
+                    placeholder="587" style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>Email (логин)</label>
+                <input type="email" value={draft.smtp_user} onChange={e => update('smtp_user', e.target.value)}
+                  placeholder="sivtsov.pavel@gmail.com" style={{ width: '100%', fontSize: 13 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>App Password (не обычный пароль!)</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input type={smtpPassVisible ? 'text' : 'password'} value={draft.smtp_pass}
+                    onChange={e => update('smtp_pass', e.target.value)}
+                    placeholder="xxxx xxxx xxxx xxxx"
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: 13 }} />
+                  <button onClick={() => setSmtpPassVisible(v => !v)}
+                    style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', color: 'var(--ink-soft)' }}>
+                    <i className={`bi bi-eye${smtpPassVisible ? '-slash' : ''}`} />
+                  </button>
+                </div>
+              </div>
+              {draft.smtp_host && draft.smtp_user && draft.smtp_pass && (
+                <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 2 }}>
+                  ✓ SMTP настроен — письма будут отправляться при новых сообщениях в чате
+                </div>
+              )}
+              {(!draft.smtp_host || !draft.smtp_user || !draft.smtp_pass) && (
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
+                  Пока не настроен — уведомления только в Telegram
+                </div>
+              )}
+            </div>
+          </Row>
+        )}
       </Section>
 
       {/* Кнопка сохранения */}
