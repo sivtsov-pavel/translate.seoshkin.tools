@@ -36,12 +36,15 @@ function pickVoice() {
 export function speak(text, lang = 'de-DE', rate = 0.9) {
   if (!synth) return
   synth.cancel()
-  const utt = new SpeechSynthesisUtterance(text)
-  utt.lang = lang
-  utt.rate = rate
-  const v = pickVoice()
-  if (v) utt.voice = v
-  synth.speak(utt)
+  // Chrome bug: cancel() и speak() в одном тике → utterance молча сбрасывается
+  setTimeout(() => {
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.lang = lang
+    utt.rate = rate
+    const v = pickVoice()
+    if (v) utt.voice = v
+    synth.speak(utt)
+  }, 50)
 }
 
 export function speakAuto(text, lang = 'de-DE') {
