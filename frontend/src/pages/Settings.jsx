@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSettingsStore, applyVisual } from '../store/settings.js'
 import { useAuthStore } from '../store/auth.js'
+import { usePushNotifications } from '../hooks/usePushNotifications.jsx'
 
 const VOICE_KEY = 'de_voice_name'
 
@@ -486,6 +487,9 @@ export default function Settings() {
         )}
       </Section>
 
+      {/* Push уведомления */}
+      <PushSection />
+
       {/* Кнопка сохранения */}
       <button onClick={handleSave}
         style={{
@@ -497,6 +501,67 @@ export default function Settings() {
         }}>
         {saved ? '✓ Сохранено!' : 'Сохранить настройки'}
       </button>
+    </div>
+  )
+}
+
+function PushSection() {
+  const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications()
+  const [msg, setMsg] = useState('')
+
+  if (!supported) return null
+
+  const handleToggle = async () => {
+    if (subscribed) {
+      await unsubscribe()
+      setMsg('Уведомления отключены')
+    } else {
+      const ok = await subscribe()
+      setMsg(ok ? '✓ Уведомления включены! Каждый день в 09:00 придёт напоминание.' : 'Доступ к уведомлениям запрещён в настройках браузера.')
+    }
+    setTimeout(() => setMsg(''), 4000)
+  }
+
+  return (
+    <div style={{
+      background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, marginBottom: 16, overflow: 'hidden',
+    }}>
+      <div style={{ padding: '14px 18px 10px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--line)' }}>
+        <span style={{ fontSize: 18 }}>🔔</span>
+        <span style={{ fontWeight: 700, fontSize: 15 }}>Напоминания</span>
+      </div>
+      <div style={{ padding: '14px 18px' }}>
+        <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+          Каждый день в 09:00 — уведомление если есть слова для повторения и ты не заходил.
+          Работает даже когда сайт закрыт.
+        </p>
+
+        {permission === 'denied' ? (
+          <div style={{ fontSize: 13, color: 'var(--red)', padding: '10px 14px', background: 'rgba(239,68,68,.1)', borderRadius: 8 }}>
+            ⚠️ Уведомления заблокированы в браузере. Разреши их в настройках браузера для этого сайта.
+          </div>
+        ) : (
+          <button onClick={handleToggle} disabled={loading} style={{
+            padding: '10px 20px', borderRadius: 10, border: 'none', cursor: loading ? 'default' : 'pointer',
+            background: subscribed ? 'var(--surface-2)' : 'var(--accent)',
+            color: subscribed ? 'var(--ink)' : 'var(--accent-ink)',
+            fontWeight: 700, fontSize: 14,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            {loading ? '…' : subscribed ? (
+              <><i className="bi bi-bell-slash" /> Отключить</>
+            ) : (
+              <><i className="bi bi-bell-fill" /> Включить уведомления</>
+            )}
+          </button>
+        )}
+
+        {msg && (
+          <div style={{ marginTop: 10, fontSize: 13, color: msg.startsWith('✓') ? 'var(--good)' : 'var(--red)' }}>
+            {msg}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

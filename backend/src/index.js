@@ -17,6 +17,8 @@ import { readerRoutes } from './routes/reader.js'
 import { phrasebookRoutes } from './routes/phrasebook.js'
 import { settingsRoutes } from './routes/settings.js'
 import { chatRoutes } from './routes/chat.js'
+import { pushRoutes } from './routes/push.js'
+import { startReminderCron } from './services/reminders.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
 // Регистрация плагинов — выделено для переиспользования в тестах
@@ -43,6 +45,7 @@ async function registerRoutes(app) {
   await app.register(phrasebookRoutes)
   await app.register(settingsRoutes)
   await app.register(chatRoutes)
+  await app.register(pushRoutes)
   await app.register(mediaRoutes)
 }
 
@@ -57,6 +60,7 @@ export async function buildApp() {
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   const app = await buildApp()
   await runMigrationsOnStartup()
+  startReminderCron()
   await app.listen({ port: config.port, host: config.host })
   console.log(`Backend запущен на http://${config.host}:${config.port}`)
 }
