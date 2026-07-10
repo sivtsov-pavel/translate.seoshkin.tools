@@ -1,4 +1,4 @@
-import { db } from '../db/client.js'
+import { db } from '../db/index.js'
 
 export async function settingsRoutes(fastify) {
   fastify.get('/api/settings', {
