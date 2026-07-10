@@ -22,6 +22,9 @@ export default function Layout({ children }) {
   const [open, setOpen] = useState(false)
   const [adminExpanded, setAdminExpanded] = useState(false)
   const [unreadChat, setUnreadChat] = useState(0)
+  const [pushMsg, setPushMsg] = useState('')
+  const [pushSending, setPushSending] = useState(false)
+  const [pushResult, setPushResult] = useState(null)
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
 
@@ -318,6 +321,56 @@ export default function Layout({ children }) {
                     {adminOp.error}
                   </div>
                 )}
+                {/* Отправить push всем ученикам */}
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--line)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5, padding: '0 2px' }}>
+                    Push ученикам
+                  </div>
+                  <textarea
+                    value={pushMsg}
+                    onChange={e => { setPushMsg(e.target.value); setPushResult(null) }}
+                    placeholder="Сообщение..."
+                    rows={2}
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      padding: '6px 8px', borderRadius: 8, fontSize: 12,
+                      border: '1px solid var(--line)', background: 'var(--surface)',
+                      color: 'var(--ink)', resize: 'vertical', fontFamily: 'inherit',
+                    }}
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!pushMsg.trim()) return
+                      setPushSending(true)
+                      setPushResult(null)
+                      try {
+                        const res = await api.post('/push/send', { body: pushMsg.trim() })
+                        setPushResult(`✓ Отправлено ${res.sent ?? 1} уч.`)
+                        setPushMsg('')
+                      } catch (e) {
+                        setPushResult('Ошибка: ' + e.message)
+                      } finally {
+                        setPushSending(false)
+                      }
+                    }}
+                    disabled={pushSending || !pushMsg.trim()}
+                    style={{
+                      marginTop: 4, width: '100%',
+                      padding: '6px', borderRadius: 8,
+                      border: 'none', fontSize: 12, fontWeight: 600,
+                      background: 'var(--accent)', color: 'var(--accent-ink)',
+                      cursor: pushSending || !pushMsg.trim() ? 'default' : 'pointer',
+                      opacity: pushSending || !pushMsg.trim() ? 0.5 : 1,
+                    }}
+                  >
+                    <i className="bi bi-bell-fill" /> {pushSending ? 'Отправка…' : 'Отправить всем'}
+                  </button>
+                  {pushResult && (
+                    <div style={{ fontSize: 11, color: pushResult.startsWith('✓') ? 'var(--good)' : 'var(--red)', marginTop: 4, textAlign: 'center' }}>
+                      {pushResult}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

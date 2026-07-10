@@ -1,0 +1,32 @@
+{
+  "name": "Deutsch Lernen",
+  "short_name": "Deutsch",
+  "description": "Учи немецкий с умным повторением, диктантами и ИИ-объяснениями",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#C9A54A",
+  "orientation": "portrait-primary",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Начать повторение",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
