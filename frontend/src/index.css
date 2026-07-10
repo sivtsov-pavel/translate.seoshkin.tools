@@ -33,8 +33,6 @@
   color-scheme: light;
 }
 
-:root { --page-zoom: 1; }
-
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body, #root {
@@ -44,7 +42,7 @@ html, body, #root {
   background: var(--bg);
   color: var(--ink);
   font-family: 'Roboto', -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  font-size: calc(16px * var(--page-zoom));
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   transition: background .25s ease, color .25s ease;
 }
@@ -78,6 +76,8 @@ a { color: var(--accent); text-decoration: none; }
 
 /* Нижняя панель — скрыта на планшете+ */
 .bottom-nav { display: none; }
+/* Узкая полоса — скрыта по умолчанию, показывается на планшете */
+.layout-narrow-strip { display: none; }
 
 /* Мобиль ≤640px — нижняя панель и полная ширина */
 @media (max-width: 640px) {
@@ -100,42 +100,262 @@ a { color: var(--accent); text-decoration: none; }
   }
 }
 
+/* Планшет 641-1023px — узкая иконочная полоса слева */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .layout-narrow-strip { display: flex !important; }
+  .layout-hamburger { display: none !important; }
+  /* Топбар отступает вправо от полосы */
+  .layout-topbar { padding-left: 70px !important; }
+  .main-content {
+    padding-left: 76px; /* 60px strip + 16px gap */
+    padding-right: 24px;
+  }
+  /* Шрифт в открытом полноэкранном меню — крупнее */
+  .layout-drawer a, .layout-drawer button.nav-pill { font-size: 18px !important; }
+  .layout-drawer .sidebar-section { font-size: 13px !important; }
+}
+
 /* Десктоп ≥1024px — постоянный сайдбар */
+.layout-desktop-topbar { display: none; } /* скрыт по умолчанию */
+
 @media (min-width: 1024px) {
   .layout-topbar  { display: none !important; }
   .layout-drawer  { display: none !important; }
   .layout-overlay { display: none !important; }
   .layout-sidebar { display: flex !important; flex-direction: column; }
+  .layout-narrow-strip { display: none !important; }
+  .layout-desktop-topbar {
+    display: flex !important;
+    align-items: center;
+    position: fixed;
+    top: 3px; /* под флагом */
+    left: 220px;
+    right: 0;
+    height: 44px;
+    z-index: 99;
+    padding: 0 24px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
   .main-content {
     margin-left: 220px;
-    padding-top: 20px;
+    padding-top: 64px; /* 20px контент + 44px хедер */
     padding-left: 32px;
     padding-right: 32px;
     max-width: none;
   }
   .bottom-nav { display: none !important; }
+  .full-page-layout {
+    top: 47px !important; /* 3px флаг + 44px десктопный хедер */
+    left: 220px !important;
+    bottom: 0 !important;
+  }
 }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 
-/* Полноэкранный контент (чат и др.) — убирает паддинги main-content */
+/* Полноэкранный контент (чат) — CSS-переменные выставляет Layout.jsx через JS-измерение */
 .full-page-layout {
-  margin: -56px -10px -76px; /* мобиль: убираем padding-top, sides и nav */
-  height: 100dvh;
+  position: fixed;
+  top: var(--topbar-h, 64px);
+  left: 0;
+  right: 0;
+  bottom: var(--bottom-nav-h, 76px);
+  z-index: 5;
   overflow: hidden;
+  background: var(--bg);
+  overscroll-behavior: none;
 }
 @media (min-width: 641px) {
-  .full-page-layout {
-    margin: -56px -16px 0;
-    height: calc(100dvh - 56px);
-  }
+  .full-page-layout { bottom: 0; }
+}
+/* Планшет: сдвигаем на ширину узкой полосы */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .full-page-layout { left: 60px; }
 }
 @media (min-width: 1024px) {
   .full-page-layout {
-    margin: -20px -32px;
-    height: calc(100dvh - 20px);
+    top: 3px;
+    left: 220px;
+    bottom: 0;
+  }
+}
+
+/* ── Упражнения: картинка + контент ── */
+/* Базовый bleed — мобиль: полная ширина, оригинальные пропорции */
+.word-image-bleed {
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--surface-2);
+  position: relative;
+  flex-shrink: 0;
+}
+/* Планшет+: горизонтальный layout — картинка слева, заполняет высоту карточки */
+@media (min-width: 641px) {
+  .exercise-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch;
+  }
+  .exercise-card .word-image-bleed {
+    width: 220px !important;
+    height: auto !important;
+    aspect-ratio: unset !important;
+    min-height: 180px;
+    border-right: 1px solid var(--line) !important;
+    border-bottom: none !important;
+    flex-shrink: 0 !important;
+  }
+  .exercise-card-content { flex: 1; min-width: 0; overflow: hidden; }
+  /* Увеличенный шрифт в открытом меню на планшете */
+  .layout-drawer a[href] { font-size: 18px !important; padding: 12px 16px !important; }
+  .layout-drawer a[href] i { font-size: 20px !important; width: 22px !important; }
+}
+
+/* ── Мобильный strip-режим (настройка в Settings) — только мобиль ≤640px ── */
+@media (max-width: 640px) {
+  html.layout-mode-strip .layout-narrow-strip { display: flex !important; }
+  html.layout-mode-strip .bottom-nav { display: none !important; }
+  html.layout-mode-strip .main-content {
+    padding-left: 76px !important;
+    padding-bottom: 0 !important;
+  }
+  html.layout-mode-strip .full-page-layout { left: 60px; bottom: 0; }
+}
+
+/* ── Полноэкранная сессия упражнений ── */
+
+/* Обёртка: full-page-layout уже даёт position:fixed, добавляем flex */
+.exercise-session-page {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Строка с типом упражнения и счётчиком */
+.exercise-session-type {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 7px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Область упражнения — заполняет оставшееся место */
+.exercise-session-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Прямой потомок — компонент упражнения — тоже flex column */
+.exercise-session-content > div {
+  flex: 1;
+  min-height: 0;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto; /* scroll для упражнений без картинки */
+  overflow-x: hidden;
+}
+
+/* exercise-card во весь экран */
+.exercise-session-page .exercise-card {
+  flex: 1 !important;
+  min-height: 0 !important;
+  margin-bottom: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-top: 1px solid var(--line) !important;
+  /* Портрет: картинка сверху, контент снизу */
+  flex-direction: column !important;
+  display: flex !important;
+}
+
+/* Картинка: ~45% высоты в портрете */
+.exercise-session-page .word-image-bleed {
+  flex: 0 0 42% !important;
+  width: 100% !important;
+  height: 42% !important;
+  max-height: 42% !important;
+  aspect-ratio: unset !important;
+  border-right: none !important;
+  border-bottom: 1px solid var(--line) !important;
+  /* Равномерные отступы внутри блока — картинка не доходит до краёв */
+  padding: 16px !important;
+}
+/* Скругляем углы самой фотографии внутри блока */
+.exercise-session-page .word-image-bleed img {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Контент: заполняет остаток, скролл внутри если не помещается */
+.exercise-session-page .exercise-card-content {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+/* Браузерный баг: padding-bottom не учитывается в overflow-y:auto / flex — используем ::after */
+.exercise-session-page .exercise-card-content::after {
+  content: '';
+  display: block;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* Элементы ВНЕ .exercise-card (кнопки Flashcard) — не тянутся */
+.exercise-session-content > div > *:not(.exercise-card) {
+  flex-shrink: 0;
+  padding-left: 16px;
+  padding-right: 16px;
+  background: var(--surface);
+}
+
+/* Ландшафт (телефон/планшет повёрнут): 50/50 горизонтально */
+@media (orientation: landscape) and (max-width: 1023px) {
+  .exercise-session-page .exercise-card {
+    flex-direction: row !important;
+  }
+  .exercise-session-page .word-image-bleed {
+    flex: 0 0 50% !important;
+    width: 50% !important;
+    height: auto !important;
+    max-height: 100% !important;
+    border-right: 1px solid var(--line) !important;
+    border-bottom: none !important;
+  }
+  .exercise-session-page .exercise-card-content {
+    flex: 1 !important;
+    width: 50% !important;
+  }
+}
+
+/* ПК: всегда 50/50 горизонтально */
+@media (min-width: 1024px) {
+  .exercise-session-page .exercise-card {
+    flex-direction: row !important;
+  }
+  .exercise-session-page .word-image-bleed {
+    flex: 0 0 50% !important;
+    width: 50% !important;
+    height: auto !important;
+    max-height: 100% !important;
+    border-right: 1px solid var(--line) !important;
+    border-bottom: none !important;
+  }
+  .exercise-session-page .exercise-card-content {
+    flex: 1 !important;
+    width: 50% !important;
   }
 }
 

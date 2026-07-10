@@ -54,6 +54,7 @@ export const en = {
     sentenceWrite: 'Write a sentence',
     letterFill: 'Fill in the letters',
     dictation: 'Dictation',
+    speech: 'Pronunciation',
     tapToReveal: 'Tap to reveal answer',
     forgot: 'Forgot',
     hard: 'Hard',

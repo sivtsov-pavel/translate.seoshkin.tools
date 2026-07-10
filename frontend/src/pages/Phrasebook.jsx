@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { api } from '../api/client.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
+import { useSpeechRecognition, speechSimilarity, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
 
 const CATEGORIES = [
   'Приветствия', 'Прощание', 'Знакомство', 'В школе', 'Числа и время',
@@ -298,6 +299,7 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
         )}
       </div>
 
+      {isSpeechRecognitionSupported() && <MicButton text={phrase.de} />}
       <button onClick={startEdit} title="Редактировать"
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 16, flexShrink: 0, padding: '0 4px' }}>
         <i className="bi bi-pencil" />
@@ -307,5 +309,40 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
         ×
       </button>
     </div>
+  )
+}
+
+// Кнопка микрофона для мини-проверки произношения в разговорнике
+function MicButton({ text }) {
+  const [status, setStatus] = useState('idle') // idle | listening | ok | bad | almost
+  const [transcript, setTranscript] = useState('')
+
+  const handleResult = useCallback((tr) => {
+    const sim = speechSimilarity(tr, text)
+    setTranscript(tr)
+    setStatus(sim >= 0.75 ? 'ok' : sim >= 0.5 ? 'almost' : 'bad')
+    // Через 3с сбрасываем индикатор
+    setTimeout(() => setStatus('idle'), 3000)
+  }, [text])
+
+  const { start, listening } = useSpeechRecognition({ lang: 'de-DE', onResult: handleResult })
+
+  useEffect(() => {
+    if (listening) setStatus('listening')
+  }, [listening])
+
+  const color = { idle: 'var(--ink-soft)', listening: 'var(--red)', ok: 'var(--good)', almost: 'var(--accent)', bad: 'var(--red)' }[status]
+  const icon  = { idle: '🎤', listening: '⏺', ok: '✓', almost: '≈', bad: '✗' }[status]
+  const title = { idle: 'Проверить произношение', listening: 'Слушаю...', ok: `✓ Верно: «${transcript}»`, almost: `≈ Почти: «${transcript}»`, bad: `✗ Нечётко: «${transcript}»` }[status]
+
+  return (
+    <button onClick={start} title={title} disabled={listening}
+      style={{
+        background: 'none', border: 'none', cursor: listening ? 'default' : 'pointer',
+        fontSize: 15, padding: '0 4px', color, flexShrink: 0, lineHeight: 1,
+        transition: 'color .2s',
+      }}>
+      {icon}
+    </button>
   )
 }

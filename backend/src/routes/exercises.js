@@ -17,6 +17,14 @@ export async function exercisesRoutes(fastify) {
 
   // Трекер прогресса admin-операций (одна за раз, in-memory)
   const adminOp = { name: null, done: 0, total: 0, status: 'idle', updated: 0, failed: 0 }
+  let _resetTimer = null
+  function finishAdminOp() {
+    adminOp.status = 'done'
+    if (_resetTimer) clearTimeout(_resetTimer)
+    _resetTimer = setTimeout(() => {
+      Object.assign(adminOp, { name: null, done: 0, total: 0, status: 'idle', updated: 0, failed: 0, error: null })
+    }, 30_000)
+  }
 
   fastify.get('/api/admin/operation-status', {
     preHandler: [fastify.authenticate],
@@ -76,6 +84,9 @@ export async function exercisesRoutes(fastify) {
         LEFT JOIN words w ON w.id = e.word_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1`
 
+    // Когда фильтр по конкретному уроку — берём все упражнения урока (max 300),
+    // иначе применяем дневной лимит пользователя
+    const limit = lesson_id ? 300 : dailyLimit
     let query, params
     if (role === 'owner') {
       params = [userId, today]
@@ -86,7 +97,7 @@ export async function exercisesRoutes(fastify) {
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT ${dailyLimit}`
+        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM() LIMIT ${limit}`
     } else {
       params = [userId, today]
       if (type)      params.push(type)
@@ -97,7 +108,7 @@ export async function exercisesRoutes(fastify) {
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC LIMIT ${dailyLimit}`
+        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM() LIMIT ${limit}`
     }
 
     const { rows } = await db.query(query, params)
@@ -501,7 +512,7 @@ export async function exercisesRoutes(fastify) {
       adminOp.done++
     }
 
-    adminOp.status = 'done'
+    finishAdminOp()
     return { total: adminOp.total, updated: adminOp.updated, failed: adminOp.failed }
   })
 
@@ -541,7 +552,7 @@ export async function exercisesRoutes(fastify) {
       adminOp.done = Math.min(i + 20, rows.length)
     }
 
-    adminOp.status = 'done'
+    finishAdminOp()
     return { updated: adminOp.updated, total: rows.length }
   })
 
@@ -572,7 +583,7 @@ export async function exercisesRoutes(fastify) {
       adminOp.done = Math.min(i + BATCH, rows.length)
     }
 
-    adminOp.status = 'done'
+    finishAdminOp()
     return { updated: adminOp.updated, total: rows.length }
   })
 
@@ -600,7 +611,7 @@ export async function exercisesRoutes(fastify) {
         adminOp.updated++
         adminOp.done++
       }
-      adminOp.status = 'done'
+      finishAdminOp()
     } catch (e) {
       adminOp.status = 'error'
       adminOp.error = e.message
@@ -647,7 +658,7 @@ export async function exercisesRoutes(fastify) {
         }
         adminOp.done = Math.min(i + BATCH, rows.length)
       }
-      adminOp.status = 'done'
+      finishAdminOp()
     } catch (e) {
       adminOp.status = 'error'
       adminOp.error = e.message
@@ -678,7 +689,7 @@ export async function exercisesRoutes(fastify) {
         adminOp.updated++
       }
       adminOp.done = rows.length
-      adminOp.status = 'done'
+      finishAdminOp()
     } catch (e) {
       adminOp.status = 'error'
       adminOp.error = e.message
@@ -722,7 +733,62 @@ export async function exercisesRoutes(fastify) {
         }
         adminOp.done = Math.min(i + BATCH, rows.length)
       }
-      adminOp.status = 'done'
+      finishAdminOp()
+    } catch (e) {
+      adminOp.status = 'error'
+      adminOp.error = e.message
+    }
+  })
+
+  // Батч: добавить упражнения на произношение ко всем урокам без них
+  fastify.post('/api/admin/add-speech-all', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (adminOp.status === 'running') return reply.status(409).send({ error: 'Операция уже выполняется' })
+
+    // Уроки без упражнений на произношение
+    const { rows: lessons } = await db.query(
+      `SELECT id FROM lessons
+       WHERE status = 'done'
+         AND NOT EXISTS (
+           SELECT 1 FROM exercises e WHERE e.lesson_id = lessons.id AND e.type = 'speech'
+         )
+       ORDER BY id`
+    )
+    if (!lessons.length) return { added: 0, total: 0 }
+
+    Object.assign(adminOp, { name: 'add-speech-all', done: 0, total: lessons.length, status: 'running', updated: 0, failed: 0 })
+    reply.code(202).send({ started: true, total: lessons.length })
+
+    try {
+      for (const lesson of lessons) {
+        try {
+          const { rows: wordRows } = await db.query(
+            `SELECT DISTINCT ON (e.payload->>'question')
+               e.word_id,
+               COALESCE(w.word_de, e.payload->>'question') AS word_de,
+               COALESCE(w.translation_ru, e.payload->>'answer') AS translation_ru
+             FROM exercises e
+             LEFT JOIN words w ON w.id = e.word_id
+             WHERE e.lesson_id = $1 AND e.type = 'flashcard'
+             ORDER BY e.payload->>'question'`,
+            [lesson.id]
+          )
+          for (const w of wordRows) {
+            await db.query(
+              'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+              [lesson.id, w.word_id, 'speech', JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })]
+            )
+          }
+          adminOp.updated += wordRows.length
+        } catch (e) {
+          console.error(`add-speech-all урок ${lesson.id}: ${e.message}`)
+          adminOp.failed++
+        }
+        adminOp.done++
+      }
+      finishAdminOp()
     } catch (e) {
       adminOp.status = 'error'
       adminOp.error = e.message

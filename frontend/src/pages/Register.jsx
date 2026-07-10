@@ -30,12 +30,32 @@ export default function Register() {
     }
   }
 
+  const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg|OPR|YaBrowser/.test(navigator.userAgent)
+
   return (
     <div style={{ maxWidth: 400, margin: '60px auto', padding: '0 16px' }}>
       <div style={{ textAlign: 'right', marginBottom: 24 }}>
         <LangSwitcher />
       </div>
       <h1 style={{ marginBottom: 24 }}>{t.nav.appName}</h1>
+
+      {/* Рекомендация Chrome — только если не Chrome */}
+      {!isChrome && (
+        <div style={{
+          background: '#FEF3C7', border: '1px solid #F59E0B', borderRadius: 10,
+          padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ fontSize: 22 }}>🌐</span>
+          <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+            <strong>Рекомендуем Google Chrome</strong> — лучший опыт работы с приложением.{' '}
+            <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer"
+              style={{ color: '#B45309', fontWeight: 600 }}>
+              Скачать Chrome →
+            </a>
+          </div>
+        </div>
+      )}
+
       <h2 style={{ marginBottom: 20 }}>{t.auth.register}</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 14 }}>

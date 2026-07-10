@@ -25,6 +25,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
       <div
         onClick={!revealed ? reveal : undefined}
+        className="exercise-card"
         style={{
           border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden',
           cursor: revealed ? 'default' : 'pointer',
@@ -33,7 +34,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
       >
         <WordImage imageUrl={imageUrl} wordDe={payload.question} bleed />
 
-        <div style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="exercise-card-content" style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
           <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center', color: 'var(--ink)' }} dir="ltr">
             {payload.question}

@@ -9,6 +9,7 @@ import MultipleChoice from '../components/MultipleChoice.jsx'
 import SentenceWrite from '../components/SentenceWrite.jsx'
 import LetterFill from '../components/LetterFill.jsx'
 import Dictation from '../components/Dictation.jsx'
+import SpeechExercise from '../components/SpeechExercise.jsx'
 
 export default function ExerciseSession() {
   const [exercises, setExercises] = useState([])
@@ -61,17 +62,28 @@ export default function ExerciseSession() {
   const ex = exercises[current]
   const lessonTitle = getLessonTitle(ex.lesson_title, ex.lesson_title_translations, lang)
 
+  const typeLabel = { flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation, speech: t.exercise.speech || 'Произношение' }[ex.type]
+
   return (
-    <div style={{ paddingTop: 30 }}>
-      <div style={{ marginBottom: 10, color: 'var(--ink-soft)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {{ flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation }[ex.type]}
+    <div className="full-page-layout exercise-session-page">
+      {/* Мини-бейдж типа упражнения */}
+      <div className="exercise-session-type">
+        <span>{typeLabel}</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--ink-soft)', fontSize: 11 }}>
+          {current + 1} / {exercises.length}
+        </span>
       </div>
-      {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-      {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
-      {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
-      {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} />}
-      {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-      {ex.type === 'dictation'       && <Dictation      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} />}
+
+      {/* Контент упражнения — заполняет оставшееся место */}
+      <div className="exercise-session-content">
+        {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
+        {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
+        {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
+        {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} />}
+        {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
+        {ex.type === 'dictation'       && <Dictation       key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} />}
+        {ex.type === 'speech'          && <SpeechExercise  key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} />}
+      </div>
     </div>
   )
 }

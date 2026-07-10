@@ -53,6 +53,7 @@ export const sq = {
     sentenceWrite: 'Shkruaj fjali',
     letterFill: 'Shto shkronjën',
     dictation: 'Diktim',
+    speech: 'Shqiptimi',
     tapToReveal: 'Kliko për të treguar përgjigjen',
     forgot: 'Nuk mbaj mend',
     hard: 'Me vështirësi',

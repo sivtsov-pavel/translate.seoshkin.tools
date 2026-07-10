@@ -5,8 +5,8 @@ import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation, getLessonTitle } from '../utils/translation.js'
 
-const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'dictation']
-const TYPE_ICON  = { multiple_choice: 'bi-check-square-fill', flashcard: 'bi-card-text', letter_fill: 'bi-fonts', fill_blank: 'bi-pencil-fill', sentence_write: 'bi-pen-fill', dictation: 'bi-mic-fill' }
+const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
+const TYPE_ICON  = { multiple_choice: 'bi-check-square-fill', flashcard: 'bi-card-text', letter_fill: 'bi-fonts', fill_blank: 'bi-pencil-fill', sentence_write: 'bi-pen-fill', speech: 'bi-soundwave', dictation: 'bi-mic-fill' }
 
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
@@ -64,9 +64,9 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Sticky CTA */}
+      {/* Sticky CTA — сидит над нижней навигацией через CSS-переменную */}
       <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        position: 'fixed', bottom: 'var(--bottom-nav-h, 0px)', left: '50%', transform: 'translateX(-50%)',
         width: '100%', maxWidth: 640,
         padding: '12px 16px 20px',
         background: 'linear-gradient(to top, var(--bg) 70%, transparent)',
@@ -102,6 +102,7 @@ function LessonCard({ lesson, navigate }) {
     multiple_choice: t.exercise.multipleChoice,
     sentence_write:  t.exercise.sentenceWrite,
     letter_fill:     t.exercise.letterFill,
+    speech:          t.exercise.speech || 'Произношение',
     dictation:       t.exercise.dictation,
   }
 

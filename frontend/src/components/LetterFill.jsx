@@ -46,10 +46,10 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
   const resultColor = submitted ? (correct ? 'var(--good)' : 'var(--red)') : 'var(--accent)'
 
   return (
-    <div style={{ border: '2px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
+    <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
       <WordImage imageUrl={imageUrl} wordDe={payload.word_de} bleed />
 
-      <div style={{ padding: 24 }}>
+      <div className="exercise-card-content" style={{ padding: 24 }}>
       {lessonTitle && (
         <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
           📚 {lessonTitle}

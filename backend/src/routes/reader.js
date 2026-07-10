@@ -1,20 +1,34 @@
 import { db } from '../db/index.js'
-import { translateParagraphs } from '../services/claude.js'
+import { translateParagraphs, translateSingle } from '../services/claude.js'
+
+const MODEL_MAP = { smart: 'gpt-4o', mini: 'gpt-4o-mini' }
 
 export async function readerRoutes(fastify) {
-  // Перевод абзацев немецкого текста на русский
+  // Перевод абзацев с выбором языковой пары
   fastify.post('/api/reader/translate', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
-    const { paragraphs } = request.body
+    const { paragraphs, sourceLang = 'de', targetLang = 'ru', model = 'mini' } = request.body
     if (!Array.isArray(paragraphs) || !paragraphs.length) {
       return reply.status(400).send({ error: 'paragraphs required' })
     }
     const filtered = paragraphs.map(p => p.trim()).filter(Boolean)
     if (!filtered.length) return reply.status(400).send({ error: 'empty paragraphs' })
 
-    const translations = await translateParagraphs(filtered)
-    return { translations: filtered.map((de, i) => ({ de, ru: translations[i] || '' })) }
+    const gptModel = MODEL_MAP[model] || 'gpt-4o-mini'
+    const translations = await translateParagraphs(filtered, sourceLang, targetLang, gptModel)
+    return { translations: filtered.map((original, i) => ({ original, translation: translations[i] || '' })) }
+  })
+
+  // Перевод одной фразы для режима разговора
+  fastify.post('/api/reader/speak-translate', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    const { text, sourceLang = 'de', targetLang = 'ru', model = 'mini' } = request.body
+    if (!text?.trim()) return reply.status(400).send({ error: 'text required' })
+    const gptModel = MODEL_MAP[model] || 'gpt-4o-mini'
+    const translation = await translateSingle(text.trim(), sourceLang, targetLang, gptModel)
+    return { translation }
   })
 
   // Собрать текст из примеров слов урока

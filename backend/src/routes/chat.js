@@ -15,7 +15,7 @@ export async function chatRoutes(fastify) {
     const { rows } = role === 'owner'
       ? await db.query(`
           SELECT c.id, c.type, c.created_at, c.updated_at,
-                 u.name AS student_name,
+                 u.email AS student_name,
                  (SELECT COUNT(*) FROM chat_messages m WHERE m.conversation_id = c.id AND m.read_at IS NULL AND m.sender_id != $1) AS unread
           FROM chat_conversations c
           JOIN users u ON u.id = c.student_id
@@ -73,7 +73,7 @@ export async function chatRoutes(fastify) {
 
     const { rows } = await db.query(`
       SELECT m.id, m.body, m.read_at, m.created_at,
-             m.sender_id, u.name AS sender_name, u.role AS sender_role
+             m.sender_id, u.email AS sender_name, u.role AS sender_role
       FROM chat_messages m
       JOIN users u ON u.id = m.sender_id
       WHERE m.conversation_id = $1
@@ -117,7 +117,7 @@ export async function chatRoutes(fastify) {
 
     // Уведомления только на входящие от студента (owner отвечает — уведомлять не нужно)
     if (role !== 'owner') {
-      const senderName = request.user.name || request.user.email
+      const senderName = request.user.email
       const chatType   = conv.rows[0].type
 
       // Запускаем параллельно, не ждём

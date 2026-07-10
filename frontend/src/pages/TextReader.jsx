@@ -20,6 +20,31 @@ function isWord(token) {
   return /[\wäöüÄÖÜß]/.test(token)
 }
 
+// Языки для переводчика и разговора
+const CONV_LANGS = [
+  { code: 'de', label: 'Deutsch',    flag: '🇩🇪', speech: 'de-DE' },
+  { code: 'ru', label: 'Русский',    flag: '🇷🇺', speech: 'ru-RU' },
+  { code: 'en', label: 'English',    flag: '🇬🇧', speech: 'en-US' },
+  { code: 'uk', label: 'Українська', flag: '🇺🇦', speech: 'uk-UA' },
+  { code: 'fr', label: 'Français',   flag: '🇫🇷', speech: 'fr-FR' },
+  { code: 'es', label: 'Español',    flag: '🇪🇸', speech: 'es-ES' },
+  { code: 'tr', label: 'Türkçe',     flag: '🇹🇷', speech: 'tr-TR' },
+  { code: 'ar', label: 'العربية',    flag: '🇸🇦', speech: 'ar-SA' },
+]
+
+function getLang(code) { return CONV_LANGS.find(l => l.code === code) || CONV_LANGS[0] }
+
+function LangSelect({ value, onChange, style }) {
+  return (
+    <select value={value} onChange={e => onChange(e.target.value)}
+      style={{ border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', borderRadius: 8, padding: '5px 10px', fontSize: 14, cursor: 'pointer', ...style }}>
+      {CONV_LANGS.map(l => (
+        <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+      ))}
+    </select>
+  )
+}
+
 // ───────── панель выбранных слов ─────────
 
 function WordPanel({ words, onRemove, onClear }) {
@@ -118,7 +143,7 @@ function ClickableParagraph({ text, selectedWords, onWordClick }) {
 // ───────── основной компонент ─────────
 
 export default function TextReader() {
-  const [mode, setMode]     = useState('read')   // 'read' | 'bilingual'
+  const [mode, setMode]     = useState('read')   // 'read' | 'bilingual' | 'conversation'
   const [text, setText]     = useState('')
 
   // Режим чтения (TTS)
@@ -128,9 +153,24 @@ export default function TextReader() {
   const [rate, setRate]             = useState(0.85)
 
   // Двуязычный режим
-  const [bilingual, setBilingual]   = useState([]) // [{de, ru}]
+  const [bilingual, setBilingual]   = useState([]) // [{original, translation}]
   const [translating, setTranslating] = useState(false)
   const [translateError, setTranslateError] = useState('')
+  const [biSrc, setBiSrc] = useState('de')
+  const [biTgt, setBiTgt] = useState('ru')
+
+  // Режим разговора
+  const [convSrcLang, setConvSrcLang] = useState('ru')   // левый — инициатор
+  const [convTgtLang, setConvTgtLang] = useState('de')   // правый — собеседник
+  const [convMessages, setConvMessages] = useState([])   // [{id, side, original, translation}]
+  const [convListening, setConvListening] = useState(null) // 'src' | 'tgt' | null
+  const [convTranslating, setConvTranslating] = useState(false)
+  const recognitionRef = useRef(null)
+  const messagesEndRef = useRef(null)
+  const hasSpeechApi = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+
+  // Модель перевода
+  const [transModel, setTransModel] = useState('mini')  // 'mini' | 'smart'
 
   // Выбранные слова
   const [selectedWords, setSelectedWords] = useState(new Map())
@@ -154,6 +194,10 @@ export default function TextReader() {
     api.get('/reader/lessons').then(setLessons).catch(() => {})
     return () => { cancel(); cancelRef.current = true }
   }, [])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [convMessages])
 
   // закрыть дропдаун при клике вне
   useEffect(() => {
@@ -228,14 +272,14 @@ export default function TextReader() {
   const stop = () => { cancelRef.current = true; cancel(); setPlaying(false); setActive(-1) }
   const prepare = () => { setSentences(splitSentences(text)); setActive(-1) }
 
-  // ─── перевод абзацев ───
+  // ─── двуязычный перевод ───
 
   const handleTranslate = async () => {
     const paragraphs = splitParagraphs(text)
     if (!paragraphs.length) return
     setTranslating(true); setTranslateError(''); setBilingual([])
     try {
-      const res = await api.post('/reader/translate', { paragraphs })
+      const res = await api.post('/reader/translate', { paragraphs, sourceLang: biSrc, targetLang: biTgt, model: transModel })
       setBilingual(res.translations || [])
     } catch (e) {
       setTranslateError('Ошибка перевода: ' + e.message)
@@ -243,6 +287,71 @@ export default function TextReader() {
       setTranslating(false)
     }
   }
+
+  // ─── режим разговора ───
+
+  const speakOut = (text, langCode) => {
+    const langInfo = getLang(langCode)
+    const synth = window.speechSynthesis
+    synth.cancel()
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.lang = langInfo.speech
+    const voices = synth.getVoices()
+    const voice = voices.find(v => v.lang.startsWith(langInfo.speech.slice(0, 2)))
+    if (voice) utt.voice = voice
+    synth.speak(utt)
+  }
+
+  const handleConvResult = useCallback(async (transcript, side) => {
+    const srcLang = side === 'src' ? convSrcLang : convTgtLang
+    const tgtLang = side === 'src' ? convTgtLang : convSrcLang
+    const msgId = Date.now()
+    setConvMessages(prev => [...prev, { id: msgId, side, original: transcript, translation: '…' }])
+    setConvTranslating(true)
+    try {
+      const res = await api.post('/reader/speak-translate', {
+        text: transcript, sourceLang: srcLang, targetLang: tgtLang,
+        model: transModel,
+      })
+      setConvMessages(prev => prev.map(m => m.id === msgId ? { ...m, translation: res.translation } : m))
+      speakOut(res.translation, tgtLang)
+    } catch {
+      setConvMessages(prev => prev.map(m => m.id === msgId ? { ...m, translation: '❌' } : m))
+    } finally {
+      setConvTranslating(false)
+    }
+  }, [convSrcLang, convTgtLang, transModel])
+
+  const startListening = useCallback((side) => {
+    if (!hasSpeechApi) {
+      alert('Распознавание речи доступно только в Google Chrome. Попробуйте открыть страницу в Chrome.')
+      return
+    }
+    window.speechSynthesis.cancel() // останавливаем TTS перед слушанием
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SR()
+    const langCode = side === 'src' ? convSrcLang : convTgtLang
+    recognition.lang = getLang(langCode).speech
+    recognition.continuous = false
+    recognition.interimResults = false
+    setConvListening(side)
+    recognitionRef.current = recognition
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim()
+      if (transcript) handleConvResult(transcript, side)
+    }
+    recognition.onerror = (event) => {
+      if (event.error === 'not-allowed') alert('Нет доступа к микрофону. Разрешите в настройках браузера.')
+      setConvListening(null)
+    }
+    recognition.onend = () => setConvListening(null)
+    recognition.start()
+  }, [convSrcLang, convTgtLang, hasSpeechApi, handleConvResult])
+
+  const stopListening = () => { recognitionRef.current?.stop(); setConvListening(null) }
+
+  const swapConvLangs = () => { setConvSrcLang(convTgtLang); setConvTgtLang(convSrcLang) }
 
   // ─── загрузить из урока ───
 
@@ -283,14 +392,21 @@ export default function TextReader() {
   const textHasContent = text.trim().length > 0
   const hasSelection = selectedWords.size > 0
 
+  const srcInfo = getLang(convSrcLang)
+  const tgtInfo = getLang(convTgtLang)
+
   return (
     <div style={{ padding: '24px 14px 60px' }}>
 
       {/* Заголовок + вкладки */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
         <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: 0 }}>📖 Читалка</h1>
         <div style={{ display: 'flex', gap: 4, background: 'var(--surface-2)', borderRadius: 10, padding: 3 }}>
-          {[{ key: 'read', label: '▶ Читать' }, { key: 'bilingual', label: '🌐 Двуязычный' }].map(tab => (
+          {[
+            { key: 'read',         label: '▶ Читать' },
+            { key: 'bilingual',    label: '🌐 Двуязычный' },
+            { key: 'conversation', label: '💬 Разговор' },
+          ].map(tab => (
             <button key={tab.key} onClick={() => setMode(tab.key)} style={{
               padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600,
               cursor: 'pointer',
@@ -300,219 +416,356 @@ export default function TextReader() {
             }}>{tab.label}</button>
           ))}
         </div>
+
+        {/* Выбор модели — для bilingual и conversation */}
+        {(mode === 'bilingual' || mode === 'conversation') && (
+          <div style={{ display: 'flex', gap: 2, background: 'var(--surface-2)', borderRadius: 8, padding: 2, marginLeft: 'auto' }}>
+            {[
+              { key: 'mini', label: '⚡ Быстро' , title: 'GPT-4o-mini: быстро и дёшево' },
+              { key: 'smart', label: '✨ Точно', title: 'GPT-4o: лучшее качество перевода' },
+            ].map(m => (
+              <button key={m.key} onClick={() => setTransModel(m.key)} title={m.title}
+                style={{
+                  padding: '4px 10px', borderRadius: 6, border: 'none', fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer',
+                  background: transModel === m.key ? 'var(--accent)' : 'transparent',
+                  color: transModel === m.key ? 'var(--accent-ink)' : 'var(--ink-soft)',
+                }}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Кнопки загрузки */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        {/* Загрузить из урока */}
-        <div data-lesson-dropdown style={{ position: 'relative' }}>
-          <button onClick={() => setShowLessons(v => !v)} disabled={loadingLesson}
-            style={{ padding: '7px 14px', background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-            {loadingLesson ? '…' : '📚 Из урока ▾'}
-          </button>
-          {showLessons && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: 4,
-              background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12,
-              boxShadow: '0 8px 24px rgba(0,0,0,.15)', minWidth: 260, maxHeight: 280, overflowY: 'auto',
-            }}>
-              {lessons.length === 0 ? (
-                <div style={{ padding: 14, fontSize: 13, color: 'var(--ink-soft)' }}>Нет уроков с примерами</div>
-              ) : lessons.map(lesson => (
-                <div key={lesson.id} onClick={() => loadLesson(lesson)}
-                  style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--line)', fontSize: 14, color: 'var(--ink)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <span style={{ fontWeight: 600 }}>{lesson.title}</span>
-                  <span style={{ color: 'var(--ink-soft)', fontSize: 12, marginLeft: 8 }}>{lesson.sentences_count} предл.</span>
+      {/* ─── Режим разговора — отдельный UI ─── */}
+      {mode === 'conversation' && (
+        <div>
+          {/* Панель языков */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <LangSelect value={convSrcLang} onChange={setConvSrcLang} />
+            <button onClick={swapConvLangs} title="Поменять языки"
+              style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)' }}>
+              ⇄
+            </button>
+            <LangSelect value={convTgtLang} onChange={setConvTgtLang} />
+          </div>
+
+          {/* История разговора */}
+          <div style={{
+            minHeight: 180, maxHeight: 420, overflowY: 'auto',
+            border: '1px solid var(--line)', borderRadius: 14, padding: 12,
+            background: 'var(--surface)', marginBottom: 16,
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            {convMessages.length === 0 ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)', padding: 20 }}>
+                <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
+                <div style={{ fontSize: 14, textAlign: 'center' }}>
+                  Нажми кнопку микрофона — скажи что-нибудь,<br />система переведёт и ответит голосом
                 </div>
-              ))}
-            </div>
+                {!hasSpeechApi && (
+                  <div style={{ marginTop: 12, fontSize: 12, color: 'var(--red)', padding: '8px 14px', background: 'rgba(239,68,68,.1)', borderRadius: 8 }}>
+                    ⚠️ Распознавание речи работает только в Google Chrome
+                  </div>
+                )}
+              </div>
+            ) : (
+              convMessages.map(msg => {
+                const isSrc = msg.side === 'src'
+                const fromLang = getLang(isSrc ? convSrcLang : convTgtLang)
+                const toLang   = getLang(isSrc ? convTgtLang : convSrcLang)
+                return (
+                  <div key={msg.id} style={{
+                    alignSelf: isSrc ? 'flex-start' : 'flex-end',
+                    maxWidth: '85%',
+                    background: isSrc ? 'var(--accent-soft)' : 'var(--surface-2)',
+                    border: `1px solid ${isSrc ? 'var(--accent)' : 'var(--line)'}`,
+                    borderRadius: isSrc ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
+                    padding: '10px 14px',
+                  }}>
+                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 4 }}>
+                      {fromLang.flag} {fromLang.label}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>
+                      {msg.original}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 3 }}>
+                      → {toLang.flag} {toLang.label}
+                    </div>
+                    <div style={{ fontSize: 14, color: msg.translation === '…' ? 'var(--ink-soft)' : 'var(--accent)', fontStyle: msg.translation === '…' ? 'italic' : 'normal' }}>
+                      {msg.translation}
+                      {msg.translation && msg.translation !== '…' && msg.translation !== '❌' && (
+                        <button onClick={() => speakOut(msg.translation, isSrc ? convTgtLang : convSrcLang)}
+                          title="Воспроизвести перевод"
+                          style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 13, padding: '0 2px' }}>
+                          🔊
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Кнопки микрофона */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {[
+              { side: 'src', lang: srcInfo, bg: 'var(--accent)', textColor: 'var(--accent-ink)' },
+              { side: 'tgt', lang: tgtInfo, bg: 'var(--surface-2)', textColor: 'var(--ink)' },
+            ].map(({ side, lang, bg, textColor }) => {
+              const isListening = convListening === side
+              const isMyTurn = convListening === null && !convTranslating
+              return (
+                <button key={side}
+                  onClick={() => isListening ? stopListening() : isMyTurn ? startListening(side) : null}
+                  disabled={!isMyTurn && !isListening}
+                  style={{
+                    padding: '18px 12px', borderRadius: 14, border: 'none',
+                    background: isListening ? 'var(--red)' : bg,
+                    color: isListening ? '#fff' : textColor,
+                    cursor: (isMyTurn || isListening) ? 'pointer' : 'default',
+                    opacity: (!isMyTurn && !isListening) ? 0.5 : 1,
+                    fontSize: 14, fontWeight: 700,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    transition: 'all .15s',
+                  }}>
+                  <span style={{ fontSize: 28 }}>
+                    {isListening ? '⏹' : convTranslating && !isListening ? '⏳' : '🎤'}
+                  </span>
+                  <span>{lang.flag} {lang.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.8 }}>
+                    {isListening ? 'Говорите… (нажмите для остановки)' : convTranslating ? 'Перевожу…' : 'Нажмите и говорите'}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          {convMessages.length > 0 && (
+            <button onClick={() => setConvMessages([])}
+              style={{ marginTop: 10, width: '100%', padding: '8px', border: '1px solid var(--line)', background: 'none', borderRadius: 10, cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 13 }}>
+              Очистить историю
+            </button>
           )}
         </div>
-
-        {/* Сохранённые наборы */}
-        {sets.map(set => (
-          <div key={set.id} onClick={() => loadSet(set)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 10, fontSize: 13, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', color: 'var(--ink)' }}>
-            <span>📄 {set.title}</span>
-            <button onClick={e => deleteSet(set.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 15, padding: '0 2px', lineHeight: 1 }}>×</button>
-          </div>
-        ))}
-      </div>
-
-      {/* Поле ввода */}
-      <textarea
-        value={text}
-        onChange={e => { setText(e.target.value); setSentences([]); setActive(-1) }}
-        placeholder="Вставь немецкий текст... (абзацы разделяй пустой строкой)"
-        rows={6}
-        style={{ width: '100%', fontSize: 15, lineHeight: 1.7, resize: 'vertical', boxSizing: 'border-box' }}
-      />
-
-      {/* Панель управления */}
-      <div style={{ display: 'flex', gap: 8, margin: '10px 0 16px', flexWrap: 'wrap', alignItems: 'center' }}>
-
-        {mode === 'read' && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {[0.7, 0.85, 1.0, 1.2].map(r => (
-                <button key={r} onClick={() => setRate(r)} style={{
-                  padding: '6px 12px', borderRadius: 20, fontSize: 13,
-                  border: `1px solid ${rate === r ? 'var(--accent)' : 'var(--line)'}`,
-                  background: rate === r ? 'var(--accent)' : 'var(--surface-2)',
-                  color: rate === r ? 'var(--accent-ink)' : 'var(--ink)',
-                  cursor: 'pointer', fontWeight: rate === r ? 700 : 400,
-                }}>{r === 0.7 ? '🐢' : r === 0.85 ? '🚶' : r === 1.0 ? '🏃' : '⚡'}</button>
-              ))}
-            </div>
-
-            {!playing ? (
-              <button onClick={() => start(0)} disabled={!textHasContent}
-                style={{ padding: '8px 20px', background: textHasContent ? 'var(--accent)' : 'var(--surface-2)', color: textHasContent ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: textHasContent ? 'pointer' : 'default', fontSize: 14, fontWeight: 700 }}>
-                ▶ Читать всё
-              </button>
-            ) : (
-              <button onClick={stop} style={{ padding: '8px 20px', background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
-                ⏹ Стоп
-              </button>
-            )}
-
-            {!playing && sentences.length === 0 && textHasContent && (
-              <button onClick={prepare} style={{ padding: '8px 14px', background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
-                Разбить
-              </button>
-            )}
-          </>
-        )}
-
-        {mode === 'bilingual' && (
-          <button onClick={handleTranslate} disabled={!textHasContent || translating}
-            style={{ padding: '8px 20px', background: textHasContent && !translating ? 'var(--accent)' : 'var(--surface-2)', color: textHasContent && !translating ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: textHasContent && !translating ? 'pointer' : 'default', fontSize: 14, fontWeight: 700 }}>
-            {translating ? '⏳ Перевожу…' : '🌐 Перевести'}
-          </button>
-        )}
-
-        {textHasContent && !showSave && (
-          <button onClick={() => setShowSave(true)} style={{ padding: '8px 14px', background: 'var(--surface-2)', color: 'var(--accent)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-            💾 Сохранить
-          </button>
-        )}
-        {showSave && (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-            <input autoFocus value={saveTitle} onChange={e => setSaveTitle(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSave()}
-              placeholder="Название набора..."
-              style={{ fontSize: 14, width: 200 }}
-            />
-            <button onClick={handleSave} disabled={saving || !saveTitle.trim()}
-              style={{ padding: '8px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
-              {saving ? '…' : '✓'}
-            </button>
-            <button onClick={() => setShowSave(false)}
-              style={{ padding: '8px 12px', background: 'var(--surface-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
-              ✕
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ─── Режим чтения (TTS) ─── */}
-      {mode === 'read' && (
-        <>
-          {sentences.length > 0 ? (
-            <>
-              <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>
-                💡 Нажми на предложение — начать с него · Нажми на слово — перевод из словаря
-              </div>
-              <div style={{
-                background: 'var(--surface)', border: '1px solid var(--line)',
-                borderRadius: 16, padding: '20px 18px', lineHeight: 2.4,
-                paddingBottom: hasSelection ? 160 : 20,
-              }}>
-                {sentences.map((s, i) => (
-                  <span key={i} style={{ display: 'inline' }}>
-                    <span onClick={() => !playing && start(i)} style={{
-                      display: 'inline',
-                      background: active === i ? 'var(--accent-soft)' : 'transparent',
-                      borderRadius: 6, padding: '1px 0',
-                      cursor: playing ? 'default' : 'pointer',
-                      borderBottom: active === i ? '2px solid var(--accent)' : 'none',
-                    }}>
-                      {tokenize(s).map((token, j) => {
-                        const key = token.toLowerCase()
-                        const sel = isWord(token) && selectedWords.has(key)
-                        return isWord(token) ? (
-                          <span key={j}
-                            onClick={e => { e.stopPropagation(); handleWordClick(token) }}
-                            style={{
-                              fontSize: 17, fontWeight: sel ? 700 : active === i ? 600 : 400,
-                              color: sel ? 'var(--accent)' : active === i ? 'var(--accent)' : 'var(--ink)',
-                              cursor: 'pointer', borderRadius: 4, padding: '1px 2px',
-                              background: sel ? 'var(--accent-soft)' : 'transparent',
-                              outline: sel ? '1px solid var(--accent)' : 'none',
-                            }}
-                            onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--accent-soft)' }}
-                            onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}
-                          >{token}</span>
-                        ) : (
-                          <span key={j} style={{ fontSize: 17, color: active === i ? 'var(--accent)' : 'var(--ink)', fontWeight: active === i ? 600 : 400 }}>{token}</span>
-                        )
-                      })}
-                    </span>
-                    {' '}
-                  </span>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
-              <p style={{ fontSize: 36, marginTop: 0 }}>🎧</p>
-              <p style={{ margin: '0 0 6px' }}>Вставь немецкий текст и нажми «Читать всё»</p>
-              <p style={{ fontSize: 13, margin: 0 }}>Или загрузи текст из урока — «Разбить» для кликабельных предложений</p>
-            </div>
-          )}
-        </>
       )}
 
-      {/* ─── Двуязычный режим ─── */}
-      {mode === 'bilingual' && (
+      {/* ─── Кнопки загрузки (только для read и bilingual) ─── */}
+      {mode !== 'conversation' && (
         <>
-          {translateError && (
-            <div style={{ color: 'var(--red)', fontSize: 14, marginBottom: 12 }}>{translateError}</div>
-          )}
-
-          {translating && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
-              <p style={{ fontSize: 28, marginTop: 0 }}>⏳</p>
-              <p style={{ margin: 0 }}>GPT переводит абзацы…</p>
-            </div>
-          )}
-
-          {!translating && bilingual.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: hasSelection ? 180 : 20 }}>
-              {bilingual.map((pair, i) => (
-                <div key={i} style={{ border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface)' }}>
-                  {/* Немецкий — кликабельные слова */}
-                  <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
-                    <ClickableParagraph text={pair.de} selectedWords={selectedWords} onWordClick={handleWordClick} />
-                  </div>
-                  {/* Русский перевод */}
-                  <div style={{ padding: '10px 16px', background: 'var(--surface-2)' }}>
-                    <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.7, fontStyle: 'italic' }}>
-                      {pair.ru}
-                    </p>
-                  </div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div data-lesson-dropdown style={{ position: 'relative' }}>
+              <button onClick={() => setShowLessons(v => !v)} disabled={loadingLesson}
+                style={{ padding: '7px 14px', background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                {loadingLesson ? '…' : '📚 Из урока ▾'}
+              </button>
+              {showLessons && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: 4,
+                  background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12,
+                  boxShadow: '0 8px 24px rgba(0,0,0,.15)', minWidth: 260, maxHeight: 280, overflowY: 'auto',
+                }}>
+                  {lessons.length === 0 ? (
+                    <div style={{ padding: 14, fontSize: 13, color: 'var(--ink-soft)' }}>Нет уроков с примерами</div>
+                  ) : lessons.map(lesson => (
+                    <div key={lesson.id} onClick={() => loadLesson(lesson)}
+                      style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--line)', fontSize: 14, color: 'var(--ink)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <span style={{ fontWeight: 600 }}>{lesson.title}</span>
+                      <span style={{ color: 'var(--ink-soft)', fontSize: 12, marginLeft: 8 }}>{lesson.sentences_count} предл.</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
+
+            {sets.map(set => (
+              <div key={set.id} onClick={() => loadSet(set)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 10, fontSize: 13, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', color: 'var(--ink)' }}>
+                <span>📄 {set.title}</span>
+                <button onClick={e => deleteSet(set.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 15, padding: '0 2px', lineHeight: 1 }}>×</button>
+              </div>
+            ))}
+          </div>
+
+          {/* Поле ввода */}
+          <textarea
+            value={text}
+            onChange={e => { setText(e.target.value); setSentences([]); setActive(-1) }}
+            placeholder="Вставь текст... (абзацы разделяй пустой строкой)"
+            rows={6}
+            style={{ width: '100%', fontSize: 15, lineHeight: 1.7, resize: 'vertical', boxSizing: 'border-box' }}
+          />
+
+          {/* Панель управления */}
+          <div style={{ display: 'flex', gap: 8, margin: '10px 0 16px', flexWrap: 'wrap', alignItems: 'center' }}>
+
+            {mode === 'read' && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {[0.7, 0.85, 1.0, 1.2].map(r => (
+                    <button key={r} onClick={() => setRate(r)} style={{
+                      padding: '6px 12px', borderRadius: 20, fontSize: 13,
+                      border: `1px solid ${rate === r ? 'var(--accent)' : 'var(--line)'}`,
+                      background: rate === r ? 'var(--accent)' : 'var(--surface-2)',
+                      color: rate === r ? 'var(--accent-ink)' : 'var(--ink)',
+                      cursor: 'pointer', fontWeight: rate === r ? 700 : 400,
+                    }}>{r === 0.7 ? '🐢' : r === 0.85 ? '🚶' : r === 1.0 ? '🏃' : '⚡'}</button>
+                  ))}
+                </div>
+                {!playing ? (
+                  <button onClick={() => start(0)} disabled={!textHasContent}
+                    style={{ padding: '8px 20px', background: textHasContent ? 'var(--accent)' : 'var(--surface-2)', color: textHasContent ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: textHasContent ? 'pointer' : 'default', fontSize: 14, fontWeight: 700 }}>
+                    ▶ Читать всё
+                  </button>
+                ) : (
+                  <button onClick={stop} style={{ padding: '8px 20px', background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
+                    ⏹ Стоп
+                  </button>
+                )}
+                {!playing && sentences.length === 0 && textHasContent && (
+                  <button onClick={prepare} style={{ padding: '8px 14px', background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
+                    Разбить
+                  </button>
+                )}
+              </>
+            )}
+
+            {mode === 'bilingual' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <LangSelect value={biSrc} onChange={v => { setBiSrc(v); setBilingual([]) }} />
+                <span style={{ color: 'var(--ink-soft)', fontSize: 18 }}>→</span>
+                <LangSelect value={biTgt} onChange={v => { setBiTgt(v); setBilingual([]) }} />
+                <button onClick={handleTranslate} disabled={!textHasContent || translating}
+                  style={{ padding: '8px 20px', background: textHasContent && !translating ? 'var(--accent)' : 'var(--surface-2)', color: textHasContent && !translating ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: textHasContent && !translating ? 'pointer' : 'default', fontSize: 14, fontWeight: 700 }}>
+                  {translating ? '⏳ Перевожу…' : '🌐 Перевести'}
+                </button>
+              </div>
+            )}
+
+            {textHasContent && !showSave && (
+              <button onClick={() => setShowSave(true)} style={{ padding: '8px 14px', background: 'var(--surface-2)', color: 'var(--accent)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+                💾 Сохранить
+              </button>
+            )}
+            {showSave && (
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input autoFocus value={saveTitle} onChange={e => setSaveTitle(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSave()}
+                  placeholder="Название набора..."
+                  style={{ fontSize: 14, width: 200 }}
+                />
+                <button onClick={handleSave} disabled={saving || !saveTitle.trim()}
+                  style={{ padding: '8px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
+                  {saving ? '…' : '✓'}
+                </button>
+                <button onClick={() => setShowSave(false)}
+                  style={{ padding: '8px 12px', background: 'var(--surface-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ─── Режим чтения (TTS) ─── */}
+          {mode === 'read' && (
+            <>
+              {sentences.length > 0 ? (
+                <>
+                  <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>
+                    💡 Нажми на предложение — начать с него · Нажми на слово — перевод из словаря
+                  </div>
+                  <div style={{
+                    background: 'var(--surface)', border: '1px solid var(--line)',
+                    borderRadius: 16, padding: '20px 18px', lineHeight: 2.4,
+                    paddingBottom: hasSelection ? 160 : 20,
+                  }}>
+                    {sentences.map((s, i) => (
+                      <span key={i} style={{ display: 'inline' }}>
+                        <span onClick={() => !playing && start(i)} style={{
+                          display: 'inline',
+                          background: active === i ? 'var(--accent-soft)' : 'transparent',
+                          borderRadius: 6, padding: '1px 0',
+                          cursor: playing ? 'default' : 'pointer',
+                          borderBottom: active === i ? '2px solid var(--accent)' : 'none',
+                        }}>
+                          {tokenize(s).map((token, j) => {
+                            const key = token.toLowerCase()
+                            const sel = isWord(token) && selectedWords.has(key)
+                            return isWord(token) ? (
+                              <span key={j}
+                                onClick={e => { e.stopPropagation(); handleWordClick(token) }}
+                                style={{
+                                  fontSize: 17, fontWeight: sel ? 700 : active === i ? 600 : 400,
+                                  color: sel ? 'var(--accent)' : active === i ? 'var(--accent)' : 'var(--ink)',
+                                  cursor: 'pointer', borderRadius: 4, padding: '1px 2px',
+                                  background: sel ? 'var(--accent-soft)' : 'transparent',
+                                  outline: sel ? '1px solid var(--accent)' : 'none',
+                                }}
+                                onMouseEnter={e => { if (!sel) e.currentTarget.style.background = 'var(--accent-soft)' }}
+                                onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent' }}
+                              >{token}</span>
+                            ) : (
+                              <span key={j} style={{ fontSize: 17, color: active === i ? 'var(--accent)' : 'var(--ink)', fontWeight: active === i ? 600 : 400 }}>{token}</span>
+                            )
+                          })}
+                        </span>
+                        {' '}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
+                  <p style={{ fontSize: 36, marginTop: 0 }}>🎧</p>
+                  <p style={{ margin: '0 0 6px' }}>Вставь немецкий текст и нажми «Читать всё»</p>
+                  <p style={{ fontSize: 13, margin: 0 }}>Или загрузи текст из урока — «Разбить» для кликабельных предложений</p>
+                </div>
+              )}
+            </>
           )}
 
-          {!translating && bilingual.length === 0 && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
-              <p style={{ fontSize: 36, marginTop: 0 }}>🌐</p>
-              <p style={{ margin: 0 }}>{textHasContent ? 'Нажми «Перевести» — получишь каждый абзац с русским переводом' : 'Вставь немецкий текст или загрузи из урока'}</p>
-            </div>
+          {/* ─── Двуязычный режим ─── */}
+          {mode === 'bilingual' && (
+            <>
+              {translateError && (
+                <div style={{ color: 'var(--red)', fontSize: 14, marginBottom: 12 }}>{translateError}</div>
+              )}
+              {translating && (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
+                  <p style={{ fontSize: 28, marginTop: 0 }}>⏳</p>
+                  <p style={{ margin: 0 }}>GPT переводит абзацы…</p>
+                </div>
+              )}
+              {!translating && bilingual.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: hasSelection ? 180 : 20 }}>
+                  {bilingual.map((pair, i) => (
+                    <div key={i} style={{ border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface)' }}>
+                      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
+                        <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 6 }}>{getLang(biSrc).flag} {getLang(biSrc).label}</div>
+                        <ClickableParagraph text={pair.original} selectedWords={selectedWords} onWordClick={handleWordClick} />
+                      </div>
+                      <div style={{ padding: '10px 16px', background: 'var(--surface-2)' }}>
+                        <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 4 }}>{getLang(biTgt).flag} {getLang(biTgt).label}</div>
+                        <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.7, fontStyle: 'italic' }}>
+                          {pair.translation}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {!translating && bilingual.length === 0 && (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
+                  <p style={{ fontSize: 36, marginTop: 0 }}>🌐</p>
+                  <p style={{ margin: 0 }}>{textHasContent ? 'Выбери языки и нажми «Перевести»' : 'Вставь текст или загрузи из урока'}</p>
+                </div>
+              )}
+            </>
           )}
         </>
       )}

@@ -7,8 +7,7 @@ function TextPlaceholder({ wordDe, bleed }) {
 
   if (bleed) {
     return (
-      <div style={{
-        width: '100%', aspectRatio: '16/9', flexShrink: 0,
+      <div className="word-image-bleed" style={{
         background: 'linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         borderBottom: '1px solid var(--line)',
@@ -38,11 +37,7 @@ export default function WordImage({ imageUrl, wordDe, bleed = false }) {
 
   if (bleed) {
     return (
-      <div style={{
-        width: '100%', aspectRatio: '16/9',
-        overflow: 'hidden', background: 'var(--surface-2)',
-        position: 'relative', flexShrink: 0,
-      }}>
+      <div className="word-image-bleed">
         {status === 'loading' && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)', fontSize: 28 }}>
             🖼️

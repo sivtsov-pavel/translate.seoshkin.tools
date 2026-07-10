@@ -58,6 +58,7 @@ export const de = {
     sentenceWrite: 'Satz schreiben',
     letterFill: 'Buchstaben ergänzen',
     dictation: 'Diktat',
+    speech: 'Aussprache',
     tapToReveal: 'Tippen zum Aufdecken',
     forgot: 'Vergessen',
     hard: 'Schwierig',

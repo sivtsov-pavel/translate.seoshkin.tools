@@ -349,16 +349,33 @@ ${list}`,
   return results
 }
 
-export async function translateParagraphs(paragraphs) {
+const LANG_NAMES = {
+  de: 'German', ru: 'Russian', en: 'English', uk: 'Ukrainian',
+  fr: 'French', es: 'Spanish', tr: 'Turkish', ar: 'Arabic', bg: 'Bulgarian', sq: 'Albanian',
+}
+
+export async function translateParagraphs(paragraphs, sourceLang = 'de', targetLang = 'ru', model = 'gpt-4o-mini') {
+  const from = LANG_NAMES[sourceLang] || sourceLang
+  const to   = LANG_NAMES[targetLang] || targetLang
   const list = paragraphs.map((p, i) => `${i + 1}: ${p}`).join('\n\n')
   const text = await ask(
-    `Переведи следующие немецкие абзацы на русский язык.
-Верни ТОЛЬКО JSON-массив строк в том же порядке (без markdown): ["перевод1", "перевод2", ...]
+    `Translate the following ${from} paragraphs to ${to}.
+Return ONLY a JSON array of strings in the same order (no markdown): ["translation1", "translation2", ...]
 
 ${list}`,
-    { max_tokens: 4096 }
+    { model, max_tokens: 4096 }
   )
   return parseJson(text)
+}
+
+export async function translateSingle(text, sourceLang, targetLang, model = 'gpt-4o-mini') {
+  const from = LANG_NAMES[sourceLang] || sourceLang
+  const to   = LANG_NAMES[targetLang] || targetLang
+  const result = await ask(
+    `Translate this ${from} text to ${to}. Return only the translation, nothing else:\n\n${text}`,
+    { model, max_tokens: 1024 }
+  )
+  return result.trim()
 }
 
 export async function explainGrammarError({ de, type, userAnswer, correctAnswer }) {

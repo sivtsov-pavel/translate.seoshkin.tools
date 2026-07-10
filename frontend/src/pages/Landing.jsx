@@ -593,9 +593,12 @@ export default function Landing() {
           <Link to="/docs" style={{ color: 'var(--accent)', fontWeight: 600 }}>{c.footer} →</Link>
         </div>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/login" style={{ color: 'var(--ink-soft)' }}>Login</Link>
+          <Link to="/login"    style={{ color: 'var(--ink-soft)' }}>Login</Link>
           <Link to="/register" style={{ color: 'var(--ink-soft)' }}>Register</Link>
-          <Link to="/docs" style={{ color: 'var(--ink-soft)' }}>Docs</Link>
+          <Link to="/docs"     style={{ color: 'var(--ink-soft)' }}>Docs</Link>
+          <Link to="/privacy"  style={{ color: 'var(--ink-soft)' }}>Privacy</Link>
+          <Link to="/terms"    style={{ color: 'var(--ink-soft)' }}>Terms</Link>
+          <Link to="/cookies"  style={{ color: 'var(--ink-soft)' }}>Cookies</Link>
         </div>
         <div style={{ marginTop: 16, fontSize: 12, opacity: 0.5 }}>
           © 2026 Deutsch.lernen · translate.seoshkin.tools

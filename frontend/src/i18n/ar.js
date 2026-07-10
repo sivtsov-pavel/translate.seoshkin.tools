@@ -56,6 +56,7 @@ export const ar = {
     sentenceWrite: 'اكتب جملة',
     letterFill: 'أضف الحرف',
     dictation: 'إملاء',
+    speech: 'نطق',
     tapToReveal: 'انقر لرؤية الإجابة',
     forgot: 'نسيت',
     hard: 'صعب',

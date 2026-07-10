@@ -37,8 +37,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   const handleSelect = (idx) => {
     if (selected !== null) return
     setSelected(idx)
-    // При правильном ответе — автопереход через 1.2с, при ошибке — ждём ручного нажатия
-    if (idx === correctIdx) setTimeout(() => onAnswer(5), 1200)
+    // Нет автоперехода — пользователь сам нажмёт «Далее» (чтобы успеть добавить в словарь)
   }
 
   const getStyle = (idx) => {
@@ -61,11 +60,11 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   }
 
   return (
-    <div style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
+    <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
 
       <WordImage imageUrl={imageUrl} wordDe={wordDe} bleed />
 
-      <div style={{ padding: 24 }}>
+      <div className="exercise-card-content" style={{ padding: 24 }}>
       {lessonTitle && (
         <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
           📚 {lessonTitle}
@@ -115,12 +114,10 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
             correctAnswer={correctAnswer}
             isCorrect={selected === correctIdx}
           />
-          {selected !== correctIdx && (
-            <button onClick={() => onAnswer(1)}
-              style={{ marginTop: 12, padding: '10px 24px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>
-              {t.exercise.next}
-            </button>
-          )}
+          <button onClick={() => onAnswer(selected === correctIdx ? 5 : 1)}
+            style={{ marginTop: 12, padding: '10px 24px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>
+            {t.exercise.next}
+          </button>
         </div>
       )}
       </div>

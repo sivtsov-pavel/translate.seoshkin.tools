@@ -1,6 +1,82 @@
-import { useState, useEffect } from 'react'
-import { useSettingsStore } from '../store/settings.js'
+import { useState, useEffect, useRef } from 'react'
+import { useSettingsStore, applyVisual } from '../store/settings.js'
 import { useAuthStore } from '../store/auth.js'
+
+const VOICE_KEY = 'de_voice_name'
+
+function VoicePicker() {
+  const [voices, setVoices] = useState([])
+  const [selected, setSelected] = useState(() => localStorage.getItem(VOICE_KEY) || '')
+  const [preview, setPreview] = useState(null)
+  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
+
+  useEffect(() => {
+    const load = () => {
+      const v = synth?.getVoices().filter(v => v.lang.startsWith('de')) || []
+      setVoices(v)
+    }
+    load()
+    synth?.addEventListener('voiceschanged', load)
+    return () => synth?.removeEventListener('voiceschanged', load)
+  }, [])
+
+  const select = (name) => {
+    localStorage.setItem(VOICE_KEY, name)
+    setSelected(name)
+    setPreview(name)
+    // Пример произношения выбранным голосом
+    if (!synth) return
+    synth.cancel()
+    setTimeout(() => {
+      const utt = new SpeechSynthesisUtterance('Guten Tag! Ich lerne Deutsch.')
+      utt.lang = 'de-DE'
+      utt.rate = parseFloat(localStorage.getItem('voice_rate') || '0.9')
+      const v = synth.getVoices().find(v => v.name === name)
+      if (v) utt.voice = v
+      synth.speak(utt)
+    }, 80)
+  }
+
+  const activeName = selected || voices.find(v => v.name === 'Google Deutsch')?.name || voices[0]?.name || ''
+
+  if (!voices.length) return (
+    <div style={{ fontSize: 13, color: 'var(--ink-soft)', padding: '8px 0' }}>
+      Голоса не найдены. На Android может быть доступен только один голос — установите «Google TTS» из Play Market.
+    </div>
+  )
+
+  return (
+    <div>
+      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Голос для немецкого</div>
+      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 12 }}>
+        Нажми — услышишь пример произношения
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {voices.map(v => {
+          const active = v.name === activeName
+          return (
+            <button key={v.name} onClick={() => select(v.name)} style={{
+              padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+              border: `2px solid ${active ? 'var(--accent)' : 'var(--line)'}`,
+              background: active ? 'var(--accent-soft)' : 'var(--surface-2)',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              <span style={{ fontSize: 18 }}>{active ? '🔊' : '🔈'}</span>
+              <div>
+                <div style={{ fontWeight: active ? 700 : 400, fontSize: 14, color: 'var(--ink)' }}>{v.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{v.lang} {v.localService ? '· локальный' : '· онлайн'}</div>
+              </div>
+              {active && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>активен</span>}
+            </button>
+          )
+        })}
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 10 }}>
+        💡 По умолчанию — Google Deutsch. На iPhone голосов мало, установите iOS 17+ для лучших вариантов.
+      </div>
+    </div>
+  )
+}
 
 const FONTS = [
   { id: 'Roboto',       label: 'Roboto',       sample: 'Стандартный шрифт приложения' },
@@ -58,18 +134,21 @@ export default function Settings() {
   const [smtpPassVisible, setSmtpPassVisible] = useState(false)
 
   const [draft, setDraft] = useState({
-    daily_limit: store.daily_limit,
-    openai_key:  store.openai_key,
-    zoom:        store.zoom,
-    fontFamily:  store.fontFamily,
-    accentColor: store.accentColor,
-    voiceRate:   store.voiceRate,
-    smtp_host:   store.smtp_host   || '',
-    smtp_port:   store.smtp_port   || 587,
-    smtp_secure: store.smtp_secure || false,
-    smtp_user:   store.smtp_user   || '',
-    smtp_pass:   store.smtp_pass   || '',
-    smtp_from:   store.smtp_from   || '',
+    daily_limit:  store.daily_limit,
+    openai_key:   store.openai_key,
+    zoom:         store.zoom,
+    fontFamily:   store.fontFamily,
+    headingFont:  store.headingFont  || 'Georgia',
+    headingSize:  store.headingSize  || 22,
+    accentColor:  store.accentColor,
+    voiceRate:    store.voiceRate,
+    mobileLayout: store.mobileLayout || 'bottom',
+    smtp_host:    store.smtp_host   || '',
+    smtp_port:    store.smtp_port   || 587,
+    smtp_secure:  store.smtp_secure || false,
+    smtp_user:    store.smtp_user   || '',
+    smtp_pass:    store.smtp_pass   || '',
+    smtp_from:    store.smtp_from   || '',
   })
 
   useEffect(() => {
@@ -78,22 +157,37 @@ export default function Settings() {
 
   useEffect(() => {
     setDraft({
-      daily_limit: store.daily_limit,
-      openai_key:  store.openai_key,
-      zoom:        store.zoom,
-      fontFamily:  store.fontFamily,
-      accentColor: store.accentColor,
-      voiceRate:   store.voiceRate,
-      smtp_host:   store.smtp_host   || '',
-      smtp_port:   store.smtp_port   || 587,
-      smtp_secure: store.smtp_secure || false,
-      smtp_user:   store.smtp_user   || '',
-      smtp_pass:   store.smtp_pass   || '',
-      smtp_from:   store.smtp_from   || '',
+      daily_limit:  store.daily_limit,
+      openai_key:   store.openai_key,
+      zoom:         store.zoom,
+      fontFamily:   store.fontFamily,
+      headingFont:  store.headingFont  || 'Georgia',
+      headingSize:  store.headingSize  || 22,
+      accentColor:  store.accentColor,
+      voiceRate:    store.voiceRate,
+      mobileLayout: store.mobileLayout || 'bottom',
+      smtp_host:    store.smtp_host   || '',
+      smtp_port:    store.smtp_port   || 587,
+      smtp_secure:  store.smtp_secure || false,
+      smtp_user:    store.smtp_user   || '',
+      smtp_pass:    store.smtp_pass   || '',
+      smtp_from:    store.smtp_from   || '',
     })
   }, [store.loaded])
 
-  const update = (key, value) => setDraft(d => ({ ...d, [key]: value }))
+  const VISUAL_KEYS = new Set(['zoom', 'fontFamily', 'headingFont', 'headingSize', 'accentColor', 'voiceRate', 'mobileLayout'])
+  const LS_KEY = 'app_visual_settings'
+
+  // Визуальные настройки применяются И сохраняются сразу — без нажатия «Сохранить»
+  const update = (key, value) => setDraft(d => {
+    const next = { ...d, [key]: value }
+    if (VISUAL_KEYS.has(key)) {
+      applyVisual(next)
+      const toSave = { zoom: next.zoom, fontFamily: next.fontFamily, headingFont: next.headingFont, headingSize: next.headingSize, accentColor: next.accentColor, voiceRate: next.voiceRate, mobileLayout: next.mobileLayout }
+      localStorage.setItem(LS_KEY, JSON.stringify(toSave))
+    }
+    return next
+  })
 
   const handleSave = async () => {
     await store.saveSettings(draft)
@@ -187,6 +281,48 @@ export default function Settings() {
           </div>
         </Row>
 
+        <Row label="Шрифт заголовков">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[{ id: 'body', label: 'Как основной текст', sample: 'Совпадает с выбранным шрифтом' }, ...FONTS].map(f => (
+              <button key={f.id} onClick={() => update('headingFont', f.id)}
+                style={{
+                  padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                  border: `2px solid ${draft.headingFont === f.id ? 'var(--accent)' : 'var(--line)'}`,
+                  background: draft.headingFont === f.id ? 'var(--accent-soft)' : 'var(--surface-2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                }}>
+                <span style={{ fontFamily: f.id === 'body' ? 'inherit' : f.id === 'Georgia' ? 'Georgia,serif' : f.id === 'Merriweather' ? 'Merriweather,Georgia,serif' : `${f.id},-apple-system,sans-serif`, fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>
+                  {f.label}
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{f.sample}</span>
+              </button>
+            ))}
+          </div>
+        </Row>
+
+        <Row label="Размер заголовков">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[
+              { value: 18, label: 'Мелкий' },
+              { value: 20, label: 'Средний' },
+              { value: 22, label: 'Обычный' },
+              { value: 26, label: 'Крупный' },
+              { value: 30, label: 'Очень крупный' },
+            ].map(({ value, label }) => (
+              <button key={value} onClick={() => update('headingSize', value)}
+                style={{
+                  padding: '8px 16px', borderRadius: 10, cursor: 'pointer',
+                  border: '1px solid var(--line)', fontSize: 13,
+                  background: draft.headingSize === value ? 'var(--accent)' : 'var(--surface-2)',
+                  color: draft.headingSize === value ? 'var(--accent-ink)' : 'var(--ink)',
+                  fontWeight: draft.headingSize === value ? 700 : 400,
+                }}>
+                <span style={{ fontSize: value * 0.55 }}>{label}</span>
+              </button>
+            ))}
+          </div>
+        </Row>
+
         <Row label="Акцентный цвет">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {ACCENT_PRESETS.map(({ color, label }) => (
@@ -208,6 +344,28 @@ export default function Settings() {
               />
               <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Свой цвет</span>
             </div>
+          </div>
+        </Row>
+      </Section>
+
+      {/* ── Навигация ── */}
+      <Section icon="📱" title="Мобильная навигация">
+        <Row label="Тип меню на телефоне" hint="Влияет только на мобиль (≤640px). На планшете — всегда иконки. На ПК — всегда полный сайдбар.">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[
+              { id: 'bottom', label: '⬇ Нижняя панель', desc: 'Сегодня, Словарь, Читалка, Разговорник' },
+              { id: 'strip',  label: '◀ Боковая полоска', desc: 'Иконки слева, как на планшете' },
+            ].map(({ id, label, desc }) => (
+              <button key={id} onClick={() => update('mobileLayout', id)}
+                style={{
+                  padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left', flex: 1, minWidth: 140,
+                  border: `2px solid ${(draft.mobileLayout || 'bottom') === id ? 'var(--accent)' : 'var(--line)'}`,
+                  background: (draft.mobileLayout || 'bottom') === id ? 'var(--accent-soft)' : 'var(--surface-2)',
+                }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{label}</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{desc}</div>
+              </button>
+            ))}
           </div>
         </Row>
       </Section>
@@ -242,9 +400,8 @@ export default function Settings() {
             💡 Для начинающих рекомендуется 0.7–0.8, для опытных — 1.0–1.2
           </div>
         </Row>
-        <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
-          Голос и автопроизношение настраиваются в боковой панели слева.
-        </div>
+
+        <VoicePicker />
       </Section>
 
       {/* ── Интеграции ── */}

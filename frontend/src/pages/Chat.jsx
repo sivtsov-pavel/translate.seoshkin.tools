@@ -41,9 +41,22 @@ export default function Chat() {
     } catch (e) { console.error('chat/messages:', e) }
   }, [])
 
+  // При первой загрузке — авто-открываем первую беседу (на десктопе сразу, на мобиле только выбираем)
   useEffect(() => {
-    loadConversations().finally(() => setLoading(false))
-  }, [loadConversations])
+    const init = async () => {
+      try {
+        const data = await api.get('/chat/conversations')
+        setConversations(data)
+        if (data.length > 0) {
+          setActiveId(data[0].id)
+          if (window.innerWidth >= 768) setMobileView('chat')
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    init()
+  }, [])
 
   useEffect(() => {
     if (!activeId) return
@@ -100,96 +113,152 @@ export default function Chat() {
 
       {/* ── Боковая панель (список бесед) ── */}
       <aside style={{
-        width: 260, flexShrink: 0,
+        width: 280, flexShrink: 0,
         borderRight: '1px solid var(--line)',
         background: 'var(--surface)',
         display: 'flex', flexDirection: 'column',
-        // на мобиле: показываем только при mobileView === 'list'
         ...(mobileView === 'chat' ? { display: 'none' } : {}),
       }}
         className="chat-sidebar"
       >
-        {/* Шапка списка */}
-        <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            💬 Чат
-          </div>
+        {/* Узкая полоса иконок — только планшет 768-1023px (показывается через CSS) */}
+        <div className="chat-sidebar-narrow" style={{
+          display: 'none', flexDirection: 'column', alignItems: 'center',
+          gap: 10, padding: '12px 0', overflowY: 'auto', flex: 1,
+          WebkitOverflowScrolling: 'touch',
+        }}>
           {!isOwner && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <button onClick={() => openOrCreate('support')} style={newBtn}>
-                🛠️ Написать в поддержку
+            <>
+              <button onClick={() => openOrCreate('support')} title="Техподдержка"
+                style={{ ...iconPillBtn, background: 'var(--accent)', color: 'var(--accent-ink)' }}>
+                🛠️
               </button>
-              <button onClick={() => openOrCreate('teacher')} style={newBtn}>
-                👨‍🏫 Написать учителю
+              <button onClick={() => openOrCreate('teacher')} title="Учителю"
+                style={{ ...iconPillBtn, background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)' }}>
+                👨‍🏫
               </button>
-            </div>
-          )}
-          {isOwner && (
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
-              Все входящие обращения
-            </div>
-          )}
-        </div>
-
-        {/* Список */}
-        <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          {conversations.length === 0 && !isOwner && (
-            <div style={{ padding: '20px 16px', color: 'var(--ink-soft)', fontSize: 13, lineHeight: 1.6 }}>
-              Нажми кнопку выше, чтобы написать в поддержку или учителю.
-            </div>
-          )}
-          {conversations.length === 0 && isOwner && (
-            <div style={{ padding: '20px 16px', color: 'var(--ink-soft)', fontSize: 13 }}>
-              Пока нет обращений
-            </div>
+              {conversations.length > 0 && (
+                <div style={{ width: 32, height: 1, background: 'var(--line)', margin: '2px 0' }} />
+              )}
+            </>
           )}
           {conversations.map(c => {
             const meta = TYPE_META[c.type] || {}
             const unread = parseInt(c.unread) || 0
             return (
-              <div key={c.id} onClick={() => selectConv(c.id)} style={{
-                padding: '11px 14px', cursor: 'pointer',
-                borderBottom: '1px solid var(--line)',
-                background: c.id === activeId ? 'var(--accent-soft)' : 'transparent',
-                borderLeft: `3px solid ${c.id === activeId ? 'var(--accent)' : 'transparent'}`,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-                  <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>
-                    {meta.icon} {meta.label}
-                  </span>
-                  {unread > 0 && (
-                    <span style={{
-                      background: 'var(--red)', color: '#fff', borderRadius: 20,
-                      padding: '1px 7px', fontSize: 11, fontWeight: 700, flexShrink: 0,
-                    }}>{unread}</span>
-                  )}
+              <div key={c.id} onClick={() => selectConv(c.id)}
+                title={`${meta.label}${isOwner && c.student_name ? ` — ${c.student_name}` : ''}`}
+                style={{ position: 'relative', cursor: 'pointer' }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: 20,
+                  background: c.id === activeId ? 'var(--accent-soft)' : 'var(--surface-2)',
+                  border: `2px solid ${c.id === activeId ? 'var(--accent)' : 'transparent'}`,
+                  transition: 'all .15s',
+                }}>
+                  {meta.icon}
                 </div>
-                {isOwner && c.student_name && (
-                  <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
-                    {c.student_name}
-                  </div>
+                {unread > 0 && (
+                  <span style={{
+                    position: 'absolute', top: -4, right: -4,
+                    background: 'var(--red)', color: '#fff', borderRadius: 10,
+                    padding: '1px 5px', fontSize: 9, fontWeight: 700,
+                    lineHeight: 1.4, minWidth: 14, textAlign: 'center',
+                  }}>{unread > 9 ? '9+' : unread}</span>
                 )}
-                <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 3 }}>
-                  {new Date(c.updated_at).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </div>
               </div>
             )
           })}
         </div>
+
+        {/* Полное меню — мобиль и десктоп */}
+        <div className="chat-sidebar-full" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          {/* Шапка */}
+          <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: isOwner ? 4 : 12 }}>
+              💬 Чат
+            </div>
+            {isOwner && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 0 }}>Входящие обращения</div>}
+
+            {!isOwner && (
+              <>
+                <button onClick={() => openOrCreate('support')}
+                  style={{ ...newBtn, marginBottom: 8, background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none' }}>
+                  <span style={{ fontSize: 18 }}>🛠️</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>Техподдержка</div>
+                    <div style={{ fontSize: 11, opacity: 0.8, fontWeight: 400 }}>Проблема с сайтом или вопрос</div>
+                  </div>
+                  <span style={{ marginLeft: 'auto', fontSize: 20 }}>+</span>
+                </button>
+                <button onClick={() => openOrCreate('teacher')}
+                  style={{ ...newBtn, background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)' }}>
+                  <span style={{ fontSize: 18 }}>👨‍🏫</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>Учителю</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', fontWeight: 400 }}>Вопрос по уроку или заданию</div>
+                  </div>
+                  <span style={{ marginLeft: 'auto', fontSize: 20, color: 'var(--ink-soft)' }}>+</span>
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Список бесед */}
+          <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            {conversations.length === 0 && (
+              <div style={{ padding: '24px 16px', color: 'var(--ink-soft)', fontSize: 13, lineHeight: 1.7, textAlign: 'center' }}>
+                {isOwner ? 'Нет обращений' : 'Твои разговоры появятся здесь после того как ты напишешь'}
+              </div>
+            )}
+            {conversations.map(c => {
+              const meta = TYPE_META[c.type] || {}
+              const unread = parseInt(c.unread) || 0
+              return (
+                <div key={c.id} onClick={() => selectConv(c.id)} style={{
+                  padding: '12px 14px', cursor: 'pointer',
+                  borderBottom: '1px solid var(--line)',
+                  background: c.id === activeId ? 'var(--accent-soft)' : 'transparent',
+                  borderLeft: `3px solid ${c.id === activeId ? 'var(--accent)' : 'transparent'}`,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>
+                      {meta.icon} {meta.label}
+                    </span>
+                    {unread > 0 && (
+                      <span style={{
+                        background: 'var(--red)', color: '#fff', borderRadius: 20,
+                        padding: '2px 8px', fontSize: 11, fontWeight: 700, flexShrink: 0,
+                      }}>{unread} новых</span>
+                    )}
+                  </div>
+                  {isOwner && c.student_name && (
+                    <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>👤 {c.student_name}</div>
+                  )}
+                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 3 }}>
+                    {new Date(c.updated_at).toLocaleString('ru', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </aside>
 
-      {/* ── Область переписки ── */}
+      {/* ── Главная область ── */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0,
-        // на мобиле: показываем только при mobileView === 'chat'
         ...(mobileView === 'list' ? { display: 'none' } : {}),
       }}
         className="chat-messages-pane"
       >
         {!activeId ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, color: 'var(--ink-soft)' }}>
-            <span style={{ fontSize: 48 }}>💬</span>
-            <div style={{ fontSize: 15 }}>Выбери беседу слева</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 20, padding: 32, textAlign: 'center' }}>
+            <div style={{ fontSize: 56 }}>💬</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>Выбери разговор слева</div>
+            <div style={{ fontSize: 14, color: 'var(--ink-soft)', maxWidth: 300 }}>
+              {isOwner ? 'Нажми на обращение в списке чтобы ответить' : 'Или начни новый разговор кнопками в левом меню'}
+            </div>
           </div>
         ) : (
           <>
@@ -291,17 +360,28 @@ export default function Chat() {
 
       {/* Стили для адаптивности */}
       <style>{`
-        /* На мобиле: полноэкранные панели по очереди */
+        /* Мобиль ≤767px: полноэкранные панели по очереди */
         @media (max-width: 767px) {
           .chat-sidebar { width: 100% !important; }
-          .chat-messages-pane { }
           .chat-back-btn { display: inline-block !important; }
+          .chat-sidebar-narrow { display: none !important; }
+          .chat-sidebar-full { display: flex !important; flex: 1; overflow: hidden; }
         }
-        /* На десктопе: обе панели рядом, кнопка назад скрыта */
-        @media (min-width: 768px) {
+        /* Планшет 768-1023px: узкая панель иконок + полная область сообщений */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .chat-sidebar { display: flex !important; width: 60px !important; min-width: 60px !important; }
+          .chat-messages-pane { display: flex !important; }
+          .chat-back-btn { display: none !important; }
+          .chat-sidebar-narrow { display: flex !important; }
+          .chat-sidebar-full { display: none !important; }
+        }
+        /* Десктоп ≥1024px: полный сайдбар */
+        @media (min-width: 1024px) {
           .chat-sidebar { display: flex !important; }
           .chat-messages-pane { display: flex !important; }
           .chat-back-btn { display: none !important; }
+          .chat-sidebar-narrow { display: none !important; }
+          .chat-sidebar-full { display: flex !important; flex: 1; overflow: hidden; }
         }
       `}</style>
     </div>
@@ -309,7 +389,14 @@ export default function Chat() {
 }
 
 const newBtn = {
-  width: '100%', padding: '9px 12px', borderRadius: 9, fontSize: 13,
+  width: '100%', padding: '11px 14px', borderRadius: 10, fontSize: 13,
   background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)',
   cursor: 'pointer', fontWeight: 600, textAlign: 'left', lineHeight: 1.4,
+  display: 'flex', alignItems: 'center', gap: 10,
+}
+
+const iconPillBtn = {
+  width: 40, height: 40, borderRadius: 12, fontSize: 20,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  cursor: 'pointer', border: 'none', padding: 0, flexShrink: 0,
 }

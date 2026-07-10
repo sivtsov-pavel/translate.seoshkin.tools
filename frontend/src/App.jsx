@@ -19,6 +19,9 @@ import Translations from './pages/Translations.jsx'
 import Settings from './pages/Settings.jsx'
 import Docs from './pages/Docs.jsx'
 import Chat from './pages/Chat.jsx'
+import Privacy from './pages/Privacy.jsx'
+import Terms from './pages/Terms.jsx'
+import Cookies from './pages/Cookies.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
@@ -52,7 +55,10 @@ export default function App() {
         <Route path="/translations"  element={<ProtectedRoute><Layout><Translations  /></Layout></ProtectedRoute>} />
         <Route path="/settings"      element={<ProtectedRoute><Layout><Settings      /></Layout></ProtectedRoute>} />
         <Route path="/chat"          element={<ProtectedRoute><Layout><Chat           /></Layout></ProtectedRoute>} />
-        <Route path="/docs"          element={<Docs />} />
+        <Route path="/docs"    element={<Docs />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms"   element={<Terms />} />
+        <Route path="/cookies" element={<Cookies />} />
       </Routes>
     </BrowserRouter>
   )

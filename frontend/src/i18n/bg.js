@@ -54,6 +54,7 @@ export const bg = {
     sentenceWrite: 'Напиши изречение',
     letterFill: 'Добави буква',
     dictation: 'Диктовка',
+    speech: 'Произношение',
     tapToReveal: 'Натисни за отговор',
     forgot: 'Забравих',
     hard: 'Трудно',

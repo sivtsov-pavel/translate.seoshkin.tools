@@ -54,6 +54,7 @@ export const es = {
     sentenceWrite: 'Escribe una frase',
     letterFill: 'Añade la letra',
     dictation: 'Dictado',
+    speech: 'Pronunciación',
     tapToReveal: 'Toca para ver la respuesta',
     forgot: 'No recuerdo',
     hard: 'Difícil',

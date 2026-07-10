@@ -54,6 +54,7 @@ export const uk = {
     sentenceWrite: 'Напиши речення',
     letterFill: 'Додай букву',
     dictation: 'Диктант',
+    speech: 'Вимова',
     tapToReveal: 'Натисни щоб побачити відповідь',
     forgot: 'Не памʼятаю',
     hard: 'Важко',

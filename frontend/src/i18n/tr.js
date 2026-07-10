@@ -54,6 +54,7 @@ export const tr = {
     sentenceWrite: 'Cümle yaz',
     letterFill: 'Harf ekle',
     dictation: 'Dikte',
+    speech: 'Telaffuz',
     tapToReveal: 'Cevabı görmek için dokun',
     forgot: 'Unuttum',
     hard: 'Zor',
