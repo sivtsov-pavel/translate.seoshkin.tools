@@ -180,7 +180,7 @@ export default function Layout({ children }) {
   const SidebarContent = ({ inDrawer = false }) => {
     const close = inDrawer ? () => setOpen(false) : undefined
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
         {/* Шапка */}
         <div style={{ padding: '16px 16px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', flexShrink: 0 }}>
           <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -226,7 +226,7 @@ export default function Layout({ children }) {
         </div>
 
         {/* Навигация */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+        <div style={{ flexShrink: 0, padding: '8px' }}>
           {/* Сегодня — отдельно сверху */}
           <NavItem item={{ to: '/', icon: 'bi-house-door-fill', label: t.nav.today }} onClick={close} />
 
@@ -397,7 +397,7 @@ export default function Layout({ children }) {
         )}
 
         {/* Подвал: тема, язык, выход */}
-        <div style={{ padding: '10px 12px', borderTop: '1px solid var(--line)', display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0 }}>
+        <div style={{ padding: '10px 12px', borderTop: '1px solid var(--line)', display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0, marginTop: 'auto' }}>
           <button onClick={toggleTheme} style={pill}>
             <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
             {' '}{theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}
@@ -463,13 +463,22 @@ export default function Layout({ children }) {
         )}
       </header>
 
-      {/* Full-screen меню (мобиль/планшет) — скрыт на ≥1024px через CSS */}
+      {/* Затемнение-фон под шторкой — тап закрывает меню (скрыт на ≥1024px через CSS) */}
+      {open && (
+        <div className="layout-overlay" onClick={() => setOpen(false)} style={{
+          position: 'fixed', inset: 0, zIndex: 150, background: 'rgba(0,0,0,0.45)',
+        }} />
+      )}
+
+      {/* Боковая шторка-меню (мобиль/планшет) — скрыта на ≥1024px через CSS */}
       <nav ref={drawerRef} className="layout-drawer" style={{
-        position: 'fixed', inset: 0, zIndex: 160,
+        position: 'fixed', top: 3, left: 0, bottom: 0, zIndex: 160,
+        width: 'min(320px, 86vw)',
         background: 'var(--surface)',
         transform: open ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform .28s cubic-bezier(.32,.72,0,1)',
         overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        boxShadow: open ? '2px 0 24px rgba(0,0,0,0.28)' : 'none',
       }}>
         <SidebarContent inDrawer />
       </nav>

@@ -88,6 +88,9 @@ a { color: var(--accent); text-decoration: none; }
 /* Мобиль ≤640px — нижняя панель и полная ширина */
 @media (max-width: 640px) {
   .hide-mobile { display: none; }
+  /* Убираем дубль-гамбургер: на мобиле меню открывается нижней панелью/полосой,
+     верхний гамбургер не нужен. visibility сохраняет место — заголовок по центру */
+  .layout-hamburger { visibility: hidden; }
   .main-content {
     padding-left: 10px;
     padding-right: 10px;
