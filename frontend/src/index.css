@@ -304,11 +304,21 @@ a { color: var(--accent); text-decoration: none; }
   overflow: hidden;
 }
 
-/* Контент: заполняет остаток, скролл внутри если не помещается */
+/* Контент: заполняет остаток; на мобиле не скролл — резиновая верстка */
 .exercise-session-page .exercise-card-content {
   flex: 1 !important;
   overflow-y: auto !important;
   min-height: 0 !important;
+}
+/* Мобиль: компактный режим — уменьшаем отступы чтобы не скроллить */
+@media (max-width: 640px) and (orientation: portrait) {
+  .exercise-session-page .exercise-card-content {
+    padding: 14px 14px 8px !important;
+  }
+  .exercise-session-page .exercise-card-content button {
+    padding: 9px 14px !important;
+    margin-bottom: 6px !important;
+  }
 }
 /* Браузерный баг: padding-bottom не учитывается в overflow-y:auto / flex — используем ::after */
 .exercise-session-page .exercise-card-content::after {

@@ -13,6 +13,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
 
   useEffect(() => {
     inputRef.current?.focus()
+    inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     speakAuto(payload.word_de)
   }, [payload.word_de])
 

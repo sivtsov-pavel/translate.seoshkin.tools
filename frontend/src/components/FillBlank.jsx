@@ -24,7 +24,10 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
     return [...unique].sort(() => Math.random() - 0.5)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  useEffect(() => {
+    inputRef.current?.focus()
+    setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()

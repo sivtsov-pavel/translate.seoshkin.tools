@@ -20,6 +20,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
   useEffect(() => {
     setTimeout(() => speak(word_de, 'de-DE', 0.8), 300)
     inputRef.current?.focus()
+    setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
   }, [word_de])
 
   const check = () => {

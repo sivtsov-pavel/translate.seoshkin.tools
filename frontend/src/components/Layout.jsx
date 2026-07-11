@@ -182,7 +182,7 @@ export default function Layout({ children }) {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {/* Шапка */}
         <div style={{ padding: '16px 16px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <span>🇩🇪 {t.nav.appName}</span>
             {inDrawer && (
               <button onClick={() => setOpen(false)} style={{
@@ -193,14 +193,11 @@ export default function Layout({ children }) {
             )}
           </div>
           {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
-              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 }}>
-                {user.email[0].toUpperCase()}
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                {user.role === 'owner' ? t.nav.teacher : t.nav.student}
               </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{user.email.split('@')[0]}</div>
-                <div style={{ fontSize: 11, opacity: 0.8 }}>{user.role === 'owner' ? t.nav.teacher : t.nav.student}</div>
-              </div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2 }}>{user.email.split('@')[0]}</div>
             </div>
           )}
         </div>
@@ -428,7 +425,7 @@ export default function Layout({ children }) {
             <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
           </svg>
         </button>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: 18 }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)', fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 18 }}>
           🇩🇪 {t.nav.appName}
         </Link>
         {location.pathname !== '/' ? (

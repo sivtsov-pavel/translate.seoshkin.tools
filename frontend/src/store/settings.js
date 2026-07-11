@@ -51,6 +51,7 @@ export function applyVisual(visual) {
     styleEl.id = '__heading_override__'
     document.head.appendChild(styleEl)
   }
+  document.documentElement.style.setProperty('--heading-font', hStack)
   styleEl.textContent = `
     h1, h2, h3, h4 { font-family: ${hStack} !important; }
     h1 { font-size: ${sz}px !important; }
