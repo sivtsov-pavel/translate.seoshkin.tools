@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
@@ -62,6 +62,28 @@ export default function Dashboard() {
         {lessons.map(lesson => (
           <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} />
         ))}
+      </div>
+
+      {/* Игры */}
+      <div style={{ padding: '16px 12px 4px' }}>
+        <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
+          Игры
+        </div>
+        <Link to="/game/match" style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: 'var(--surface)', border: '2px solid var(--accent)',
+            borderRadius: 16, padding: '14px 16px',
+            display: 'flex', alignItems: 'center', gap: 14,
+            transition: 'transform .15s',
+          }}>
+            <span style={{ fontSize: 32, lineHeight: 1 }}>🃏</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Словопара</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Найди пары слов — 8 пар, таймер, 4×4</div>
+            </div>
+            <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
+          </div>
+        </Link>
       </div>
 
       {/* Sticky CTA — сидит над нижней навигацией через CSS-переменную */}
