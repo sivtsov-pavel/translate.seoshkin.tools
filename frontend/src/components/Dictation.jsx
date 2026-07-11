@@ -3,6 +3,7 @@ import { speak } from '../hooks/useSpeech.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
+import { playCorrect, playWrong } from '../utils/sound.js'
 
 export default function Dictation({ payload, onAnswer, lessonTitle, translations, translationRu, exerciseId }) {
   const { word_de, translation_ru } = payload
@@ -27,6 +28,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
     const isCorrect = input.trim().toLowerCase() === word_de.trim().toLowerCase()
     setCorrect(isCorrect)
     setChecked(true)
+    if (isCorrect) playCorrect(); else playWrong()
   }
 
   const handleKeyDown = (e) => {

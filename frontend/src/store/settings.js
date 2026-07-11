@@ -6,7 +6,7 @@ const LS_KEY = 'app_visual_settings'
 const VISUAL_DEFAULTS = {
   zoom: 1.0,
   fontFamily: 'Roboto',
-  headingFont: 'Georgia',
+  headingFont: 'Roboto',
   headingSize: 22,
   accentColor: '',
   voiceRate: 0.9,

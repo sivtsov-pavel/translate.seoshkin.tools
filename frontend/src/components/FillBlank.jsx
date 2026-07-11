@@ -3,6 +3,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
+import { playCorrect, playWrong } from '../utils/sound.js'
 
 export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTranslations, exerciseId }) {
   const [answer, setAnswer] = useState('')
@@ -32,9 +33,10 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!answer.trim()) return
+    const correct = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
     setSubmitted(true)
+    if (correct) playCorrect(); else playWrong()
     const fullSentence = beforeBlank + payload.blank + afterBlank
-    // Произносим полное предложение, а не только слово
     setTimeout(() => speak(fullSentence), 300)
   }
 

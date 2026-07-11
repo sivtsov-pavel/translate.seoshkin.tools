@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
+import { playCorrect, playWrong } from '../utils/sound.js'
 
 export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
   const [input, setInput]       = useState('')
@@ -22,6 +23,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
     const isCorrect = input.trim().toLowerCase() === payload.answer.trim().toLowerCase()
     setCorrect(isCorrect)
     setSubmitted(true)
+    if (isCorrect) playCorrect(); else playWrong()
     setTimeout(() => speak(payload.word_de), 300)
     setTimeout(() => onAnswer(isCorrect ? 5 : 1, input.trim()), 1500)
   }

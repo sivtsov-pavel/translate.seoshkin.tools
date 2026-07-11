@@ -12,7 +12,7 @@ import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 const SIDEBAR_W = 220
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuthStore()
+  const { user, logout, refreshUser } = useAuthStore()
   const { t } = useI18nStore()
   const { theme, toggle: toggleTheme } = useThemeStore()
   const adminOp = useAdminOpStore()
@@ -28,8 +28,8 @@ export default function Layout({ children }) {
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
 
-  // Загружаем серверные настройки один раз при старте
-  useEffect(() => { fetchSettings() }, [])
+  // Загружаем серверные настройки и обновляем профиль один раз при старте
+  useEffect(() => { fetchSettings(); refreshUser() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Бейдж непрочитанных сообщений — опрос каждые 30 сек
   useEffect(() => {
@@ -193,12 +193,34 @@ export default function Layout({ children }) {
             )}
           </div>
           {user && (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>
-                {user.role === 'owner' ? t.nav.teacher : t.nav.student}
+            <Link to="/profile" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+              {/* Аватар — эмодзи или первая буква */}
+              {(() => {
+                const av = user.avatar || ''
+                const isEmoji = /\p{Emoji}/u.test(av)
+                const displayName = user.full_name || user.email.split('@')[0]
+                return (
+                  <div style={{
+                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                    background: av ? 'var(--surface-2)' : 'var(--accent)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: isEmoji ? 20 : 14, fontWeight: 700,
+                    color: av ? 'inherit' : 'var(--accent-ink)',
+                    border: '1px solid var(--line)',
+                  }}>
+                    {av || displayName[0]?.toUpperCase()}
+                  </div>
+                )
+              })()}
+              <div>
+                <div style={{ fontSize: 10, opacity: 0.7, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                  {user.role === 'owner' ? t.nav.teacher : t.nav.student}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: 13, marginTop: 1 }}>
+                  {user.full_name || user.email.split('@')[0]}
+                </div>
               </div>
-              <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2 }}>{user.email.split('@')[0]}</div>
-            </div>
+            </Link>
           )}
         </div>
 

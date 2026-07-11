@@ -23,6 +23,7 @@ import WordMatch from './pages/WordMatch.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
 import Cookies from './pages/Cookies.jsx'
+import Profile from './pages/Profile.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/settings"      element={<ProtectedRoute><Layout><Settings      /></Layout></ProtectedRoute>} />
         <Route path="/chat"          element={<ProtectedRoute><Layout><Chat           /></Layout></ProtectedRoute>} />
         <Route path="/game/match"    element={<ProtectedRoute><Layout><WordMatch      /></Layout></ProtectedRoute>} />
+        <Route path="/profile"  element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/docs"    element={<Docs />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms"   element={<Terms />} />

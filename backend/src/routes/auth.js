@@ -70,10 +70,56 @@ export async function authRoutes(fastify) {
     return { token, user: { id: user.id, email: user.email, role: user.role } }
   })
 
-  // Получить текущего пользователя
+  // Получить текущего пользователя (с полями профиля)
   fastify.get('/api/auth/me', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
-    return request.user
+    const { rows } = await db.query(
+      'SELECT id, email, role, avatar, phone, telegram, whatsapp, profession, full_name FROM users WHERE id = $1',
+      [request.user.id]
+    )
+    return rows[0] ?? request.user
+  })
+
+  // Обновить свой профиль
+  fastify.put('/api/profile', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          full_name:  { type: 'string', maxLength: 100 },
+          avatar:     { type: 'string', maxLength: 10 },
+          phone:      { type: 'string', maxLength: 30 },
+          telegram:   { type: 'string', maxLength: 60 },
+          whatsapp:   { type: 'string', maxLength: 30 },
+          profession: { type: 'string', maxLength: 100 },
+          password:   { type: 'string', minLength: 6 },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    const { password, ...fields } = request.body
+    const allowed = ['full_name', 'avatar', 'phone', 'telegram', 'whatsapp', 'profession']
+    const keys = Object.keys(fields).filter(k => allowed.includes(k))
+
+    if (keys.length > 0) {
+      const sets = keys.map((k, i) => `${k} = $${i + 2}`).join(', ')
+      await db.query(
+        `UPDATE users SET ${sets} WHERE id = $1`,
+        [request.user.id, ...keys.map(k => fields[k])]
+      )
+    }
+
+    if (password) {
+      const hash = await bcrypt.hash(password, 10)
+      await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, request.user.id])
+    }
+
+    const { rows } = await db.query(
+      'SELECT id, email, role, avatar, phone, telegram, whatsapp, profession, full_name FROM users WHERE id = $1',
+      [request.user.id]
+    )
+    return rows[0]
   })
 }

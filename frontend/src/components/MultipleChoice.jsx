@@ -4,6 +4,7 @@ import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
 import { getTranslation, getEffectiveLang } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
+import { playCorrect, playWrong } from '../utils/sound.js'
 
 export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations, exerciseId }) {
   const [selected, setSelected] = useState(null)
@@ -18,7 +19,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
     // Перемешиваем с сохранением исходного индекса — избегаем indexOf по строке (ломается на "сорок" vs "сорок (40)")
     const indexed = displayOpts.map((opt, i) => ({ opt, i }))
     indexed.sort(() => Math.random() - 0.5)
-    const correctOrigIdx = payload.correct ?? 0
+    const correctOrigIdx = Number(payload.correct ?? 0)
     return {
       options: indexed.map(x => x.opt),
       correctIdx: indexed.findIndex(x => x.i === correctOrigIdx),
@@ -37,7 +38,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   const handleSelect = (idx) => {
     if (selected !== null) return
     setSelected(idx)
-    // Нет автоперехода — пользователь сам нажмёт «Далее» (чтобы успеть добавить в словарь)
+    if (idx === correctIdx) playCorrect(); else playWrong()
   }
 
   const getStyle = (idx) => {
