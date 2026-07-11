@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation } from '../utils/translation.js'
@@ -14,10 +14,15 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
   const parts = payload.sentence.split('___')
   const beforeBlank = parts[0]
   const afterBlank  = parts[parts.length - 1]
-  const uniqueOptions = [
-    payload.blank,
-    ...payload.options.filter(o => o.trim().toLowerCase() !== payload.blank.trim().toLowerCase()),
-  ]
+
+  // Перемешиваем один раз при монтировании — не при каждом рендере
+  const shuffledOptions = useMemo(() => {
+    const unique = [
+      payload.blank,
+      ...payload.options.filter(o => o.trim().toLowerCase() !== payload.blank.trim().toLowerCase()),
+    ]
+    return [...unique].sort(() => Math.random() - 0.5)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
@@ -75,7 +80,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
         <div style={{ marginBottom: 14 }}>
           <span style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>{t.exercise.wordHints}</span>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {uniqueOptions.sort(() => Math.random() - 0.5).map((opt, i) => (
+            {shuffledOptions.map((opt, i) => (
               <button key={i} onClick={() => selectHint(opt)}
                 style={{
                   fontSize: 16,

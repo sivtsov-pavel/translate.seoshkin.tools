@@ -287,17 +287,16 @@ a { color: var(--accent); text-decoration: none; }
   display: flex !important;
 }
 
-/* Картинка: ~45% высоты в портрете */
+/* Картинка: не более 28% высоты, жёсткий cap 180px — чтобы все 4 варианта влезли */
 .exercise-session-page .word-image-bleed {
-  flex: 0 0 42% !important;
+  flex: 0 0 28% !important;
   width: 100% !important;
-  height: 42% !important;
-  max-height: 42% !important;
+  height: 28% !important;
+  max-height: 180px !important;
   aspect-ratio: unset !important;
   border-right: none !important;
   border-bottom: 1px solid var(--line) !important;
-  /* Равномерные отступы внутри блока — картинка не доходит до краёв */
-  padding: 16px !important;
+  padding: 12px !important;
 }
 /* Скругляем углы самой фотографии внутри блока */
 .exercise-session-page .word-image-bleed img {
