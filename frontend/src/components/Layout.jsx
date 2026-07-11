@@ -135,6 +135,7 @@ export default function Layout({ children }) {
   const learningItems = [
     { to: '/lessons',                     icon: 'bi-book-fill',                 label: t.nav.lessons },
     { to: '/vocabulary',                  icon: 'bi-card-list',                 label: t.nav.vocabulary },
+    { to: '/ai-trainer',                  icon: 'bi-person-video3',             label: 'AI Тренер' },
     { to: '/vocabulary?status=learning',  icon: 'bi-journal-bookmark-fill',     label: t.nav.learningWords },
     { to: '/reader',                      icon: 'bi-eyeglasses',                label: t.nav.reader },
     { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
