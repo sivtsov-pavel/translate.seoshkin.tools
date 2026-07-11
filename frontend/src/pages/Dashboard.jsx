@@ -31,7 +31,7 @@ export default function Dashboard() {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-        <div style={{ fontFamily: 'Georgia,serif', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
+        <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
           {t.dashboard.allDone}
         </div>
         <div style={{ color: 'var(--ink-soft)', fontSize: 15 }}>{t.dashboard.comeBack}</div>
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
       {/* Hero — просто заголовок и счёт */}
       <div style={{ padding: '20px 20px 14px' }}>
-        <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 6px', lineHeight: 1.2 }}>
+        <h1 style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 22, margin: '0 0 6px', lineHeight: 1.2 }}>
           {t.dashboard.title}
         </h1>
         <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>
@@ -179,7 +179,7 @@ function LessonCard({ lesson, navigate }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-            <div style={{ fontFamily: 'Georgia,serif', fontSize: 18, fontWeight: 700 }}>
+            <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 18, fontWeight: 700 }}>
               {getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || `Урок #${lesson.lesson_id}`}
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: badge.bg, color: badge.color, flexShrink: 0 }}>

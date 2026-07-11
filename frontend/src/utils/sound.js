@@ -8,17 +8,23 @@ function getCtx() {
 }
 
 // Разблокировка звука на первом же взаимодействии пользователя со страницей.
-// Один раз создаём/резюмируем контекст, дальше слушатели снимаются.
+// На мобильных (iOS/Android) недостаточно resume() — нужно проиграть
+// пустой буфер внутри пользовательского жеста, иначе аудио остаётся заглушено.
 function unlockAudio() {
-  getCtx()
-  window.removeEventListener('pointerdown', unlockAudio)
-  window.removeEventListener('keydown', unlockAudio)
-  window.removeEventListener('touchstart', unlockAudio)
+  const ac = getCtx()
+  try {
+    const buf = ac.createBuffer(1, 1, 22050)
+    const src = ac.createBufferSource()
+    src.buffer = buf
+    src.connect(ac.destination)
+    src.start(0)
+  } catch {}
+  ;['pointerdown', 'keydown', 'touchstart', 'touchend'].forEach(ev =>
+    window.removeEventListener(ev, unlockAudio))
 }
 if (typeof window !== 'undefined') {
-  window.addEventListener('pointerdown', unlockAudio, { once: true })
-  window.addEventListener('keydown', unlockAudio, { once: true })
-  window.addEventListener('touchstart', unlockAudio, { once: true })
+  ;['pointerdown', 'keydown', 'touchstart', 'touchend'].forEach(ev =>
+    window.addEventListener(ev, unlockAudio, { once: true }))
 }
 
 function beep(freq, startTime, duration, gain = 0.18) {

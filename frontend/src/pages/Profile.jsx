@@ -134,9 +134,9 @@ export default function Profile() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Field label="Имя" value={form.full_name}  onChange={v => setForm(f => ({ ...f, full_name: v }))}  placeholder="Как тебя зовут?" />
           <Field label="Профессия" value={form.profession} onChange={v => setForm(f => ({ ...f, profession: v }))} placeholder="Студент, инженер, врач..." />
-          <Field label="Телефон"   value={form.phone}      onChange={v => setForm(f => ({ ...f, phone: v }))}      placeholder="+7 999 123-45-67" />
+          <Field label="Телефон"   value={form.phone}      onChange={v => setForm(f => ({ ...f, phone: v }))}      placeholder="+49 151 23456789" />
           <Field label="Telegram"  value={form.telegram}   onChange={v => setForm(f => ({ ...f, telegram: v }))}   placeholder="@username" />
-          <Field label="WhatsApp"  value={form.whatsapp}   onChange={v => setForm(f => ({ ...f, whatsapp: v }))}   placeholder="+7 999 123-45-67" />
+          <Field label="WhatsApp"  value={form.whatsapp}   onChange={v => setForm(f => ({ ...f, whatsapp: v }))}   placeholder="+49 151 23456789" />
         </div>
         {msg && (
           <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, fontSize: 14, fontWeight: 600, background: msg.ok ? 'rgba(78,154,110,0.12)' : 'rgba(179,56,44,0.12)', color: msg.ok ? 'var(--good)' : 'var(--red)' }}>

@@ -183,9 +183,9 @@ function EditModal({ student, onClose, onSaved }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
           <MField label="Имя"       value={form.full_name}  onChange={v => setForm(f => ({ ...f, full_name: v }))}  placeholder="Полное имя" />
           <MField label="Профессия" value={form.profession} onChange={v => setForm(f => ({ ...f, profession: v }))} placeholder="Профессия" />
-          <MField label="Телефон"   value={form.phone}      onChange={v => setForm(f => ({ ...f, phone: v }))}      placeholder="+7 999 ..." />
+          <MField label="Телефон"   value={form.phone}      onChange={v => setForm(f => ({ ...f, phone: v }))}      placeholder="+49 151 ..." />
           <MField label="Telegram"  value={form.telegram}   onChange={v => setForm(f => ({ ...f, telegram: v }))}   placeholder="@username" />
-          <MField label="WhatsApp"  value={form.whatsapp}   onChange={v => setForm(f => ({ ...f, whatsapp: v }))}   placeholder="+7 999 ..." />
+          <MField label="WhatsApp"  value={form.whatsapp}   onChange={v => setForm(f => ({ ...f, whatsapp: v }))}   placeholder="+49 151 ..." />
         </div>
 
         {/* Новый пароль */}
