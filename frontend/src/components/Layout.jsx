@@ -135,7 +135,7 @@ export default function Layout({ children }) {
   const learningItems = [
     { to: '/lessons',                     icon: 'bi-book-fill',                 label: t.nav.lessons },
     { to: '/vocabulary',                  icon: 'bi-card-list',                 label: t.nav.vocabulary },
-    { to: '/ai-trainer',                  icon: 'bi-person-video3',             label: 'AI Тренер' },
+    { to: '/ai-trainer',                  icon: 'bi-person-video3',             label: 'AI тренер' },
     { to: '/vocabulary?status=learning',  icon: 'bi-journal-bookmark-fill',     label: t.nav.learningWords },
     { to: '/reader',                      icon: 'bi-eyeglasses',                label: t.nav.reader },
     { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
@@ -441,7 +441,7 @@ export default function Layout({ children }) {
         borderBottom: '1px solid var(--line)',
         minHeight: 50,
       }}>
-        <button onClick={() => setOpen(true)} className="layout-hamburger" style={iconBtn} aria-label="Меню">
+        <button onClick={() => setOpen(v => !v)} className="layout-hamburger" style={iconBtn} aria-label="Меню">
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
             <rect width="18" height="2" rx="1" fill="currentColor"/>
             <rect y="6" width="12" height="2" rx="1" fill="currentColor"/>
@@ -545,7 +545,7 @@ export default function Layout({ children }) {
         </Link>
 
         {/* Кнопка «Ещё» — открывает полное меню */}
-        <button onClick={() => setOpen(true)} title="Меню" style={{
+        <button onClick={() => setOpen(v => !v)} title="Меню" style={{
           width: 44, height: 44, borderRadius: 12, marginBottom: 10,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 18, border: 'none', background: 'transparent',
@@ -612,7 +612,7 @@ export default function Layout({ children }) {
             </Link>
           )
         })}
-        <button onClick={() => setOpen(true)} style={{
+        <button onClick={() => setOpen(v => !v)} style={{
           flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
           justifyContent: 'center', gap: 3, padding: '8px 2px',
           background: 'none', border: 'none', cursor: 'pointer',

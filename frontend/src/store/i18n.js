@@ -12,7 +12,7 @@ import { sq } from '../i18n/sq.js'
 
 const translations = { ru, de, en, uk, bg, tr, ar, es, fr, sq }
 
-const savedLang = localStorage.getItem('lang') || 'ru'
+const savedLang = localStorage.getItem('lang') || 'uk'
 
 export const useI18nStore = create((set) => ({
   lang: savedLang,

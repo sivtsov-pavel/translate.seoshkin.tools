@@ -70,8 +70,10 @@ const L = {
       { icon: '✏️', title: 'Вставь букву', desc: 'Упражнение на правописание: ä, ö, ü, ß — частые трудности' },
       { icon: '💬', title: 'Разговорник', desc: 'Сохраняй полезные фразы из уроков и учи их отдельно' },
       { icon: '📖', title: 'Читалка', desc: 'Двуязычный режим, кликабельные слова и 💬 Разговор с переводом речи в реальном времени', isNew: true },
+      { icon: '🤖', title: 'AI тренер', desc: 'Живые разговорные тренировки: выбери персонажа и сценарий — и говори по-немецки. Ошибки исправляются мягко.', isNew: true },
       { icon: '📊', title: 'Аналитика', desc: 'Прогресс по дням, лучшая серия, слова в изучении' },
       { icon: '🃏', title: 'Словопара', desc: 'Мини-игра: найди пары немецких слов и переводов. 8 пар, таймер, 4×4 поле', isNew: true, link: '/game/match' },
+      { icon: '🤝', title: 'Знакомства — скоро', desc: 'Найди партнёра по языку: практикуй немецкий с носителем или другим учеником в живом чате', isSoon: true },
     ],
     steps: {
       title: 'Как начать',
@@ -503,12 +505,14 @@ export default function Landing() {
           {c.modules.map((m, i) => (
             <Link to={m.link || '/docs'} key={i} style={{ textDecoration: 'none' }}>
               <div style={{
-                background: 'var(--surface)', border: `1px solid ${m.isNew ? 'var(--accent)' : 'var(--line)'}`,
+                background: m.isSoon ? 'var(--surface-2)' : 'var(--surface)',
+                border: `1px solid ${m.isNew ? 'var(--accent)' : m.isSoon ? 'var(--line)' : 'var(--line)'}`,
                 borderRadius: 16, padding: '20px 20px 18px',
                 transition: 'border-color .2s, transform .15s',
-                cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                cursor: m.isSoon ? 'default' : 'pointer', position: 'relative', overflow: 'hidden',
+                opacity: m.isSoon ? 0.75 : 1,
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                onMouseEnter={e => { if (!m.isSoon) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = m.isNew ? 'var(--accent)' : 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}
               >
                 {m.isNew && (
@@ -518,6 +522,15 @@ export default function Landing() {
                     fontSize: 10, fontWeight: 800, letterSpacing: '0.5px',
                     padding: '2px 7px', borderRadius: 20,
                   }}>NEW</span>
+                )}
+                {m.isSoon && (
+                  <span style={{
+                    position: 'absolute', top: 10, right: 10,
+                    background: 'var(--surface-2)', color: 'var(--ink-soft)',
+                    border: '1px solid var(--line)',
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.5px',
+                    padding: '2px 7px', borderRadius: 20,
+                  }}>СКОРО</span>
                 )}
                 <div style={{ fontSize: 32, marginBottom: 10 }}>{m.icon}</div>
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6, color: 'var(--ink)' }}>{m.title}</div>

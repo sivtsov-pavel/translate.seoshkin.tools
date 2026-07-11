@@ -4,7 +4,6 @@ import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
-import ProgressRing from '../components/ProgressRing.jsx'
 
 const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
 
@@ -34,16 +33,24 @@ const STATUS_BG     = {
   known:    'rgba(78,154,110,0.08)',
 }
 
+const SELECT_STYLE = {
+  padding: '7px 10px', borderRadius: 8, border: '1px solid var(--line)',
+  background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 13,
+  cursor: 'pointer', minWidth: 0, maxWidth: '100%',
+}
+
 export default function Vocabulary() {
   const location = useLocation()
-  const [words, setWords]         = useState([])
-  const [view, setView] = useState('words') // 'words' | 'alphabet'
+  const [words, setWords]       = useState([])
+  const [view, setView]         = useState('words')
   const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(location.search).get('status') || '')
+  const [courseFilter, setCourseFilter] = useState('')
   const [lessonFilter, setLessonFilter] = useState('')
   const [grammarFilter, setGrammarFilter] = useState('')
-  const [search, setSearch]       = useState('')
-  const [loading, setLoading]     = useState(true)
-  const [sending, setSending]     = useState(false)
+  const [search, setSearch]     = useState('')
+  const [loading, setLoading]   = useState(true)
+  const [sending, setSending]   = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const { t } = useI18nStore()
 
   useEffect(() => {
@@ -51,20 +58,6 @@ export default function Vocabulary() {
     setStatusFilter(s)
     setGrammarFilter('')
   }, [location.search])
-
-  const sendToReader = async () => {
-    const sentences = filtered.map(w => w.example_sentence).filter(Boolean)
-    if (!sentences.length) { alert(t.vocabulary.noExamples); return }
-    const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : t.vocabulary.title) + ' — примеры'
-    setSending(true)
-    try {
-      await api.post('/phrase-sets', { title, content: sentences.join('\n') })
-      alert(`${t.vocabulary.sendToReader}: "${title}" (${sentences.length})`)
-    } catch (e) {
-      alert(t.common.error + ': ' + e.message)
-    }
-    setSending(false)
-  }
 
   useEffect(() => {
     setLoading(true)
@@ -76,32 +69,43 @@ export default function Vocabulary() {
     setWords(ws => ws.map(w => w.id === updated.id ? { ...w, status: updated.status } : w))
   }
 
-  const filterLabels = {
-    '':       t.vocabulary.all,
-    new:      t.vocabulary.new,
-    learning: t.vocabulary.learning,
-    known:    t.vocabulary.known,
-  }
-  const statusLabels = {
-    new:      t.vocabulary.statusNew,
-    learning: t.vocabulary.statusLearning,
-    known:    t.vocabulary.statusKnown,
+  const sendToReader = async () => {
+    const sentences = filtered.map(w => w.example_sentence).filter(Boolean)
+    if (!sentences.length) { alert(t.vocabulary.noExamples); return }
+    const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : t.vocabulary.title) + ' — примеры'
+    setSending(true)
+    try {
+      await api.post('/phrase-sets', { title, content: sentences.join('\n') })
+      alert(`${t.vocabulary.sendToReader}: "${title}" (${sentences.length})`)
+    } catch (e) { alert(t.common.error + ': ' + e.message) }
+    setSending(false)
   }
 
+  const filterLabels = { '': t.vocabulary.all, new: t.vocabulary.new, learning: t.vocabulary.learning, known: t.vocabulary.known }
+  const statusLabels = { new: t.vocabulary.statusNew, learning: t.vocabulary.statusLearning, known: t.vocabulary.statusKnown }
   const GRAMMAR_LABELS = getGrammarLabels(t)
-  const lessonTitles = [...new Set(words.map(w => w.lesson_title || t.vocabulary.noLesson))]
+
+  const courseTitles = [...new Set(words.map(w => w.course_title).filter(Boolean))].sort()
+  const lessonTitles = [...new Set(
+    words
+      .filter(w => !courseFilter || w.course_title === courseFilter)
+      .map(w => w.lesson_title || t.vocabulary.noLesson)
+  )]
+  const grammarCats  = [...new Set(words.map(w => detectGrammar(w.word_de)))].sort()
+
   const q = search.toLowerCase().trim()
   const knownCount = words.filter(w => w.status === 'known').length
   const vocabPct   = words.length > 0 ? Math.round((knownCount / words.length) * 100) : 0
 
   const filtered = words.filter(w => {
-    if (statusFilter && w.status !== statusFilter) return false
-    if (lessonFilter && (w.lesson_title || t.vocabulary.noLesson) !== lessonFilter) return false
+    if (statusFilter  && w.status !== statusFilter) return false
+    if (courseFilter  && w.course_title !== courseFilter) return false
+    if (lessonFilter  && (w.lesson_title || t.vocabulary.noLesson) !== lessonFilter) return false
     if (grammarFilter && detectGrammar(w.word_de) !== grammarFilter) return false
     if (q) return w.word_de.toLowerCase().includes(q) || w.translation_ru.toLowerCase().includes(q)
     return true
   })
-  const grammarCats = [...new Set(words.map(w => detectGrammar(w.word_de)))].sort()
+
   const grouped = filtered.reduce((acc, w) => {
     const key = w.lesson_title || t.vocabulary.noLesson
     if (!acc[key]) acc[key] = []
@@ -109,23 +113,24 @@ export default function Vocabulary() {
     return acc
   }, {})
 
+  // Счётчик активных фильтров для бейджа
+  const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
+
+  const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter('') }
+
   if (loading) return <p style={{ padding: 20, color: 'var(--ink-soft)' }}>{t.vocabulary.loading}</p>
 
   return (
-    <div style={{ paddingBottom: 12 }}>
-      {words.length > 0 && view === 'words' && (
-        <div className="hide-mobile">
-          <ProgressRing pct={vocabPct} done={knownCount} total={words.length} label="Словарь" />
-        </div>
-      )}
-      <div style={{ padding: '0 14px 10px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 24 }}>{t.vocabulary.title}</h1>
-        {/* Переключатель вид */}
-        <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)' }}>
-          {[{ id: 'words', label: '📚 Слова' }, { id: 'alphabet', label: '🔤 Алфавит' }, { id: 'numbers', label: '🔢 Цифры' }].map(tab => (
+    <div style={{ paddingBottom: 40 }}>
+      {/* Заголовок + вкладки */}
+      <div style={{ padding: '0 14px 8px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <h1 style={{ margin: 0, fontSize: 22, flex: '0 0 auto' }}>{t.vocabulary.title}</h1>
+        <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)', flex: '0 0 auto' }}>
+          {[{ id: 'words', label: '📚' }, { id: 'alphabet', label: '🔤' }, { id: 'numbers', label: '🔢' }].map(tab => (
             <button key={tab.id} onClick={() => setView(tab.id)}
+              title={{ words: 'Слова', alphabet: 'Алфавит', numbers: 'Цифры' }[tab.id]}
               style={{
-                padding: '6px 14px', fontSize: 13, fontWeight: view === tab.id ? 700 : 400, cursor: 'pointer',
+                padding: '7px 13px', fontSize: 15, cursor: 'pointer',
                 border: 'none', background: view === tab.id ? 'var(--accent)' : 'var(--surface-2)',
                 color: view === tab.id ? 'var(--accent-ink)' : 'var(--ink)',
               }}>
@@ -135,119 +140,127 @@ export default function Vocabulary() {
         </div>
         {view === 'words' && (
           <button onClick={sendToReader} disabled={sending}
-            style={{ padding: '6px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--accent)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            {sending ? '...' : '📖 В Читалку'}
+            style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--accent)', fontWeight: 600, fontSize: 13, cursor: 'pointer', flex: '0 0 auto' }}>
+            {sending ? '...' : '📖'}
           </button>
         )}
       </div>
+
+      {/* Прогресс-полоска */}
+      {words.length > 0 && view === 'words' && (
+        <div style={{ padding: '0 14px 12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 4 }}>
+            <span>{t.vocabulary.title}</span>
+            <span>{knownCount} / {words.length} · {vocabPct}%</span>
+          </div>
+          <div style={{ height: 6, borderRadius: 4, background: 'var(--line)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${vocabPct}%`, background: 'var(--accent)', borderRadius: 4, transition: 'width 0.4s' }} />
+          </div>
+        </div>
+      )}
 
       {view === 'alphabet' && <GermanAlphabet />}
       {view === 'numbers' && <GermanNumbers />}
 
       {view === 'words' && <div style={{ padding: '0 14px' }}>
-      {/* Поиск */}
-      <div style={{ position: 'relative', marginBottom: 12 }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Поиск по немецкому или переводу..."
-          style={{ width: '100%', paddingRight: 36, boxSizing: 'border-box' }}
-        />
-        {search
-          ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--ink-soft)' }}>✕</button>
-          : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: 'var(--ink-soft)' }}>🔍</span>
-        }
-      </div>
 
-      {/* Фильтр по статусу */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        {['', 'new', 'learning', 'known'].map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)}
-            style={{
-              padding: '6px 16px', borderRadius: 20,
-              border: `1px solid ${statusFilter === s ? 'var(--accent)' : 'var(--line)'}`,
-              background: statusFilter === s ? 'var(--accent)' : 'var(--surface-2)',
-              color: statusFilter === s ? 'var(--accent-ink)' : 'var(--ink)',
-              cursor: 'pointer', fontSize: 14, fontWeight: statusFilter === s ? 600 : 400,
-            }}>
-            {filterLabels[s]}
-          </button>
-        ))}
-      </div>
-
-      {/* Фильтр по грамматике */}
-      {grammarCats.length > 1 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-          <button onClick={() => setGrammarFilter('')} style={{
-            padding: '5px 14px', borderRadius: 20, fontSize: 13, flexShrink: 0,
-            border: `1px solid ${grammarFilter === '' ? 'var(--accent)' : 'var(--line)'}`,
-            background: grammarFilter === '' ? 'var(--accent-soft)' : 'var(--surface-2)',
-            color: grammarFilter === '' ? 'var(--accent)' : 'var(--ink-soft)',
-            fontWeight: grammarFilter === '' ? 700 : 400, cursor: 'pointer',
-          }}>Все части речи</button>
-          {grammarCats.map(cat => (
-            <button key={cat} onClick={() => setGrammarFilter(cat)} style={{
-              padding: '5px 14px', borderRadius: 20, fontSize: 13, flexShrink: 0,
-              border: `1px solid ${grammarFilter === cat ? 'var(--accent)' : 'var(--line)'}`,
-              background: grammarFilter === cat ? 'var(--accent-soft)' : 'var(--surface-2)',
-              color: grammarFilter === cat ? 'var(--accent)' : 'var(--ink-soft)',
-              fontWeight: grammarFilter === cat ? 700 : 400, cursor: 'pointer',
-            }}>{GRAMMAR_LABELS[cat] || cat}</button>
-          ))}
-        </div>
-      )}
-
-      {/* Фильтр по уроку */}
-      {lessonTitles.length > 1 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-          <button onClick={() => setLessonFilter('')}
-            style={{
-              padding: '4px 12px', borderRadius: 16, fontSize: 13,
-              border: `1px solid ${lessonFilter === '' ? 'var(--accent)' : 'var(--line)'}`,
-              background: lessonFilter === '' ? 'var(--accent-soft)' : 'var(--surface-2)',
-              color: lessonFilter === '' ? 'var(--accent)' : 'var(--ink-soft)',
-              fontWeight: lessonFilter === '' ? 700 : 400, cursor: 'pointer',
-            }}>
-            Все уроки
-          </button>
-          {lessonTitles.map(lt => (
-            <button key={lt} onClick={() => setLessonFilter(lt)}
-              style={{
-                padding: '4px 12px', borderRadius: 16, fontSize: 13,
-                border: `1px solid ${lessonFilter === lt ? 'var(--accent)' : 'var(--line)'}`,
-                background: lessonFilter === lt ? 'var(--accent-soft)' : 'var(--surface-2)',
-                color: lessonFilter === lt ? 'var(--accent)' : 'var(--ink-soft)',
-                fontWeight: lessonFilter === lt ? 700 : 400, cursor: 'pointer',
-              }}>
-              📚 {shortLesson(lt, t.vocabulary.noLesson)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <p style={{ color: 'var(--ink-soft)', marginBottom: 16, fontSize: 14 }}>{t.vocabulary.wordsCount(filtered.length)}</p>
-
-      {Object.entries(grouped).map(([lessonTitle, lessonWords]) => (
-        <div key={lessonTitle} style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: `2px solid var(--line)` }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              📚 {lessonTitle}
-            </span>
-            <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{lessonWords.length} сл.</span>
+        {/* Поиск + кнопка фильтров */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Поиск по немецкому или переводу..."
+              style={{ width: '100%', paddingRight: 34, boxSizing: 'border-box' }}
+            />
+            {search
+              ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: 'var(--ink-soft)' }}>✕</button>
+              : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--ink-soft)' }}>🔍</span>
+            }
           </div>
-
-          {lessonWords.map(word => (
-            <VocabWord key={word.id} word={word} statusLabels={statusLabels} onStatusChange={updateStatus} />
-          ))}
+          <button
+            onClick={() => setFiltersOpen(v => !v)}
+            style={{
+              padding: '0 14px', borderRadius: 8, border: `1.5px solid ${filtersOpen || activeFilters ? 'var(--accent)' : 'var(--line)'}`,
+              background: filtersOpen ? 'var(--accent-soft)' : 'var(--surface-2)',
+              color: filtersOpen || activeFilters ? 'var(--accent)' : 'var(--ink)',
+              fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+            {activeFilters ? `Фильтры · ${activeFilters}` : 'Фильтры'} {filtersOpen ? '▲' : '▼'}
+          </button>
         </div>
-      ))}
 
-      {words.length === 0 && (
-        <div style={{ textAlign: 'center', marginTop: 60, color: 'var(--ink-soft)' }}>
-          <p style={{ fontSize: 40 }}>📚</p>
-          <p>Слова появятся после обработки урока</p>
-        </div>
-      )}
+        {/* Панель фильтров */}
+        {filtersOpen && (
+          <div style={{
+            marginBottom: 12, padding: '12px 14px', borderRadius: 12,
+            background: 'var(--surface-2)', border: '1px solid var(--line)',
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8,
+          }}>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={SELECT_STYLE}>
+              <option value="">Все статусы</option>
+              <option value="new">{t.vocabulary.new}</option>
+              <option value="learning">{t.vocabulary.learning}</option>
+              <option value="known">{t.vocabulary.known}</option>
+            </select>
+
+            {courseTitles.length > 0 && (
+              <select value={courseFilter} onChange={e => { setCourseFilter(e.target.value); setLessonFilter('') }} style={SELECT_STYLE}>
+                <option value="">Все курсы</option>
+                {courseTitles.map(ct => <option key={ct} value={ct}>{ct}</option>)}
+              </select>
+            )}
+
+            {lessonTitles.length > 1 && (
+              <select value={lessonFilter} onChange={e => setLessonFilter(e.target.value)} style={SELECT_STYLE}>
+                <option value="">Все уроки</option>
+                {lessonTitles.map(lt => <option key={lt} value={lt}>{shortLesson(lt, t.vocabulary.noLesson)}</option>)}
+              </select>
+            )}
+
+            {grammarCats.length > 1 && (
+              <select value={grammarFilter} onChange={e => setGrammarFilter(e.target.value)} style={SELECT_STYLE}>
+                <option value="">Все части речи</option>
+                {grammarCats.map(cat => <option key={cat} value={cat}>{GRAMMAR_LABELS[cat] || cat}</option>)}
+              </select>
+            )}
+
+            {activeFilters > 0 && (
+              <button onClick={resetFilters} style={{
+                ...SELECT_STYLE, border: '1px dashed var(--line)',
+                color: 'var(--ink-soft)', background: 'transparent', textAlign: 'center',
+              }}>
+                ✕ Сбросить
+              </button>
+            )}
+          </div>
+        )}
+
+        <p style={{ color: 'var(--ink-soft)', marginBottom: 12, fontSize: 13 }}>
+          {t.vocabulary.wordsCount(filtered.length)}
+          {activeFilters > 0 && <span> · <button onClick={resetFilters} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 13, padding: 0 }}>сбросить фильтры</button></span>}
+        </p>
+
+        {Object.entries(grouped).map(([lessonTitle, lessonWords]) => (
+          <div key={lessonTitle} style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: `2px solid var(--line)` }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                📚 {lessonTitle}
+              </span>
+              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{lessonWords.length} сл.</span>
+            </div>
+            {lessonWords.map(word => (
+              <VocabWord key={word.id} word={word} statusLabels={statusLabels} onStatusChange={updateStatus} />
+            ))}
+          </div>
+        ))}
+
+        {words.length === 0 && (
+          <div style={{ textAlign: 'center', marginTop: 60, color: 'var(--ink-soft)' }}>
+            <p style={{ fontSize: 40 }}>📚</p>
+            <p>Слова появятся после обработки урока</p>
+          </div>
+        )}
       </div>}
     </div>
   )

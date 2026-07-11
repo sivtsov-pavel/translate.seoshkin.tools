@@ -247,10 +247,13 @@ export async function exercisesRoutes(fastify) {
                WHERE e.word_id = w.id AND e.image_url IS NOT NULL LIMIT 1
              )) AS image_url,
              l.title AS lesson_title,
+             l.course_id AS course_id,
+             c.title AS course_title,
              COALESCE(l.title_translations, '{}') AS lesson_title_translations,
              COALESCE(uws.status, w.status, 'new') AS status
       FROM words w
       LEFT JOIN lessons l ON l.id = w.lesson_id
+      LEFT JOIN courses c ON c.id = l.course_id
       LEFT JOIN user_word_status uws ON uws.word_id = w.id AND uws.user_id = $1
       WHERE ${lessonFilter}`
 

@@ -1,7 +1,24 @@
 let ctx = null
 function getCtx() {
   if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)()
+  // Браузеры создают AudioContext в состоянии suspended до первого
+  // жеста пользователя — без resume() звук не воспроизводится (особенно мобилки)
+  if (ctx.state === 'suspended') ctx.resume()
   return ctx
+}
+
+// Разблокировка звука на первом же взаимодействии пользователя со страницей.
+// Один раз создаём/резюмируем контекст, дальше слушатели снимаются.
+function unlockAudio() {
+  getCtx()
+  window.removeEventListener('pointerdown', unlockAudio)
+  window.removeEventListener('keydown', unlockAudio)
+  window.removeEventListener('touchstart', unlockAudio)
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('pointerdown', unlockAudio, { once: true })
+  window.addEventListener('keydown', unlockAudio, { once: true })
+  window.addEventListener('touchstart', unlockAudio, { once: true })
 }
 
 function beep(freq, startTime, duration, gain = 0.18) {

@@ -429,6 +429,54 @@ export async function translateText(text, from = 'de', to = 'ru') {
   return result.trim()
 }
 
+const TRAINER_CHARACTERS = {
+  lena:  { name: 'Лена',  emoji: '🧑‍🏫', desc: 'досвідчена вчителька німецької мови з Берліна. Ти терпляча, підбадьорююча, пояснюєш граматику просто' },
+  max:   { name: 'Макс',  emoji: '☕',    desc: 'бариста у берлінській кав\'ярні. Ти дружній, невимушений, говориш про каву та меню' },
+  hanna: { name: 'Ганна', emoji: '🛒',   desc: 'продавчиня у супермаркеті. Ти ввічлива, допомагаєш знайти товари, розповідаєш про ціни' },
+  otto:  { name: 'Отто',  emoji: '🏨',   desc: 'портьє в готелі у центрі Берліна. Ти професійний, допомагаєш з заселенням та туристичними порадами' },
+}
+
+const TRAINER_SCENARIOS = {
+  intro:     'Знайомство — учень вперше зустрічає тебе і представляється',
+  cafe:      'У кав\'ярні — учень замовляє напої та їжу',
+  shopping:  'Покупки — учень купує продукти або одяг',
+  hotel:     'Готель — учень заселяється або запитує про послуги',
+  direction: 'Орієнтування у місті — учень просить дорогу або пояснює де знаходиться',
+  free:      'Вільна бесіда на будь-яку тему',
+}
+
+export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk' }) {
+  const char = TRAINER_CHARACTERS[character] || TRAINER_CHARACTERS.lena
+  const scenarioDesc = TRAINER_SCENARIOS[scenario] || TRAINER_SCENARIOS.free
+  const corrLang = userLang === 'uk' ? 'українській' : 'русском'
+  const transLang = userLang === 'uk' ? 'українську' : 'русский'
+
+  const systemPrompt = `Ти — ${char.emoji} ${char.name}, ${char.desc}.
+Рівень учня: A1–A2 (початківець).
+Сценарій: ${scenarioDesc}.
+
+Правила:
+1. Основна відповідь ЗАВЖДИ тільки німецькою мовою (reply)
+2. Якщо учень написав не-німецькою — зрозумій сенс та відповідай так, ніби він написав правильно по-німецьки
+3. Виправляй помилки учня дружньо, без осуду (correction на ${corrLang} мові)
+4. Якщо помилок немає — correction: null
+5. Дай переклад своєї відповіді на ${transLang} мову (translation)
+6. Речення короткі, прості, рівень A1
+
+СТРОГО повертай лише JSON без markdown:
+{"reply":"...","correction":"...або null","translation":"..."}`
+
+  const res = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    max_tokens: 512,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...messages,
+    ],
+  })
+  return parseJson(res.choices[0].message.content)
+}
+
 export async function translateSentences(pairs) {
   const BATCH = 25
   const all = []

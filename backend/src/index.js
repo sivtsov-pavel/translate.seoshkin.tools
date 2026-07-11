@@ -18,6 +18,7 @@ import { phrasebookRoutes } from './routes/phrasebook.js'
 import { settingsRoutes } from './routes/settings.js'
 import { chatRoutes } from './routes/chat.js'
 import { pushRoutes } from './routes/push.js'
+import { aiTrainerRoutes } from './routes/aiTrainer.js'
 import { startReminderCron } from './services/reminders.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
@@ -46,6 +47,7 @@ async function registerRoutes(app) {
   await app.register(settingsRoutes)
   await app.register(chatRoutes)
   await app.register(pushRoutes)
+  await app.register(aiTrainerRoutes)
   await app.register(mediaRoutes)
 }
 
