@@ -53,19 +53,8 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Секция уроков */}
-      <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 20 }}>
-        {t.dashboard.lessons}
-      </div>
-
-      <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {lessons.map(lesson => (
-          <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} />
-        ))}
-      </div>
-
-      {/* Игры */}
-      <div style={{ padding: '16px 12px 4px' }}>
+      {/* Игры — наверху, первыми */}
+      <div style={{ padding: '4px 12px 8px' }}>
         <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
           Игры
         </div>
@@ -74,7 +63,6 @@ export default function Dashboard() {
             background: 'var(--surface)', border: '2px solid var(--accent)',
             borderRadius: 16, padding: '14px 16px',
             display: 'flex', alignItems: 'center', gap: 14,
-            transition: 'transform .15s',
           }}>
             <span style={{ fontSize: 32, lineHeight: 1 }}>🃏</span>
             <div style={{ flex: 1 }}>
@@ -86,28 +74,37 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Sticky CTA — сидит над нижней навигацией через CSS-переменную */}
-      <div style={{
-        position: 'fixed', bottom: 'var(--bottom-nav-h, 0px)', left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 640,
-        padding: '12px 16px 20px',
-        background: 'linear-gradient(to top, var(--bg) 70%, transparent)',
-      }}>
+      {/* Секция уроков */}
+      <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 20 }}>
+        {t.dashboard.lessons}
+      </div>
+
+      <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {lessons.map(lesson => (
+          <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} />
+        ))}
+      </div>
+
+      {/* Круглая кнопка «Повторить всё» в правом нижнем углу — не перекрывает
+          левое меню и контент (была на всю ширину по центру → налезала на сайдбар) */}
+      {total > 0 && (
         <button
           onClick={() => navigate('/exercise-session')}
           style={{
-            width: '100%', padding: '16px', borderRadius: 16,
+            position: 'fixed', zIndex: 50,
+            right: 16, bottom: 'calc(var(--bottom-nav-h, 0px) + 16px)',
+            padding: '13px 20px', borderRadius: 999,
             background: 'var(--accent)', color: 'var(--accent-ink)',
             border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 15,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
           }}>
           ▶ {t.dashboard.repeatAll}
-          <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 8, padding: '2px 10px', fontSize: 13 }}>
+          <span style={{ background: 'rgba(0,0,0,0.18)', color: 'inherit', borderRadius: 999, padding: '1px 9px', fontSize: 13 }}>
             {total}
           </span>
         </button>
-      </div>
+      )}
     </div>
   )
 }

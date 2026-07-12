@@ -44,6 +44,7 @@ const CHARACTERS = [
   { id: 'hanna', emoji: '🛒',   name: 'Ганна',  color: '#5A9E6E', role: { uk: 'Продавчиня в магазині', ru: 'Продавщица в магазине', en: 'Shop assistant', de: 'Verkäuferin im Laden', bg: 'Продавачка в магазин', tr: 'Mağaza görevlisi', ar: 'بائعة في متجر', es: 'Dependienta de tienda', fr: 'Vendeuse en magasin', sq: 'Shitëse në dyqan' } },
   { id: 'otto',  emoji: '🏨',   name: 'Отто',   color: '#7B5EA7', role: { uk: 'Портьє в готелі', ru: 'Портье в отеле', en: 'Hotel receptionist', de: 'Portier im Hotel', bg: 'Рецепционист в хотел', tr: 'Otel resepsiyonisti', ar: 'موظف استقبال فندق', es: 'Recepcionista de hotel', fr: 'Réceptionniste d\'hôtel', sq: 'Recepsionist hoteli' } },
   { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', color: '#5A6B8C', role: { uk: 'HR — співбесіда', ru: 'HR — собеседование', en: 'HR — interview', de: 'HR — Vorstellungsgespräch', bg: 'HR — интервю', tr: 'İK — mülakat', ar: 'موارد بشرية — مقابلة', es: 'RRHH — entrevista', fr: 'RH — entretien', sq: 'HR — intervistë' } },
+  { id: 'pablo', emoji: '🧔', name: 'Pablo Seoshkin', color: '#3B7A57', role: { uk: 'Засновник, наставник', ru: 'Основатель, наставник', en: 'Founder, mentor', de: 'Gründer, Mentor', bg: 'Основател, наставник', tr: 'Kurucu, mentor', ar: 'المؤسس، مرشد', es: 'Fundador, mentor', fr: 'Fondateur, mentor', sq: 'Themelues, mentor' } },
 ]
 
 const SCENARIOS = [
