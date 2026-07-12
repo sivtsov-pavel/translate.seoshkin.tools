@@ -62,21 +62,38 @@ export async function aiTrainerRoutes(fastify) {
 
   // ── Создать сессию (подтягивает память для баннера «тренер помнит») ──
   fastify.post('/api/ai-trainer/sessions', { preHandler: [fastify.authenticate] }, async (request) => {
-    const { character = 'lena', scenario = 'free', starter } = request.body || {}
+    const { character = 'lena', scenario = 'free', userLang = 'uk', starter } = request.body || {}
     const { rows } = await db.query(
       'INSERT INTO ai_trainer_sessions (user_id, character, scenario) VALUES ($1, $2, $3) RETURNING id',
       [request.user.id, character, scenario]
     )
     const sessionId = rows[0].id
-    if (starter) {
+    const memory = await loadMemory(request.user.id)
+
+    // Первую реплику генерирует ИИ с учётом памяти — не повторяем одинаковое приветствие
+    let opening = null, opening_translation = null
+    try {
+      const instr = (memory && memory.summary_text)
+        ? 'Розпочни розмову першим. Ти вже спілкувався з цим учнем раніше — привітайся і природно згадай щось із минулих розмов АБО постав НОВЕ питання за сценарієм. НЕ повторюй щоразу однакове привітання.'
+        : 'Розпочни розмову першим: коротко привітайся і постав перше питання за сценарієм.'
+      const r = await chatWithTrainer({ messages: [{ role: 'user', content: instr }], character, scenario, userLang, memory })
+      opening = r && r.reply ? r.reply : null
+      opening_translation = (r && r.translation && r.translation !== 'null') ? r.translation : null
+    } catch (e) {
+      fastify.log.error({ err: e }, 'ai-trainer opening generation failed')
+    }
+
+    const firstText = opening || starter
+    if (firstText) {
       await db.query(
-        'INSERT INTO ai_trainer_messages (session_id, role, text) VALUES ($1, $2, $3)',
-        [sessionId, 'trainer', starter]
+        'INSERT INTO ai_trainer_messages (session_id, role, text, translation) VALUES ($1, $2, $3, $4)',
+        [sessionId, 'trainer', firstText, opening_translation]
       )
     }
-    const memory = await loadMemory(request.user.id)
     return {
       session_id: sessionId,
+      opening: firstText || null,
+      opening_translation,
       memory: memory
         ? { summary_text: memory.summary_text, recurring_mistakes: memory.recurring_mistakes }
         : null,

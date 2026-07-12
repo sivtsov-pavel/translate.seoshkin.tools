@@ -181,21 +181,27 @@ export default function AiTrainer() {
   }, [])
 
   const startSession = async () => {
-    const starter = STARTER_PHRASES[character]?.[scenario]
+    const fallback = STARTER_PHRASES[character]?.[scenario]
       || (scenario.startsWith('interview') ? 'Guten Tag! Setzen Sie sich bitte. Erzählen Sie mir von sich.' : 'Hallo!')
-    setMessages([{ role: 'ai', reply: starter, translation: null, correction: null, character }])
+    setMessages([])
     setMemoryHint('')
     setStep('chat')
-    if (starter) speak(starter, 'de-DE')  // тренер приветствует голосом
-    setTimeout(() => inputRef.current?.focus(), 100)
-    // Создаём серверную сессию (для памяти между сессиями). Если упадёт —
-    // тренер всё равно работает через stateless-фолбэк в sendMessage.
+    setLoading(true)  // «печатает…» пока ИИ генерит первую реплику с учётом памяти
+    const userLang = localStorage.getItem('lang') || 'uk'
     try {
-      const res = await api.post('/ai-trainer/sessions', { character, scenario, starter })
+      const res = await api.post('/ai-trainer/sessions', { character, scenario, userLang, starter: fallback })
       setSessionId(res.session_id)
       if (res.memory?.summary_text) setMemoryHint(res.memory.summary_text)
+      const opening = res.opening || fallback
+      setMessages([{ role: 'ai', reply: opening, translation: res.opening_translation || null, correction: null, character }])
+      if (opening) speak(opening, 'de-DE')
     } catch {
       setSessionId(null)
+      setMessages([{ role: 'ai', reply: fallback, translation: null, correction: null, character }])
+      if (fallback) speak(fallback, 'de-DE')
+    } finally {
+      setLoading(false)
+      setTimeout(() => inputRef.current?.focus(), 100)
     }
   }
 
