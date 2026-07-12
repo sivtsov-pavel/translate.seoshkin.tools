@@ -5,11 +5,45 @@ import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { useAdminOpStore } from '../store/adminOp.js'
 
+// Колонка слов (учебник / тетрадь): textarea + чипы-слова, тап по чипу перекидывает в другой список
+function WordCol({ title, text, setText, onMove, moveHint }) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+  return (
+    <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, color: 'var(--ink)' }}>
+        {title} <span style={{ opacity: 0.6, fontWeight: 400 }}>· {lines.length}</span>
+      </div>
+      <textarea value={text} onChange={e => setText(e.target.value)}
+        placeholder={"der Hund — собака\ndie Katze — кошка"} rows={4}
+        style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 13 }} />
+      {lines.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+          {lines.map((line, i) => (
+            <button key={i} type="button" onClick={() => onMove(line)} title={moveHint}
+              style={{ fontSize: 11, padding: '3px 8px', borderRadius: 999, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', cursor: 'pointer', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {line} ⇄
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function EditForm({ lesson, onSave, onCancel }) {
   const [title, setTitle]       = useState(lesson.title || '')
   const [desc, setDesc]         = useState(lesson.description || '')
-  const [textContent, setTextContent] = useState(lesson.text_content || '')
+  const [bookText, setBookText]   = useState(lesson.text_content || '')
+  const [extraText, setExtraText] = useState(lesson.text_content_extra || '')
   const [saving, setSaving]     = useState(false)
+
+  // Перекинуть строку-слово между списками
+  const moveLine = (line, from) => {
+    const rm = (t) => t.split('\n').filter(l => l.trim() !== line.trim()).join('\n')
+    const add = (t) => (t.trim() ? t.replace(/\n+$/, '') + '\n' : '') + line
+    if (from === 'book') { setBookText(rm); setExtraText(add) }
+    else { setExtraText(rm); setBookText(add) }
+  }
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef()
   const sourceRef = useRef('textbook')  // какой источник грузим: учебник / тетрадь
@@ -20,7 +54,8 @@ function EditForm({ lesson, onSave, onCancel }) {
       const updated = await api.patch(`/lessons/${lesson.id}`, {
         title: title.trim() || null,
         description: desc.trim() || null,
-        text_content: textContent.trim() || null,
+        text_content: bookText.trim(),
+        text_content_extra: extraText.trim(),
       })
       onSave(updated)
     } catch (e) {
@@ -59,13 +94,14 @@ function EditForm({ lesson, onSave, onCancel }) {
           style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
       </div>
       <div style={{ marginBottom: 10 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>
-          Текст урока / слова
-          <span style={{ fontWeight: 400, marginLeft: 6, opacity: 0.7 }}>— Claude разберёт и создаст упражнения</span>
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>
+          Слова урока
+          <span style={{ fontWeight: 400, marginLeft: 6, opacity: 0.7 }}>— Claude разберёт и создаст упражнения. Тапни слово-чип, чтобы перекинуть в другой список.</span>
         </label>
-        <textarea value={textContent} onChange={e => setTextContent(e.target.value)}
-          placeholder={"der Hund — собака\ndie Katze — кошка\nsprechen — говорить"}
-          rows={5} style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 13 }} />
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <WordCol title="📘 Из учебника" text={bookText} setText={setBookText} onMove={line => moveLine(line, 'book')} moveHint="Перекинуть в тетрадь" />
+          <WordCol title="✏️ Из тетради/доски" text={extraText} setText={setExtraText} onMove={line => moveLine(line, 'extra')} moveHint="Перекинуть в учебник" />
+        </div>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={save} disabled={saving}

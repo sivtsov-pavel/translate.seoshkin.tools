@@ -73,9 +73,10 @@ export async function processLesson(lessonId, ownerId) {
 
   try {
     const { rows: lessonRows } = await db.query(
-      'SELECT text_content, owner_id FROM lessons WHERE id = $1', [lessonId]
+      'SELECT text_content, text_content_extra, owner_id FROM lessons WHERE id = $1', [lessonId]
     )
     const textContent = lessonRows[0]?.text_content || null
+    const textContentExtra = lessonRows[0]?.text_content_extra || null
     // Слова всегда сохраняем под реальным владельцем урока
     ownerId = lessonRows[0]?.owner_id ?? ownerId
 
@@ -142,7 +143,7 @@ export async function processLesson(lessonId, ownerId) {
     }
 
     await ingest(textbookPhotos, 0, combinedText, 'textbook')
-    if (extraPhotos.length > 0) await ingest(extraPhotos, textbookPhotos.length, null, 'extra')
+    if (extraPhotos.length > 0 || textContentExtra) await ingest(extraPhotos, textbookPhotos.length, textContentExtra, 'extra')
 
     for (const gp of allGrammar) {
       await db.query('INSERT INTO grammar_points (lesson_id, description, example) VALUES ($1, $2, $3)', [lessonId, gp.description, gp.example || null])

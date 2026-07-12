@@ -237,6 +237,7 @@ export async function lessonsRoutes(fastify) {
           title:              { type: 'string' },
           description:        { type: 'string' },
           text_content:       { type: 'string' },
+          text_content_extra: { type: 'string' },
           title_translations: { type: 'object' },
         },
       },
@@ -244,19 +245,20 @@ export async function lessonsRoutes(fastify) {
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const lessonId = parseInt(request.params.id)
-    const { title, description, text_content, title_translations } = request.body
+    const { title, description, text_content, text_content_extra, title_translations } = request.body
 
     const { rows } = await db.query(
       `UPDATE lessons SET
          title              = COALESCE($1, title),
          description        = COALESCE($2, description),
          text_content       = COALESCE($3, text_content),
-         title_translations = CASE WHEN $4::jsonb IS NOT NULL
-                                THEN COALESCE(title_translations, '{}'::jsonb) || $4::jsonb
+         text_content_extra = COALESCE($4, text_content_extra),
+         title_translations = CASE WHEN $5::jsonb IS NOT NULL
+                                THEN COALESCE(title_translations, '{}'::jsonb) || $5::jsonb
                                 ELSE title_translations END
-       WHERE id = $5
+       WHERE id = $6
        RETURNING *`,
-      [title ?? null, description ?? null, text_content ?? null,
+      [title ?? null, description ?? null, text_content ?? null, text_content_extra ?? null,
        title_translations ? JSON.stringify(title_translations) : null,
        lessonId]
     )
