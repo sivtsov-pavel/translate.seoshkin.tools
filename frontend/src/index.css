@@ -313,14 +313,31 @@ a { color: var(--accent); text-decoration: none; }
   overflow-y: auto !important;
   min-height: 0 !important;
 }
-/* Мобиль: компактный режим — уменьшаем отступы чтобы не скроллить */
+/* Мобиль: компактный режим — всё на один экран без прокрутки ответов */
 @media (max-width: 640px) and (orientation: portrait) {
-  .exercise-session-page .exercise-card-content {
-    padding: 14px 14px 8px !important;
+  /* Фото компактнее, чтобы освободить место под ответы */
+  .exercise-session-page .word-image-bleed {
+    flex: 0 0 auto !important;
+    height: 130px !important;
+    max-height: 130px !important;
+    padding: 8px !important;
   }
+  .exercise-session-page .exercise-card-content {
+    padding: 12px 14px 6px !important;
+  }
+  /* Немецкое слово меньше */
+  .exercise-word-de { font-size: 24px !important; }
+  /* Блок вопроса плотнее */
+  .exercise-question-block {
+    padding: 8px 14px !important;
+    margin-bottom: 10px !important;
+  }
+  .exercise-question-block p { margin-top: 4px !important; font-size: 13px !important; }
+  /* Кнопки ответов компактнее */
   .exercise-session-page .exercise-card-content button {
-    padding: 9px 14px !important;
-    margin-bottom: 6px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 5px !important;
+    font-size: 15px !important;
   }
 }
 /* Браузерный баг: padding-bottom не учитывается в overflow-y:auto / flex — используем ::after */

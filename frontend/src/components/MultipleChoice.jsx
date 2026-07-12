@@ -72,9 +72,9 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
         </div>
       )}
 
-      <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 20px', marginBottom: 18, textAlign: 'center' }}>
+      <div className="exercise-question-block" style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 20px', marginBottom: 18, textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-          <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }} dir="ltr">{germanWord}</span>
+          <span className="exercise-word-de" style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }} dir="ltr">{germanWord}</span>
           <SpeakButton text={germanWord} size={24} />
         </div>
         <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0' }}>{t.exercise.chooseTranslation}</p>
