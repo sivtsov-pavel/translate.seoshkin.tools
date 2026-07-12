@@ -10,6 +10,11 @@ export default defineConfig({
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-192-maskable.png', 'icons/icon-512-maskable.png', 'push-sw.js'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        // Новый SW активируется сразу и берёт контроль над открытыми вкладками —
+        // новые версии подхватываются без ручного сброса кеша
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         // Импортируем push-обработчики в сгенерированный service worker
         importScripts: ['/push-sw.js'],
         runtimeCaching: [
