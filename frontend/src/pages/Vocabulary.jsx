@@ -666,10 +666,11 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'flex-start', padding: '10px',
-      borderBottom: '1px solid var(--line)', gap: 10, borderRadius: 10,
+      display: 'flex', flexDirection: 'column', padding: '10px',
+      borderBottom: '1px solid var(--line)', borderRadius: 10,
       marginBottom: 3, background: STATUS_BG[word.status] ?? 'var(--surface)',
     }}>
+     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
         {imageUrl ? (
           <div style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
@@ -737,19 +738,6 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
             </>
           )}
         </div>
-        {word.example_sentence && (
-          <div style={{ marginTop: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{word.example_sentence}</span>
-              <SpeakButton text={word.example_sentence} size={13} />
-            </div>
-            {word.example_sentence_ru && (
-              <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2, paddingLeft: 2 }}>
-                {word.example_sentence_ru}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <select
@@ -766,6 +754,22 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
         <option value="learning">{statusLabels.learning}</option>
         <option value="known">{statusLabels.known}</option>
       </select>
+     </div>
+
+      {/* Пример — отдельной строкой во всю ширину блока (под верхним рядом) */}
+      {word.example_sentence && (
+        <div style={{ marginTop: 6, width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+            <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{word.example_sentence}</span>
+            <SpeakButton text={word.example_sentence} size={13} />
+          </div>
+          {word.example_sentence_ru && (
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
+              {word.example_sentence_ru}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
