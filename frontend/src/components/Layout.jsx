@@ -472,13 +472,14 @@ export default function Layout({ children }) {
       {/* Затемнение-фон под шторкой — тап закрывает меню (скрыт на ≥1024px через CSS) */}
       {open && (
         <div className="layout-overlay" onClick={() => setOpen(false)} style={{
-          position: 'fixed', inset: 0, zIndex: 150, background: 'rgba(0,0,0,0.45)',
+          position: 'fixed', inset: 0, zIndex: 215, background: 'rgba(0,0,0,0.45)',
         }} />
       )}
 
-      {/* Боковая шторка-меню (мобиль/планшет) — скрыта на ≥1024px через CSS */}
+      {/* Боковая шторка-меню (мобиль/планшет) — скрыта на ≥1024px через CSS.
+          z-index выше нижней панели (200), иначе футер с «Выход» перекрыт ею */}
       <nav ref={drawerRef} className="layout-drawer" style={{
-        position: 'fixed', top: 3, left: 0, bottom: 0, zIndex: 160,
+        position: 'fixed', top: 3, left: 0, bottom: 0, zIndex: 220,
         width: 'min(320px, 86vw)',
         background: 'var(--surface)',
         transform: open ? 'translateX(0)' : 'translateX(-100%)',
