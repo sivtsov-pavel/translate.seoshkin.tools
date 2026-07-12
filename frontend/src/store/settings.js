@@ -4,7 +4,7 @@ import { api } from '../api/client.js'
 const LS_KEY = 'app_visual_settings'
 
 const VISUAL_DEFAULTS = {
-  zoom: 1.0,
+  zoom: 1.3,          // по умолчанию самый крупный — лучше читается на мобиле
   fontFamily: 'Roboto',
   headingFont: 'Roboto',
   headingSize: 22,
@@ -86,11 +86,19 @@ export const useSettingsStore = create((set, get) => ({
   fetchSettings: async () => {
     try {
       const data = await api.get('/settings')
-      set({
+      const patch = {
         daily_limit: data.daily_limit ?? 50,
         openai_key: data.openai_key ?? '',
         loaded: true,
-      })
+      }
+      // Визуальные настройки с сервера — чтобы не слетали после чистки кеша/перезахода
+      if (data.visual && typeof data.visual === 'object') {
+        const visual = { ...VISUAL_DEFAULTS, ...data.visual }
+        Object.assign(patch, visual)
+        applyVisual(visual)
+        localStorage.setItem(LS_KEY, JSON.stringify(visual))
+      }
+      set(patch)
     } catch {
       set({ loaded: true })
     }
@@ -115,7 +123,7 @@ export const useSettingsStore = create((set, get) => ({
     applyVisual(visual)
     localStorage.setItem(LS_KEY, JSON.stringify(visual))
 
-    // Сохранить серверные
+    // Сохранить серверные настройки
     try {
       await api.patch('/settings', {
         daily_limit: next.daily_limit,
@@ -123,6 +131,12 @@ export const useSettingsStore = create((set, get) => ({
       })
     } catch (e) {
       console.error('Ошибка сохранения настроек:', e)
+    }
+    // Визуальные — отдельным эндпоинтом (чтобы не трогать smtp и синхронизировать между устройствами)
+    try {
+      await api.patch('/settings/visual', { visual })
+    } catch (e) {
+      console.error('Ошибка сохранения вида:', e)
     }
   },
 }))

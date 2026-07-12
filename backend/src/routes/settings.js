@@ -6,11 +6,25 @@ export async function settingsRoutes(fastify) {
   }, async (request) => {
     const { id: userId } = request.user
     const { rows } = await db.query(
-      `SELECT daily_limit, openai_key, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from
+      `SELECT daily_limit, openai_key, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from, visual
        FROM user_settings WHERE user_id = $1`,
       [userId]
     )
     return rows[0] ?? { daily_limit: 50, openai_key: null }
+  })
+
+  // Визуальные настройки (шрифт/размер/раскладка) — отдельно, чтобы не трогать остальные поля
+  fastify.patch('/api/settings/visual', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const { id: userId } = request.user
+    const visual = request.body?.visual ?? {}
+    await db.query(
+      `INSERT INTO user_settings (user_id, visual) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET visual = EXCLUDED.visual, updated_at = NOW()`,
+      [userId, JSON.stringify(visual)]
+    )
+    return { ok: true }
   })
 
   fastify.patch('/api/settings', {

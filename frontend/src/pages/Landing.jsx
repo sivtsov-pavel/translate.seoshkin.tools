@@ -4,6 +4,91 @@ import { useI18nStore } from '../store/i18n.js'
 import LangSwitcher from '../components/LangSwitcher.jsx'
 import { speak } from '../hooks/useSpeech.jsx'
 
+// Блок «для учителей» — привлекаем преподавателей. Иконки общие, текст локализован.
+const TEACHER_ICONS = ['📚', '🔔', '👥', '📊', '💬', '🤖']
+const TEACHER = {
+  ru: { title: 'Преподаёте немецкий? Ведите учеников здесь', subtitle: 'Бесплатный кабинет учителя: соберите класс, давайте задания и держите учеников в тонусе — всё в одном месте.', items: [
+    { title: 'Свои уроки из учебника', desc: 'Загрузите фото страниц — ИИ распознаёт слова и сам соберёт 7 типов упражнений' },
+    { title: 'Домашка в push', desc: 'Отправляйте задания и напоминания прямо на телефон ученика push-уведомлением' },
+    { title: 'Класс и курсы', desc: 'Добавляйте учеников, ведите курсы, распределяйте уроки по группам' },
+    { title: 'Прогресс каждого', desc: 'Видно, кто занимается, сколько слов выучил и где буксует' },
+    { title: 'Чат с классом', desc: 'Общайтесь с учениками прямо в приложении' },
+    { title: 'ИИ на ваших учеников', desc: 'AI-тренер, объяснения и разбор ошибок работают для класса автоматически' },
+  ] },
+  uk: { title: 'Викладаєте німецьку? Ведіть учнів тут', subtitle: 'Безкоштовний кабінет вчителя: зберіть клас, давайте завдання і тримайте учнів у тонусі — все в одному місці.', items: [
+    { title: 'Свої уроки з підручника', desc: 'Завантажте фото сторінок — ШІ розпізнає слова і сам збере 7 типів вправ' },
+    { title: 'Домашка в push', desc: 'Надсилайте завдання та нагадування прямо на телефон учня push-сповіщенням' },
+    { title: 'Клас і курси', desc: 'Додавайте учнів, ведіть курси, розподіляйте уроки по групах' },
+    { title: 'Прогрес кожного', desc: 'Видно, хто займається, скільки слів вивчив і де буксує' },
+    { title: 'Чат із класом', desc: 'Спілкуйтеся з учнями прямо в застосунку' },
+    { title: 'ШІ для ваших учнів', desc: 'AI-тренер, пояснення та розбір помилок працюють для класу автоматично' },
+  ] },
+  en: { title: 'Teach German? Run your students here', subtitle: 'Free teacher workspace: build a class, assign homework and keep students on track — all in one place.', items: [
+    { title: 'Your own lessons', desc: 'Upload photos of textbook pages — AI recognizes the words and builds 7 exercise types' },
+    { title: 'Homework via push', desc: 'Send assignments and reminders straight to the student\'s phone as a push notification' },
+    { title: 'Class & courses', desc: 'Add students, run courses, split lessons into groups' },
+    { title: 'Everyone\'s progress', desc: 'See who is studying, how many words they learned and where they struggle' },
+    { title: 'Class chat', desc: 'Talk to your students right inside the app' },
+    { title: 'AI for your students', desc: 'AI trainer, explanations and error analysis work for your class automatically' },
+  ] },
+  de: { title: 'Unterrichtest du Deutsch? Führe deine Schüler hier', subtitle: 'Kostenloser Lehrerbereich: Klasse aufbauen, Hausaufgaben verteilen und Schüler am Ball halten — alles an einem Ort.', items: [
+    { title: 'Eigene Lektionen', desc: 'Lade Fotos der Buchseiten hoch — die KI erkennt die Wörter und baut 7 Übungstypen' },
+    { title: 'Hausaufgaben per Push', desc: 'Sende Aufgaben und Erinnerungen direkt als Push-Nachricht aufs Handy des Schülers' },
+    { title: 'Klasse & Kurse', desc: 'Schüler hinzufügen, Kurse führen, Lektionen in Gruppen aufteilen' },
+    { title: 'Fortschritt jedes Einzelnen', desc: 'Sieh, wer lernt, wie viele Wörter gelernt sind und wo es hakt' },
+    { title: 'Klassen-Chat', desc: 'Sprich mit deinen Schülern direkt in der App' },
+    { title: 'KI für deine Schüler', desc: 'KI-Trainer, Erklärungen und Fehleranalyse arbeiten automatisch für deine Klasse' },
+  ] },
+  bg: { title: 'Преподавате немски? Водете учениците си тук', subtitle: 'Безплатен кабинет за учителя: съберете клас, давайте задания и дръжте учениците в тонус — всичко на едно място.', items: [
+    { title: 'Собствени уроци', desc: 'Качете снимки на страници от учебника — ИИ разпознава думите и създава 7 типа упражнения' },
+    { title: 'Домашно чрез push', desc: 'Изпращайте задачи и напомняния директно на телефона на ученика с push известие' },
+    { title: 'Клас и курсове', desc: 'Добавяйте ученици, водете курсове, разпределяйте уроци по групи' },
+    { title: 'Прогрес на всеки', desc: 'Вижте кой учи, колко думи е научил и къде се затруднява' },
+    { title: 'Чат с класа', desc: 'Общувайте с учениците директно в приложението' },
+    { title: 'ИИ за вашите ученици', desc: 'AI треньор, обяснения и анализ на грешки работят за класа автоматично' },
+  ] },
+  tr: { title: 'Almanca mı öğretiyorsun? Öğrencilerini burada yönet', subtitle: 'Ücretsiz öğretmen paneli: sınıf oluştur, ödev ver ve öğrencileri takipte tut — hepsi tek yerde.', items: [
+    { title: 'Kendi dersleriniz', desc: 'Kitap sayfalarının fotoğraflarını yükleyin — yapay zeka kelimeleri tanır ve 7 alıştırma türü oluşturur' },
+    { title: 'Push ile ödev', desc: 'Görevleri ve hatırlatmaları doğrudan öğrencinin telefonuna push bildirimi olarak gönderin' },
+    { title: 'Sınıf ve kurslar', desc: 'Öğrenci ekleyin, kurslar yürütün, dersleri gruplara ayırın' },
+    { title: 'Herkesin ilerlemesi', desc: 'Kimin çalıştığını, kaç kelime öğrendiğini ve nerede zorlandığını görün' },
+    { title: 'Sınıf sohbeti', desc: 'Öğrencilerinizle doğrudan uygulama içinde konuşun' },
+    { title: 'Öğrencileriniz için yapay zeka', desc: 'AI eğitmen, açıklamalar ve hata analizi sınıfınız için otomatik çalışır' },
+  ] },
+  ar: { title: 'تُدرّس الألمانية؟ أدِر طلابك هنا', subtitle: 'مساحة عمل مجانية للمعلم: كوّن صفًا، وزّع الواجبات وحافظ على تقدّم طلابك — كل ذلك في مكان واحد.', items: [
+    { title: 'دروسك الخاصة', desc: 'ارفع صور صفحات الكتاب — يتعرّف الذكاء الاصطناعي على الكلمات ويُنشئ 7 أنواع من التمارين' },
+    { title: 'الواجب عبر الإشعارات', desc: 'أرسل المهام والتذكيرات مباشرة إلى هاتف الطالب عبر إشعار' },
+    { title: 'الصف والدورات', desc: 'أضف الطلاب، أدِر الدورات، وزّع الدروس على المجموعات' },
+    { title: 'تقدّم كل طالب', desc: 'شاهد من يدرس، وكم كلمة تعلّم، وأين يتعثّر' },
+    { title: 'دردشة الصف', desc: 'تواصل مع طلابك مباشرة داخل التطبيق' },
+    { title: 'ذكاء اصطناعي لطلابك', desc: 'المدرب الذكي والشروحات وتحليل الأخطاء تعمل لصفك تلقائيًا' },
+  ] },
+  es: { title: '¿Enseñas alemán? Gestiona a tus alumnos aquí', subtitle: 'Espacio gratuito para el profesor: crea una clase, asigna tareas y mantén a los alumnos al día — todo en un solo lugar.', items: [
+    { title: 'Tus propias lecciones', desc: 'Sube fotos de las páginas del libro — la IA reconoce las palabras y crea 7 tipos de ejercicios' },
+    { title: 'Tareas por push', desc: 'Envía tareas y recordatorios directamente al teléfono del alumno como notificación push' },
+    { title: 'Clase y cursos', desc: 'Añade alumnos, gestiona cursos, reparte lecciones por grupos' },
+    { title: 'Progreso de cada uno', desc: 'Ve quién estudia, cuántas palabras ha aprendido y dónde falla' },
+    { title: 'Chat de clase', desc: 'Habla con tus alumnos dentro de la app' },
+    { title: 'IA para tus alumnos', desc: 'El entrenador IA, las explicaciones y el análisis de errores funcionan para tu clase automáticamente' },
+  ] },
+  fr: { title: 'Vous enseignez l\'allemand ? Gérez vos élèves ici', subtitle: 'Espace enseignant gratuit : créez une classe, donnez des devoirs et gardez vos élèves motivés — tout au même endroit.', items: [
+    { title: 'Vos propres leçons', desc: 'Téléchargez les photos des pages du manuel — l\'IA reconnaît les mots et crée 7 types d\'exercices' },
+    { title: 'Devoirs par push', desc: 'Envoyez devoirs et rappels directement sur le téléphone de l\'élève par notification push' },
+    { title: 'Classe et cours', desc: 'Ajoutez des élèves, gérez des cours, répartissez les leçons par groupes' },
+    { title: 'Progrès de chacun', desc: 'Voyez qui travaille, combien de mots appris et où ça coince' },
+    { title: 'Chat de classe', desc: 'Échangez avec vos élèves directement dans l\'app' },
+    { title: 'IA pour vos élèves', desc: 'Le coach IA, les explications et l\'analyse des erreurs travaillent pour votre classe automatiquement' },
+  ] },
+  sq: { title: 'Jep mësim gjermanisht? Menaxho nxënësit këtu', subtitle: 'Hapësirë falas për mësuesin: krijo një klasë, jep detyra dhe mbaji nxënësit në ritëm — gjithçka në një vend.', items: [
+    { title: 'Mësimet e tua', desc: 'Ngarko foto të faqeve të librit — IA njeh fjalët dhe ndërton 7 lloje ushtrimesh' },
+    { title: 'Detyra me push', desc: 'Dërgo detyra dhe kujtesa direkt në telefonin e nxënësit si njoftim push' },
+    { title: 'Klasa dhe kurset', desc: 'Shto nxënës, menaxho kurse, ndaj mësimet në grupe' },
+    { title: 'Progresi i secilit', desc: 'Shiko kush mëson, sa fjalë ka mësuar dhe ku ngec' },
+    { title: 'Chat me klasën', desc: 'Bisedo me nxënësit direkt në aplikacion' },
+    { title: 'IA për nxënësit e tu', desc: 'Trajneri AI, shpjegimet dhe analiza e gabimeve punojnë automatikisht për klasën tënde' },
+  ] },
+}
+
 const ALPHA_PREVIEW = [
   { l: 'A', n: 'a',    ipa: 'аа' }, { l: 'B', n: 'be',   ipa: 'бэ' },
   { l: 'D', n: 'de',   ipa: 'дэ' }, { l: 'E', n: 'e',    ipa: 'э'  },
@@ -92,18 +177,6 @@ const L = {
     ai: {
       title: 'ИИ объясняет, а не просто проверяет',
       text: 'Нажми «Обоснуй» — и получи объяснение смысла слова простым языком. Нажми «Почему ошибка?» — разбор твоей ошибки.',
-    },
-    teacher: {
-      title: 'Преподаёте немецкий? Ведите учеников здесь',
-      subtitle: 'Бесплатный кабинет учителя: соберите класс, давайте задания и держите учеников в тонусе — всё в одном месте.',
-      items: [
-        { icon: '📚', title: 'Свои уроки из учебника', desc: 'Загрузите фото страниц — ИИ распознаёт слова и сам соберёт 7 типов упражнений' },
-        { icon: '🔔', title: 'Домашка в push', desc: 'Отправляйте задания и напоминания прямо на телефон ученика push-уведомлением' },
-        { icon: '👥', title: 'Класс и курсы', desc: 'Добавляйте учеников, ведите курсы, распределяйте уроки по группам' },
-        { icon: '📊', title: 'Прогресс каждого', desc: 'Видно, кто занимается, сколько слов выучил и где буксует' },
-        { icon: '💬', title: 'Чат с классом', desc: 'Общайтесь с учениками прямо в приложении' },
-        { icon: '🤖', title: 'ИИ на ваших учеников', desc: 'AI-тренер, объяснения и разбор ошибок работают для класса автоматически' },
-      ],
     },
     footer: 'Читать документацию',
   },
@@ -438,6 +511,7 @@ const LANGS_AVAILABLE = Object.keys(L)
 export default function Landing() {
   const { lang } = useI18nStore()
   const c = L[lang] || L.en
+  const tb = TEACHER[lang] || TEACHER.en
   const isRTL = lang === 'ar'
 
   return (
@@ -570,8 +644,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Блок для учителей — привлекаем преподавателей */}
-      {c.teacher && (
+      {/* Блок для учителей — привлекаем преподавателей (локализован на все языки) */}
+      {tb && (
         <section style={{ maxWidth: 900, margin: '0 auto 56px', padding: '0 16px' }}>
           <div style={{
             background: 'var(--surface)', border: '2px solid var(--accent)',
@@ -579,13 +653,13 @@ export default function Landing() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
               <span style={{ fontSize: 34 }}>🧑‍🏫</span>
-              <div style={{ fontWeight: 800, fontSize: 22, color: 'var(--ink)' }}>{c.teacher.title}</div>
+              <div style={{ fontWeight: 800, fontSize: 22, color: 'var(--ink)' }}>{tb.title}</div>
             </div>
-            <div style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.6, marginBottom: 20 }}>{c.teacher.subtitle}</div>
+            <div style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.6, marginBottom: 20 }}>{tb.subtitle}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-              {c.teacher.items.map((it, i) => (
+              {tb.items.map((it, i) => (
                 <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{it.icon}</span>
+                  <span style={{ fontSize: 22, flexShrink: 0 }}>{TEACHER_ICONS[i]}</span>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{it.title}</div>
                     <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>{it.desc}</div>
