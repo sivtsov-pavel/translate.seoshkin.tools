@@ -527,7 +527,9 @@ export async function summarizeTrainerSession({ existingSummary = '', messages =
 ${dialog}
 
 Онови памʼять. Поверни СТРОГО JSON без markdown:
-{"summary_text":"коротка накопичувальна вижимка мовою ${langName} (2-4 речення: хто учень, що обговорювали, над чим працює)","known_facts":{},"recurring_mistakes":[{"type":"тип помилки коротко","example":"приклад"}],"topics_covered":[{"topic":"тема сесії"}]}`
+{"summary_text":"коротка накопичувальна вижимка (2-4 речення: хто учень, що обговорювали, над чим працює)","known_facts":{},"recurring_mistakes":[{"type":"тип помилки коротко","example":"приклад"}],"topics_covered":[{"topic":"тема сесії"}]}
+
+ДУЖЕ ВАЖЛИВО: поле summary_text напиши САМЕ мовою користувача — ${langName}. Це мова інтерфейсу учня, а не обовʼязково українська.`
 
   const res = await client.chat.completions.create({
     model: 'gpt-4o-mini',

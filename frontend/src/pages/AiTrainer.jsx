@@ -107,6 +107,10 @@ function BubbleAI({ msg, onSpeak }) {
             fontSize: 12, color: 'var(--ink)',
           }}>
             ✏️ {msg.correction}
+            <button onClick={() => onSpeak(msg.correction)} title="Прослухати правильно"
+              style={{ marginLeft: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.6, verticalAlign: 'middle' }}>
+              🔊
+            </button>
           </div>
         )}
       </div>
