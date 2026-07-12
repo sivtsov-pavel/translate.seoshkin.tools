@@ -497,12 +497,19 @@ ${memoryBlock}
   const res = await client.chat.completions.create({
     model: 'gpt-4o-mini',
     max_tokens: 512,
+    response_format: { type: 'json_object' },   // модель обязана вернуть валидный JSON
     messages: [
       { role: 'system', content: systemPrompt },
       ...messages,
     ],
   })
-  return parseJson(res.choices[0].message.content)
+  const content = res.choices[0].message.content
+  try {
+    return parseJson(content)
+  } catch {
+    // Подстраховка: если модель всё же вернула не-JSON — не падаем, берём как reply
+    return { reply: content, correction: null, translation: null }
+  }
 }
 
 // §3 ТЗ: суммаризация завершённой сессии в накопительную память.
@@ -522,7 +529,17 @@ ${dialog}
 Онови памʼять. Поверни СТРОГО JSON без markdown:
 {"summary_text":"коротка накопичувальна вижимка мовою ${langName} (2-4 речення: хто учень, що обговорювали, над чим працює)","known_facts":{},"recurring_mistakes":[{"type":"тип помилки коротко","example":"приклад"}],"topics_covered":[{"topic":"тема сесії"}]}`
 
-  return parseJson(await ask(prompt, { max_tokens: 700 }))
+  const res = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    max_tokens: 700,
+    response_format: { type: 'json_object' },
+    messages: [{ role: 'user', content: prompt }],
+  })
+  try {
+    return parseJson(res.choices[0].message.content)
+  } catch {
+    return { summary_text: existingSummary, known_facts: {}, recurring_mistakes: [], topics_covered: [] }
+  }
 }
 
 export async function translateSentences(pairs) {
