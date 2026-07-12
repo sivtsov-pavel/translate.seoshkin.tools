@@ -120,6 +120,30 @@ export async function mergeLesson(extractions, transcription = null) {
   return { words: [...seenWords.values()], grammar_points }
 }
 
+// AI-название и описание урока по его содержимому (когда учитель не задал тему).
+// Возвращает { title, description } по-русски.
+export async function generateLessonMeta(words = [], grammarPoints = []) {
+  const wl = words.slice(0, 60).map(w => `${w.word_de} — ${w.translation_ru}`).join(', ')
+  const gl = (grammarPoints || []).slice(0, 8).map(g => g.description).filter(Boolean).join('; ')
+  const prompt = `Ты помогаешь учителю немецкого языка. По содержимому урока придумай:
+1) НАЗВАНИЕ — короткое, 3-6 слов, по-русски, БЕЗ слова «Урок» и без номера (например: «Умлаут Ä, семья и заказ еды»).
+2) ОПИСАНИЕ — 1-2 предложения по-русски: какие темы и что тренируется.
+
+Слова урока: ${wl || '(нет)'}
+Грамматика: ${gl || '—'}
+
+Верни СТРОГО JSON без markdown: {"title":"...","description":"..."}`
+  const res = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    max_tokens: 256,
+    temperature: 0.5,
+    response_format: { type: 'json_object' },
+    messages: [{ role: 'user', content: prompt }],
+  })
+  const data = parseJson(res.choices[0].message.content)
+  return { title: (data.title || '').trim(), description: (data.description || '').trim() }
+}
+
 const EXERCISES_PROMPT = `На основе слов и грамматики урока немецкого (A1) создай упражнения для школьника.
 
 Для каждого слова создай 5 упражнений — по одному каждого типа:

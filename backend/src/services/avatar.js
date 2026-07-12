@@ -18,6 +18,19 @@ export function isAvatarConfigured() {
   return Boolean(D_ID_KEY)
 }
 
+// Остаток кредитов D-ID (для скрытия кнопки 🎥, когда генерить нечем)
+export async function getCredits() {
+  if (!isAvatarConfigured()) return 0
+  try {
+    const res = await fetch(`${D_ID_BASE}/credits`, { headers: { Authorization: authHeader() } })
+    if (!res.ok) return 0
+    const data = await res.json()
+    return Number(data.remaining ?? 0)
+  } catch {
+    return 0
+  }
+}
+
 export function personaPhoto(character) {
   return PERSONA_PHOTOS[character] || DEFAULT_PHOTO
 }

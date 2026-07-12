@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 
 async function setProgress(lessonId, text) {
@@ -140,6 +140,14 @@ export async function processLesson(lessonId, ownerId) {
       }
       allWords.push(...(cons.words || []))
       allGrammar.push(...(cons.grammar_points || []))
+
+      // Заполняем блок текста урока словами (для формы редактирования: 📘 учебник / ✏️ тетрадь),
+      // только если блок ещё пуст — не затираем OCR-текст, если он был.
+      const wordLines = (cons.words || []).map(w => `${w.word_de} — ${w.translation_ru}`).join('\n')
+      if (wordLines) {
+        const col = source === 'extra' ? 'text_content_extra' : 'text_content'
+        await db.query(`UPDATE lessons SET ${col} = $1 WHERE id = $2 AND (${col} IS NULL OR ${col} = '')`, [wordLines, lessonId])
+      }
     }
 
     await ingest(textbookPhotos, 0, combinedText, 'textbook')
@@ -180,6 +188,27 @@ export async function processLesson(lessonId, ownerId) {
         'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
         [lessonId, wordId, 'dictation', JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })]
       )
+    }
+
+    // AI-название и описание, если тема не задана вручную (пусто или авто «Урок N»)
+    if (consolidated.words.length > 0) {
+      try {
+        const { rows: metaRows } = await db.query('SELECT title, description FROM lessons WHERE id = $1', [lessonId])
+        const curTitle = (metaRows[0]?.title || '').trim()
+        const needTitle = !curTitle || /^Урок\s+\d+$/i.test(curTitle)
+        const needDesc  = !metaRows[0]?.description
+        if (needTitle || needDesc) {
+          const meta = await generateLessonMeta(consolidated.words, consolidated.grammar_points)
+          // Сохраняем номер в заголовке: «Урок N: <AI-название>»
+          const numMatch = curTitle.match(/^Урок\s+(\d+)/i)
+          const prefix = numMatch ? `Урок ${numMatch[1]}: ` : ''
+          const newTitle = needTitle && meta.title ? `${prefix}${meta.title}` : (curTitle || null)
+          const newDesc  = needDesc && meta.description ? meta.description : (metaRows[0]?.description || null)
+          await db.query('UPDATE lessons SET title = $1, description = $2 WHERE id = $3', [newTitle, newDesc, lessonId])
+        }
+      } catch (e) {
+        console.error('generateLessonMeta failed:', e.message)
+      }
     }
 
     await db.query(

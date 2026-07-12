@@ -274,7 +274,7 @@ export default function AiTrainer() {
       const r = await api.post('/ai-trainer/avatar', { text, character })
       setMessages(prev => prev.map((m, i) => i === index ? { ...m, videoUrl: r.video_url } : m))
     } catch {
-      setError('Не удалось создать видео-аватар')
+      setError('Не удалось создать видео (возможно, закончились кредиты D-ID). Голосовой режим ✨ работает без кредитов.')
     } finally {
       setAvatarBusy(-1)
     }
@@ -690,28 +690,27 @@ export default function AiTrainer() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Введення */}
+      {/* Введення: поле во всю ширину, кнопки под ним */}
       <div style={{ padding: '10px 16px 16px', borderTop: '1px solid var(--line)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder={S.placeholder}
-            rows={1}
-            style={{
-              flex: 1, resize: 'none', borderRadius: 12, padding: '10px 14px',
-              fontSize: 15, lineHeight: 1.5, border: '1.5px solid var(--line)',
-              background: 'var(--surface)', color: 'var(--ink)',
-              maxHeight: 120, overflowY: 'auto',
-              fontFamily: 'inherit',
-            }}
-            onInput={e => {
-              e.target.style.height = 'auto'
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
-            }}
-          />
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder={S.placeholder}
+          rows={1}
+          style={{
+            width: '100%', boxSizing: 'border-box', resize: 'none', borderRadius: 12, padding: '11px 14px',
+            fontSize: 15, lineHeight: 1.5, border: '1.5px solid var(--line)',
+            background: 'var(--surface)', color: 'var(--ink)',
+            maxHeight: 120, overflowY: 'auto', fontFamily: 'inherit',
+          }}
+          onInput={e => {
+            e.target.style.height = 'auto'
+            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+          }}
+        />
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
           {/* Переключатель языка микрофона (скрыт, если локаль уже немецкая) */}
           {micSupported && lang !== 'de' && (
             <button
@@ -744,11 +743,26 @@ export default function AiTrainer() {
               <i className={`bi ${listening ? 'bi-mic-fill' : 'bi-mic'}`} />
             </button>
           )}
+          {/* ✨ Живой голосовой режим (как в Gemini) */}
+          {micSupported && (
+            <button
+              onClick={enterVoice} title={V.voice}
+              style={{
+                height: 42, padding: '0 14px', borderRadius: 12, flexShrink: 0, border: 'none',
+                background: 'linear-gradient(135deg, #7C5CFF 0%, #3B7A57 100%)',
+                color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              ✨ {V.voice}
+            </button>
+          )}
+          <div style={{ flex: 1 }} />
           <button
             onClick={sendMessage}
             disabled={!input.trim() || loading}
             style={{
-              width: 42, height: 42, borderRadius: 12, border: 'none',
+              width: 46, height: 42, borderRadius: 12, border: 'none',
               background: input.trim() && !loading ? 'var(--accent)' : 'var(--line)',
               color: 'var(--accent-ink)', cursor: input.trim() && !loading ? 'pointer' : 'default',
               fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -772,6 +786,10 @@ export default function AiTrainer() {
         const st = loading ? V.thinking : speaking ? V.speaking : listening ? V.listening : V.tap
         const stColor = loading ? 'var(--ink-soft)' : speaking ? '#c78a3c' : listening ? '#d6533c' : 'var(--accent)'
         const active = speaking || listening
+        // «Живой по умолчанию»: когда не играет клип с озвучкой — крутим тихий зацикленный клип.
+        // Говорит → клип «говорит» (муть), иначе → лёгкое «слушает». Только для Pablo (клипы его лица).
+        const isPablo = character === 'pablo'
+        const ambient = (!clip && !lastAi?.videoUrl && isPablo) ? (speaking ? CLIPS.start : CLIPS.listening) : null
         return (
           <div style={{
             position: 'fixed', inset: 0, zIndex: 300,
@@ -779,8 +797,15 @@ export default function AiTrainer() {
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             padding: '24px 20px', color: '#fff',
           }}>
-            {/* Верхняя панель: переключиться на текст / закрыть */}
+            {/* Верхняя панель: оживить (D-ID, если есть кредиты) / текст */}
             <div style={{ position: 'absolute', top: 14, right: 16, display: 'flex', gap: 8 }}>
+              {avatarAvailable && lastAi && !lastAi.videoUrl && (
+                <button onClick={() => generateAvatar(lastAiIdx, lastAi.reply)} disabled={avatarBusy === lastAiIdx}
+                  title={V.animate}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                  {avatarBusy === lastAiIdx ? '⏳' : '🎥'} {V.animate}
+                </button>
+              )}
               <button onClick={exitVoice} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
                 💬 {V.text}
               </button>
@@ -800,6 +825,9 @@ export default function AiTrainer() {
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
                 ) : lastAi?.videoUrl ? (
                   <video src={lastAi.videoUrl} autoPlay playsInline
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
+                ) : ambient ? (
+                  <video key={ambient} src={ambient} autoPlay loop muted playsInline
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
                 ) : char.photo ? (
                   <img src={char.photo} alt={char.name}
@@ -856,16 +884,6 @@ export default function AiTrainer() {
                   boxShadow: listening ? '0 0 0 6px rgba(214,83,60,0.25)' : 'none', animation: listening ? 'pulse 1.2s infinite' : 'none' }}>
                 <i className={`bi ${listening ? 'bi-mic-fill' : 'bi-mic'}`} />
               </button>
-
-              {/* оживить видео D-ID (только учитель) */}
-              {avatarAvailable && lastAi && !lastAi.videoUrl && (
-                <button onClick={() => generateAvatar(lastAiIdx, lastAi.reply)} disabled={avatarBusy === lastAiIdx}
-                  title={V.animate}
-                  style={{ width: 46, height: 46, borderRadius: '50%', cursor: 'pointer', fontSize: 20,
-                    border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff' }}>
-                  {avatarBusy === lastAiIdx ? '⏳' : '🎥'}
-                </button>
-              )}
             </div>
           </div>
         )

@@ -1,7 +1,7 @@
 import { chatWithTrainer, summarizeTrainerSession } from '../services/claude.js'
 import { db } from '../db/index.js'
 import { mergeMemory, buildReport } from '../services/aiTrainerMemory.js'
-import { isAvatarConfigured, personaPhoto, generateTalkingVideo } from '../services/avatar.js'
+import { isAvatarConfigured, personaPhoto, generateTalkingVideo, getCredits } from '../services/avatar.js'
 
 // Загрузить память пользователя (или null)
 async function loadMemory(userId) {
@@ -43,7 +43,10 @@ export async function aiTrainerRoutes(fastify) {
 
   // ── Видео-аватар: доступность (настроен ли ключ D-ID) ──
   fastify.get('/api/ai-trainer/avatar/available', { preHandler: [fastify.authenticate] }, async () => {
-    return { available: isAvatarConfigured() }
+    // Кнопка 🎥 (генерация нового видео D-ID) доступна, только если ключ есть И остались кредиты
+    const configured = isAvatarConfigured()
+    const credits = configured ? await getCredits() : 0
+    return { available: configured && credits > 0, credits }
   })
 
   // ── Видео-аватар: сгенерировать говорящее видео для реплики ──
