@@ -464,16 +464,25 @@ const TRAINER_LANG_NAMES = {
   sq: 'Albanian (shqip)',
 }
 
-export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk' }) {
+export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk', memory = null }) {
   const char = TRAINER_CHARACTERS[character] || TRAINER_CHARACTERS.lena
   const scenarioDesc = TRAINER_SCENARIOS[scenario] || TRAINER_SCENARIOS.free
   // Мова підказок/перекладу = мова інтерфейсу учня (усі 10 локалей)
   const userLangName = TRAINER_LANG_NAMES[userLang] || TRAINER_LANG_NAMES.uk
 
+  // Память о ученике (§3 ТЗ): накопительная выжимка + топ повторяющихся ошибок
+  let memoryBlock = ''
+  if (memory && (memory.summary_text || (memory.recurring_mistakes || []).length)) {
+    const sum = memory.summary_text ? `Що ти вже знаєш про учня: ${memory.summary_text}` : ''
+    const mist = (memory.recurring_mistakes || []).slice(0, 3).map(m => m.type).filter(Boolean).join(', ')
+    const mistLine = mist ? `Його повторювані помилки — м'яко давай практику на них: ${mist}.` : ''
+    memoryBlock = `\nПАМʼЯТЬ ПРО УЧНЯ (ти спілкувався раніше — поводься природно, ненавʼязливо покажи, що памʼятаєш його):\n${sum}\n${mistLine}\n`
+  }
+
   const systemPrompt = `Ти — ${char.emoji} ${char.name}, ${char.desc}.
 Рівень учня: A1–A2 (початківець).
 Сценарій: ${scenarioDesc}.
-
+${memoryBlock}
 Правила:
 1. Основна відповідь ЗАВЖДИ тільки німецькою мовою (reply)
 2. Якщо учень написав не-німецькою — зрозумій сенс та відповідай так, ніби він написав правильно по-німецьки
@@ -494,6 +503,26 @@ export async function chatWithTrainer({ messages, character = 'lena', scenario =
     ],
   })
   return parseJson(res.choices[0].message.content)
+}
+
+// §3 ТЗ: суммаризация завершённой сессии в накопительную память.
+// Вход: текущая выжимка + лог сессии → структурное обновление памяти.
+export async function summarizeTrainerSession({ existingSummary = '', messages = [], userLang = 'uk' }) {
+  const langName = TRAINER_LANG_NAMES[userLang] || TRAINER_LANG_NAMES.uk
+  const dialog = (messages || [])
+    .map(m => `${m.role === 'user' ? 'Учень' : 'Тренер'}: ${m.text}${m.correction && m.correction !== 'null' ? ` [виправлення: ${m.correction}]` : ''}`)
+    .join('\n')
+
+  const prompt = `Ти ведеш памʼять про учня, який тренує німецьку з AI-тренером.
+Поточна памʼять (вижимка минулих розмов): ${existingSummary || '(порожньо, це перша сесія)'}
+
+Лог щойно завершеної сесії:
+${dialog}
+
+Онови памʼять. Поверни СТРОГО JSON без markdown:
+{"summary_text":"коротка накопичувальна вижимка мовою ${langName} (2-4 речення: хто учень, що обговорювали, над чим працює)","known_facts":{},"recurring_mistakes":[{"type":"тип помилки коротко","example":"приклад"}],"topics_covered":[{"topic":"тема сесії"}]}`
+
+  return parseJson(await ask(prompt, { max_tokens: 700 }))
 }
 
 export async function translateSentences(pairs) {

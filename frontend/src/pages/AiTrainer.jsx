@@ -121,6 +121,8 @@ export default function AiTrainer() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showSummary, setShowSummary] = useState(false)
+  const [sessionId, setSessionId] = useState(null)
+  const [memoryHint, setMemoryHint] = useState('')
   const bottomRef = useRef()
   const inputRef = useRef()
   const lang = useI18nStore(s => s.lang)
@@ -130,19 +132,22 @@ export default function AiTrainer() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const startSession = () => {
-    const char = CHARACTERS.find(c => c.id === character)
+  const startSession = async () => {
     const starter = STARTER_PHRASES[character]?.[scenario]
       || (scenario.startsWith('interview') ? 'Guten Tag! Setzen Sie sich bitte. Erzählen Sie mir von sich.' : 'Hallo!')
-    setMessages([{
-      role: 'ai',
-      reply: starter,
-      translation: null,
-      correction: null,
-      character,
-    }])
+    setMessages([{ role: 'ai', reply: starter, translation: null, correction: null, character }])
+    setMemoryHint('')
     setStep('chat')
     setTimeout(() => inputRef.current?.focus(), 100)
+    // Создаём серверную сессию (для памяти между сессиями). Если упадёт —
+    // тренер всё равно работает через stateless-фолбэк в sendMessage.
+    try {
+      const res = await api.post('/ai-trainer/sessions', { character, scenario, starter })
+      setSessionId(res.session_id)
+      if (res.memory?.summary_text) setMemoryHint(res.memory.summary_text)
+    } catch {
+      setSessionId(null)
+    }
   }
 
   const sendMessage = async () => {
@@ -164,14 +169,12 @@ export default function AiTrainer() {
     }
     history.push({ role: 'user', content: text })
 
+    const userLang = localStorage.getItem('lang') || 'uk'
     try {
-      const result = await api.post('/ai-trainer/chat', {
-        messages: history,
-        character,
-        scenario,
-        // Язык подсказок/перевода тренера = текущая локаль интерфейса
-        userLang: localStorage.getItem('lang') || 'uk',
-      })
+      // С сессией сервер сам держит историю и память; иначе — stateless-фолбэк
+      const result = sessionId
+        ? await api.post(`/ai-trainer/sessions/${sessionId}/message`, { text, userLang })
+        : await api.post('/ai-trainer/chat', { messages: history, character, scenario, userLang })
       setMessages(prev => [...prev, {
         role: 'ai',
         reply: result.reply,
@@ -195,6 +198,13 @@ export default function AiTrainer() {
   }
 
   const resetSession = () => {
+    // Завершаем сессию — сервер сгенерит отчёт и обновит память (не ждём ответа)
+    if (sessionId) {
+      const userLang = localStorage.getItem('lang') || 'uk'
+      api.post(`/ai-trainer/sessions/${sessionId}/finish`, { userLang }).catch(() => {})
+    }
+    setSessionId(null)
+    setMemoryHint('')
     setMessages([])
     setStep('select')
     setShowSummary(false)
@@ -287,6 +297,18 @@ export default function AiTrainer() {
           {S.change}
         </button>
       </div>
+
+      {/* Баннер «тренер помнит» — из накопленной памяти (§3 ТЗ) */}
+      {memoryHint && (
+        <div style={{
+          margin: '8px 16px 0', padding: '8px 12px', borderRadius: 10,
+          background: 'var(--accent-soft)', border: '1px solid var(--line)',
+          fontSize: 12, color: 'var(--ink-soft)', display: 'flex', gap: 6, alignItems: 'flex-start',
+        }}>
+          <span style={{ flexShrink: 0 }}>🧠</span>
+          <span>{memoryHint}</span>
+        </div>
+      )}
 
       {/* Повідомлення */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px' }}>
