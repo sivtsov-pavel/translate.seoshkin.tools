@@ -3,34 +3,42 @@ import { api } from '../api/client.js'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useI18nStore } from '../store/i18n.js'
 
-// Локализованные строки UI (ru/uk; для остальных локалей — украинский как было)
+// Локализованные строки UI тренера — все языки интерфейса
 const STR = {
   uk: { title: '🤖 AI тренер', subtitle: 'Живі розмовні тренування з AI-наставником. Обери персонажа та тему.', persona: 'Персонаж', topic: 'Тема розмови', start: 'Почати розмову →', change: '← Змінити', typing: '⏳ Відповідає...', placeholder: 'Напиши по-німецьки або по-українськи...', hint: 'Enter — надіслати · Shift+Enter — новий рядок', connErr: 'Помилка з\'єднання. Спробуй ще раз.' },
   ru: { title: '🤖 AI тренер', subtitle: 'Живые разговорные тренировки с AI-наставником. Выбери персонажа и тему.', persona: 'Персонаж', topic: 'Тема разговора', start: 'Начать разговор →', change: '← Сменить', typing: '⏳ Отвечает...', placeholder: 'Напиши по-немецки или по-русски...', hint: 'Enter — отправить · Shift+Enter — новая строка', connErr: 'Ошибка соединения. Попробуй ещё раз.' },
+  en: { title: '🤖 AI Trainer', subtitle: 'Live conversation practice with an AI mentor. Choose a character and a topic.', persona: 'Character', topic: 'Topic', start: 'Start conversation →', change: '← Change', typing: '⏳ Replying...', placeholder: 'Write in German or English...', hint: 'Enter — send · Shift+Enter — new line', connErr: 'Connection error. Try again.' },
+  de: { title: '🤖 KI-Trainer', subtitle: 'Lebendiges Gesprächstraining mit einem KI-Mentor. Wähle einen Charakter und ein Thema.', persona: 'Charakter', topic: 'Thema', start: 'Gespräch starten →', change: '← Ändern', typing: '⏳ Antwortet...', placeholder: 'Schreibe auf Deutsch...', hint: 'Enter — senden · Shift+Enter — neue Zeile', connErr: 'Verbindungsfehler. Versuche es erneut.' },
+  bg: { title: '🤖 AI треньор', subtitle: 'Живи разговорни тренировки с AI-наставник. Избери герой и тема.', persona: 'Герой', topic: 'Тема', start: 'Започни разговор →', change: '← Смени', typing: '⏳ Отговаря...', placeholder: 'Пиши на немски или български...', hint: 'Enter — прати · Shift+Enter — нов ред', connErr: 'Грешка във връзката. Опитай пак.' },
+  tr: { title: '🤖 AI Eğitmen', subtitle: 'AI mentoruyla canlı konuşma pratiği. Bir karakter ve konu seç.', persona: 'Karakter', topic: 'Konu', start: 'Konuşmaya başla →', change: '← Değiştir', typing: '⏳ Yanıtlıyor...', placeholder: 'Almanca veya Türkçe yaz...', hint: 'Enter — gönder · Shift+Enter — yeni satır', connErr: 'Bağlantı hatası. Tekrar dene.' },
+  ar: { title: '🤖 مدرب الذكاء الاصطناعي', subtitle: 'تدريبات محادثة حية مع مرشد ذكاء اصطناعي. اختر شخصية وموضوعًا.', persona: 'الشخصية', topic: 'الموضوع', start: 'ابدأ المحادثة →', change: '← تغيير', typing: '⏳ يرد...', placeholder: 'اكتب بالألمانية أو العربية...', hint: 'Enter — إرسال · Shift+Enter — سطر جديد', connErr: 'خطأ في الاتصال. حاول مرة أخرى.' },
+  es: { title: '🤖 Entrenador IA', subtitle: 'Práctica de conversación en vivo con un mentor de IA. Elige un personaje y un tema.', persona: 'Personaje', topic: 'Tema', start: 'Iniciar conversación →', change: '← Cambiar', typing: '⏳ Respondiendo...', placeholder: 'Escribe en alemán o español...', hint: 'Enter — enviar · Shift+Enter — nueva línea', connErr: 'Error de conexión. Inténtalo de nuevo.' },
+  fr: { title: '🤖 Coach IA', subtitle: 'Entraînement à la conversation en direct avec un mentor IA. Choisis un personnage et un thème.', persona: 'Personnage', topic: 'Thème', start: 'Commencer la conversation →', change: '← Changer', typing: '⏳ Répond...', placeholder: 'Écris en allemand ou en français...', hint: 'Entrée — envoyer · Maj+Entrée — nouvelle ligne', connErr: 'Erreur de connexion. Réessaie.' },
+  sq: { title: '🤖 Trajneri AI', subtitle: 'Praktikë bisede e drejtpërdrejtë me një mentor AI. Zgjidh një personazh dhe një temë.', persona: 'Personazhi', topic: 'Tema', start: 'Fillo bisedën →', change: '← Ndrysho', typing: '⏳ Po përgjigjet...', placeholder: 'Shkruaj në gjermanisht ose shqip...', hint: 'Enter — dërgo · Shift+Enter — rresht i ri', connErr: 'Gabim lidhjeje. Provo përsëri.' },
 }
 const uiStr = (lang) => STR[lang] || STR.uk
 // Достаём локализованное значение из {uk, ru}-карты
 const loc = (obj, lang) => (obj && (obj[lang] || obj.uk)) || ''
 
 const CHARACTERS = [
-  { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  color: '#4A7FA5', role: { uk: 'Вчителька з Берліна',    ru: 'Учительница из Берлина' } },
-  { id: 'max',   emoji: '☕',    name: 'Макс',   color: '#8B5E3C', role: { uk: 'Бариста в кав\'ярні',    ru: 'Бариста в кафе' } },
-  { id: 'hanna', emoji: '🛒',   name: 'Ганна',  color: '#5A9E6E', role: { uk: 'Продавчиня в магазині',  ru: 'Продавщица в магазине' } },
-  { id: 'otto',  emoji: '🏨',   name: 'Отто',   color: '#7B5EA7', role: { uk: 'Портьє в готелі',        ru: 'Портье в отеле' } },
-  { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', color: '#5A6B8C', role: { uk: 'HR — співбесіда',    ru: 'HR — собеседование' } },
+  { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  color: '#4A7FA5', role: { uk: 'Вчителька з Берліна', ru: 'Учительница из Берлина', en: 'Teacher from Berlin', de: 'Lehrerin aus Berlin', bg: 'Учителка от Берлин', tr: 'Berlin\'den öğretmen', ar: 'معلمة من برلين', es: 'Profesora de Berlín', fr: 'Professeure de Berlin', sq: 'Mësuese nga Berlini' } },
+  { id: 'max',   emoji: '☕',    name: 'Макс',   color: '#8B5E3C', role: { uk: 'Бариста в кав\'ярні', ru: 'Бариста в кафе', en: 'Barista in a café', de: 'Barista im Café', bg: 'Бариста в кафене', tr: 'Kafede barista', ar: 'باريستا في مقهى', es: 'Barista en una cafetería', fr: 'Barista dans un café', sq: 'Barist në kafe' } },
+  { id: 'hanna', emoji: '🛒',   name: 'Ганна',  color: '#5A9E6E', role: { uk: 'Продавчиня в магазині', ru: 'Продавщица в магазине', en: 'Shop assistant', de: 'Verkäuferin im Laden', bg: 'Продавачка в магазин', tr: 'Mağaza görevlisi', ar: 'بائعة في متجر', es: 'Dependienta de tienda', fr: 'Vendeuse en magasin', sq: 'Shitëse në dyqan' } },
+  { id: 'otto',  emoji: '🏨',   name: 'Отто',   color: '#7B5EA7', role: { uk: 'Портьє в готелі', ru: 'Портье в отеле', en: 'Hotel receptionist', de: 'Portier im Hotel', bg: 'Рецепционист в хотел', tr: 'Otel resepsiyonisti', ar: 'موظف استقبال فندق', es: 'Recepcionista de hotel', fr: 'Réceptionniste d\'hôtel', sq: 'Recepsionist hoteli' } },
+  { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', color: '#5A6B8C', role: { uk: 'HR — співбесіда', ru: 'HR — собеседование', en: 'HR — interview', de: 'HR — Vorstellungsgespräch', bg: 'HR — интервю', tr: 'İK — mülakat', ar: 'موارد بشرية — مقابلة', es: 'RRHH — entrevista', fr: 'RH — entretien', sq: 'HR — intervistë' } },
 ]
 
 const SCENARIOS = [
-  { id: 'intro',     label: { uk: '👋 Знайомство',    ru: '👋 Знакомство' } },
-  { id: 'cafe',      label: { uk: '☕ У кав\'ярні',    ru: '☕ В кафе' } },
-  { id: 'shopping',  label: { uk: '🛒 Покупки',       ru: '🛒 Покупки' } },
-  { id: 'hotel',     label: { uk: '🏨 Готель',        ru: '🏨 Отель' } },
-  { id: 'direction', label: { uk: '🗺️ Орієнтування',  ru: '🗺️ Ориентирование' } },
-  { id: 'free',      label: { uk: '💬 Вільна бесіда',  ru: '💬 Свободная беседа' } },
-  { id: 'interview_it',    label: { uk: '💻 Співбесіда: IT-агентство',   ru: '💻 Собеседование: IT-агентство' } },
-  { id: 'interview_clean', label: { uk: '🧹 Співбесіда: клінінг',        ru: '🧹 Собеседование: клининг' } },
-  { id: 'interview_food',  label: { uk: '🍽️ Співбесіда: кафе/ресторан',  ru: '🍽️ Собеседование: кафе/ресторан' } },
-  { id: 'interview_hotel', label: { uk: '🛎️ Співбесіда: готель',         ru: '🛎️ Собеседование: отель' } },
+  { id: 'intro',     label: { uk: '👋 Знайомство', ru: '👋 Знакомство', en: '👋 Introduction', de: '👋 Kennenlernen', bg: '👋 Запознанство', tr: '👋 Tanışma', ar: '👋 التعارف', es: '👋 Presentación', fr: '👋 Rencontre', sq: '👋 Njohje' } },
+  { id: 'cafe',      label: { uk: '☕ У кав\'ярні', ru: '☕ В кафе', en: '☕ At the café', de: '☕ Im Café', bg: '☕ В кафенето', tr: '☕ Kafede', ar: '☕ في المقهى', es: '☕ En la cafetería', fr: '☕ Au café', sq: '☕ Në kafe' } },
+  { id: 'shopping',  label: { uk: '🛒 Покупки', ru: '🛒 Покупки', en: '🛒 Shopping', de: '🛒 Einkaufen', bg: '🛒 Пазаруване', tr: '🛒 Alışveriş', ar: '🛒 التسوق', es: '🛒 Compras', fr: '🛒 Courses', sq: '🛒 Blerje' } },
+  { id: 'hotel',     label: { uk: '🏨 Готель', ru: '🏨 Отель', en: '🏨 Hotel', de: '🏨 Hotel', bg: '🏨 Хотел', tr: '🏨 Otel', ar: '🏨 الفندق', es: '🏨 Hotel', fr: '🏨 Hôtel', sq: '🏨 Hotel' } },
+  { id: 'direction', label: { uk: '🗺️ Орієнтування', ru: '🗺️ Ориентирование', en: '🗺️ Directions', de: '🗺️ Orientierung', bg: '🗺️ Ориентиране', tr: '🗺️ Yön bulma', ar: '🗺️ الاتجاهات', es: '🗺️ Orientación', fr: '🗺️ Orientation', sq: '🗺️ Orientim' } },
+  { id: 'free',      label: { uk: '💬 Вільна бесіда', ru: '💬 Свободная беседа', en: '💬 Free talk', de: '💬 Freies Gespräch', bg: '💬 Свободен разговор', tr: '💬 Serbest sohbet', ar: '💬 محادثة حرة', es: '💬 Charla libre', fr: '💬 Discussion libre', sq: '💬 Bisedë e lirë' } },
+  { id: 'interview_it',    label: { uk: '💻 Співбесіда: IT-агентство', ru: '💻 Собеседование: IT-агентство', en: '💻 Interview: IT agency', de: '💻 Bewerbung: IT-Agentur', bg: '💻 Интервю: IT агенция', tr: '💻 Mülakat: IT ajansı', ar: '💻 مقابلة: وكالة IT', es: '💻 Entrevista: agencia IT', fr: '💻 Entretien : agence IT', sq: '💻 Intervistë: agjenci IT' } },
+  { id: 'interview_clean', label: { uk: '🧹 Співбесіда: клінінг', ru: '🧹 Собеседование: клининг', en: '🧹 Interview: cleaning', de: '🧹 Bewerbung: Reinigung', bg: '🧹 Интервю: почистване', tr: '🧹 Mülakat: temizlik', ar: '🧹 مقابلة: تنظيف', es: '🧹 Entrevista: limpieza', fr: '🧹 Entretien : nettoyage', sq: '🧹 Intervistë: pastrim' } },
+  { id: 'interview_food',  label: { uk: '🍽️ Співбесіда: кафе/ресторан', ru: '🍽️ Собеседование: кафе/ресторан', en: '🍽️ Interview: café/restaurant', de: '🍽️ Bewerbung: Café/Restaurant', bg: '🍽️ Интервю: кафе/ресторант', tr: '🍽️ Mülakat: kafe/restoran', ar: '🍽️ مقابلة: مقهى/مطعم', es: '🍽️ Entrevista: café/restaurante', fr: '🍽️ Entretien : café/restaurant', sq: '🍽️ Intervistë: kafe/restorant' } },
+  { id: 'interview_hotel', label: { uk: '🛎️ Співбесіда: готель', ru: '🛎️ Собеседование: отель', en: '🛎️ Interview: hotel', de: '🛎️ Bewerbung: Hotel', bg: '🛎️ Интервю: хотел', tr: '🛎️ Mülakat: otel', ar: '🛎️ مقابلة: فندق', es: '🛎️ Entrevista: hotel', fr: '🛎️ Entretien : hôtel', sq: '🛎️ Intervistë: hotel' } },
 ]
 
 const STARTER_PHRASES = {

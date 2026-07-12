@@ -450,11 +450,25 @@ const TRAINER_SCENARIOS = {
   interview_hotel: 'Співбесіда на роботу в готель (обслуговуючий персонал — покоївка, портьє). Ти роботодавець: питаєш про досвід, знання мов, готовність працювати позмінно та ставлення до гостей. Питання прості, рівень A1-A2',
 }
 
+// Мови інтерфейсу → назва мови для підказок/перекладу тренера
+const TRAINER_LANG_NAMES = {
+  uk: 'українською',
+  ru: 'російською (по-русски)',
+  en: 'English',
+  de: 'German (auf Deutsch)',
+  bg: 'Bulgarian (български)',
+  tr: 'Turkish (Türkçe)',
+  ar: 'Arabic (العربية)',
+  es: 'Spanish (español)',
+  fr: 'French (français)',
+  sq: 'Albanian (shqip)',
+}
+
 export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk' }) {
   const char = TRAINER_CHARACTERS[character] || TRAINER_CHARACTERS.lena
   const scenarioDesc = TRAINER_SCENARIOS[scenario] || TRAINER_SCENARIOS.free
-  const corrLang = userLang === 'uk' ? 'українській' : 'русском'
-  const transLang = userLang === 'uk' ? 'українську' : 'русский'
+  // Мова підказок/перекладу = мова інтерфейсу учня (усі 10 локалей)
+  const userLangName = TRAINER_LANG_NAMES[userLang] || TRAINER_LANG_NAMES.uk
 
   const systemPrompt = `Ти — ${char.emoji} ${char.name}, ${char.desc}.
 Рівень учня: A1–A2 (початківець).
@@ -463,9 +477,9 @@ export async function chatWithTrainer({ messages, character = 'lena', scenario =
 Правила:
 1. Основна відповідь ЗАВЖДИ тільки німецькою мовою (reply)
 2. Якщо учень написав не-німецькою — зрозумій сенс та відповідай так, ніби він написав правильно по-німецьки
-3. Виправляй помилки учня дружньо, без осуду (correction на ${corrLang} мові)
+3. Виправляй помилки учня дружньо, без осуду (correction — мовою: ${userLangName})
 4. Якщо помилок немає — correction: null
-5. Дай переклад своєї відповіді на ${transLang} мову (translation)
+5. Дай переклад своєї відповіді мовою: ${userLangName} (translation)
 6. Речення короткі, прості, рівень A1
 
 СТРОГО повертай лише JSON без markdown:
