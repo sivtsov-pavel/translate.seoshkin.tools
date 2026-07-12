@@ -132,6 +132,18 @@ export default function AiTrainer() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Держим актуальный sessionId для авто-завершения при уходе со страницы
+  const sessionIdRef = useRef(null)
+  useEffect(() => { sessionIdRef.current = sessionId }, [sessionId])
+  // Авто-finish при размонтировании (навигация из чата) — чтобы память
+  // обновлялась, даже если пользователь не нажал «Сменить»
+  useEffect(() => () => {
+    if (sessionIdRef.current) {
+      const userLang = localStorage.getItem('lang') || 'uk'
+      api.post(`/ai-trainer/sessions/${sessionIdRef.current}/finish`, { userLang }).catch(() => {})
+    }
+  }, [])
+
   const startSession = async () => {
     const starter = STARTER_PHRASES[character]?.[scenario]
       || (scenario.startsWith('interview') ? 'Guten Tag! Setzen Sie sich bitte. Erzählen Sie mir von sich.' : 'Hallo!')
