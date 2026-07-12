@@ -436,7 +436,7 @@ export default function Layout({ children }) {
         borderRight: '1px solid var(--line)',
         flexDirection: 'column',
       }}>
-        <SidebarContent />
+        {SidebarContent({})}
       </nav>
 
       {/* Топбар (только мобиль/планшет, скрыт на ≥1024px через CSS) */}
@@ -487,7 +487,7 @@ export default function Layout({ children }) {
         overflow: 'hidden', display: 'flex', flexDirection: 'column',
         boxShadow: open ? '2px 0 24px rgba(0,0,0,0.28)' : 'none',
       }}>
-        <SidebarContent inDrawer />
+        {SidebarContent({ inDrawer: true })}
       </nav>
 
       {/* Узкая иконочная полоса — только планшет 641-1023px (CSS управляет видимостью) */}

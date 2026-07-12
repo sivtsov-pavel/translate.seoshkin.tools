@@ -4,6 +4,7 @@ import { api } from '../api/client.js'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition.jsx'
 import { useI18nStore } from '../store/i18n.js'
+import { useAuthStore } from '../store/auth.js'
 
 // Локализованные строки UI тренера — все языки интерфейса
 const STR = {
@@ -73,7 +74,7 @@ const STARTER_PHRASES = {
   },
 }
 
-function BubbleAI({ msg, onSpeak }) {
+function BubbleAI({ msg, onSpeak, avatarAvailable, busy, onAvatar }) {
   const char = CHARACTERS.find(c => c.id === msg.character) || CHARACTERS[0]
   return (
     <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'flex-start' }}>
@@ -95,7 +96,17 @@ function BubbleAI({ msg, onSpeak }) {
             style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, opacity: 0.6, verticalAlign: 'middle' }}>
             🔊
           </button>
+          {avatarAvailable && !msg.videoUrl && (
+            <button onClick={onAvatar} disabled={busy} title="Видео-аватар (тратит кредит D-ID)"
+              style={{ marginLeft: 6, background: 'none', border: 'none', cursor: busy ? 'default' : 'pointer', fontSize: 14, opacity: 0.6, verticalAlign: 'middle' }}>
+              {busy ? '⏳' : '🎥'}
+            </button>
+          )}
         </div>
+        {msg.videoUrl && (
+          <video src={msg.videoUrl} controls autoPlay playsInline
+            style={{ width: '100%', maxWidth: 280, borderRadius: 12, marginTop: 6, border: '1px solid var(--line)' }} />
+        )}
         {msg.translation && (
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, paddingLeft: 4 }}>
             {msg.translation}
@@ -149,11 +160,15 @@ export default function AiTrainer() {
   const [history, setHistory] = useState(null) // { session, messages } — просмотр прошлого диалога
   const [lessonMode, setLessonMode] = useState(null) // { title, words } — тренировка по словам урока
   const [searchParams] = useSearchParams()
+  const [avatarAvailable, setAvatarAvailable] = useState(false)
+  const [avatarBusy, setAvatarBusy] = useState(-1) // индекс сообщения, для которого генерится видео
   const bottomRef = useRef()
   const inputRef = useRef()
   const lang = useI18nStore(s => s.lang)
   const S = uiStr(lang)
   const R = reportStr(lang)
+  const { user } = useAuthStore()
+  const isOwner = user?.role === 'owner'
 
   // Голосовой ввод: распознаватель одноязычный, поэтому даём переключатель
   // «родной / немецкий». По умолчанию — язык локали (без ручных настроек телефона).
@@ -183,6 +198,26 @@ export default function AiTrainer() {
       if (words.length) setLessonMode({ id: lessonId, title, words })
     }).catch(() => {})
   }, [searchParams])
+
+  // Доступность видео-аватара (только для учителя — экономим кредиты)
+  useEffect(() => {
+    if (!isOwner) return
+    api.get('/ai-trainer/avatar/available').then(r => setAvatarAvailable(!!r.available)).catch(() => {})
+  }, [isOwner])
+
+  // Сгенерировать видео-аватар для реплики (⚠️ тратит кредит D-ID)
+  const generateAvatar = async (index, text) => {
+    setAvatarBusy(index)
+    setError('')
+    try {
+      const r = await api.post('/ai-trainer/avatar', { text, character })
+      setMessages(prev => prev.map((m, i) => i === index ? { ...m, videoUrl: r.video_url } : m))
+    } catch {
+      setError('Не удалось создать видео-аватар')
+    } finally {
+      setAvatarBusy(-1)
+    }
+  }
 
   // Держим актуальный sessionId для авто-завершения при уходе со страницы
   const sessionIdRef = useRef(null)
@@ -506,7 +541,9 @@ export default function AiTrainer() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px' }}>
         {messages.map((m, i) => (
           m.role === 'ai'
-            ? <BubbleAI key={i} msg={m} onSpeak={handleSpeak} />
+            ? <BubbleAI key={i} msg={m} onSpeak={handleSpeak}
+                avatarAvailable={avatarAvailable} busy={avatarBusy === i}
+                onAvatar={() => generateAvatar(i, m.reply)} />
             : <BubbleUser key={i} text={m.content} />
         ))}
         {loading && (

@@ -1,6 +1,7 @@
 import { chatWithTrainer, summarizeTrainerSession } from '../services/claude.js'
 import { db } from '../db/index.js'
 import { mergeMemory, buildReport } from '../services/aiTrainerMemory.js'
+import { isAvatarConfigured, personaPhoto, generateTalkingVideo } from '../services/avatar.js'
 
 // Загрузить память пользователя (или null)
 async function loadMemory(userId) {
@@ -38,6 +39,29 @@ export async function aiTrainerRoutes(fastify) {
   fastify.get('/api/ai-trainer/memory', { preHandler: [fastify.authenticate] }, async (request) => {
     const memory = await loadMemory(request.user.id)
     return memory || { summary_text: '', known_facts: {}, recurring_mistakes: [], topics_covered: [], sessions_total: 0 }
+  })
+
+  // ── Видео-аватар: доступность (настроен ли ключ D-ID) ──
+  fastify.get('/api/ai-trainer/avatar/available', { preHandler: [fastify.authenticate] }, async () => {
+    return { available: isAvatarConfigured() }
+  })
+
+  // ── Видео-аватар: сгенерировать говорящее видео для реплики ──
+  // ⚠️ Каждый вызов тратит кредит D-ID — вызывается строго по кнопке пользователя
+  fastify.post('/api/ai-trainer/avatar', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isAvatarConfigured()) return reply.status(503).send({ error: 'avatar not configured' })
+    // Пока генерировать видео может только учитель (owner) — экономим кредиты.
+    // Тонкая настройка «кто может» — в тарифном спринте (супер-админ).
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Генерация видео-аватара доступна только учителю' })
+    const { text, character = 'lena' } = request.body || {}
+    if (!text || !text.trim()) return reply.status(400).send({ error: 'text required' })
+    try {
+      const video = await generateTalkingVideo({ photoUrl: personaPhoto(character), text: text.slice(0, 300) })
+      return { video_url: video.url }
+    } catch (e) {
+      fastify.log.error({ err: e }, 'avatar generation failed')
+      return reply.status(500).send({ error: e.message })
+    }
   })
 
   // ── Список сессий ──

@@ -25,6 +25,7 @@ services:
       UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      D_ID_API_KEY: ${D_ID_API_KEY:-}
       PORT: 8090
       HOST: 0.0.0.0
       UPLOAD_DIR: /data/uploads
