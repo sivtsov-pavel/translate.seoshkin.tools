@@ -93,6 +93,18 @@ const L = {
       title: 'ИИ объясняет, а не просто проверяет',
       text: 'Нажми «Обоснуй» — и получи объяснение смысла слова простым языком. Нажми «Почему ошибка?» — разбор твоей ошибки.',
     },
+    teacher: {
+      title: 'Преподаёте немецкий? Ведите учеников здесь',
+      subtitle: 'Бесплатный кабинет учителя: соберите класс, давайте задания и держите учеников в тонусе — всё в одном месте.',
+      items: [
+        { icon: '📚', title: 'Свои уроки из учебника', desc: 'Загрузите фото страниц — ИИ распознаёт слова и сам соберёт 7 типов упражнений' },
+        { icon: '🔔', title: 'Домашка в push', desc: 'Отправляйте задания и напоминания прямо на телефон ученика push-уведомлением' },
+        { icon: '👥', title: 'Класс и курсы', desc: 'Добавляйте учеников, ведите курсы, распределяйте уроки по группам' },
+        { icon: '📊', title: 'Прогресс каждого', desc: 'Видно, кто занимается, сколько слов выучил и где буксует' },
+        { icon: '💬', title: 'Чат с классом', desc: 'Общайтесь с учениками прямо в приложении' },
+        { icon: '🤖', title: 'ИИ на ваших учеников', desc: 'AI-тренер, объяснения и разбор ошибок работают для класса автоматически' },
+      ],
+    },
     footer: 'Читать документацию',
   },
   en: {
@@ -557,6 +569,33 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Блок для учителей — привлекаем преподавателей */}
+      {c.teacher && (
+        <section style={{ maxWidth: 900, margin: '0 auto 56px', padding: '0 16px' }}>
+          <div style={{
+            background: 'var(--surface)', border: '2px solid var(--accent)',
+            borderRadius: 20, padding: '28px 32px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+              <span style={{ fontSize: 34 }}>🧑‍🏫</span>
+              <div style={{ fontWeight: 800, fontSize: 22, color: 'var(--ink)' }}>{c.teacher.title}</div>
+            </div>
+            <div style={{ fontSize: 15, color: 'var(--ink-soft)', lineHeight: 1.6, marginBottom: 20 }}>{c.teacher.subtitle}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+              {c.teacher.items.map((it, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 22, flexShrink: 0 }}>{it.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{it.title}</div>
+                    <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>{it.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Как начать */}
       <section style={{ maxWidth: 640, margin: '0 auto 64px', padding: '0 20px' }}>
