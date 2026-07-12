@@ -7,6 +7,18 @@ import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 
 const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
 
+// Мобильный брейкпоинт (≤640px) — адаптация только для мобилки, на ПК всё как было
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)')
+    const onChange = e => setMobile(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return mobile
+}
+
 function detectGrammar(word_de) {
   const w = (word_de || '').trim()
   if (/^der\s/i.test(w)) return 'der'
@@ -52,6 +64,7 @@ export default function Vocabulary() {
   const [sending, setSending]   = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const { t } = useI18nStore()
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const s = new URLSearchParams(location.search).get('status') || ''
@@ -136,6 +149,9 @@ export default function Vocabulary() {
 
   // Счётчик активных фильтров для бейджа
   const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
+  // «Продвинутые» фильтры (курс/урок/часть речи) — на мобиле прячутся за шестерёнку
+  const advancedCount  = [courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
+  const advancedActive = advancedCount > 0
 
   const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter('') }
 
@@ -207,18 +223,32 @@ export default function Vocabulary() {
 
       {view === 'words' && <div style={{ padding: '0 14px' }}>
 
-        {/* Поиск */}
-        <div style={{ position: 'relative', marginBottom: 10 }}>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Поиск по немецкому или переводу..."
-            style={{ width: '100%', paddingRight: 34, boxSizing: 'border-box' }}
-          />
-          {search
-            ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: 'var(--ink-soft)' }}>✕</button>
-            : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--ink-soft)' }}>🔍</span>
-          }
+        {/* Поиск + шестерёнка фильтров (шестерёнка только на мобиле) */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Поиск по немецкому или переводу..."
+              style={{ width: '100%', paddingRight: 34, boxSizing: 'border-box' }}
+            />
+            {search
+              ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: 'var(--ink-soft)' }}>✕</button>
+              : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--ink-soft)' }}>🔍</span>
+            }
+          </div>
+          {isMobile && (
+            <button onClick={() => setFiltersOpen(v => !v)} title="Фильтры: курс, урок, часть речи"
+              style={{
+                padding: '0 13px', borderRadius: 8, flexShrink: 0,
+                border: `1.5px solid ${filtersOpen || advancedActive ? 'var(--accent)' : 'var(--line)'}`,
+                background: filtersOpen ? 'var(--accent-soft)' : 'var(--surface-2)',
+                color: filtersOpen || advancedActive ? 'var(--accent)' : 'var(--ink)',
+                fontSize: 16, cursor: 'pointer',
+              }}>
+              ⚙️{advancedActive ? ` ${advancedCount}` : ''}
+            </button>
+          )}
         </div>
 
         {/* Статус — чипы, всегда под рукой (пустые скрыты) */}
@@ -244,8 +274,8 @@ export default function Vocabulary() {
           )}
         </div>
 
-        {/* Курс + урок — выпадающие, под рукой */}
-        {(courseTitles.length > 0 || lessonTitles.length > 1) && (
+        {/* Курс + урок — на ПК всегда, на мобиле по шестерёнке */}
+        {(!isMobile || filtersOpen) && (courseTitles.length > 0 || lessonTitles.length > 1) && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
             <span style={FILTER_LABEL}>Курс</span>
             {courseTitles.length > 0 && (
@@ -263,8 +293,8 @@ export default function Vocabulary() {
           </div>
         )}
 
-        {/* Часть речи — чипы «капельки» (пустые скрыты) */}
-        {visiblePos.length > 1 && (
+        {/* Часть речи — на ПК всегда, на мобиле по шестерёнке */}
+        {(!isMobile || filtersOpen) && visiblePos.length > 1 && (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
             <span style={FILTER_LABEL}>Речь</span>
             <button style={chipStyle(grammarFilter === '')} onClick={() => setGrammarFilter('')}>
@@ -612,6 +642,23 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
   const editRef                         = useRef(null)
   const { user } = useAuthStore()
   const { t } = useI18nStore()
+  const isMobile = useIsMobile()
+
+  // Селект статуса — на мобиле рендерится под фото, на ПК справа (стиль передаётся)
+  const StatusSelect = ({ style }) => (
+    <select
+      value={word.status}
+      onChange={e => onStatusChange(word.id, e.target.value)}
+      style={{
+        borderRadius: 8, border: `1px solid ${STATUS_COLORS[word.status]}`,
+        color: STATUS_COLORS[word.status], fontWeight: 700, cursor: 'pointer',
+        background: 'var(--surface-2)', ...style,
+      }}>
+      <option value="new">{statusLabels.new}</option>
+      <option value="learning">{statusLabels.learning}</option>
+      <option value="known">{statusLabels.known}</option>
+    </select>
+  )
 
   const startEdit = () => {
     setEditValue(translation)
@@ -666,12 +713,11 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', padding: '10px',
+      display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px',
       borderBottom: '1px solid var(--line)', borderRadius: 10,
       marginBottom: 3, background: STATUS_BG[word.status] ?? 'var(--surface)',
     }}>
-     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0, width: 80 }}>
         {imageUrl ? (
           <div style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>
             <img src={imageUrl} alt={word.word_de} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -688,8 +734,10 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
             {word.word_de.replace(/^(der|die|das|ein|eine)\s+/i, '')}
           </div>
         )}
+        {/* Статус под фото — ТОЛЬКО на мобиле (на ПК он справа) */}
+        {isMobile && <StatusSelect style={{ width: '100%', padding: '3px 2px', fontSize: 11, textAlign: 'center' }} />}
         {user?.role === 'owner' && (
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку (Unsplash)"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
               {refreshing ? '⏳' : '🔄'}
@@ -738,38 +786,24 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
             </>
           )}
         </div>
+        {/* Пример — во всю ширину правой колонки, под словом */}
+        {word.example_sentence && (
+          <div style={{ marginTop: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+              <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{word.example_sentence}</span>
+              <SpeakButton text={word.example_sentence} size={13} />
+            </div>
+            {word.example_sentence_ru && (
+              <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
+                {word.example_sentence_ru}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      <select
-        value={word.status}
-        onChange={e => onStatusChange(word.id, e.target.value)}
-        style={{
-          padding: '4px 8px', borderRadius: 8, fontSize: 12,
-          border: `1px solid ${STATUS_COLORS[word.status]}`,
-          color: STATUS_COLORS[word.status], fontWeight: 700,
-          cursor: 'pointer', flexShrink: 0,
-          background: 'var(--surface-2)',
-        }}>
-        <option value="new">{statusLabels.new}</option>
-        <option value="learning">{statusLabels.learning}</option>
-        <option value="known">{statusLabels.known}</option>
-      </select>
-     </div>
-
-      {/* Пример — отдельной строкой во всю ширину блока (под верхним рядом) */}
-      {word.example_sentence && (
-        <div style={{ marginTop: 6, width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
-            <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{word.example_sentence}</span>
-            <SpeakButton text={word.example_sentence} size={13} />
-          </div>
-          {word.example_sentence_ru && (
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
-              {word.example_sentence_ru}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Статус справа — ТОЛЬКО на ПК (на мобиле он под фото) */}
+      {!isMobile && <StatusSelect style={{ padding: '4px 8px', fontSize: 12, flexShrink: 0 }} />}
     </div>
   )
 }
