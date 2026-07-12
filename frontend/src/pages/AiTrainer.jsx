@@ -7,6 +7,7 @@ const CHARACTERS = [
   { id: 'max',   emoji: '☕',    name: 'Макс',   role: 'Бариста в кав\'ярні',   color: '#8B5E3C' },
   { id: 'hanna', emoji: '🛒',   name: 'Ганна',  role: 'Продавчиня в магазині', color: '#5A9E6E' },
   { id: 'otto',  emoji: '🏨',   name: 'Отто',   role: 'Портьє в готелі',       color: '#7B5EA7' },
+  { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', role: 'HR — співбесіда',   color: '#5A6B8C' },
 ]
 
 const SCENARIOS = [
@@ -16,6 +17,10 @@ const SCENARIOS = [
   { id: 'hotel',     label: '🏨 Готель' },
   { id: 'direction', label: '🗺️ Орієнтування' },
   { id: 'free',      label: '💬 Вільна бесіда' },
+  { id: 'interview_it',    label: '💻 Співбесіда: IT-агентство' },
+  { id: 'interview_clean', label: '🧹 Співбесіда: клінінг' },
+  { id: 'interview_food',  label: '🍽️ Співбесіда: кафе/ресторан' },
+  { id: 'interview_hotel', label: '🛎️ Співбесіда: готель' },
 ]
 
 const STARTER_PHRASES = {
@@ -23,6 +28,14 @@ const STARTER_PHRASES = {
   max:   { intro: 'Hallo! Was möchtest du trinken?', cafe: 'Guten Tag! Was darf es sein?', shopping: 'Hallo! Kann ich helfen?', hotel: 'Willkommen!', direction: 'Guten Tag!', free: 'Hey! Was möchtest du?' },
   hanna: { intro: 'Hallo! Willkommen im Supermarkt!', cafe: 'Hallo!', shopping: 'Guten Tag! Suchen Sie etwas?', hotel: 'Hallo!', direction: 'Guten Tag!', free: 'Hallo! Wie kann ich helfen?' },
   otto:  { intro: 'Guten Tag! Willkommen im Hotel!', cafe: 'Guten Morgen!', shopping: 'Hallo!', hotel: 'Guten Tag! Haben Sie eine Reservierung?', direction: 'Guten Tag! Wie kann ich helfen?', free: 'Willkommen! Was wünschen Sie?' },
+  hr:    {
+    intro: 'Guten Tag! Schön, dass Sie da sind. Erzählen Sie mir von sich.',
+    interview_it:    'Guten Tag! Schön, dass Sie da sind. Erzählen Sie mir von sich.',
+    interview_clean: 'Guten Tag! Bitte setzen Sie sich. Haben Sie Erfahrung mit Reinigung?',
+    interview_food:  'Guten Tag! Willkommen. Haben Sie schon in einem Café oder Restaurant gearbeitet?',
+    interview_hotel: 'Guten Tag! Schön, Sie kennenzulernen. Warum möchten Sie im Hotel arbeiten?',
+    free:  'Guten Tag! Wie kann ich Ihnen helfen?',
+  },
 }
 
 function BubbleAI({ msg, onSpeak }) {
@@ -99,7 +112,8 @@ export default function AiTrainer() {
 
   const startSession = () => {
     const char = CHARACTERS.find(c => c.id === character)
-    const starter = STARTER_PHRASES[character]?.[scenario] || 'Hallo!'
+    const starter = STARTER_PHRASES[character]?.[scenario]
+      || (scenario.startsWith('interview') ? 'Guten Tag! Setzen Sie sich bitte. Erzählen Sie mir von sich.' : 'Hallo!')
     setMessages([{
       role: 'ai',
       reply: starter,

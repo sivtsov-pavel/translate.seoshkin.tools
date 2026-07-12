@@ -255,21 +255,21 @@ export default function Vocabulary() {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
           <span style={FILTER_LABEL}>Статус</span>
           <button style={chipStyle(statusFilter === '')} onClick={() => setStatusFilter('')}>
-            {t.vocabulary.all} {chipCount(statusCounts[''])}
+            {t.vocabulary.all}
           </button>
           {statusCounts.new > 0 && (
             <button style={chipStyle(statusFilter === 'new', STATUS_COLORS.new)} onClick={() => setStatusFilter(statusFilter === 'new' ? '' : 'new')}>
-              {t.vocabulary.new} {chipCount(statusCounts.new)}
+              {t.vocabulary.new}
             </button>
           )}
           {statusCounts.learning > 0 && (
             <button style={chipStyle(statusFilter === 'learning', STATUS_COLORS.learning)} onClick={() => setStatusFilter(statusFilter === 'learning' ? '' : 'learning')}>
-              {t.vocabulary.learning} {chipCount(statusCounts.learning)}
+              {t.vocabulary.learning}
             </button>
           )}
           {statusCounts.known > 0 && (
             <button style={chipStyle(statusFilter === 'known', STATUS_COLORS.known)} onClick={() => setStatusFilter(statusFilter === 'known' ? '' : 'known')}>
-              {t.vocabulary.known} {chipCount(statusCounts.known)}
+              {t.vocabulary.known}
             </button>
           )}
         </div>
