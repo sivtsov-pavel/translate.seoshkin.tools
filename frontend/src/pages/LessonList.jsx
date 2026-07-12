@@ -266,6 +266,15 @@ export default function LessonList() {
                         </button>
                       )}
 
+                      {/* Тренер по этому уроку — тренируется на словах урока */}
+                      {status === 'done' && lesson.words_total > 0 && (
+                        <button onClick={() => navigate(`/ai-trainer?lesson_id=${lesson.id}&lesson_title=${encodeURIComponent(lesson.title || '')}`)}
+                          title="Поговорить с AI-тренером по словам этого урока"
+                          style={actionBtn('var(--surface-2)', 'var(--accent)', true)}>
+                          🗣️
+                        </button>
+                      )}
+
                       {user?.role === 'owner' && (
                         <>
                           {(status === 'pending' || status === 'error') && (

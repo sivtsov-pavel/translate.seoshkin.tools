@@ -464,11 +464,17 @@ const TRAINER_LANG_NAMES = {
   sq: 'Albanian (shqip)',
 }
 
-export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk', memory = null }) {
+export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk', memory = null, targetWords = null }) {
   const char = TRAINER_CHARACTERS[character] || TRAINER_CHARACTERS.lena
   const scenarioDesc = TRAINER_SCENARIOS[scenario] || TRAINER_SCENARIOS.free
   // Мова підказок/перекладу = мова інтерфейсу учня (усі 10 локалей)
   const userLangName = TRAINER_LANG_NAMES[userLang] || TRAINER_LANG_NAMES.uk
+
+  // Режим «Тренер по уроку»: фокус на словах конкретного урока
+  let wordsBlock = ''
+  if (Array.isArray(targetWords) && targetWords.length) {
+    wordsBlock = `\nСЛОВА ЦЬОГО УРОКУ (тренуй САМЕ їх: природно вплітай у діалог, став питання так, щоб учень вживав ці слова, м'яко перевіряй чи він їх знає):\n${targetWords.slice(0, 25).join(', ')}\n`
+  }
 
   // Память о ученике (§3 ТЗ): накопительная выжимка + топ повторяющихся ошибок
   let memoryBlock = ''
@@ -482,7 +488,7 @@ export async function chatWithTrainer({ messages, character = 'lena', scenario =
   const systemPrompt = `Ти — ${char.emoji} ${char.name}, ${char.desc}.
 Рівень учня: A1–A2 (початківець).
 Сценарій: ${scenarioDesc}.
-${memoryBlock}
+${wordsBlock}${memoryBlock}
 Правила:
 1. Основна відповідь ЗАВЖДИ тільки німецькою мовою (reply)
 2. Якщо учень написав не-німецькою — зрозумій сенс та відповідай так, ніби він написав правильно по-німецьки

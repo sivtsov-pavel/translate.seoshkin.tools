@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition.jsx'
@@ -146,6 +147,8 @@ export default function AiTrainer() {
   const [report, setReport] = useState(null)
   const [sessions, setSessions] = useState([])
   const [history, setHistory] = useState(null) // { session, messages } — просмотр прошлого диалога
+  const [lessonMode, setLessonMode] = useState(null) // { title, words } — тренировка по словам урока
+  const [searchParams] = useSearchParams()
   const bottomRef = useRef()
   const inputRef = useRef()
   const lang = useI18nStore(s => s.lang)
@@ -168,6 +171,19 @@ export default function AiTrainer() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Режим «Тренер по уроку»: пришли с ?lesson_id=… → подтягиваем слова урока
+  useEffect(() => {
+    const lessonId = searchParams.get('lesson_id')
+    if (!lessonId) return
+    const title = searchParams.get('lesson_title') || ''
+    api.get('/words').then(all => {
+      const words = (all || [])
+        .filter(w => String(w.lesson_id) === String(lessonId))
+        .map(w => w.word_de).filter(Boolean)
+      if (words.length) setLessonMode({ id: lessonId, title, words })
+    }).catch(() => {})
+  }, [searchParams])
+
   // Держим актуальный sessionId для авто-завершения при уходе со страницы
   const sessionIdRef = useRef(null)
   useEffect(() => { sessionIdRef.current = sessionId }, [sessionId])
@@ -189,7 +205,7 @@ export default function AiTrainer() {
     setLoading(true)  // «печатает…» пока ИИ генерит первую реплику с учётом памяти
     const userLang = localStorage.getItem('lang') || 'uk'
     try {
-      const res = await api.post('/ai-trainer/sessions', { character, scenario, userLang, starter: fallback })
+      const res = await api.post('/ai-trainer/sessions', { character, scenario, userLang, starter: fallback, targetWords: lessonMode?.words })
       setSessionId(res.session_id)
       if (res.memory?.summary_text) setMemoryHint(res.memory.summary_text)
       const opening = res.opening || fallback
@@ -312,6 +328,13 @@ export default function AiTrainer() {
           {S.subtitle}
         </p>
 
+        {lessonMode && (
+          <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 14, background: 'var(--accent-soft)', border: '1px solid var(--accent)', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 20 }}>📚</span>
+            <span>Тренировка по уроку: <b>{lessonMode.title || 'урок'}</b> · {lessonMode.words.length} слов</span>
+          </div>
+        )}
+
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-soft)', marginBottom: 12 }}>
             {S.persona}
@@ -332,6 +355,7 @@ export default function AiTrainer() {
           </div>
         </div>
 
+        {!lessonMode && (
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-soft)', marginBottom: 12 }}>
             {S.topic}
@@ -350,6 +374,7 @@ export default function AiTrainer() {
             ))}
           </div>
         </div>
+        )}
 
         <button onClick={startSession} style={{
           width: '100%', padding: '14px 24px', borderRadius: 14, border: 'none',

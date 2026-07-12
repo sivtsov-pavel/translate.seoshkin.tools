@@ -62,10 +62,11 @@ export async function aiTrainerRoutes(fastify) {
 
   // ── Создать сессию (подтягивает память для баннера «тренер помнит») ──
   fastify.post('/api/ai-trainer/sessions', { preHandler: [fastify.authenticate] }, async (request) => {
-    const { character = 'lena', scenario = 'free', userLang = 'uk', starter } = request.body || {}
+    const { character = 'lena', scenario = 'free', userLang = 'uk', starter, targetWords } = request.body || {}
+    const words = Array.isArray(targetWords) && targetWords.length ? targetWords.slice(0, 25) : null
     const { rows } = await db.query(
-      'INSERT INTO ai_trainer_sessions (user_id, character, scenario) VALUES ($1, $2, $3) RETURNING id',
-      [request.user.id, character, scenario]
+      'INSERT INTO ai_trainer_sessions (user_id, character, scenario, target_words) VALUES ($1, $2, $3, $4) RETURNING id',
+      [request.user.id, character, scenario, words ? JSON.stringify(words) : null]
     )
     const sessionId = rows[0].id
     const memory = await loadMemory(request.user.id)
@@ -73,10 +74,12 @@ export async function aiTrainerRoutes(fastify) {
     // Первую реплику генерирует ИИ с учётом памяти — не повторяем одинаковое приветствие
     let opening = null, opening_translation = null
     try {
-      const instr = (memory && memory.summary_text)
-        ? 'Розпочни розмову першим. Ти вже спілкувався з цим учнем раніше — привітайся і природно згадай щось із минулих розмов АБО постав НОВЕ питання за сценарієм. НЕ повторюй щоразу однакове привітання.'
-        : 'Розпочни розмову першим: коротко привітайся і постав перше питання за сценарієм.'
-      const r = await chatWithTrainer({ messages: [{ role: 'user', content: instr }], character, scenario, userLang, memory })
+      const instr = words
+        ? 'Розпочни розмову першим: привітайся і почни тренувати слова цього уроку — постав перше просте питання, у якому природно вживається одне зі слів уроку.'
+        : (memory && memory.summary_text)
+          ? 'Розпочни розмову першим. Ти вже спілкувався з цим учнем раніше — привітайся і природно згадай щось із минулих розмов АБО постав НОВЕ питання за сценарієм. НЕ повторюй щоразу однакове привітання.'
+          : 'Розпочни розмову першим: коротко привітайся і постав перше питання за сценарієм.'
+      const r = await chatWithTrainer({ messages: [{ role: 'user', content: instr }], character, scenario, userLang, memory, targetWords: words })
       opening = r && r.reply ? r.reply : null
       opening_translation = (r && r.translation && r.translation !== 'null') ? r.translation : null
     } catch (e) {
@@ -132,6 +135,7 @@ export async function aiTrainerRoutes(fastify) {
         scenario: session.scenario,
         userLang,
         memory,
+        targetWords: session.target_words,
       })
       // Сохраняем ответ тренера
       await db.query(
