@@ -10,8 +10,8 @@ const DEFAULT_PHOTO = 'https://d-id-public-bucket.s3.us-west-2.amazonaws.com/ali
 const PERSONA_PHOTOS = {
   lena: DEFAULT_PHOTO, max: DEFAULT_PHOTO, hanna: DEFAULT_PHOTO,
   otto: DEFAULT_PHOTO, hr: DEFAULT_PHOTO,
-  // Pablo Seoshkin — реальное фото (оживает через D-ID)
-  pablo: 's3://d-id-images-prod/google-oauth2|107849838766341455257/img_04hMJpx7KU58AYnIb0F7_/pablo_face.jpg',
+  // Pablo Seoshkin — реальное фото (Marienplatz München: ратуша + фонтан за спиной), оживает через D-ID
+  pablo: 's3://d-id-images-prod/google-oauth2|107849838766341455257/img_TiB9BmG7NM_TRz91O4CDx/pablo_munich.jpg',
 }
 
 export function isAvatarConfigured() {

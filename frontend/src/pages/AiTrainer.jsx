@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client.js'
-import { speak } from '../hooks/useSpeech.jsx'
+import { speak, speakWithEvents, cancel as cancelSpeak } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
@@ -38,13 +38,28 @@ const RSTR = {
 }
 const reportStr = (lang) => RSTR[lang] || RSTR.en
 
+// Строки голосового режима (Gemini-стиль)
+const VSTR = {
+  ru: { voice: 'Голос', text: 'Текст', listening: 'Слушаю…', thinking: 'Думаю…', speaking: 'Говорит…', tap: 'Нажми и говори', paused: 'Пауза', exit: 'Выйти', animate: 'Оживить (видео)' },
+  uk: { voice: 'Голос', text: 'Текст', listening: 'Слухаю…', thinking: 'Думаю…', speaking: 'Говорить…', tap: 'Натисни і говори', paused: 'Пауза', exit: 'Вийти', animate: 'Оживити (відео)' },
+  en: { voice: 'Voice', text: 'Text', listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking…', tap: 'Tap to talk', paused: 'Paused', exit: 'Exit', animate: 'Animate (video)' },
+  de: { voice: 'Sprache', text: 'Text', listening: 'Höre zu…', thinking: 'Denke…', speaking: 'Spricht…', tap: 'Tippen und sprechen', paused: 'Pause', exit: 'Beenden', animate: 'Beleben (Video)' },
+  bg: { voice: 'Глас', text: 'Текст', listening: 'Слушам…', thinking: 'Мисля…', speaking: 'Говори…', tap: 'Натисни и говори', paused: 'Пауза', exit: 'Изход', animate: 'Оживи (видео)' },
+  tr: { voice: 'Ses', text: 'Metin', listening: 'Dinliyorum…', thinking: 'Düşünüyorum…', speaking: 'Konuşuyor…', tap: 'Bas ve konuş', paused: 'Duraklat', exit: 'Çıkış', animate: 'Canlandır (video)' },
+  ar: { voice: 'صوت', text: 'نص', listening: 'أستمع…', thinking: 'أفكر…', speaking: 'يتحدث…', tap: 'اضغط وتحدث', paused: 'إيقاف', exit: 'خروج', animate: 'إحياء (فيديو)' },
+  es: { voice: 'Voz', text: 'Texto', listening: 'Escuchando…', thinking: 'Pensando…', speaking: 'Hablando…', tap: 'Toca para hablar', paused: 'Pausa', exit: 'Salir', animate: 'Animar (vídeo)' },
+  fr: { voice: 'Voix', text: 'Texte', listening: 'J\'écoute…', thinking: 'Je réfléchis…', speaking: 'Parle…', tap: 'Appuie pour parler', paused: 'Pause', exit: 'Quitter', animate: 'Animer (vidéo)' },
+  sq: { voice: 'Zë', text: 'Tekst', listening: 'Po dëgjoj…', thinking: 'Po mendoj…', speaking: 'Po flet…', tap: 'Prek dhe fol', paused: 'Pauzë', exit: 'Dil', animate: 'Gjalëro (video)' },
+}
+const voiceStr = (lang) => VSTR[lang] || VSTR.en
+
 const CHARACTERS = [
   { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  color: '#4A7FA5', role: { uk: 'Вчителька з Берліна', ru: 'Учительница из Берлина', en: 'Teacher from Berlin', de: 'Lehrerin aus Berlin', bg: 'Учителка от Берлин', tr: 'Berlin\'den öğretmen', ar: 'معلمة من برلين', es: 'Profesora de Berlín', fr: 'Professeure de Berlin', sq: 'Mësuese nga Berlini' } },
   { id: 'max',   emoji: '☕',    name: 'Макс',   color: '#8B5E3C', role: { uk: 'Бариста в кав\'ярні', ru: 'Бариста в кафе', en: 'Barista in a café', de: 'Barista im Café', bg: 'Бариста в кафене', tr: 'Kafede barista', ar: 'باريستا في مقهى', es: 'Barista en una cafetería', fr: 'Barista dans un café', sq: 'Barist në kafe' } },
   { id: 'hanna', emoji: '🛒',   name: 'Ганна',  color: '#5A9E6E', role: { uk: 'Продавчиня в магазині', ru: 'Продавщица в магазине', en: 'Shop assistant', de: 'Verkäuferin im Laden', bg: 'Продавачка в магазин', tr: 'Mağaza görevlisi', ar: 'بائعة في متجر', es: 'Dependienta de tienda', fr: 'Vendeuse en magasin', sq: 'Shitëse në dyqan' } },
   { id: 'otto',  emoji: '🏨',   name: 'Отто',   color: '#7B5EA7', role: { uk: 'Портьє в готелі', ru: 'Портье в отеле', en: 'Hotel receptionist', de: 'Portier im Hotel', bg: 'Рецепционист в хотел', tr: 'Otel resepsiyonisti', ar: 'موظف استقبال فندق', es: 'Recepcionista de hotel', fr: 'Réceptionniste d\'hôtel', sq: 'Recepsionist hoteli' } },
   { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', color: '#5A6B8C', role: { uk: 'HR — співбесіда', ru: 'HR — собеседование', en: 'HR — interview', de: 'HR — Vorstellungsgespräch', bg: 'HR — интервю', tr: 'İK — mülakat', ar: 'موارد بشرية — مقابلة', es: 'RRHH — entrevista', fr: 'RH — entretien', sq: 'HR — intervistë' } },
-  { id: 'pablo', emoji: '🧔', name: 'Pablo Seoshkin', color: '#3B7A57', role: { uk: 'Засновник, наставник', ru: 'Основатель, наставник', en: 'Founder, mentor', de: 'Gründer, Mentor', bg: 'Основател, наставник', tr: 'Kurucu, mentor', ar: 'المؤسس، مرشد', es: 'Fundador, mentor', fr: 'Fondateur, mentor', sq: 'Themelues, mentor' } },
+  { id: 'pablo', emoji: '🧔', name: 'Pablo Seoshkin', color: '#3B7A57', photo: '/avatar/pablo.jpg', role: { uk: 'Засновник, наставник', ru: 'Основатель, наставник', en: 'Founder, mentor', de: 'Gründer, Mentor', bg: 'Основател, наставник', tr: 'Kurucu, mentor', ar: 'المؤسس، مرشد', es: 'Fundador, mentor', fr: 'Fondateur, mentor', sq: 'Themelues, mentor' } },
 ]
 
 const SCENARIOS = [
@@ -175,13 +190,45 @@ export default function AiTrainer() {
   // «родной / немецкий». По умолчанию — язык локали (без ручных настроек телефона).
   const SPEECH_LANG = { ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', bg: 'bg-BG', tr: 'tr-TR', ar: 'ar-SA', es: 'es-ES', fr: 'fr-FR', sq: 'sq-AL' }
   const [micDe, setMicDe] = useState(lang === 'de')  // false = родной язык, true = немецкий
+  const V = voiceStr(lang)
+
+  // Голосовой режим «как в Gemini»: большое фото, hands-free диалог
+  const [voiceMode, setVoiceMode] = useState(false)
+  const [speaking, setSpeaking] = useState(false)   // аватар «говорит» (озвучка идёт)
+  const voiceModeRef = useRef(false)
+  const speakingRef   = useRef(false)
+  const busyRef       = useRef(false)               // ждём ответ ИИ
+  const listeningRef  = useRef(false)
+  const startMicRef   = useRef(null)
+  const sendRef       = useRef(null)
+  useEffect(() => { voiceModeRef.current = voiceMode }, [voiceMode])
+  useEffect(() => { speakingRef.current = speaking }, [speaking])
+
   const { start: startMic, stop: stopMic, listening, isSupported: micSupported } = useSpeechRecognition({
     lang: micDe ? 'de-DE' : (SPEECH_LANG[lang] || 'de-DE'),
     onResult: (text) => {
-      setInput(prev => (prev ? prev.trim() + ' ' : '') + text)
-      setTimeout(() => inputRef.current?.focus(), 0)
+      // В голосовом режиме сразу отправляем распознанное; в тексте — дописываем в поле
+      if (voiceModeRef.current) {
+        if (text && text.trim()) sendRef.current?.(text.trim())
+      } else {
+        setInput(prev => (prev ? prev.trim() + ' ' : '') + text)
+        setTimeout(() => inputRef.current?.focus(), 0)
+      }
     },
   })
+  useEffect(() => { listeningRef.current = listening }, [listening])
+  useEffect(() => { startMicRef.current = startMic }, [startMic])
+
+  // Непрерывный цикл: как только тренер молчит и не думает — снова слушаем
+  useEffect(() => {
+    if (!voiceMode || listening || speaking || loading) return
+    const t = setTimeout(() => {
+      if (voiceModeRef.current && !speakingRef.current && !busyRef.current && !listeningRef.current) {
+        startMicRef.current?.()
+      }
+    }, 500)
+    return () => clearTimeout(t)
+  }, [voiceMode, listening, speaking, loading])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -257,10 +304,13 @@ export default function AiTrainer() {
     }
   }
 
-  const sendMessage = async () => {
-    const text = input.trim()
-    if (!text || loading) return
-    setInput('')
+  const sendMessage = async (overrideText) => {
+    // overrideText приходит из голосового режима (распознанная фраза)
+    const fromVoice = typeof overrideText === 'string'
+    const text = (fromVoice ? overrideText : input).trim()
+    if (!text || busyRef.current) return
+    busyRef.current = true
+    if (!fromVoice) setInput('')
     setError('')
 
     const userMsg = { role: 'user', content: text }
@@ -289,13 +339,48 @@ export default function AiTrainer() {
         correction: result.correction !== 'null' ? result.correction : null,
         character,
       }])
-      // Тренер отвечает голосом (немецкий) — озвучиваем реплику автоматически
-      if (result.reply) speak(result.reply, 'de-DE')
+      // Тренер отвечает голосом (немецкий). В голосовом режиме — с событиями
+      // (пока говорит — не слушаем; после — цикл снова включит микрофон).
+      if (result.reply) {
+        if (voiceModeRef.current) {
+          speakWithEvents(result.reply, 'de-DE', {
+            onStart: () => setSpeaking(true),
+            onEnd:   () => setSpeaking(false),
+          })
+        } else {
+          speak(result.reply, 'de-DE')
+        }
+      }
     } catch (e) {
       setError(S.connErr)
     } finally {
+      busyRef.current = false
       setLoading(false)
     }
+  }
+  useEffect(() => { sendRef.current = sendMessage })
+
+  // Вход/выход из голосового режима
+  const enterVoice = () => {
+    voiceModeRef.current = true
+    setVoiceMode(true)
+    cancelSpeak()
+    // Озвучиваем последнюю реплику тренера, потом цикл начнёт слушать
+    const lastAi = [...messages].reverse().find(m => m.role === 'ai')
+    if (lastAi?.reply) {
+      setSpeaking(true)
+      speakWithEvents(lastAi.reply, 'de-DE', {
+        onStart: () => setSpeaking(true),
+        onEnd:   () => setSpeaking(false),
+      })
+    }
+  }
+  const exitVoice = () => {
+    voiceModeRef.current = false
+    setVoiceMode(false)
+    setSpeaking(false)
+    stopMic()
+    cancelSpeak()
   }
 
   const handleKey = (e) => {
@@ -307,6 +392,7 @@ export default function AiTrainer() {
   }
 
   const resetSession = () => {
+    if (voiceModeRef.current) exitVoice()
     // Завершаем сессию — сервер сгенерит отчёт и обновит память (не ждём ответа)
     if (sessionId) {
       const userLang = localStorage.getItem('lang') || 'uk'
@@ -321,6 +407,7 @@ export default function AiTrainer() {
 
   // Завершить с показом отчёта (ждём ответ /finish)
   const finishSession = async () => {
+    if (voiceModeRef.current) exitVoice()
     if (!sessionId) { setStep('select'); return }
     const userLang = localStorage.getItem('lang') || 'uk'
     const sid = sessionId
@@ -518,6 +605,15 @@ export default function AiTrainer() {
             {loc(SCENARIOS.find(s => s.id === scenario)?.label, lang)}
           </div>
         </div>
+        {micSupported && (
+          <button onClick={enterVoice} title={V.voice} style={{
+            width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--accent)',
+            background: 'var(--accent)', color: 'var(--accent-ink)', cursor: 'pointer', fontSize: 18,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            🎙️
+          </button>
+        )}
         <button onClick={finishSession} disabled={loading} style={{
           padding: '6px 12px', borderRadius: 8, border: '1px solid var(--accent)',
           background: 'var(--accent-soft)', cursor: 'pointer', fontSize: 13, color: 'var(--accent)', fontWeight: 600,
@@ -634,6 +730,112 @@ export default function AiTrainer() {
         </div>
       </div>
       </div>
+
+      {/* ГОЛОСОВОЙ РЕЖИМ «как в Gemini»: большое фото, hands-free */}
+      {voiceMode && (() => {
+        const lastAiIdx = [...messages.keys()].reverse().find(i => messages[i].role === 'ai')
+        const lastAi = lastAiIdx != null ? messages[lastAiIdx] : null
+        const lastUser = [...messages].reverse().find(m => m.role === 'user')
+        const st = loading ? V.thinking : speaking ? V.speaking : listening ? V.listening : V.tap
+        const stColor = loading ? 'var(--ink-soft)' : speaking ? '#c78a3c' : listening ? '#d6533c' : 'var(--accent)'
+        const active = speaking || listening
+        return (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 300,
+            background: 'radial-gradient(120% 80% at 50% 0%, #223 0%, #0d1014 70%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            padding: '24px 20px', color: '#fff',
+          }}>
+            {/* Верхняя панель: переключиться на текст / закрыть */}
+            <div style={{ position: 'absolute', top: 14, right: 16, display: 'flex', gap: 8 }}>
+              <button onClick={exitVoice} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                💬 {V.text}
+              </button>
+            </div>
+
+            {/* Большой аватар */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 420 }}>
+              <div style={{ position: 'relative', width: 'min(64vw, 240px)', height: 'min(64vw, 240px)', marginBottom: 20 }}>
+                {/* пульсирующее кольцо */}
+                <div style={{
+                  position: 'absolute', inset: -10, borderRadius: '50%',
+                  border: `3px solid ${stColor}`, opacity: active ? 0.9 : 0.25,
+                  animation: active ? 'voice-pulse 1.4s ease-out infinite' : 'none',
+                }} />
+                {lastAi?.videoUrl ? (
+                  <video src={lastAi.videoUrl} autoPlay playsInline
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
+                ) : char.photo ? (
+                  <img src={char.photo} alt={char.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%',
+                      border: `3px solid ${stColor}`, transition: 'transform .3s',
+                      transform: speaking ? 'scale(1.03)' : 'scale(1)' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: char.color + '33',
+                    border: `3px solid ${stColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'min(28vw, 110px)' }}>
+                    {char.emoji}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontWeight: 700, fontSize: 19 }}>{char.name}</div>
+              <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 14 }}>{loc(char.role, lang)}</div>
+
+              {/* Статус */}
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', fontSize: 14, fontWeight: 600, color: stColor }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: stColor, animation: active ? 'pulse 1s infinite' : 'none' }} />
+                {st}
+              </div>
+
+              {/* Последняя реплика тренера */}
+              {lastAi?.reply && (
+                <div style={{ marginTop: 18, textAlign: 'center', maxHeight: '22vh', overflowY: 'auto' }}>
+                  <div style={{ fontSize: 17, lineHeight: 1.5 }}>{lastAi.reply}</div>
+                  {lastAi.translation && <div style={{ fontSize: 13, opacity: 0.55, marginTop: 6 }}>{lastAi.translation}</div>}
+                </div>
+              )}
+              {/* Что распознал микрофон */}
+              {lastUser?.content && (
+                <div style={{ marginTop: 12, fontSize: 13, opacity: 0.5, fontStyle: 'italic' }}>« {lastUser.content} »</div>
+              )}
+              {error && <div style={{ marginTop: 12, color: '#ff8a7a', fontSize: 13 }}>{error}</div>}
+            </div>
+
+            {/* Нижние контролы */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, paddingBottom: 8, flexWrap: 'wrap' }}>
+              {/* язык микрофона */}
+              {lang !== 'de' && (
+                <button onClick={() => setMicDe(v => !v)} disabled={listening}
+                  style={{ minWidth: 46, height: 46, padding: '0 10px', borderRadius: 999, cursor: 'pointer', fontWeight: 700, fontSize: 13,
+                    border: `1px solid ${micDe ? '#7db' : 'rgba(255,255,255,0.25)'}`, background: micDe ? 'rgba(120,220,180,0.15)' : 'rgba(255,255,255,0.08)', color: micDe ? '#7db' : '#fff' }}>
+                  {micDe ? '🇩🇪' : lang.toUpperCase()}
+                </button>
+              )}
+
+              {/* центральная кнопка микрофона */}
+              <button onClick={() => (listening ? stopMic() : startMic())} disabled={loading || speaking}
+                style={{ width: 76, height: 76, borderRadius: '50%', cursor: (loading || speaking) ? 'default' : 'pointer', fontSize: 30,
+                  border: 'none', background: listening ? '#d6533c' : (loading || speaking) ? 'rgba(255,255,255,0.15)' : 'var(--accent)',
+                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: listening ? '0 0 0 6px rgba(214,83,60,0.25)' : 'none', animation: listening ? 'pulse 1.2s infinite' : 'none' }}>
+                <i className={`bi ${listening ? 'bi-mic-fill' : 'bi-mic'}`} />
+              </button>
+
+              {/* оживить видео D-ID (только учитель) */}
+              {avatarAvailable && lastAi && !lastAi.videoUrl && (
+                <button onClick={() => generateAvatar(lastAiIdx, lastAi.reply)} disabled={avatarBusy === lastAiIdx}
+                  title={V.animate}
+                  style={{ width: 46, height: 46, borderRadius: '50%', cursor: 'pointer', fontSize: 20,
+                    border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff' }}>
+                  {avatarBusy === lastAiIdx ? '⏳' : '🎥'}
+                </button>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
+      <style>{`@keyframes voice-pulse { 0% { transform: scale(1); opacity: .8 } 100% { transform: scale(1.25); opacity: 0 } }`}</style>
     </div>
   )
 }

@@ -56,6 +56,24 @@ export function speakAuto(text, lang = 'de-DE') {
   if (isAutoSpeakEnabled()) speak(text, lang)
 }
 
+// Озвучка с событиями начала/конца — для голосового режима тренера (hands-free):
+// пока аватар «говорит» — микрофон молчит, после onEnd — снова слушаем.
+export function speakWithEvents(text, lang = 'de-DE', { onStart, onEnd } = {}) {
+  if (!synth || !text) { onEnd?.(); return }
+  synth.cancel()
+  setTimeout(() => {
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.lang = lang
+    utt.rate = getSavedRate()
+    const v = pickVoice()
+    if (v) utt.voice = v
+    utt.onstart = () => onStart?.()
+    utt.onend   = () => onEnd?.()
+    utt.onerror = () => onEnd?.()
+    synth.speak(utt)
+  }, 50)
+}
+
 export function cancel() {
   synth?.cancel()
 }
