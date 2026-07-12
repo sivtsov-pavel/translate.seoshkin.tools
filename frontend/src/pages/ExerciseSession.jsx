@@ -18,6 +18,7 @@ export default function ExerciseSession() {
   const navigate                  = useNavigate()
   const [searchParams]            = useSearchParams()
   const { t, lang }               = useI18nStore()
+  const lessonId                  = searchParams.get('lesson_id')
 
   useEffect(() => {
     const type      = searchParams.get('type')
@@ -69,9 +70,18 @@ export default function ExerciseSession() {
       {/* Мини-бейдж типа упражнения */}
       <div className="exercise-session-type">
         <span>{typeLabel}</span>
-        <span style={{ marginLeft: 'auto', color: 'var(--ink-soft)', fontSize: 11 }}>
-          {current + 1} / {exercises.length}
-        </span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {lessonId && (
+            <button onClick={() => navigate(`/ai-trainer?lesson_id=${lessonId}`)}
+              title="Поговорить с AI-тренером по словам этого урока"
+              style={{ padding: '3px 10px', borderRadius: 8, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', cursor: 'pointer', fontSize: 12, fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>
+              🗣️ Тренер
+            </button>
+          )}
+          <span style={{ color: 'var(--ink-soft)', fontSize: 11 }}>
+            {current + 1} / {exercises.length}
+          </span>
+        </div>
       </div>
 
       {/* Контент упражнения — заполняет оставшееся место */}

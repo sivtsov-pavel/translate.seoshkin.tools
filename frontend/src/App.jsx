@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import CookieConsent from './components/CookieConsent.jsx'
 import { useAuthStore } from './store/auth.js'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="/terms"   element={<Terms />} />
         <Route path="/cookies" element={<Cookies />} />
       </Routes>
+      <CookieConsent />
     </BrowserRouter>
   )
 }
