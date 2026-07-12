@@ -44,7 +44,7 @@ export default function Vocabulary() {
   const [words, setWords]       = useState([])
   const [view, setView]         = useState('words')
   const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(location.search).get('status') || '')
-  const [courseFilter, setCourseFilter] = useState('')
+  const [courseFilter, setCourseFilter] = useState(() => localStorage.getItem('vocab_course') || '')
   const [lessonFilter, setLessonFilter] = useState('')
   const [grammarFilter, setGrammarFilter] = useState('')
   const [search, setSearch]     = useState('')
@@ -97,6 +97,27 @@ export default function Vocabulary() {
   const knownCount = words.filter(w => w.status === 'known').length
   const vocabPct   = words.length > 0 ? Math.round((knownCount / words.length) * 100) : 0
 
+  // Запоминаем выбранный курс между визитами
+  useEffect(() => { localStorage.setItem('vocab_course', courseFilter) }, [courseFilter])
+
+  // Счётчики по статусам (для чипов)
+  const statusCounts = {
+    '':       words.length,
+    new:      words.filter(w => w.status === 'new').length,
+    learning: words.filter(w => w.status === 'learning').length,
+    known:    knownCount,
+  }
+  // Счётчики по частям речи в текущем разрезе курс/урок (пустые скроем)
+  const posBase = words.filter(w =>
+    (!courseFilter || w.course_title === courseFilter) &&
+    (!lessonFilter || (w.lesson_title || t.vocabulary.noLesson) === lessonFilter)
+  )
+  const posCounts = grammarCats.reduce((acc, c) => {
+    acc[c] = posBase.filter(w => detectGrammar(w.word_de) === c).length
+    return acc
+  }, {})
+  const visiblePos = grammarCats.filter(c => posCounts[c] > 0)
+
   const filtered = words.filter(w => {
     if (statusFilter  && w.status !== statusFilter) return false
     if (courseFilter  && w.course_title !== courseFilter) return false
@@ -118,6 +139,19 @@ export default function Vocabulary() {
 
   const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter('') }
 
+  // Стиль чипа-фильтра («капелька»)
+  const chipStyle = (active, color) => ({
+    display: 'inline-flex', alignItems: 'center', gap: 5,
+    padding: '5px 11px', borderRadius: 999, fontSize: 13, cursor: 'pointer',
+    whiteSpace: 'nowrap', lineHeight: 1.2,
+    border: `1.5px solid ${active ? (color || 'var(--accent)') : 'var(--line)'}`,
+    background: active ? (color ? color + '22' : 'var(--accent-soft)') : 'var(--surface-2)',
+    color: active ? (color || 'var(--accent)') : 'var(--ink)',
+    fontWeight: active ? 700 : 500,
+  })
+  const FILTER_LABEL = { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', minWidth: 52, flexShrink: 0 }
+  const chipCount = (n) => <span style={{ fontSize: 11, opacity: 0.7, fontWeight: 600 }}>{n}</span>
+
   if (loading) return <p style={{ padding: 20, color: 'var(--ink-soft)' }}>{t.vocabulary.loading}</p>
 
   return (
@@ -126,15 +160,24 @@ export default function Vocabulary() {
       <div style={{ padding: '0 14px 8px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0, fontSize: 22, flex: '0 0 auto' }}>{t.vocabulary.title}</h1>
         <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)', flex: '0 0 auto' }}>
-          {[{ id: 'words', label: '📚' }, { id: 'alphabet', label: '🔤' }, { id: 'numbers', label: '🔢' }].map(tab => (
+          {[
+            { id: 'words',    emoji: '📚', label: 'Слова', count: words.length },
+            { id: 'alphabet', emoji: '🔤', label: 'Алфавит' },
+            { id: 'numbers',  emoji: '🔢', label: 'Цифры' },
+          ].map(tab => (
             <button key={tab.id} onClick={() => setView(tab.id)}
-              title={{ words: 'Слова', alphabet: 'Алфавит', numbers: 'Цифры' }[tab.id]}
               style={{
-                padding: '7px 13px', fontSize: 15, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '7px 12px', fontSize: 13, fontWeight: view === tab.id ? 700 : 500, cursor: 'pointer',
                 border: 'none', background: view === tab.id ? 'var(--accent)' : 'var(--surface-2)',
                 color: view === tab.id ? 'var(--accent-ink)' : 'var(--ink)',
+                whiteSpace: 'nowrap',
               }}>
-              {tab.label}
+              <span>{tab.emoji}</span>
+              <span>{tab.label}</span>
+              {tab.count != null && (
+                <span style={{ fontSize: 11, opacity: 0.75 }}>{tab.count}</span>
+              )}
             </button>
           ))}
         </div>
@@ -164,75 +207,74 @@ export default function Vocabulary() {
 
       {view === 'words' && <div style={{ padding: '0 14px' }}>
 
-        {/* Поиск + кнопка фильтров */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Поиск по немецкому или переводу..."
-              style={{ width: '100%', paddingRight: 34, boxSizing: 'border-box' }}
-            />
-            {search
-              ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: 'var(--ink-soft)' }}>✕</button>
-              : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--ink-soft)' }}>🔍</span>
-            }
-          </div>
-          <button
-            onClick={() => setFiltersOpen(v => !v)}
-            style={{
-              padding: '0 14px', borderRadius: 8, border: `1.5px solid ${filtersOpen || activeFilters ? 'var(--accent)' : 'var(--line)'}`,
-              background: filtersOpen ? 'var(--accent-soft)' : 'var(--surface-2)',
-              color: filtersOpen || activeFilters ? 'var(--accent)' : 'var(--ink)',
-              fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-            }}>
-            {activeFilters ? `Фильтры · ${activeFilters}` : 'Фильтры'} {filtersOpen ? '▲' : '▼'}
-          </button>
+        {/* Поиск */}
+        <div style={{ position: 'relative', marginBottom: 10 }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Поиск по немецкому или переводу..."
+            style={{ width: '100%', paddingRight: 34, boxSizing: 'border-box' }}
+          />
+          {search
+            ? <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: 'var(--ink-soft)' }}>✕</button>
+            : <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--ink-soft)' }}>🔍</span>
+          }
         </div>
 
-        {/* Панель фильтров */}
-        {filtersOpen && (
-          <div style={{
-            marginBottom: 12, padding: '12px 14px', borderRadius: 12,
-            background: 'var(--surface-2)', border: '1px solid var(--line)',
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8,
-          }}>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={SELECT_STYLE}>
-              <option value="">Все статусы</option>
-              <option value="new">{t.vocabulary.new}</option>
-              <option value="learning">{t.vocabulary.learning}</option>
-              <option value="known">{t.vocabulary.known}</option>
-            </select>
+        {/* Статус — чипы, всегда под рукой (пустые скрыты) */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+          <span style={FILTER_LABEL}>Статус</span>
+          <button style={chipStyle(statusFilter === '')} onClick={() => setStatusFilter('')}>
+            {t.vocabulary.all} {chipCount(statusCounts[''])}
+          </button>
+          {statusCounts.new > 0 && (
+            <button style={chipStyle(statusFilter === 'new', STATUS_COLORS.new)} onClick={() => setStatusFilter(statusFilter === 'new' ? '' : 'new')}>
+              {t.vocabulary.new} {chipCount(statusCounts.new)}
+            </button>
+          )}
+          {statusCounts.learning > 0 && (
+            <button style={chipStyle(statusFilter === 'learning', STATUS_COLORS.learning)} onClick={() => setStatusFilter(statusFilter === 'learning' ? '' : 'learning')}>
+              {t.vocabulary.learning} {chipCount(statusCounts.learning)}
+            </button>
+          )}
+          {statusCounts.known > 0 && (
+            <button style={chipStyle(statusFilter === 'known', STATUS_COLORS.known)} onClick={() => setStatusFilter(statusFilter === 'known' ? '' : 'known')}>
+              {t.vocabulary.known} {chipCount(statusCounts.known)}
+            </button>
+          )}
+        </div>
 
+        {/* Курс + урок — выпадающие, под рукой */}
+        {(courseTitles.length > 0 || lessonTitles.length > 1) && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+            <span style={FILTER_LABEL}>Курс</span>
             {courseTitles.length > 0 && (
               <select value={courseFilter} onChange={e => { setCourseFilter(e.target.value); setLessonFilter('') }} style={SELECT_STYLE}>
                 <option value="">Все курсы</option>
                 {courseTitles.map(ct => <option key={ct} value={ct}>{ct}</option>)}
               </select>
             )}
-
             {lessonTitles.length > 1 && (
               <select value={lessonFilter} onChange={e => setLessonFilter(e.target.value)} style={SELECT_STYLE}>
                 <option value="">Все уроки</option>
                 {lessonTitles.map(lt => <option key={lt} value={lt}>{shortLesson(lt, t.vocabulary.noLesson)}</option>)}
               </select>
             )}
+          </div>
+        )}
 
-            {grammarCats.length > 1 && (
-              <select value={grammarFilter} onChange={e => setGrammarFilter(e.target.value)} style={SELECT_STYLE}>
-                <option value="">Все части речи</option>
-                {grammarCats.map(cat => <option key={cat} value={cat}>{GRAMMAR_LABELS[cat] || cat}</option>)}
-              </select>
-            )}
-
-            {activeFilters > 0 && (
-              <button onClick={resetFilters} style={{
-                ...SELECT_STYLE, border: '1px dashed var(--line)',
-                color: 'var(--ink-soft)', background: 'transparent', textAlign: 'center',
-              }}>
-                ✕ Сбросить
+        {/* Часть речи — чипы «капельки» (пустые скрыты) */}
+        {visiblePos.length > 1 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+            <span style={FILTER_LABEL}>Речь</span>
+            <button style={chipStyle(grammarFilter === '')} onClick={() => setGrammarFilter('')}>
+              {t.vocabulary.all}
+            </button>
+            {visiblePos.map(cat => (
+              <button key={cat} style={chipStyle(grammarFilter === cat)} onClick={() => setGrammarFilter(grammarFilter === cat ? '' : cat)}>
+                {GRAMMAR_LABELS[cat] || cat} {chipCount(posCounts[cat])}
               </button>
-            )}
+            ))}
           </div>
         )}
 
