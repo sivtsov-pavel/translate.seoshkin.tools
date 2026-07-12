@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { api } from '../api/client.js'
 import { speak } from '../hooks/useSpeech.jsx'
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition.jsx'
 import { useI18nStore } from '../store/i18n.js'
 
 // Локализованные строки UI тренера — все языки интерфейса
@@ -127,6 +128,15 @@ export default function AiTrainer() {
   const inputRef = useRef()
   const lang = useI18nStore(s => s.lang)
   const S = uiStr(lang)
+
+  // Голосовой ввод: ученик говорит по-немецки → текст в поле ввода
+  const { start: startMic, stop: stopMic, listening, isSupported: micSupported } = useSpeechRecognition({
+    lang: 'de-DE',
+    onResult: (text) => {
+      setInput(prev => (prev ? prev.trim() + ' ' : '') + text)
+      setTimeout(() => inputRef.current?.focus(), 0)
+    },
+  })
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -369,6 +379,22 @@ export default function AiTrainer() {
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
             }}
           />
+          {micSupported && (
+            <button
+              onClick={() => (listening ? stopMic() : startMic())}
+              title="Говорить по-немецки в микрофон"
+              style={{
+                width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                border: `1px solid ${listening ? 'var(--red)' : 'var(--line)'}`,
+                background: listening ? 'var(--red)' : 'var(--surface-2)',
+                color: listening ? '#fff' : 'var(--ink)', cursor: 'pointer', fontSize: 18,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: listening ? 'pulse 1s infinite' : 'none',
+              }}
+            >
+              <i className={`bi ${listening ? 'bi-mic-fill' : 'bi-mic'}`} />
+            </button>
+          )}
           <button
             onClick={sendMessage}
             disabled={!input.trim() || loading}
