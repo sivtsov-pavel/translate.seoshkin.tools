@@ -1,26 +1,36 @@
 import { useState, useRef, useEffect } from 'react'
 import { api } from '../api/client.js'
 import { speak } from '../hooks/useSpeech.jsx'
+import { useI18nStore } from '../store/i18n.js'
+
+// Локализованные строки UI (ru/uk; для остальных локалей — украинский как было)
+const STR = {
+  uk: { title: '🤖 AI тренер', subtitle: 'Живі розмовні тренування з AI-наставником. Обери персонажа та тему.', persona: 'Персонаж', topic: 'Тема розмови', start: 'Почати розмову →', change: '← Змінити', typing: '⏳ Відповідає...', placeholder: 'Напиши по-німецьки або по-українськи...', hint: 'Enter — надіслати · Shift+Enter — новий рядок', connErr: 'Помилка з\'єднання. Спробуй ще раз.' },
+  ru: { title: '🤖 AI тренер', subtitle: 'Живые разговорные тренировки с AI-наставником. Выбери персонажа и тему.', persona: 'Персонаж', topic: 'Тема разговора', start: 'Начать разговор →', change: '← Сменить', typing: '⏳ Отвечает...', placeholder: 'Напиши по-немецки или по-русски...', hint: 'Enter — отправить · Shift+Enter — новая строка', connErr: 'Ошибка соединения. Попробуй ещё раз.' },
+}
+const uiStr = (lang) => STR[lang] || STR.uk
+// Достаём локализованное значение из {uk, ru}-карты
+const loc = (obj, lang) => (obj && (obj[lang] || obj.uk)) || ''
 
 const CHARACTERS = [
-  { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  role: 'Вчителька з Берліна',    color: '#4A7FA5' },
-  { id: 'max',   emoji: '☕',    name: 'Макс',   role: 'Бариста в кав\'ярні',   color: '#8B5E3C' },
-  { id: 'hanna', emoji: '🛒',   name: 'Ганна',  role: 'Продавчиня в магазині', color: '#5A9E6E' },
-  { id: 'otto',  emoji: '🏨',   name: 'Отто',   role: 'Портьє в готелі',       color: '#7B5EA7' },
-  { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', role: 'HR — співбесіда',   color: '#5A6B8C' },
+  { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  color: '#4A7FA5', role: { uk: 'Вчителька з Берліна',    ru: 'Учительница из Берлина' } },
+  { id: 'max',   emoji: '☕',    name: 'Макс',   color: '#8B5E3C', role: { uk: 'Бариста в кав\'ярні',    ru: 'Бариста в кафе' } },
+  { id: 'hanna', emoji: '🛒',   name: 'Ганна',  color: '#5A9E6E', role: { uk: 'Продавчиня в магазині',  ru: 'Продавщица в магазине' } },
+  { id: 'otto',  emoji: '🏨',   name: 'Отто',   color: '#7B5EA7', role: { uk: 'Портьє в готелі',        ru: 'Портье в отеле' } },
+  { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', color: '#5A6B8C', role: { uk: 'HR — співбесіда',    ru: 'HR — собеседование' } },
 ]
 
 const SCENARIOS = [
-  { id: 'intro',     label: '👋 Знайомство' },
-  { id: 'cafe',      label: '☕ У кав\'ярні' },
-  { id: 'shopping',  label: '🛒 Покупки' },
-  { id: 'hotel',     label: '🏨 Готель' },
-  { id: 'direction', label: '🗺️ Орієнтування' },
-  { id: 'free',      label: '💬 Вільна бесіда' },
-  { id: 'interview_it',    label: '💻 Співбесіда: IT-агентство' },
-  { id: 'interview_clean', label: '🧹 Співбесіда: клінінг' },
-  { id: 'interview_food',  label: '🍽️ Співбесіда: кафе/ресторан' },
-  { id: 'interview_hotel', label: '🛎️ Співбесіда: готель' },
+  { id: 'intro',     label: { uk: '👋 Знайомство',    ru: '👋 Знакомство' } },
+  { id: 'cafe',      label: { uk: '☕ У кав\'ярні',    ru: '☕ В кафе' } },
+  { id: 'shopping',  label: { uk: '🛒 Покупки',       ru: '🛒 Покупки' } },
+  { id: 'hotel',     label: { uk: '🏨 Готель',        ru: '🏨 Отель' } },
+  { id: 'direction', label: { uk: '🗺️ Орієнтування',  ru: '🗺️ Ориентирование' } },
+  { id: 'free',      label: { uk: '💬 Вільна бесіда',  ru: '💬 Свободная беседа' } },
+  { id: 'interview_it',    label: { uk: '💻 Співбесіда: IT-агентство',   ru: '💻 Собеседование: IT-агентство' } },
+  { id: 'interview_clean', label: { uk: '🧹 Співбесіда: клінінг',        ru: '🧹 Собеседование: клининг' } },
+  { id: 'interview_food',  label: { uk: '🍽️ Співбесіда: кафе/ресторан',  ru: '🍽️ Собеседование: кафе/ресторан' } },
+  { id: 'interview_hotel', label: { uk: '🛎️ Співбесіда: готель',         ru: '🛎️ Собеседование: отель' } },
 ]
 
 const STARTER_PHRASES = {
@@ -105,6 +115,8 @@ export default function AiTrainer() {
   const [showSummary, setShowSummary] = useState(false)
   const bottomRef = useRef()
   const inputRef = useRef()
+  const lang = useI18nStore(s => s.lang)
+  const S = uiStr(lang)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -160,7 +172,7 @@ export default function AiTrainer() {
         character,
       }])
     } catch (e) {
-      setError('Помилка з\'єднання. Спробуй ще раз.')
+      setError(S.connErr)
     } finally {
       setLoading(false)
     }
@@ -185,14 +197,14 @@ export default function AiTrainer() {
   if (step === 'select') {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px 40px' }}>
-        <h1 style={{ marginBottom: 4, fontSize: 22 }}>🤖 ІІ тренер</h1>
+        <h1 style={{ marginBottom: 4, fontSize: 22 }}>{S.title}</h1>
         <p style={{ color: 'var(--ink-soft)', marginBottom: 28, fontSize: 14 }}>
-          Живі розмовні тренування з ІІ-наставником. Обери персонажа та тему.
+          {S.subtitle}
         </p>
 
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-soft)', marginBottom: 12 }}>
-            Персонаж
+            {S.persona}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {CHARACTERS.map(c => (
@@ -204,7 +216,7 @@ export default function AiTrainer() {
               }}>
                 <div style={{ fontSize: 26, marginBottom: 4 }}>{c.emoji}</div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{c.role}</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{loc(c.role, lang)}</div>
               </button>
             ))}
           </div>
@@ -212,7 +224,7 @@ export default function AiTrainer() {
 
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-soft)', marginBottom: 12 }}>
-            Тема розмови
+            {S.topic}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {SCENARIOS.map(s => (
@@ -223,7 +235,7 @@ export default function AiTrainer() {
                 color: scenario === s.id ? 'var(--accent-ink)' : 'var(--ink)',
                 fontWeight: scenario === s.id ? 600 : 400,
               }}>
-                {s.label}
+                {loc(s.label, lang)}
               </button>
             ))}
           </div>
@@ -234,7 +246,7 @@ export default function AiTrainer() {
           background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16,
           fontWeight: 700, cursor: 'pointer',
         }}>
-          Почати розмову →
+          {S.start}
         </button>
       </div>
     )
@@ -255,16 +267,16 @@ export default function AiTrainer() {
           {char.emoji}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>{char.name} — {char.role}</div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{char.name} — {loc(char.role, lang)}</div>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
-            {SCENARIOS.find(s => s.id === scenario)?.label}
+            {loc(SCENARIOS.find(s => s.id === scenario)?.label, lang)}
           </div>
         </div>
         <button onClick={resetSession} style={{
           padding: '6px 12px', borderRadius: 8, border: '1px solid var(--line)',
           background: 'var(--surface-2)', cursor: 'pointer', fontSize: 13, color: 'var(--ink-soft)',
         }}>
-          ← Змінити
+          {S.change}
         </button>
       </div>
 
@@ -279,7 +291,7 @@ export default function AiTrainer() {
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', background: char.color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{char.emoji}</div>
             <div style={{ background: 'var(--surface-2)', borderRadius: '4px 16px 16px 16px', padding: '12px 16px', border: '1px solid var(--line)', color: 'var(--ink-soft)', fontSize: 14 }}>
-              <span style={{ animation: 'pulse 1s infinite' }}>⏳ Відповідає...</span>
+              <span style={{ animation: 'pulse 1s infinite' }}>{S.typing}</span>
             </div>
           </div>
         )}
@@ -297,7 +309,7 @@ export default function AiTrainer() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Напиши по-німецьки або по-українськи..."
+            placeholder={S.placeholder}
             rows={1}
             style={{
               flex: 1, resize: 'none', borderRadius: 12, padding: '10px 14px',
@@ -326,7 +338,7 @@ export default function AiTrainer() {
           </button>
         </div>
         <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 6, textAlign: 'center' }}>
-          Enter — надіслати · Shift+Enter — новий рядок
+          {S.hint}
         </div>
       </div>
     </div>

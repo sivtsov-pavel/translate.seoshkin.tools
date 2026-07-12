@@ -180,7 +180,7 @@ export default function Layout({ children }) {
   const SidebarContent = ({ inDrawer = false }) => {
     const close = inDrawer ? () => setOpen(false) : undefined
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {/* Шапка */}
         <div style={{ padding: '16px 16px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', flexShrink: 0 }}>
           <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -224,6 +224,10 @@ export default function Layout({ children }) {
             </Link>
           )}
         </div>
+
+        {/* Прокручиваемая область: навигация + admin + подвал. Шапка зафиксирована,
+            всё остальное скроллится одним блоком — футер с языками всегда достаётся */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
         {/* Навигация */}
         <div style={{ flexShrink: 0, padding: '8px' }}>
@@ -396,8 +400,10 @@ export default function Layout({ children }) {
           </div>
         )}
 
-        {/* Подвал: тема, язык, выход */}
-        <div style={{ padding: '10px 12px', borderTop: '1px solid var(--line)', display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0, marginTop: 'auto' }}>
+        </div>{/* конец прокручиваемой области */}
+
+        {/* Подвал: тема, язык, выход — зафиксирован снизу, всегда виден (языки под рукой) */}
+        <div style={{ padding: '10px 12px', borderTop: '1px solid var(--line)', display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0 }}>
           <button onClick={toggleTheme} style={pill}>
             <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
             {' '}{theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}
