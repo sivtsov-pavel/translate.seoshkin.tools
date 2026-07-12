@@ -49,6 +49,17 @@ export async function aiTrainerRoutes(fastify) {
     return rows
   })
 
+  // ── Полный лог конкретной сессии (для экрана «История сессий») ──
+  fastify.get('/api/ai-trainer/sessions/:id/messages', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const session = await loadSession(request.params.id, request.user.id)
+    if (!session) return reply.status(404).send({ error: 'session not found' })
+    const { rows } = await db.query(
+      'SELECT role, text, correction, translation, created_at FROM ai_trainer_messages WHERE session_id = $1 ORDER BY id ASC',
+      [session.id]
+    )
+    return { session, messages: rows }
+  })
+
   // ── Создать сессию (подтягивает память для баннера «тренер помнит») ──
   fastify.post('/api/ai-trainer/sessions', { preHandler: [fastify.authenticate] }, async (request) => {
     const { character = 'lena', scenario = 'free', starter } = request.body || {}

@@ -21,6 +21,21 @@ const uiStr = (lang) => STR[lang] || STR.uk
 // Достаём локализованное значение из {uk, ru}-карты
 const loc = (obj, lang) => (obj && (obj[lang] || obj.uk)) || ''
 
+// Строки экрана отчёта и истории сессий
+const RSTR = {
+  ru: { finish: 'Завершить', reportTitle: 'Итог диалога', replies: 'реплик', mistakes: 'Работа над ошибками', noMistakes: 'Без ошибок — отлично! 🎉', again: 'Ещё раз', toStart: 'К выбору', history: 'История', empty: 'Пока нет диалогов', was: 'было', became: 'стало' },
+  uk: { finish: 'Завершити', reportTitle: 'Підсумок діалогу', replies: 'реплік', mistakes: 'Робота над помилками', noMistakes: 'Без помилок — чудово! 🎉', again: 'Ще раз', toStart: 'До вибору', history: 'Історія', empty: 'Поки немає діалогів', was: 'було', became: 'стало' },
+  en: { finish: 'Finish', reportTitle: 'Session summary', replies: 'replies', mistakes: 'Work on mistakes', noMistakes: 'No mistakes — great! 🎉', again: 'Again', toStart: 'Back', history: 'History', empty: 'No sessions yet', was: 'was', became: 'correct' },
+  de: { finish: 'Beenden', reportTitle: 'Zusammenfassung', replies: 'Antworten', mistakes: 'Fehler bearbeiten', noMistakes: 'Keine Fehler — super! 🎉', again: 'Nochmal', toStart: 'Zurück', history: 'Verlauf', empty: 'Noch keine Sitzungen', was: 'war', became: 'richtig' },
+  bg: { finish: 'Завърши', reportTitle: 'Обобщение', replies: 'реплики', mistakes: 'Работа върху грешките', noMistakes: 'Без грешки — чудесно! 🎉', again: 'Пак', toStart: 'Назад', history: 'История', empty: 'Още няма сесии', was: 'беше', became: 'правилно' },
+  tr: { finish: 'Bitir', reportTitle: 'Özet', replies: 'yanıt', mistakes: 'Hatalar üzerine çalışma', noMistakes: 'Hata yok — harika! 🎉', again: 'Tekrar', toStart: 'Geri', history: 'Geçmiş', empty: 'Henüz oturum yok', was: 'yanlış', became: 'doğru' },
+  ar: { finish: 'إنهاء', reportTitle: 'ملخص الجلسة', replies: 'ردود', mistakes: 'العمل على الأخطاء', noMistakes: 'لا أخطاء — رائع! 🎉', again: 'مرة أخرى', toStart: 'رجوع', history: 'السجل', empty: 'لا توجد جلسات بعد', was: 'كان', became: 'الصحيح' },
+  es: { finish: 'Terminar', reportTitle: 'Resumen', replies: 'respuestas', mistakes: 'Trabajo sobre errores', noMistakes: 'Sin errores — ¡genial! 🎉', again: 'Otra vez', toStart: 'Volver', history: 'Historial', empty: 'Aún no hay sesiones', was: 'era', became: 'correcto' },
+  fr: { finish: 'Terminer', reportTitle: 'Résumé', replies: 'réponses', mistakes: 'Travail sur les erreurs', noMistakes: 'Aucune erreur — super ! 🎉', again: 'Encore', toStart: 'Retour', history: 'Historique', empty: 'Aucune session', was: 'était', became: 'correct' },
+  sq: { finish: 'Përfundo', reportTitle: 'Përmbledhje', replies: 'përgjigje', mistakes: 'Puna me gabimet', noMistakes: 'Pa gabime — shkëlqyeshëm! 🎉', again: 'Përsëri', toStart: 'Kthehu', history: 'Historiku', empty: 'Ende asnjë seancë', was: 'ishte', became: 'saktë' },
+}
+const reportStr = (lang) => RSTR[lang] || RSTR.en
+
 const CHARACTERS = [
   { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  color: '#4A7FA5', role: { uk: 'Вчителька з Берліна', ru: 'Учительница из Берлина', en: 'Teacher from Berlin', de: 'Lehrerin aus Berlin', bg: 'Учителка от Берлин', tr: 'Berlin\'den öğretmen', ar: 'معلمة من برلين', es: 'Profesora de Berlín', fr: 'Professeure de Berlin', sq: 'Mësuese nga Berlini' } },
   { id: 'max',   emoji: '☕',    name: 'Макс',   color: '#8B5E3C', role: { uk: 'Бариста в кав\'ярні', ru: 'Бариста в кафе', en: 'Barista in a café', de: 'Barista im Café', bg: 'Бариста в кафене', tr: 'Kafede barista', ar: 'باريستا في مقهى', es: 'Barista en una cafetería', fr: 'Barista dans un café', sq: 'Barist në kafe' } },
@@ -124,10 +139,14 @@ export default function AiTrainer() {
   const [showSummary, setShowSummary] = useState(false)
   const [sessionId, setSessionId] = useState(null)
   const [memoryHint, setMemoryHint] = useState('')
+  const [report, setReport] = useState(null)
+  const [sessions, setSessions] = useState([])
+  const [history, setHistory] = useState(null) // { session, messages } — просмотр прошлого диалога
   const bottomRef = useRef()
   const inputRef = useRef()
   const lang = useI18nStore(s => s.lang)
   const S = uiStr(lang)
+  const R = reportStr(lang)
 
   // Голосовой ввод: ученик говорит по-немецки → текст в поле ввода
   const { start: startMic, stop: stopMic, listening, isSupported: micSupported } = useSpeechRecognition({
@@ -235,12 +254,47 @@ export default function AiTrainer() {
     setShowSummary(false)
   }
 
+  // Завершить с показом отчёта (ждём ответ /finish)
+  const finishSession = async () => {
+    if (!sessionId) { setStep('select'); return }
+    const userLang = localStorage.getItem('lang') || 'uk'
+    const sid = sessionId
+    setSessionId(null)   // предотвращаем двойной finish на unmount
+    setLoading(true)
+    try {
+      const rep = await api.post(`/ai-trainer/sessions/${sid}/finish`, { userLang })
+      setReport(rep)
+      setMemoryHint('')
+      setMessages([])
+      setStep('report')
+    } catch {
+      resetSession()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // История сессий
+  const openHistory = async () => {
+    setHistory(null)
+    setStep('history')
+    try { setSessions(await api.get('/ai-trainer/sessions')) } catch {}
+  }
+  const openSessionLog = async (id) => {
+    try { setHistory(await api.get(`/ai-trainer/sessions/${id}/messages`)) } catch {}
+  }
+
   const char = CHARACTERS.find(c => c.id === character)
 
   if (step === 'select') {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px 40px' }}>
-        <h1 style={{ marginBottom: 4, fontSize: 22 }}>{S.title}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
+          <h1 style={{ margin: 0, fontSize: 22 }}>{S.title}</h1>
+          <button onClick={openHistory} style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>
+            🕘 {R.history}
+          </button>
+        </div>
         <p style={{ color: 'var(--ink-soft)', marginBottom: 28, fontSize: 14 }}>
           {S.subtitle}
         </p>
@@ -295,6 +349,80 @@ export default function AiTrainer() {
     )
   }
 
+  // Экран отчёта после завершённого диалога
+  if (step === 'report') {
+    return (
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px 40px' }}>
+        <h1 style={{ fontSize: 22, marginBottom: 6 }}>📊 {R.reportTitle}</h1>
+        <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 20 }}>
+          {(report?.user_message_count ?? 0)} {R.replies}
+        </p>
+        {report?.mistakes?.length > 0 ? (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 10 }}>{R.mistakes}</div>
+            {report.mistakes.map((m, i) => (
+              <div key={i} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
+                <div style={{ fontSize: 14, color: 'var(--red)', textDecoration: 'line-through' }}>{m.original}</div>
+                <div style={{ fontSize: 15, color: 'var(--good)', fontWeight: 600, marginTop: 2 }}>{m.correction}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ background: 'var(--accent-soft)', borderRadius: 14, padding: 20, textAlign: 'center', fontSize: 16, marginBottom: 24 }}>{R.noMistakes}</div>
+        )}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => { setReport(null); startSession() }} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>{R.again}</button>
+          <button onClick={() => { setReport(null); setStep('select') }} style={{ flex: 1, padding: 13, borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>{R.toStart}</button>
+        </div>
+      </div>
+    )
+  }
+
+  // История сессий: список → просмотр диалога
+  if (step === 'history') {
+    return (
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <button onClick={() => (history ? setHistory(null) : setStep('select'))} style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>← {R.toStart}</button>
+          <h1 style={{ margin: 0, fontSize: 20 }}>🕘 {R.history}</h1>
+        </div>
+        {history ? (
+          <div>
+            {history.messages.map((m, i) => (
+              m.role === 'trainer'
+                ? <div key={i} style={{ background: 'var(--surface-2)', borderRadius: '4px 14px 14px 14px', padding: '10px 14px', marginBottom: 8, border: '1px solid var(--line)' }}>
+                    <div style={{ fontSize: 15 }}>{m.text}</div>
+                    {m.translation && <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 4 }}>{m.translation}</div>}
+                  </div>
+                : <div key={i} style={{ background: 'var(--accent-soft)', borderRadius: '14px 4px 14px 14px', padding: '10px 14px', marginBottom: 8, marginLeft: 40 }}>
+                    <div style={{ fontSize: 15 }}>{m.text}</div>
+                    {m.correction && m.correction !== 'null' && <div style={{ fontSize: 13, color: 'var(--good)', marginTop: 4 }}>✓ {m.correction}</div>}
+                  </div>
+            ))}
+          </div>
+        ) : sessions.length === 0 ? (
+          <div style={{ color: 'var(--ink-soft)', textAlign: 'center', marginTop: 40 }}>{R.empty}</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {sessions.map(s => {
+              const ch = CHARACTERS.find(c => c.id === s.character) || CHARACTERS[0]
+              const sc = SCENARIOS.find(x => x.id === s.scenario)
+              return (
+                <button key={s.id} onClick={() => openSessionLog(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: 22 }}>{ch.emoji}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{ch.name} · {sc ? loc(sc.label, lang) : s.scenario}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{new Date(s.started_at).toLocaleString()}</div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="full-page-layout" style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxWidth: 700, margin: '0 auto', width: '100%' }}>
@@ -316,11 +444,11 @@ export default function AiTrainer() {
             {loc(SCENARIOS.find(s => s.id === scenario)?.label, lang)}
           </div>
         </div>
-        <button onClick={resetSession} style={{
-          padding: '6px 12px', borderRadius: 8, border: '1px solid var(--line)',
-          background: 'var(--surface-2)', cursor: 'pointer', fontSize: 13, color: 'var(--ink-soft)',
+        <button onClick={finishSession} disabled={loading} style={{
+          padding: '6px 12px', borderRadius: 8, border: '1px solid var(--accent)',
+          background: 'var(--accent-soft)', cursor: 'pointer', fontSize: 13, color: 'var(--accent)', fontWeight: 600,
         }}>
-          {S.change}
+          {R.finish}
         </button>
       </div>
 
