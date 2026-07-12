@@ -152,11 +152,12 @@ export default function AiTrainer() {
   const S = uiStr(lang)
   const R = reportStr(lang)
 
-  // Голосовой ввод: распознавание на языке локали пользователя (без ручных переключений).
-  // Тренер понимает любой язык и отвечает по-немецки.
+  // Голосовой ввод: распознаватель одноязычный, поэтому даём переключатель
+  // «родной / немецкий». По умолчанию — язык локали (без ручных настроек телефона).
   const SPEECH_LANG = { ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', bg: 'bg-BG', tr: 'tr-TR', ar: 'ar-SA', es: 'es-ES', fr: 'fr-FR', sq: 'sq-AL' }
+  const [micDe, setMicDe] = useState(lang === 'de')  // false = родной язык, true = немецкий
   const { start: startMic, stop: stopMic, listening, isSupported: micSupported } = useSpeechRecognition({
-    lang: SPEECH_LANG[lang] || 'de-DE',
+    lang: micDe ? 'de-DE' : (SPEECH_LANG[lang] || 'de-DE'),
     onResult: (text) => {
       setInput(prev => (prev ? prev.trim() + ' ' : '') + text)
       setTimeout(() => inputRef.current?.focus(), 0)
@@ -513,10 +514,26 @@ export default function AiTrainer() {
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
             }}
           />
+          {/* Переключатель языка микрофона (скрыт, если локаль уже немецкая) */}
+          {micSupported && lang !== 'de' && (
+            <button
+              onClick={() => setMicDe(v => !v)} disabled={listening}
+              title="Язык распознавания: свой или немецкий"
+              style={{
+                height: 42, minWidth: 42, padding: '0 8px', borderRadius: 12, flexShrink: 0,
+                border: `1px solid ${micDe ? 'var(--accent)' : 'var(--line)'}`,
+                background: micDe ? 'var(--accent-soft)' : 'var(--surface-2)',
+                color: micDe ? 'var(--accent)' : 'var(--ink-soft)', cursor: 'pointer',
+                fontSize: 13, fontWeight: 700,
+              }}
+            >
+              {micDe ? '🇩🇪' : lang.toUpperCase()}
+            </button>
+          )}
           {micSupported && (
             <button
               onClick={() => (listening ? stopMic() : startMic())}
-              title="Говорить по-немецки в микрофон"
+              title={micDe ? 'Говорить по-немецки' : 'Говорить на своём языке'}
               style={{
                 width: 42, height: 42, borderRadius: 12, flexShrink: 0,
                 border: `1px solid ${listening ? 'var(--red)' : 'var(--line)'}`,
