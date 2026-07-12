@@ -1,0 +1,20 @@
+# CLAUDE.md — Deutsch Lernen (translate.seoshkin.tools)
+
+## 📋 Файл планов — ГЛАВНОЕ
+**`IDEAS.md`** в корне репозитория — единый бэклог идей и задач Павла.
+- В начале работы **сверяйся с IDEAS.md** (что в планах `[ ]`, в работе `[~]`, сделано `[x]`).
+- Павел присылает идеи (часто с прогулки) → фиксируем сюда → собираем в спринты → делаем → тестим.
+- После выполнения задачи — **отмечай `[x]` с датой** в IDEAS.md.
+- Файл в git → переживает любые сбои чата. При потере контекста план всегда там.
+
+## Проект
+- German-learning PWA. Стек: Fastify 4 + React 18/Vite + PostgreSQL 16 (raw SQL) + Docker Compose.
+- AI: OpenAI gpt-4o (vision-импорт уроков), gpt-4o-mini (AI-тренер), D-ID (видео-аватар).
+- Локализация интерфейса: 10 языков, всё работает от локали пользователя.
+
+## Деплой
+Git flow → сервер. Коммит/пуш → `ssh gcloud-seosite` → `cd /home/seosite/translate && git pull` → `docker compose -f docker-compose.prod.yml build frontend backend && up -d`. Claude деплоит сам.
+
+## Правила
+- Общение и комментарии в коде — русский. Имена в коде — английский.
+- Ключи API (D_ID_API_KEY, REPLICATE_API_TOKEN и т.д.) — только на сервере в `.env`, в локальный `.env`/git не писать.
