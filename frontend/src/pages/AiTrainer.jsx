@@ -54,12 +54,12 @@ const VSTR = {
 const voiceStr = (lang) => VSTR[lang] || VSTR.en
 
 const CHARACTERS = [
+  { id: 'pablo', emoji: '🤓', name: 'Pablo Seoshkin', color: '#3B7A57', photo: '/avatar/pablo.jpg', role: { uk: 'Засновник, наставник', ru: 'Основатель, наставник', en: 'Founder, mentor', de: 'Gründer, Mentor', bg: 'Основател, наставник', tr: 'Kurucu, mentor', ar: 'المؤسس، مرشد', es: 'Fundador, mentor', fr: 'Fondateur, mentor', sq: 'Themelues, mentor' } },
   { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  color: '#4A7FA5', role: { uk: 'Вчителька з Берліна', ru: 'Учительница из Берлина', en: 'Teacher from Berlin', de: 'Lehrerin aus Berlin', bg: 'Учителка от Берлин', tr: 'Berlin\'den öğretmen', ar: 'معلمة من برلين', es: 'Profesora de Berlín', fr: 'Professeure de Berlin', sq: 'Mësuese nga Berlini' } },
   { id: 'max',   emoji: '☕',    name: 'Макс',   color: '#8B5E3C', role: { uk: 'Бариста в кав\'ярні', ru: 'Бариста в кафе', en: 'Barista in a café', de: 'Barista im Café', bg: 'Бариста в кафене', tr: 'Kafede barista', ar: 'باريستا في مقهى', es: 'Barista en una cafetería', fr: 'Barista dans un café', sq: 'Barist në kafe' } },
   { id: 'hanna', emoji: '🛒',   name: 'Ганна',  color: '#5A9E6E', role: { uk: 'Продавчиня в магазині', ru: 'Продавщица в магазине', en: 'Shop assistant', de: 'Verkäuferin im Laden', bg: 'Продавачка в магазин', tr: 'Mağaza görevlisi', ar: 'بائعة في متجر', es: 'Dependienta de tienda', fr: 'Vendeuse en magasin', sq: 'Shitëse në dyqan' } },
   { id: 'otto',  emoji: '🏨',   name: 'Отто',   color: '#7B5EA7', role: { uk: 'Портьє в готелі', ru: 'Портье в отеле', en: 'Hotel receptionist', de: 'Portier im Hotel', bg: 'Рецепционист в хотел', tr: 'Otel resepsiyonisti', ar: 'موظف استقبال فندق', es: 'Recepcionista de hotel', fr: 'Réceptionniste d\'hôtel', sq: 'Recepsionist hoteli' } },
   { id: 'hr',    emoji: '💼',   name: 'Фрау Вебер', color: '#5A6B8C', role: { uk: 'HR — співбесіда', ru: 'HR — собеседование', en: 'HR — interview', de: 'HR — Vorstellungsgespräch', bg: 'HR — интервю', tr: 'İK — mülakat', ar: 'موارد بشرية — مقابلة', es: 'RRHH — entrevista', fr: 'RH — entretien', sq: 'HR — intervistë' } },
-  { id: 'pablo', emoji: '🧔', name: 'Pablo Seoshkin', color: '#3B7A57', photo: '/avatar/pablo.jpg', role: { uk: 'Засновник, наставник', ru: 'Основатель, наставник', en: 'Founder, mentor', de: 'Gründer, Mentor', bg: 'Основател, наставник', tr: 'Kurucu, mentor', ar: 'المؤسس، مرشد', es: 'Fundador, mentor', fr: 'Fondateur, mentor', sq: 'Themelues, mentor' } },
 ]
 
 const SCENARIOS = [
@@ -162,7 +162,7 @@ function BubbleUser({ text }) {
 
 export default function AiTrainer() {
   const [step, setStep] = useState('select') // 'select' | 'chat'
-  const [character, setCharacter] = useState('lena')
+  const [character, setCharacter] = useState('pablo')
   const [scenario, setScenario] = useState('intro')
   const [messages, setMessages] = useState([]) // [{role, content, reply, correction, translation, character}]
   const [input, setInput] = useState('')

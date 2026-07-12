@@ -11,6 +11,7 @@ export async function lessonsRoutes(fastify) {
         type: 'object',
         properties: {
           title:         { type: 'string' },
+          description:   { type: ['string', 'null'] },
           date:          { type: 'string', format: 'date' },
           course_id:     { type: ['integer', 'null'] },
           lesson_number: { type: ['integer', 'null'] },
@@ -18,12 +19,21 @@ export async function lessonsRoutes(fastify) {
       },
     },
   }, async (request, reply) => {
-    const { title, date, course_id, lesson_number } = request.body
+    const { title, description, date, course_id, lesson_number } = request.body
     const ownerId = request.user.id
 
+    // Автономер урока: следующий по порядку в курсе (или в общем пуле без курса)
+    let number = lesson_number
+    if (number == null) {
+      const q = course_id
+        ? await db.query('SELECT COALESCE(MAX(lesson_number), 0) + 1 AS n FROM lessons WHERE course_id = $1', [course_id])
+        : await db.query('SELECT COALESCE(MAX(lesson_number), 0) + 1 AS n FROM lessons WHERE owner_id = $1 AND course_id IS NULL', [ownerId])
+      number = q.rows[0].n
+    }
+
     const { rows } = await db.query(
-      'INSERT INTO lessons (owner_id, title, date, course_id, lesson_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [ownerId, title || null, date || new Date().toISOString().slice(0, 10), course_id || null, lesson_number || null]
+      'INSERT INTO lessons (owner_id, title, description, date, course_id, lesson_number) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [ownerId, title || null, description || null, date || new Date().toISOString().slice(0, 10), course_id || null, number]
     )
     return reply.status(201).send(rows[0])
   })

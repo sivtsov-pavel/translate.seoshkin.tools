@@ -1,20 +1,47 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 
+// Локальные строки новых полей (10 языков) — чтобы не трогать общий i18n
+const NSTR = {
+  ru: { word: 'Урок', descLabel: 'Описание (необязательно)', descHint: 'Кратко: о чём урок, что тренируем…', book: '📘 Учебник', bookHint: 'Фото страниц учебника', tetrad: '✏️ Тетрадь / доска', tetradHint: 'Свои слова с доски или тетради', selected: (n) => `Выбрано: ${n}` },
+  uk: { word: 'Урок', descLabel: 'Опис (необов\'язково)', descHint: 'Коротко: про що урок, що тренуємо…', book: '📘 Підручник', bookHint: 'Фото сторінок підручника', tetrad: '✏️ Зошит / дошка', tetradHint: 'Свої слова з дошки або зошита', selected: (n) => `Обрано: ${n}` },
+  en: { word: 'Lesson', descLabel: 'Description (optional)', descHint: 'Briefly: what the lesson is about…', book: '📘 Textbook', bookHint: 'Photos of textbook pages', tetrad: '✏️ Notebook / board', tetradHint: 'Your own words from the board or notebook', selected: (n) => `Selected: ${n}` },
+  de: { word: 'Lektion', descLabel: 'Beschreibung (optional)', descHint: 'Kurz: worum es geht…', book: '📘 Lehrbuch', bookHint: 'Fotos der Lehrbuchseiten', tetrad: '✏️ Heft / Tafel', tetradHint: 'Eigene Wörter von Tafel oder Heft', selected: (n) => `Ausgewählt: ${n}` },
+  bg: { word: 'Урок', descLabel: 'Описание (по избор)', descHint: 'Накратко: за какво е урокът…', book: '📘 Учебник', bookHint: 'Снимки на страници', tetrad: '✏️ Тетрадка / дъска', tetradHint: 'Свои думи от дъската или тетрадката', selected: (n) => `Избрани: ${n}` },
+  tr: { word: 'Ders', descLabel: 'Açıklama (isteğe bağlı)', descHint: 'Kısaca: ders ne hakkında…', book: '📘 Ders kitabı', bookHint: 'Ders kitabı sayfaları', tetrad: '✏️ Defter / tahta', tetradHint: 'Tahtadan veya defterden kendi kelimeleriniz', selected: (n) => `Seçildi: ${n}` },
+  ar: { word: 'درس', descLabel: 'وصف (اختياري)', descHint: 'باختصار: عن ماذا الدرس…', book: '📘 الكتاب', bookHint: 'صور صفحات الكتاب', tetrad: '✏️ الدفتر / السبورة', tetradHint: 'كلماتك من السبورة أو الدفتر', selected: (n) => `المحدد: ${n}` },
+  es: { word: 'Lección', descLabel: 'Descripción (opcional)', descHint: 'Breve: de qué trata la lección…', book: '📘 Libro', bookHint: 'Fotos de las páginas del libro', tetrad: '✏️ Cuaderno / pizarra', tetradHint: 'Tus palabras de la pizarra o el cuaderno', selected: (n) => `Seleccionadas: ${n}` },
+  fr: { word: 'Leçon', descLabel: 'Description (facultatif)', descHint: 'Brièvement : de quoi parle la leçon…', book: '📘 Manuel', bookHint: 'Photos des pages du manuel', tetrad: '✏️ Cahier / tableau', tetradHint: 'Tes propres mots du tableau ou du cahier', selected: (n) => `Sélectionnées : ${n}` },
+  sq: { word: 'Mësimi', descLabel: 'Përshkrimi (opsional)', descHint: 'Shkurt: për çfarë është mësimi…', book: '📘 Libri', bookHint: 'Foto të faqeve të librit', tetrad: '✏️ Fletore / dërrasë', tetradHint: 'Fjalët e tua nga dërrasa ose fletorja', selected: (n) => `Zgjedhur: ${n}` },
+}
+
 export default function NewLesson() {
   const [title, setTitle]   = useState('')
-  const [photos, setPhotos] = useState([])
+  const [description, setDescription] = useState('')
+  const [photos, setPhotos] = useState([])       // фото учебника (textbook)
+  const [extraPhotos, setExtraPhotos] = useState([]) // фото тетради/доски (extra)
   const [audios, setAudios] = useState([])
   const [status, setStatus] = useState('idle')
   const [progress, setProgress] = useState('')
   const [error, setError]   = useState('')
+  const [nextNumber, setNextNumber] = useState(null) // автономер следующего урока
   const navigate  = useNavigate()
   const [searchParams] = useSearchParams()
   const courseId  = searchParams.get('course_id')
-  const { t }     = useI18nStore()
+  const { t, lang } = useI18nStore()
+  const N = NSTR[lang] || NSTR.en
   const pollRef   = useRef(null)
+
+  // Автономер урока: считаем следующий по порядку (в курсе или в общем пуле)
+  useEffect(() => {
+    api.get('/lessons').then(all => {
+      const list = (all || []).filter(l => courseId ? String(l.course_id) === String(courseId) : !l.course_id)
+      const maxNum = list.reduce((m, l) => Math.max(m, l.lesson_number || 0), 0)
+      setNextNumber(maxNum + 1)
+    }).catch(() => setNextNumber(null))
+  }, [courseId])
 
   const addPhotos = useCallback((files) => {
     const newItems = files.filter(f => f.type.startsWith('image/')).map(file => ({ file, preview: URL.createObjectURL(file) }))
@@ -28,6 +55,18 @@ export default function NewLesson() {
     })
   }
 
+  const addExtraPhotos = useCallback((files) => {
+    const newItems = files.filter(f => f.type.startsWith('image/')).map(file => ({ file, preview: URL.createObjectURL(file) }))
+    setExtraPhotos(prev => [...prev, ...newItems])
+  }, [])
+
+  const removeExtraPhoto = (idx) => {
+    setExtraPhotos(prev => {
+      URL.revokeObjectURL(prev[idx].preview)
+      return prev.filter((_, i) => i !== idx)
+    })
+  }
+
   const addAudio = useCallback((files) => {
     setAudios(files.slice(0, 1).map(file => ({ file })))
   }, [])
@@ -36,6 +75,7 @@ export default function NewLesson() {
     e.preventDefault()
     const files = Array.from(e.dataTransfer.files)
     if (type === 'photo') addPhotos(files)
+    else if (type === 'extra') addExtraPhotos(files)
     else addAudio(files)
   }
 
@@ -48,6 +88,7 @@ export default function NewLesson() {
           clearInterval(pollRef.current)
           setStatus('done')
           photos.forEach(p => URL.revokeObjectURL(p.preview))
+          extraPhotos.forEach(p => URL.revokeObjectURL(p.preview))
           setTimeout(() => navigate(courseId ? `/courses/${courseId}` : '/'), 2500)
         } else if (res.status === 'error') {
           clearInterval(pollRef.current)
@@ -64,17 +105,27 @@ export default function NewLesson() {
     try {
       setStatus('creating')
       setProgress('')
+      // Автозаголовок: «Урок N» по порядку, если тема не задана
+      const autoTitle = nextNumber ? `${N.word} ${nextNumber}` : `${t.lessons.newLesson} ${new Date().toLocaleDateString()}`
       const lesson = await api.post('/lessons', {
-        title: title || `${t.lessons.newLesson} ${new Date().toLocaleDateString()}`,
+        title: title.trim() || autoTitle,
+        description: description.trim() || null,
         date: new Date().toISOString().slice(0, 10),
         course_id: courseId ? parseInt(courseId) : null,
+        lesson_number: nextNumber || null,
       })
       setStatus('uploading')
-      setProgress(`0 / ${photos.length + audios.length} файлов`)
+      const totalFiles = photos.length + extraPhotos.length + audios.length
+      setProgress(`0 / ${totalFiles} файлов`)
       if (photos.length > 0) {
         const fd = new FormData()
         photos.forEach(p => fd.append('files', p.file))
-        await uploadFiles(`/lessons/${lesson.id}/media`, fd)
+        await uploadFiles(`/lessons/${lesson.id}/media`, fd)  // источник: учебник (по умолчанию)
+      }
+      if (extraPhotos.length > 0) {
+        const fd = new FormData()
+        extraPhotos.forEach(p => fd.append('files', p.file))
+        await uploadFiles(`/lessons/${lesson.id}/media?source=extra`, fd)  // источник: тетрадь/доска
       }
       if (audios.length > 0) {
         const fd = new FormData()
@@ -106,39 +157,36 @@ export default function NewLesson() {
       <h1 style={{ marginBottom: 24 }}>{t.lessons.newLesson}</h1>
       <form onSubmit={handleSubmit}>
 
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>{t.lessons.lessonTopic}</label>
-          <input value={title} onChange={e => setTitle(e.target.value)} placeholder={t.lessons.topicPlaceholder} disabled={isProcessing}
+          <input value={title} onChange={e => setTitle(e.target.value)}
+            placeholder={nextNumber ? `${N.word} ${nextNumber}` : t.lessons.topicPlaceholder} disabled={isProcessing}
             style={{ width: '100%', boxSizing: 'border-box' }} />
         </div>
 
-        <div style={{ marginBottom: 8 }}>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{t.lessons.photos}</label>
-          <DropZone onFiles={addPhotos} onDrop={e => handleDrop(e, 'photo')} accept="image/*" label={t.lessons.photoHint} disabled={isProcessing} />
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>{N.descLabel}</label>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={N.descHint} disabled={isProcessing}
+            rows={2} style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
         </div>
 
-        {photos.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.lessons.photosSelected(photos.length)}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
-              {photos.map((item, idx) => (
-                <div key={idx} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1', background: 'var(--surface-2)' }}>
-                  <img src={item.preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                  {!isProcessing && (
-                    <button type="button" onClick={() => removePhoto(idx)} style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>×</button>
-                  )}
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 11, padding: '2px 4px', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {idx + 1}. {item.file.name.replace(/\.[^.]+$/, '')}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* 📘 Учебник (source=textbook) */}
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{N.book}</label>
+          <DropZone onFiles={addPhotos} onDrop={e => handleDrop(e, 'photo')} accept="image/*" idKey="book" label={N.bookHint} disabled={isProcessing} />
+        </div>
+        <PhotoGrid items={photos} onRemove={removePhoto} disabled={isProcessing} label={N.selected(photos.length)} />
+
+        {/* ✏️ Тетрадь / доска (source=extra) */}
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{N.tetrad}</label>
+          <DropZone onFiles={addExtraPhotos} onDrop={e => handleDrop(e, 'extra')} accept="image/*" idKey="tetrad" label={N.tetradHint} disabled={isProcessing} />
+        </div>
+        <PhotoGrid items={extraPhotos} onRemove={removeExtraPhoto} disabled={isProcessing} label={N.selected(extraPhotos.length)} />
 
         <div style={{ marginBottom: 8 }}>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{t.lessons.audio}</label>
-          <DropZone onFiles={addAudio} onDrop={e => handleDrop(e, 'audio')} accept="audio/*" multiple={false} label={t.lessons.audioHint} disabled={isProcessing} />
+          <DropZone onFiles={addAudio} onDrop={e => handleDrop(e, 'audio')} accept="audio/*" idKey="audio" multiple={false} label={t.lessons.audioHint} disabled={isProcessing} />
         </div>
 
         {audios.length > 0 && (
@@ -176,11 +224,11 @@ export default function NewLesson() {
           </div>
         )}
 
-        <button type="submit" disabled={photos.length === 0 || isProcessing}
+        <button type="submit" disabled={(photos.length === 0 && extraPhotos.length === 0) || isProcessing}
           style={{ width: '100%', padding: '14px 32px', fontSize: 16, fontWeight: 700,
-            background: photos.length === 0 || isProcessing ? 'var(--surface-2)' : 'var(--accent)',
-            color: photos.length === 0 || isProcessing ? 'var(--ink-soft)' : 'var(--accent-ink)',
-            border: 'none', borderRadius: 12, cursor: photos.length === 0 || isProcessing ? 'not-allowed' : 'pointer' }}>
+            background: (photos.length === 0 && extraPhotos.length === 0) || isProcessing ? 'var(--surface-2)' : 'var(--accent)',
+            color: (photos.length === 0 && extraPhotos.length === 0) || isProcessing ? 'var(--ink-soft)' : 'var(--accent-ink)',
+            border: 'none', borderRadius: 12, cursor: (photos.length === 0 && extraPhotos.length === 0) || isProcessing ? 'not-allowed' : 'pointer' }}>
           {isProcessing ? statusLabel : t.lessons.processBtn}
         </button>
       </form>
@@ -190,14 +238,38 @@ export default function NewLesson() {
   )
 }
 
-function DropZone({ onFiles, onDrop, accept, multiple = true, label, disabled }) {
+// Сетка превью загруженных фото с кнопкой удаления
+function PhotoGrid({ items, onRemove, disabled, label }) {
+  if (!items.length) return null
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 8 }}>{label}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
+        {items.map((item, idx) => (
+          <div key={idx} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1', background: 'var(--surface-2)' }}>
+            <img src={item.preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {!disabled && (
+              <button type="button" onClick={() => onRemove(idx)} style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>×</button>
+            )}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 11, padding: '2px 4px', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {idx + 1}. {item.file.name.replace(/\.[^.]+$/, '')}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DropZone({ onFiles, onDrop, accept, idKey, multiple = true, label, disabled }) {
   const [dragging, setDragging] = useState(false)
+  const inputId = `upload-${idKey || accept}`
   return (
     <div
       onDrop={e => { if (!disabled) { e.preventDefault(); setDragging(false); onDrop(e) } }}
       onDragOver={e => { e.preventDefault(); if (!disabled) setDragging(true) }}
       onDragLeave={() => setDragging(false)}
-      onClick={() => { if (!disabled) document.getElementById(`upload-${accept}`).click() }}
+      onClick={() => { if (!disabled) document.getElementById(inputId).click() }}
       style={{
         border: `2px dashed ${dragging ? 'var(--accent)' : 'var(--line)'}`,
         borderRadius: 12, padding: '24px 16px', textAlign: 'center',
@@ -207,7 +279,7 @@ function DropZone({ onFiles, onDrop, accept, multiple = true, label, disabled })
       }}>
       <div style={{ fontSize: 28, marginBottom: 6 }}>{accept.startsWith('image') ? '📷' : '🎵'}</div>
       <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>{label}</p>
-      <input id={`upload-${accept}`} type="file" accept={accept} multiple={multiple} style={{ display: 'none' }}
+      <input id={inputId} type="file" accept={accept} multiple={multiple} style={{ display: 'none' }}
         onChange={e => onFiles(Array.from(e.target.files))} disabled={disabled} />
     </div>
   )
