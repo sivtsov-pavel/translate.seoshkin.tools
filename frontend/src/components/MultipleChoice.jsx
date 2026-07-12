@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import WordImage from './WordImage.jsx'
@@ -8,6 +8,7 @@ import { playCorrect, playWrong } from '../utils/sound.js'
 
 export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations, exerciseId }) {
   const [selected, setSelected] = useState(null)
+  const resultRef = useRef(null)
   const { t, lang } = useI18nStore()
 
   // Локализованные варианты: если есть payloadTranslations[lang] — массив переводов вариантов
@@ -39,6 +40,8 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
     if (selected !== null) return
     setSelected(idx)
     if (idx === correctIdx) playCorrect(); else playWrong()
+    // Автопрокрутка к результату и кнопке «Далее» — чтобы их было видно сразу
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 80)
   }
 
   const getStyle = (idx) => {
@@ -99,7 +102,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
       ))}
 
       {selected !== null && (
-        <div style={{ marginTop: 10 }}>
+        <div ref={resultRef} style={{ marginTop: 10 }}>
           <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700,
             color: selected === correctIdx ? 'var(--good)' : 'var(--red)' }}>
             {selected === correctIdx

@@ -277,50 +277,47 @@ a { color: var(--accent); text-decoration: none; }
   overflow-x: hidden;
 }
 
-/* exercise-card во весь экран */
+/* Карточка упражнения: натуральная высота, скроллится ВСЯ одним блоком
+   (фото не фиксируется, ответы не уезжают под него) */
 .exercise-session-page .exercise-card {
-  flex: 1 !important;
-  min-height: 0 !important;
+  flex: 0 0 auto !important;
   margin-bottom: 0 !important;
   border: none !important;
   border-radius: 0 !important;
   border-top: 1px solid var(--line) !important;
-  /* Портрет: картинка сверху, контент снизу */
   flex-direction: column !important;
   display: flex !important;
 }
 
-/* Картинка: не более 28% высоты, жёсткий cap 180px — чтобы все 4 варианта влезли */
+/* Картинка: показываем ПОЛНОСТЬЮ (contain, без обрезки), скроллится вместе с карточкой */
 .exercise-session-page .word-image-bleed {
-  flex: 0 0 28% !important;
+  flex: 0 0 auto !important;
   width: 100% !important;
-  height: 28% !important;
-  max-height: 180px !important;
-  aspect-ratio: unset !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  max-height: 220px !important;
   border-right: none !important;
   border-bottom: 1px solid var(--line) !important;
-  padding: 12px !important;
+  padding: 10px !important;
 }
-/* Скругляем углы самой фотографии внутри блока */
 .exercise-session-page .word-image-bleed img {
+  object-fit: contain !important;
   border-radius: 10px;
   overflow: hidden;
 }
 
-/* Контент: заполняет остаток; на мобиле не скролл — резиновая верстка */
+/* Контент: натуральная высота, без своего скролла */
 .exercise-session-page .exercise-card-content {
-  flex: 1 !important;
-  overflow-y: auto !important;
+  flex: 0 0 auto !important;
   min-height: 0 !important;
 }
 /* Мобиль: компактный режим — всё на один экран без прокрутки ответов */
 @media (max-width: 640px) and (orientation: portrait) {
-  /* Фото компактнее, чтобы освободить место под ответы */
+  /* Фото компактнее, но целиком видно (contain) */
   .exercise-session-page .word-image-bleed {
-    flex: 0 0 auto !important;
-    height: 130px !important;
-    max-height: 130px !important;
-    padding: 8px !important;
+    aspect-ratio: 16 / 10 !important;
+    max-height: 170px !important;
+    padding: 6px !important;
   }
   .exercise-session-page .exercise-card-content {
     padding: 12px 14px 6px !important;
