@@ -138,6 +138,7 @@ export default function AiTrainer() {
     setMessages([{ role: 'ai', reply: starter, translation: null, correction: null, character }])
     setMemoryHint('')
     setStep('chat')
+    if (starter) speak(starter, 'de-DE')  // тренер приветствует голосом
     setTimeout(() => inputRef.current?.focus(), 100)
     // Создаём серверную сессию (для памяти между сессиями). Если упадёт —
     // тренер всё равно работает через stateless-фолбэк в sendMessage.
@@ -182,6 +183,8 @@ export default function AiTrainer() {
         correction: result.correction !== 'null' ? result.correction : null,
         character,
       }])
+      // Тренер отвечает голосом (немецкий) — озвучиваем реплику автоматически
+      if (result.reply) speak(result.reply, 'de-DE')
     } catch (e) {
       setError(S.connErr)
     } finally {
@@ -271,7 +274,8 @@ export default function AiTrainer() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--topbar-h, 56px) - var(--bottom-nav-h, 0px))', maxWidth: 700, margin: '0 auto', width: '100%' }}>
+    <div className="full-page-layout" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxWidth: 700, margin: '0 auto', width: '100%' }}>
       {/* Хедер сесії */}
       <div style={{
         padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
@@ -370,6 +374,7 @@ export default function AiTrainer() {
         <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 6, textAlign: 'center' }}>
           {S.hint}
         </div>
+      </div>
       </div>
     </div>
   )

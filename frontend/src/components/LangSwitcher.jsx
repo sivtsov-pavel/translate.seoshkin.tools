@@ -14,7 +14,7 @@ const LANGS = [
   { code: 'ru', label: '🇷🇺', name: 'RU' },
 ]
 
-export default function LangSwitcher({ pill = false }) {
+export default function LangSwitcher({ pill = false, dropUp = false }) {
   const { lang, setLang } = useI18nStore()
   const [open, setOpen] = useState(false)
   const ref = useRef()
@@ -68,7 +68,7 @@ export default function LangSwitcher({ pill = false }) {
       {/* Дропдаун с флагами — залипает пока не выберешь */}
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+          position: 'absolute', [dropUp ? 'bottom' : 'top']: 'calc(100% + 6px)', right: 0,
           zIndex: 2000,
           background: 'var(--surface)',
           border: '1px solid var(--line)',

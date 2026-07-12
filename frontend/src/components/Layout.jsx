@@ -410,7 +410,7 @@ export default function Layout({ children }) {
           </button>
           <AutoSpeakToggle pill />
           <SpeakTranslationToggle />
-          <LangSwitcher pill />
+          <LangSwitcher pill dropUp />
           <button onClick={handleLogout} style={{ ...pill, color: '#C0392B', borderColor: '#C0392B22' }}>
             <i className="bi bi-box-arrow-right" /> {t.nav.logout}
           </button>
