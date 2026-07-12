@@ -28,7 +28,7 @@ export default defineConfig({
       manifest: {
         id: '/',
         name: 'Deutsch Lernen',
-        short_name: 'Deutsch',
+        short_name: 'DeutschLernen',
         description: 'Учи немецкий язык — карточки, диктант, разговорник',
         theme_color: '#C9A54A',
         background_color: '#111111',
