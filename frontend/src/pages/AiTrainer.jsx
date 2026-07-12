@@ -53,6 +53,17 @@ const VSTR = {
 }
 const voiceStr = (lang) => VSTR[lang] || VSTR.en
 
+// Библиотека готовых видео-клипов Pablo (сгенерированы 1 раз, крутятся бесконечно, 0 кредитов)
+const CLIPS = {
+  greeting:   '/avatar/clips/greeting.mp4',   // вход в голос
+  correction: '/avatar/clips/correction.mp4', // «правильно так:» перед исправлением
+  listening:  '/avatar/clips/listening.mp4',
+  correct:    '/avatar/clips/correct.mp4',
+  wrong:      '/avatar/clips/wrong.mp4',
+  start:      '/avatar/clips/start.mp4',
+  bye:        '/avatar/clips/bye.mp4',
+}
+
 const CHARACTERS = [
   { id: 'pablo', emoji: '🤓', name: 'Pablo Seoshkin', color: '#3B7A57', photo: '/avatar/pablo.jpg', role: { uk: 'Засновник, наставник', ru: 'Основатель, наставник', en: 'Founder, mentor', de: 'Gründer, Mentor', bg: 'Основател, наставник', tr: 'Kurucu, mentor', ar: 'المؤسس، مرشد', es: 'Fundador, mentor', fr: 'Fondateur, mentor', sq: 'Themelues, mentor' } },
   { id: 'lena',  emoji: '🧑‍🏫', name: 'Лена',  color: '#4A7FA5', role: { uk: 'Вчителька з Берліна', ru: 'Учительница из Берлина', en: 'Teacher from Berlin', de: 'Lehrerin aus Berlin', bg: 'Учителка от Берлин', tr: 'Berlin\'den öğretmen', ar: 'معلمة من برلين', es: 'Profesora de Berlín', fr: 'Professeure de Berlin', sq: 'Mësuese nga Berlini' } },
@@ -194,7 +205,9 @@ export default function AiTrainer() {
 
   // Голосовой режим «как в Gemini»: большое фото, hands-free диалог
   const [voiceMode, setVoiceMode] = useState(false)
-  const [speaking, setSpeaking] = useState(false)   // аватар «говорит» (озвучка идёт)
+  const [speaking, setSpeaking] = useState(false)   // аватар «говорит» (озвучка или клип идёт)
+  const [clip, setClip] = useState(null)            // проигрываемый видео-клип в кружке аватара
+  const clipOnEndRef = useRef(null)
   const voiceModeRef = useRef(false)
   const speakingRef   = useRef(false)
   const busyRef       = useRef(false)               // ждём ответ ИИ
@@ -343,9 +356,19 @@ export default function AiTrainer() {
       // (пока говорит — не слушаем; после — цикл снова включит микрофон).
       if (result.reply) {
         if (voiceModeRef.current) {
+          const corr = (result.correction && result.correction !== 'null') ? result.correction : null
           speakWithEvents(result.reply, 'de-DE', {
             onStart: () => setSpeaking(true),
-            onEnd:   () => setSpeaking(false),
+            onEnd:   () => {
+              if (voiceModeRef.current && corr) {
+                // Pablo реагирует готовым клипом «правильно так:», затем договаривает исправление голосом
+                playClip(CLIPS.correction, () => {
+                  speakWithEvents(corr, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) })
+                })
+              } else {
+                setSpeaking(false)
+              }
+            },
           })
         } else {
           speak(result.reply, 'de-DE')
@@ -360,25 +383,35 @@ export default function AiTrainer() {
   }
   useEffect(() => { sendRef.current = sendMessage })
 
+  // Проиграть готовый видео-клип в кружке аватара (0 кредитов). onEnd — что после.
+  const playClip = (url, onEnd) => {
+    clipOnEndRef.current = onEnd || null
+    setSpeaking(true)
+    setClip(url)
+  }
+  // Вызывается по onEnded видео-клипа
+  const handleClipEnded = () => {
+    const cb = clipOnEndRef.current
+    clipOnEndRef.current = null
+    setClip(null)
+    if (cb) cb()
+    else setSpeaking(false)
+  }
+
   // Вход/выход из голосового режима
   const enterVoice = () => {
     voiceModeRef.current = true
     setVoiceMode(true)
     cancelSpeak()
-    // Озвучиваем последнюю реплику тренера, потом цикл начнёт слушать
-    const lastAi = [...messages].reverse().find(m => m.role === 'ai')
-    if (lastAi?.reply) {
-      setSpeaking(true)
-      speakWithEvents(lastAi.reply, 'de-DE', {
-        onStart: () => setSpeaking(true),
-        onEnd:   () => setSpeaking(false),
-      })
-    }
+    // Живое приветствие клипом Pablo, затем цикл начнёт слушать
+    playClip(CLIPS.greeting, () => setSpeaking(false))
   }
   const exitVoice = () => {
     voiceModeRef.current = false
     setVoiceMode(false)
     setSpeaking(false)
+    setClip(null)
+    clipOnEndRef.current = null
     stopMic()
     cancelSpeak()
   }
@@ -762,7 +795,10 @@ export default function AiTrainer() {
                   border: `3px solid ${stColor}`, opacity: active ? 0.9 : 0.25,
                   animation: active ? 'voice-pulse 1.4s ease-out infinite' : 'none',
                 }} />
-                {lastAi?.videoUrl ? (
+                {clip ? (
+                  <video src={clip} autoPlay playsInline onEnded={handleClipEnded} onError={handleClipEnded}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
+                ) : lastAi?.videoUrl ? (
                   <video src={lastAi.videoUrl} autoPlay playsInline
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
                 ) : char.photo ? (
