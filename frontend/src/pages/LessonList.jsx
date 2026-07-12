@@ -12,6 +12,7 @@ function EditForm({ lesson, onSave, onCancel }) {
   const [saving, setSaving]     = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef()
+  const sourceRef = useRef('textbook')  // какой источник грузим: учебник / тетрадь
 
   const save = async () => {
     setSaving(true)
@@ -29,14 +30,16 @@ function EditForm({ lesson, onSave, onCancel }) {
     }
   }
 
+  const pickFiles = (source) => { sourceRef.current = source; fileRef.current?.click() }
+
   const uploadMedia = async (files) => {
     if (!files.length) return
     setUploading(true)
     try {
       const form = new FormData()
       for (const f of files) form.append('file', f)
-      await uploadFiles(`/lessons/${lesson.id}/media`, form)
-      alert(`Загружено: ${files.length} файл(ов)`)
+      await uploadFiles(`/lessons/${lesson.id}/media?source=${sourceRef.current}`, form)
+      alert(`Загружено (${sourceRef.current === 'extra' ? 'тетрадь/доска' : 'учебник'}): ${files.length} файл(ов)`)
     } catch (e) {
       alert('Ошибка загрузки: ' + e.message)
     } finally {
@@ -69,9 +72,15 @@ function EditForm({ lesson, onSave, onCancel }) {
           style={{ padding: '7px 18px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
           {saving ? '...' : '✓ Сохранить'}
         </button>
-        <button onClick={() => fileRef.current?.click()} disabled={uploading}
+        <button onClick={() => pickFiles('textbook')} disabled={uploading}
+          title="Слова из учебника (базовые)"
           style={{ padding: '7px 14px', background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          {uploading ? '⏳ Загружаю...' : '📎 Фото/аудио'}
+          {uploading ? '⏳...' : '📘 Из учебника'}
+        </button>
+        <button onClick={() => pickFiles('extra')} disabled={uploading}
+          title="Тетрадь, доска, дополнительные слова"
+          style={{ padding: '7px 14px', background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+          {uploading ? '⏳...' : '✏️ Из тетради/доски'}
         </button>
         <input ref={fileRef} type="file" multiple accept="image/*,audio/*" style={{ display: 'none' }}
           onChange={e => uploadMedia([...e.target.files])} />

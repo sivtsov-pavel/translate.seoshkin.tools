@@ -282,6 +282,8 @@ export async function lessonsRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     const lessonId = request.params.id
+    // Источник: учебник (по умолчанию) или тетрадь/доска (?source=extra)
+    const source = request.query?.source === 'extra' ? 'extra' : 'textbook'
 
     const { rows: lessonRows } = await db.query(
       'SELECT id FROM lessons WHERE id = $1', [lessonId]
@@ -300,8 +302,8 @@ export async function lessonsRoutes(fastify) {
       const { filename } = await fastify.saveUploadedFile(part)
 
       const { rows } = await db.query(
-        'INSERT INTO lesson_media (lesson_id, type, file_path) VALUES ($1, $2, $3) RETURNING id',
-        [lessonId, mediaType, filename]
+        'INSERT INTO lesson_media (lesson_id, type, file_path, source) VALUES ($1, $2, $3, $4) RETURNING id',
+        [lessonId, mediaType, filename, source]
       )
       savedFiles.push({ mediaId: rows[0].id, filename, type: mediaType })
     }

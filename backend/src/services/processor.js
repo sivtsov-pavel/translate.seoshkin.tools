@@ -87,31 +87,25 @@ export async function processLesson(lessonId, ownerId) {
     const photos = mediaFiles.filter(m => m.type === 'photo')
     const audios = mediaFiles.filter(m => m.type === 'audio')
 
-    // 1. Обрабатываем каждое фото через GPT-4o vision (пропускаем уже готовые из кэша)
-    const photoExtractions = []
-    for (let i = 0; i < photos.length; i++) {
-      const photo = photos[i]
-
-      if (photo.processed && photo.raw_extraction) {
-        // Берём из БД — токены не тратим
-        photoExtractions.push(typeof photo.raw_extraction === 'string'
-          ? JSON.parse(photo.raw_extraction)
-          : photo.raw_extraction)
-        continue
+    // Извлечение фото через GPT-4o vision (с кэшем raw_extraction)
+    async function extractPhotos(list, offset) {
+      const out = []
+      for (let i = 0; i < list.length; i++) {
+        const photo = list[i]
+        if (photo.processed && photo.raw_extraction) {
+          out.push(typeof photo.raw_extraction === 'string' ? JSON.parse(photo.raw_extraction) : photo.raw_extraction)
+          continue
+        }
+        await setProgress(lessonId, `Фото ${offset + i + 1}...`)
+        const filepath = join(config.uploadDir, photo.file_path)
+        const extraction = await extractFromPhoto(filepath)
+        out.push(extraction)
+        await db.query('UPDATE lesson_media SET processed = true, raw_extraction = $1 WHERE id = $2', [JSON.stringify(extraction), photo.id])
       }
-
-      await setProgress(lessonId, `Фото ${i + 1} из ${photos.length}...`)
-      const filepath = join(config.uploadDir, photo.file_path)
-      const extraction = await extractFromPhoto(filepath)
-      photoExtractions.push(extraction)
-
-      await db.query(
-        'UPDATE lesson_media SET processed = true, raw_extraction = $1 WHERE id = $2',
-        [JSON.stringify(extraction), photo.id]
-      )
+      return out
     }
 
-    // 2. Транскрипция аудио
+    // Транскрипция аудио (относим к материалу учебника)
     let transcription = null
     if (audios.length > 0) {
       await setProgress(lessonId, 'Расшифровка аудио...')
@@ -121,34 +115,42 @@ export async function processLesson(lessonId, ownerId) {
         await db.query('UPDATE lesson_media SET processed = true WHERE id = $1', [audio.id])
       }
     }
-
-    // 3. Объединяем в единый конспект
-    await setProgress(lessonId, 'Составляю конспект урока...')
     const combinedText = [transcription, textContent].filter(Boolean).join('\n\n') || null
-    const hasContent = photoExtractions.length > 0 || combinedText
-    const consolidated = hasContent
-      ? await mergeLesson(photoExtractions, combinedText)
-      : { words: [], grammar_points: [] }
 
-    // 4. Сохраняем слова
-    for (const word of consolidated.words) {
-      await db.query(
-        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (user_id, word_de)
-         DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence)`,
-        [lessonId, ownerId, word.word_de, word.translation_ru, word.example_sentence || null]
-      )
+    // Обрабатываем фото ДВУМЯ группами по источнику: учебник и тетрадь/доска
+    const textbookPhotos = photos.filter(p => p.source !== 'extra')
+    const extraPhotos    = photos.filter(p => p.source === 'extra')
+    const allWords = []
+    const allGrammar = []
+
+    async function ingest(list, offset, text, source) {
+      const ex = await extractPhotos(list, offset)
+      if (ex.length === 0 && !text) return
+      await setProgress(lessonId, 'Составляю конспект урока...')
+      const cons = await mergeLesson(ex, text)
+      for (const word of (cons.words || [])) {
+        await db.query(
+          `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (user_id, word_de)
+           DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence)`,
+          [lessonId, ownerId, word.word_de, word.translation_ru, word.example_sentence || null, source]
+        )
+      }
+      allWords.push(...(cons.words || []))
+      allGrammar.push(...(cons.grammar_points || []))
     }
 
-    for (const gp of consolidated.grammar_points) {
-      await db.query(
-        'INSERT INTO grammar_points (lesson_id, description, example) VALUES ($1, $2, $3)',
-        [lessonId, gp.description, gp.example || null]
-      )
+    await ingest(textbookPhotos, 0, combinedText, 'textbook')
+    if (extraPhotos.length > 0) await ingest(extraPhotos, textbookPhotos.length, null, 'extra')
+
+    for (const gp of allGrammar) {
+      await db.query('INSERT INTO grammar_points (lesson_id, description, example) VALUES ($1, $2, $3)', [lessonId, gp.description, gp.example || null])
     }
 
-    // 5. Генерируем упражнения батчами по 15 слов
+    const consolidated = { words: allWords, grammar_points: allGrammar }
+
+    // Генерируем упражнения
     const totalWords = consolidated.words.length
     await setProgress(lessonId, `Создаю упражнения для ${totalWords} слов...`)
     let exercises = []

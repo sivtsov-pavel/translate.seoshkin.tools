@@ -754,6 +754,9 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--ink)' }}>{word.word_de}</span>
+          {word.source === 'extra' && (
+            <span title="Из тетради / с доски (дополнительное)" style={{ fontSize: 11, padding: '1px 6px', borderRadius: 6, background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>✏️</span>
+          )}
           <SpeakButton text={word.word_de} appendText={translation} />
           <span style={{ color: 'var(--ink-soft)' }}>—</span>
           {editing ? (
