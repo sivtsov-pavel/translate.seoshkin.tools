@@ -152,9 +152,11 @@ export default function AiTrainer() {
   const S = uiStr(lang)
   const R = reportStr(lang)
 
-  // Голосовой ввод: ученик говорит по-немецки → текст в поле ввода
+  // Голосовой ввод: распознавание на языке локали пользователя (без ручных переключений).
+  // Тренер понимает любой язык и отвечает по-немецки.
+  const SPEECH_LANG = { ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', bg: 'bg-BG', tr: 'tr-TR', ar: 'ar-SA', es: 'es-ES', fr: 'fr-FR', sq: 'sq-AL' }
   const { start: startMic, stop: stopMic, listening, isSupported: micSupported } = useSpeechRecognition({
-    lang: 'de-DE',
+    lang: SPEECH_LANG[lang] || 'de-DE',
     onResult: (text) => {
       setInput(prev => (prev ? prev.trim() + ' ' : '') + text)
       setTimeout(() => inputRef.current?.focus(), 0)
