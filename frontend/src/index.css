@@ -219,23 +219,15 @@ a { color: var(--accent); text-decoration: none; }
     flex-shrink: 0 !important;
   }
   .exercise-card-content { flex: 1; min-width: 0; overflow: hidden; }
-  /* Реакция аватара: карточка становится вертикальной, аватар — во всю ширину сверху */
-  .exercise-card:has(.avatar-reacting) { flex-direction: column !important; }
-  .exercise-card .word-image-bleed.avatar-reacting {
-    width: 100% !important; aspect-ratio: 4 / 3 !important; min-height: 0 !important;
-    border-right: none !important; border-bottom: 1px solid var(--line) !important;
-  }
   /* Увеличенный шрифт в открытом меню на планшете */
   .layout-drawer a[href] { font-size: 18px !important; padding: 12px 16px !important; }
   .layout-drawer a[href] i { font-size: 20px !important; width: 22px !important; }
 }
 
-/* Реакция аватара во всю ширину — крупное лицо Pablo, плавное раскрытие */
-.avatar-reacting { aspect-ratio: 4 / 3; animation: avatar-expand .35s ease; }
-@keyframes avatar-expand {
-  from { opacity: .45; transform: scale(.98); }
-  to   { opacity: 1; transform: scale(1); }
-}
+/* Реакция аватара: тот же размер, что фото слова (word-image-bleed) — вёрстка НЕ прыгает.
+   Меняется только содержимое (фото → видео Pablo), рамка одна и та же. */
+.avatar-reacting { animation: avatar-fade .3s ease; }
+@keyframes avatar-fade { from { opacity: .5 } to { opacity: 1 } }
 
 /* ── Мобильный strip-режим (настройка в Settings) — только мобиль ≤640px ── */
 @media (max-width: 640px) {

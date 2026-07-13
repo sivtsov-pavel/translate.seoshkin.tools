@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
+import AvatarReaction from './AvatarReaction.jsx'
 
 export default function SentenceWrite({ exercise, onAnswer, payloadTranslations }) {
   const [sentence, setSentence] = useState('')
   const [result, setResult] = useState(null)
+  const [reaction, setReaction] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const { t, lang } = useI18nStore()
@@ -22,6 +24,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
     try {
       const res = await api.post(`/exercises/${exercise.id}/check-sentence`, { sentence, lang })
       setResult(res)
+      setReaction(res.quality >= 3 ? 'correct' : 'wrong')  // Pablo реагирует
     } catch (err) {
       setError(err.message)
     } finally {
@@ -38,7 +41,9 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
   const qualityStars = (q) => '★'.repeat(q) + '☆'.repeat(5 - q)
 
   return (
-    <div style={{ border: '2px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 16, background: 'var(--surface)' }}>
+    <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
+      <AvatarReaction imageUrl={exercise.image_url} wordDe={word_de} reaction={reaction} />
+      <div className="exercise-card-content" style={{ padding: 24 }}>
       {/* Задание */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 13, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
@@ -113,6 +118,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
           </button>
         </div>
       )}
+      </div>
     </div>
   )
 }
