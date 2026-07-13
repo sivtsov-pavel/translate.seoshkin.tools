@@ -111,6 +111,20 @@ export default function Dashboard() {
             <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
           </div>
         </Link>
+        <Link to="/game/crossword" style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: 'var(--surface)', border: '2px solid var(--accent)',
+            borderRadius: 16, padding: '14px 16px', marginTop: 8,
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <span style={{ fontSize: 32, lineHeight: 1 }}>🧩</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Кроссворд</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Впиши немецкие слова по переводам — с пересечениями</div>
+            </div>
+            <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
+          </div>
+        </Link>
       </div>
 
       {/* Секция уроков */}

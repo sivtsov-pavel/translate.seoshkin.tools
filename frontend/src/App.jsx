@@ -15,6 +15,7 @@ import CourseView from './pages/CourseView.jsx'
 import Wiki from './pages/Wiki.jsx'
 import Grammar from './pages/Grammar.jsx'
 import LoveKids from './pages/LoveKids.jsx'
+import Crossword from './pages/Crossword.jsx'
 import TextReader from './pages/TextReader.jsx'
 import Report from './pages/Report.jsx'
 import Phrasebook from './pages/Phrasebook.jsx'
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="/settings"      element={<ProtectedRoute><Layout><Settings      /></Layout></ProtectedRoute>} />
         <Route path="/chat"          element={<ProtectedRoute><Layout><Chat           /></Layout></ProtectedRoute>} />
         <Route path="/game/match"    element={<ProtectedRoute><Layout><WordMatch      /></Layout></ProtectedRoute>} />
+        <Route path="/game/crossword" element={<ProtectedRoute><Layout><Crossword     /></Layout></ProtectedRoute>} />
         <Route path="/profile"    element={<ProtectedRoute><Layout><Profile    /></Layout></ProtectedRoute>} />
         <Route path="/ai-trainer" element={<ProtectedRoute><Layout><AiTrainer /></Layout></ProtectedRoute>} />
         <Route path="/docs"    element={<Docs />} />
