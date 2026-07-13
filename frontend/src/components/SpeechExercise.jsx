@@ -235,6 +235,8 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
 
   const [phase, setPhase] = useState('ready')
   const [result, setResult] = useState(null)
+  // Реакция наставника Pablo на произношение (объединение с тренером — живой аватар)
+  const [reactionClip, setReactionClip] = useState(null)
 
   const russianPhonetic = germanPhonetic(word_de)
 
@@ -253,6 +255,8 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
     const { quality, label, color } = scoreResult(sim)
     setResult({ transcript, sim, quality, label, color })
     setPhase('result')
+    // Pablo оживает и реагирует голосом+видео (клип со своей озвучкой «Sehr gut!» / «Nicht ganz»)
+    setReactionClip(quality >= 3 ? '/avatar/clips/correct.mp4' : '/avatar/clips/wrong.mp4')
   }, [word_de])
 
   const { start, listening, isSupported, error } = useSpeechRecognition({
@@ -267,7 +271,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
 
   const handleMic = () => {
     if (phase === 'result') {
-      setResult(null); setPhase('ready')
+      setResult(null); setReactionClip(null); setPhase('ready')
       return
     }
     start()
@@ -300,7 +304,14 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
 
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
-      <WordImage imageUrl={imageUrl} wordDe={word_de} bleed />
+      {reactionClip ? (
+        <div className="word-image-bleed" style={{ position: 'relative' }}>
+          <video src={reactionClip} autoPlay playsInline onEnded={() => setReactionClip(null)} onError={() => setReactionClip(null)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        </div>
+      ) : (
+        <WordImage imageUrl={imageUrl} wordDe={word_de} bleed />
+      )}
 
       <div className="exercise-card-content" style={{ padding: '20px 20px 24px' }}>
         {lessonTitle && (
