@@ -3,7 +3,7 @@ import { speak } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition, speechSimilarity, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
-import WordImage from './WordImage.jsx'
+import WordImage, { PabloCircle } from './WordImage.jsx'
 import { ExerciseActions } from './ExerciseActions.jsx'
 
 // ── Немецкая фонетика ──────────────────────────────────────────────
@@ -351,9 +351,10 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
       {reactionClip ? (
-        <div className="word-image-bleed avatar-reacting" style={{ position: 'relative' }}>
-          <video src={reactionClip} autoPlay playsInline onEnded={() => setReactionClip(null)} onError={() => setReactionClip(null)}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <div className="word-image-bleed">
+          <PabloCircle wordDe={word_de} reaction={result && result.quality >= 3 ? 'correct' : 'wrong'}>
+            <video src={reactionClip} autoPlay playsInline onEnded={() => setReactionClip(null)} onError={() => setReactionClip(null)} />
+          </PabloCircle>
         </div>
       ) : (
         <WordImage imageUrl={imageUrl} wordDe={word_de} bleed />

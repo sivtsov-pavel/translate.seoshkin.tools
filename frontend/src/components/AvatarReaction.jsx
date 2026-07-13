@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import WordImage from './WordImage.jsx'
+import WordImage, { PabloCircle } from './WordImage.jsx'
 
-// Показывает картинку слова (или аватар Pablo, если фото нет).
-// При reaction ('correct' | 'wrong') проигрывает видео-клип реакции наставника
-// НА ВСЮ ШИРИНУ (его лицо оживает и озвучивает «Sehr gut!» / «Nicht ganz»).
-// Когда клип договорил — вызывает onReactionEnd (упражнение листает/скроллит ТОЛЬКО тогда).
+// Показывает медиа-область слова; при reaction ('correct'|'wrong') Pablo оживает
+// видео-клипом В КРУЖКЕ (рамка красится по реакции), договаривает «Sehr gut»/«Nicht ganz»,
+// затем onReactionEnd (упражнение листает/скроллит ТОЛЬКО тогда). Можно отключить в настройках.
 export default function AvatarReaction({ imageUrl, wordDe, reaction, onReactionEnd }) {
   const [clip, setClip] = useState(null)
   const endedRef = useRef(false)
@@ -12,13 +11,11 @@ export default function AvatarReaction({ imageUrl, wordDe, reaction, onReactionE
   useEffect(() => {
     if (reaction !== 'correct' && reaction !== 'wrong') return
     endedRef.current = false
-    // Тренер в упражнениях можно отключить в настройках — тогда без видео, просто листаем
     if (localStorage.getItem('trainer_reactions') === 'false') {
       const t = setTimeout(() => end(), 700)
       return () => clearTimeout(t)
     }
     setClip(reaction === 'correct' ? '/avatar/clips/correct.mp4' : '/avatar/clips/wrong.mp4')
-    // Страховка: если видео не проиграется/не отдаст onEnded — листаем через 5с
     const safety = setTimeout(() => end(), 5000)
     return () => clearTimeout(safety)
   }, [reaction])
@@ -31,11 +28,11 @@ export default function AvatarReaction({ imageUrl, wordDe, reaction, onReactionE
   }
 
   if (clip) {
-    // avatar-reacting раскрывает аватар во всю ширину (даже в горизонтальном layout десктопа)
     return (
-      <div className="word-image-bleed avatar-reacting" style={{ position: 'relative' }}>
-        <video src={clip} autoPlay playsInline onEnded={end} onError={end}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      <div className="word-image-bleed">
+        <PabloCircle wordDe={wordDe} reaction={reaction}>
+          <video src={clip} autoPlay playsInline onEnded={end} onError={end} />
+        </PabloCircle>
       </div>
     )
   }
