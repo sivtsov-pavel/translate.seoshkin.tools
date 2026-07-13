@@ -716,6 +716,29 @@ export default function Landing() {
         <AlphabetPreview />
       </section>
 
+      {/* Кроссплатформенность — работает на всех устройствах */}
+      <section style={{ maxWidth: 820, margin: '0 auto 48px', padding: '0 16px', textAlign: 'center' }}>
+        <h2 style={{ fontWeight: 800, fontSize: 22, marginBottom: 6, color: 'var(--ink)' }}>
+          🌍 Одна платформа — все устройства
+        </h2>
+        <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 22 }}>
+          Кроссплатформенное приложение (PWA): работает в браузере и ставится как обычная программа на любой ОС — без магазина.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 18 }}>
+          {[['🍎', 'macOS'], ['🪟', 'Windows'], ['🐧', 'Linux'], ['🤖', 'Android'], ['📱', 'iPhone / iPad'], ['🌐', 'Любой браузер']].map(([ic, name]) => (
+            <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 999, padding: '9px 16px', fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>
+              <span style={{ fontSize: 20 }}>{ic}</span>{name}
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 8 }}>Магазины приложений (скоро):</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+          {['▶️ Google Play', '⊞ Microsoft Store', '🌌 Samsung Galaxy Store', '📲 Huawei AppGallery', '🛍️ Xiaomi GetApps', '🔥 Amazon Appstore'].map(s => (
+            <div key={s} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, padding: '6px 12px', fontSize: 12.5, color: 'var(--ink-soft)' }}>{s}</div>
+          ))}
+        </div>
+      </section>
+
       {/* Установка как PWA */}
       <section style={{
         maxWidth: 720, margin: '0 auto 64px', padding: '0 16px',
