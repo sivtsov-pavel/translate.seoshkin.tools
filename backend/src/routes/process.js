@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { processLesson, enrichLesson, generateCustomSet, drawLessonImages } from '../services/processor.js'
+import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia } from '../services/processor.js'
 
 export async function processRoutes(fastify) {
   // «Нарисовать недостающие картинки»: детсадовские ИИ-иллюстрации для слов урока без фото
@@ -67,11 +67,14 @@ export async function processRoutes(fastify) {
     // В фоне: докидываем недостающее, затем возвращаем статус done
     ;(async () => {
       try {
+        // Сначала обрабатываем НОВЫЕ фото (новые слова + упражнения), потом дополняем
+        const n = await processNewMedia(lessonId)
         await enrichLesson(lessonId)
+        await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2",
+          [n > 0 ? `Готово! Обработано новых фото: ${n}.` : 'Готово! Всё дополнено.', lessonId])
       } catch (err) {
         fastify.log.error({ lessonId, err }, 'Ошибка «Обработать всё»')
-      } finally {
-        await db.query("UPDATE lessons SET status = 'done', progress = 'Готово! Всё дополнено.' WHERE id = $1", [lessonId])
+        await db.query("UPDATE lessons SET status='done', progress='Готово (с ошибками).' WHERE id=$1", [lessonId])
       }
     })()
 

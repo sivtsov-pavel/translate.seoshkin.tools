@@ -154,6 +154,59 @@ export async function regenerateExercisesFromDb(lessonId) {
   }
 }
 
+// Обработать ТОЛЬКО новые (необработанные) фото урока: извлечь слова + упражнения
+// для новых слов (без пересоздания существующих). Возвращает число обработанных фото.
+export async function processNewMedia(lessonId) {
+  const { rows: media } = await db.query(
+    "SELECT * FROM lesson_media WHERE lesson_id=$1 AND type='photo' AND processed=false", [lessonId])
+  if (!media.length) return 0
+  const { rows: lrow } = await db.query('SELECT owner_id FROM lessons WHERE id=$1', [lessonId])
+  const ownerId = lrow[0]?.owner_id
+  await setProgress(lessonId, `Обрабатываю ${media.length} новых фото...`)
+
+  for (const src of ['textbook', 'extra']) {
+    const list = media.filter(m => (m.source === 'extra' ? 'extra' : 'textbook') === src)
+    if (!list.length) continue
+    const extractions = []
+    for (const photo of list) {
+      try {
+        const extraction = await extractFromPhoto(join(config.uploadDir, photo.file_path))
+        extractions.push(extraction)
+        await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
+      } catch (e) { console.error('processNewMedia extract', e.message) }
+    }
+    if (!extractions.length) continue
+    const cons = await mergeLesson(extractions, null)
+    for (const w of (cons.words || [])) {
+      await db.query(
+        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)
+         VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (user_id, word_de)
+         DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence)`,
+        [lessonId, ownerId, w.word_de, w.translation_ru, w.example_sentence || null, src])
+    }
+  }
+
+  // Упражнения ТОЛЬКО для слов урока без упражнений (новые) — без дублей
+  const { rows: wordRows } = await db.query(
+    `SELECT w.id, w.word_de, w.translation_ru, w.example_sentence FROM words w
+     WHERE w.lesson_id=$1 AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id=w.id AND e.lesson_id=$1)`, [lessonId])
+  if (wordRows.length) {
+    await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
+    const exercises = await generateExercises(wordRows, [])
+    const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+    for (const ex of exercises) {
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+    }
+    for (const w of wordRows) {
+      const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', p])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', p])
+    }
+  }
+  return media.length
+}
+
 // «Свои упражнения»: собрать набор упражнений из выбранных слов (по их id).
 // Слова уже существуют (из других уроков/словаря) — упражнения ссылаются на них.
 export async function generateCustomSet(lessonId, wordIds) {
