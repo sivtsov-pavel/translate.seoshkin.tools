@@ -1,14 +1,15 @@
 import { db } from './src/db/index.js'
-import { generateWordImage } from './src/services/imageGen.js'
+import { generateWordImage, isFunctionWord } from './src/services/imageGen.js'
 
-const LIMIT = Number(process.env.LIMIT || 45)
-// Только слова БЕЗ картинок (в уроках учителя)
-const { rows } = await db.query(
+const LIMIT = Number(process.env.LIMIT || 200)
+// Только КОНКРЕТНЫЕ слова без картинок (служебные пропускаем)
+const { rows: all } = await db.query(
   `SELECT w.id, w.word_de, w.translation_ru
    FROM words w JOIN lessons l ON l.id = w.lesson_id
    WHERE l.owner_id = 1 AND w.image_url IS NULL
-   ORDER BY w.id LIMIT $1`, [LIMIT])
-console.log('Генерирую (нет картинки):', rows.length)
+   ORDER BY w.id`)
+const rows = all.filter(w => !isFunctionWord(w.word_de)).slice(0, LIMIT)
+console.log(`Без картинки: ${all.length}, служебных пропущено: ${all.length - all.filter(w => !isFunctionWord(w.word_de)).length}, генерирую: ${rows.length}`)
 
 let ok = 0, fail = 0
 for (const w of rows) {
