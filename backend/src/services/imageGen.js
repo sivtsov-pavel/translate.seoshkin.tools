@@ -19,7 +19,7 @@ function saveB64(b64, wordId) {
 export async function generateWordImage(wordDe, translationRu, wordId) {
   const prompt = `Simple cheerful flat vector illustration for a children's language flashcard. Show clearly: "${translationRu}" (German word: ${wordDe}). Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style. No text, no letters.`
   try {
-    const r = await openai.images.generate({ model: 'gpt-image-1', prompt, size: '1024x1024', n: 1 })
+    const r = await openai.images.generate({ model: 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', n: 1 })
     if (r.data?.[0]?.b64_json) return saveB64(r.data[0].b64_json, wordId)
     if (r.data?.[0]?.url) return await downloadAndSave(r.data[0].url, wordId)
   } catch (e) {
