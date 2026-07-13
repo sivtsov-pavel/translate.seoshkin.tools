@@ -114,13 +114,12 @@ export async function regenerateExercisesFromDb(lessonId) {
       )
     }
 
-    // Диктант — по одному на каждое слово
+    // Диктант + «Проговори слова» (speech) — по одному на каждое слово
     for (const word of words) {
       const wordId = wordMap[word.word_de] || null
-      await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
-        [lessonId, wordId, 'dictation', JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })]
-      )
+      const payload = JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'dictation', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'speech', payload])
     }
 
     const total = exercises.length + words.length
@@ -251,13 +250,12 @@ export async function processLesson(lessonId, ownerId) {
       )
     }
 
-    // Диктант — одно упражнение на каждое слово, всегда последними
+    // Диктант + «Проговори слова» (speech) — по одному на каждое слово, последними
     for (const word of consolidated.words) {
       const wordId = wordMap[word.word_de] || null
-      await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
-        [lessonId, wordId, 'dictation', JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })]
-      )
+      const payload = JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'dictation', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'speech', payload])
     }
 
     // AI-название и описание, если тема не задана вручную (пусто или авто «Урок N»)
