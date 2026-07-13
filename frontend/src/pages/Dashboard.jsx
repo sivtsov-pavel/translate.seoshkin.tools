@@ -6,7 +6,7 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation, getLessonTitle } from '../utils/translation.js'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
-const TYPE_ICON  = { multiple_choice: 'bi-check-square-fill', flashcard: 'bi-card-text', letter_fill: 'bi-fonts', fill_blank: 'bi-pencil-fill', sentence_write: 'bi-pen-fill', speech: 'bi-soundwave', dictation: 'bi-mic-fill' }
+const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🃏', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️', speech: '🗣️', dictation: '🎙️' }
 
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
@@ -270,7 +270,7 @@ function LessonCard({ lesson, navigate }) {
               color: 'var(--ink)', cursor: 'pointer', textAlign: 'left',
               minWidth: 0, overflow: 'hidden',
             }}>
-            <i className={`bi ${TYPE_ICON[type]}`} style={{ flexShrink: 0, fontSize: 15 }} />
+            <span style={{ flexShrink: 0, fontSize: 16 }}>{TYPE_ICON[type]}</span>
             <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, borderRadius: 7, padding: '2px 7px', fontSize: 13, flexShrink: 0 }}>
               {lesson.byType[type]}
             </span>

@@ -540,7 +540,8 @@ export default function Landing() {
 
       {/* Герой */}
       <section style={{ textAlign: 'center', padding: '72px 20px 56px', maxWidth: 720, margin: '0 auto' }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>🇩🇪</div>
+        <img src="/icons/icon-192.png" alt="DeutschLernen" width={104} height={104}
+          style={{ marginBottom: 16, borderRadius: 24, boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }} />
         <h1 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 900, lineHeight: 1.15,
           margin: '0 0 20px', color: 'var(--ink)',
