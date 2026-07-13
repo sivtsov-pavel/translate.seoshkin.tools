@@ -236,7 +236,9 @@ export async function exercisesRoutes(fastify) {
     // Дедуп по немецкому слову (DISTINCT ON): в общем пуле несколько учителей
     // могут иметь одно и то же слово — ученик не должен видеть дубли.
     const params = [userId]
-    const lessonFilter = role === 'owner' ? 'w.user_id = $1' : "l.status = 'done'"
+    // Учитель видит слова СВОИХ уроков (по владельцу урока, а не по автору строки слова —
+    // при загрузке/обработке слово могло получить чужой user_id). Ученик — из готовых уроков.
+    const lessonFilter = role === 'owner' ? 'l.owner_id = $1' : "l.status = 'done'"
 
     let statusCond = ''
     if (status) {
