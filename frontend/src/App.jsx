@@ -16,6 +16,7 @@ import Wiki from './pages/Wiki.jsx'
 import Grammar from './pages/Grammar.jsx'
 import LoveKids from './pages/LoveKids.jsx'
 import Crossword from './pages/Crossword.jsx'
+import Tutors from './pages/Tutors.jsx'
 import TextReader from './pages/TextReader.jsx'
 import Report from './pages/Report.jsx'
 import Phrasebook from './pages/Phrasebook.jsx'
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="/wiki"        element={<ProtectedRoute><Layout><Wiki       /></Layout></ProtectedRoute>} />
         <Route path="/grammar"     element={<ProtectedRoute><Layout><Grammar    /></Layout></ProtectedRoute>} />
         <Route path="/love"        element={<ProtectedRoute><Layout><LoveKids   /></Layout></ProtectedRoute>} />
+        <Route path="/tutors"      element={<ProtectedRoute><Layout><Tutors     /></Layout></ProtectedRoute>} />
         <Route path="/reader"      element={<ProtectedRoute><Layout><TextReader /></Layout></ProtectedRoute>} />
         <Route path="/report"      element={<ProtectedRoute><Layout><Report       /></Layout></ProtectedRoute>} />
         <Route path="/phrasebook"    element={<ProtectedRoute><Layout><Phrasebook    /></Layout></ProtectedRoute>} />

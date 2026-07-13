@@ -141,6 +141,7 @@ export default function Layout({ children }) {
     { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
     { to: '/grammar',                     icon: 'bi-mortarboard-fill',          label: 'Грамматика' },
     { to: '/love',                        icon: 'bi-heart-fill',                label: 'Любовь к детям' },
+    { to: '/tutors',                      icon: 'bi-geo-alt-fill',              label: 'Школы и репетиторы' },
   ]
 
   const classItems = user?.role === 'owner' ? [

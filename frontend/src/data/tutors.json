@@ -1,0 +1,66 @@
+[
+  {
+    "id": "t1", "avatar": "/tutors/t1.png", "name": "Anna Müller", "type": "Репетитор",
+    "langs": ["Немецкий"], "levels": ["A1", "A2", "B1", "B2"],
+    "country": "Германия", "city": "Мюнхен", "district": "Schwabing",
+    "format": "Оба", "price": 25, "rating": 4.9, "reviews": 128, "experience": 8,
+    "audience": ["Взрослые", "Дети"], "verified": true,
+    "about": "Дипломированный преподаватель, готовлю к Goethe-Zertifikat. Тёплая атмосфера, много разговорной практики."
+  },
+  {
+    "id": "t2", "avatar": "/tutors/t2.png", "name": "Deutsch mit Max", "type": "Репетитор",
+    "langs": ["Немецкий"], "levels": ["A1", "A2", "B1"],
+    "country": "Германия", "city": "Гамбург", "district": "Altona",
+    "format": "Онлайн", "price": 20, "rating": 4.8, "reviews": 76, "experience": 5,
+    "audience": ["Дети", "Подростки"], "verified": true,
+    "about": "Специализируюсь на детях и подростках. Игровой подход, картинки, песни — учиться весело!"
+  },
+  {
+    "id": "t3", "avatar": "/tutors/t3.png", "name": "Sprachschule Berlin Mitte", "type": "Школа",
+    "langs": ["Немецкий", "Английский"], "levels": ["A1", "A2", "B1", "B2", "C1"],
+    "country": "Германия", "city": "Берлин", "district": "Mitte",
+    "format": "Оба", "price": 18, "rating": 4.7, "reviews": 342, "experience": 15,
+    "audience": ["Взрослые", "Бизнес"], "verified": true,
+    "about": "Языковая школа в центре Берлина. Группы и индивидуально, интеграционные курсы, подготовка к экзаменам."
+  },
+  {
+    "id": "t4", "avatar": "/tutors/t4.png", "name": "Thomas Weber", "type": "Репетитор",
+    "langs": ["Немецкий"], "levels": ["B1", "B2", "C1"],
+    "country": "Германия", "city": "Франкфурт", "district": "Innenstadt",
+    "format": "Офлайн", "price": 35, "rating": 5.0, "reviews": 54, "experience": 20,
+    "audience": ["Бизнес", "Взрослые"], "verified": true,
+    "about": "Бизнес-немецкий, деловая переписка, собеседования. 20 лет опыта, работал в корпорациях."
+  },
+  {
+    "id": "t5", "avatar": "/tutors/t5.png", "name": "Olena Kovalenko", "type": "Репетитор",
+    "langs": ["Немецкий"], "levels": ["A1", "A2"],
+    "country": "Германия", "city": "Кёльн", "district": "Ehrenfeld",
+    "format": "Онлайн", "price": 15, "rating": 4.9, "reviews": 91, "experience": 3,
+    "audience": ["Взрослые", "Начинающие"], "verified": true,
+    "about": "Помогаю переехавшим освоить базовый немецкий с нуля. Объясняю на русском и украинском, поддержка в адаптации."
+  },
+  {
+    "id": "t6", "avatar": "/tutors/t6.png", "name": "Sprachcafé Wien", "type": "Школа",
+    "langs": ["Немецкий"], "levels": ["A1", "A2", "B1", "B2"],
+    "country": "Австрия", "city": "Вена", "district": "Innere Stadt",
+    "format": "Оба", "price": 22, "rating": 4.6, "reviews": 210, "experience": 12,
+    "audience": ["Взрослые"], "verified": false,
+    "about": "Разговорные клубы, курсы австрийского варианта немецкого, дружелюбная атмосфера кафе."
+  },
+  {
+    "id": "t7", "avatar": "/tutors/t7.png", "name": "Lena Fischer", "type": "Репетитор",
+    "langs": ["Немецкий"], "levels": ["A2", "B1", "B2"],
+    "country": "Швейцария", "city": "Цюрих", "district": "Kreis 4",
+    "format": "Онлайн", "price": 40, "rating": 4.8, "reviews": 63, "experience": 10,
+    "audience": ["Взрослые", "Бизнес"], "verified": true,
+    "about": "Швейцарский и стандартный немецкий, подготовка к переезду и работе в DACH-регионе."
+  },
+  {
+    "id": "t8", "avatar": "/tutors/t8.png", "name": "Pablo Seoshkin", "type": "Репетитор",
+    "langs": ["Немецкий"], "levels": ["A1", "A2"],
+    "country": "Германия", "city": "Мюнхен", "district": "Онлайн",
+    "format": "Онлайн", "price": 0, "rating": 5.0, "reviews": 12, "experience": 1,
+    "audience": ["Дети", "Начинающие"], "verified": true,
+    "about": "Основатель Deutsch Lernen. Учу немецкий вместе с дочкой и сыном — тёплый семейный подход, много практики и любви ❤️"
+  }
+]
