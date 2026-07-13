@@ -207,6 +207,7 @@ export default function AiTrainer() {
   const [voiceMode, setVoiceMode] = useState(false)
   const [speaking, setSpeaking] = useState(false)   // аватар «говорит» (озвучка или клип идёт)
   const [clip, setClip] = useState(null)            // проигрываемый видео-клип в кружке аватара
+  const [reaction, setReaction] = useState(null)    // 'correct' | 'wrong' | null — реакция на ответ (цвета Германии)
   const clipOnEndRef = useRef(null)
   const voiceModeRef = useRef(false)
   const speakingRef   = useRef(false)
@@ -357,18 +358,20 @@ export default function AiTrainer() {
       if (result.reply) {
         if (voiceModeRef.current) {
           const corr = (result.correction && result.correction !== 'null') ? result.correction : null
-          speakWithEvents(result.reply, 'de-DE', {
-            onStart: () => setSpeaking(true),
-            onEnd:   () => {
-              if (voiceModeRef.current && corr) {
-                // Pablo реагирует готовым клипом «правильно так:», затем договаривает исправление голосом
-                playClip(CLIPS.correction, () => {
-                  speakWithEvents(corr, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) })
-                })
-              } else {
-                setSpeaking(false)
-              }
-            },
+          // Флоу: студент ответил → Pablo оживает клипом реакции (верно/неверно) →
+          // затем говорит саму реплику → (если ошибка) договаривает правильный вариант → ждёт.
+          setReaction(corr ? 'wrong' : 'correct')
+          playClip(corr ? CLIPS.wrong : CLIPS.correct, () => {
+            speakWithEvents(result.reply, 'de-DE', {
+              onStart: () => setSpeaking(true),
+              onEnd:   () => {
+                if (voiceModeRef.current && corr) {
+                  speakWithEvents(corr, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => { setReaction(null); setSpeaking(false) } })
+                } else {
+                  setReaction(null); setSpeaking(false)
+                }
+              },
+            })
           })
         } else {
           speak(result.reply, 'de-DE')
@@ -411,6 +414,7 @@ export default function AiTrainer() {
     setVoiceMode(false)
     setSpeaking(false)
     setClip(null)
+    setReaction(null)
     clipOnEndRef.current = null
     stopMic()
     cancelSpeak()
@@ -784,12 +788,11 @@ export default function AiTrainer() {
         const lastAi = lastAiIdx != null ? messages[lastAiIdx] : null
         const lastUser = [...messages].reverse().find(m => m.role === 'user')
         const st = loading ? V.thinking : speaking ? V.speaking : listening ? V.listening : V.tap
-        const stColor = loading ? 'var(--ink-soft)' : speaking ? '#c78a3c' : listening ? '#d6533c' : 'var(--accent)'
-        const active = speaking || listening
-        // «Живой по умолчанию»: когда не играет клип с озвучкой — крутим тихий зацикленный клип.
-        // Говорит → клип «говорит» (муть), иначе → лёгкое «слушает». Только для Pablo (клипы его лица).
-        const isPablo = character === 'pablo'
-        const ambient = (!clip && !lastAi?.videoUrl && isPablo) ? (speaking ? CLIPS.start : CLIPS.listening) : null
+        // Цвета Германии: 🟡 ждёт/слушает · ⚫ верно · 🔴 неверно
+        const GER_GOLD = '#FFCE00', GER_RED = '#DD0000', GER_BLACK = '#1a1a1a'
+        const stColor = reaction === 'wrong' ? GER_RED : reaction === 'correct' ? GER_BLACK : GER_GOLD
+        const glow = reaction === 'correct' ? GER_GOLD : stColor  // чёрный виден за счёт золотого свечения
+        const active = speaking || listening || !!reaction
         return (
           <div style={{
             position: 'fixed', inset: 0, zIndex: 300,
@@ -814,26 +817,24 @@ export default function AiTrainer() {
             {/* Большой аватар */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 420 }}>
               <div style={{ position: 'relative', width: 'min(64vw, 240px)', height: 'min(64vw, 240px)', marginBottom: 20 }}>
-                {/* пульсирующее кольцо */}
+                {/* пульсирующее кольцо (цвета Германии) */}
                 <div style={{
                   position: 'absolute', inset: -10, borderRadius: '50%',
-                  border: `3px solid ${stColor}`, opacity: active ? 0.9 : 0.25,
+                  border: `3px solid ${stColor}`, opacity: active ? 0.9 : 0.3,
+                  boxShadow: active ? `0 0 26px ${glow}` : 'none',
                   animation: active ? 'voice-pulse 1.4s ease-out infinite' : 'none',
                 }} />
                 {clip ? (
                   <video src={clip} autoPlay playsInline onEnded={handleClipEnded} onError={handleClipEnded}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}`, boxShadow: `0 0 24px ${glow}` }} />
                 ) : lastAi?.videoUrl ? (
                   <video src={lastAi.videoUrl} autoPlay playsInline
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
-                ) : ambient ? (
-                  <video key={ambient} src={ambient} autoPlay loop muted playsInline
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: `3px solid ${stColor}` }} />
                 ) : char.photo ? (
                   <img src={char.photo} alt={char.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%',
-                      border: `3px solid ${stColor}`, transition: 'transform .3s',
-                      transform: speaking ? 'scale(1.03)' : 'scale(1)' }} />
+                      border: `3px solid ${stColor}`, boxShadow: active ? `0 0 20px ${glow}` : 'none', transition: 'transform .3s, box-shadow .3s',
+                      transform: speaking ? 'scale(1.02)' : 'scale(1)' }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: char.color + '33',
                     border: `3px solid ${stColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'min(28vw, 110px)' }}>
