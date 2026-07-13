@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import tutors from '../data/tutors.json'
+import { api } from '../api/client.js'
+import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 import { ex } from '../utils/extraI18n.js'
 
@@ -28,21 +29,31 @@ export default function Tutors() {
   const [audience, setAudience] = useState('')
   const [search, setSearch] = useState('')
   const [view, setView] = useState('list')  // list | map
+  const [all, setAll] = useState([])
+  const [mine, setMine] = useState(null)
+  const [editing, setEditing] = useState(false)
+  const { user } = useAuthStore()
   const E = ex(useI18nStore(s => s.lang))
 
-  const countries = [...new Set(tutors.map(t => t.country))].sort()
-  const cities = [...new Set(tutors.filter(t => !country || t.country === country).map(t => t.city))].sort()
-  const audiences = [...new Set(tutors.flatMap(t => t.audience))].sort()
+  const reload = () => {
+    api.get('/tutors').then(setAll).catch(() => {})
+    api.get('/tutors/mine').then(setMine).catch(() => {})
+  }
+  useEffect(() => { reload() }, [])
 
-  const list = useMemo(() => tutors.filter(t => {
+  const countries = [...new Set(all.map(t => t.country).filter(Boolean))].sort()
+  const cities = [...new Set(all.filter(t => !country || t.country === country).map(t => t.city).filter(Boolean))].sort()
+  const audiences = [...new Set(all.flatMap(t => t.audience || []))].sort()
+
+  const list = useMemo(() => all.filter(t => {
     if (country && t.country !== country) return false
     if (city && t.city !== city) return false
     if (format && t.format !== format && t.format !== 'Оба') return false
-    if (audience && !t.audience.includes(audience)) return false
+    if (audience && !(t.audience || []).includes(audience)) return false
     const q = search.trim().toLowerCase()
-    if (q && !(t.name.toLowerCase().includes(q) || t.city.toLowerCase().includes(q) || t.about.toLowerCase().includes(q))) return false
+    if (q && !(`${t.name} ${t.city || ''} ${t.about || ''}`.toLowerCase().includes(q))) return false
     return true
-  }), [country, city, format, audience, search])
+  }), [all, country, city, format, audience, search])
 
   const sel = { padding: '9px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }
 
@@ -50,7 +61,11 @@ export default function Tutors() {
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 16px 40px' }}>
       <div style={{ textAlign: 'center', padding: '10px 0 14px' }}>
         <h1 style={{ fontSize: 24, margin: '4px 0 6px' }}>🏫 {E.tutorsTitle}</h1>
-        <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: 0 }}>{E.tutorsSub}</p>
+        <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 10px' }}>{E.tutorsSub}</p>
+        <button onClick={() => setEditing(true)}
+          style={{ padding: '9px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 14 }}>
+          {mine ? '✏️ Моя анкета' : '➕ Разместить свою анкету'}
+        </button>
       </div>
 
       {/* Фильтры */}
@@ -87,7 +102,7 @@ export default function Tutors() {
           <MapContainer center={[50.5, 10.5]} zoom={5} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
             <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {list.map((t, i) => {
-              const base = CITY_COORDS[t.city]
+              const base = (t.lat != null && t.lng != null) ? [Number(t.lat), Number(t.lng)] : CITY_COORDS[t.city]
               if (!base) return null
               const pos = [base[0] + jitter(i + 1), base[1] + jitter(i + 3)]
               return (
@@ -115,6 +130,8 @@ export default function Tutors() {
         </div>
       )}
       {list.length === 0 && view === 'list' && <div style={{ textAlign: 'center', color: 'var(--ink-soft)', marginTop: 30 }}>Никого не найдено — измени фильтры</div>}
+
+      {editing && <TutorForm mine={mine} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); reload() }} />}
     </div>
   )
 }
@@ -163,4 +180,87 @@ function TutorCard({ t }) {
 
 function Tag({ children }) {
   return <span style={{ fontSize: 11.5, background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 7, padding: '3px 8px', color: 'var(--ink-soft)' }}>{children}</span>
+}
+
+const DEMO_AVATARS = ['/tutors/t1.png', '/tutors/t2.png', '/tutors/t3.png', '/tutors/t4.png', '/tutors/t5.png', '/tutors/t6.png', '/tutors/t7.png', '/tutors/t8.png']
+const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1']
+const AUDS = ['Дети', 'Подростки', 'Взрослые', 'Бизнес', 'Начинающие']
+
+// Форма создания/редактирования своей анкеты репетитора
+function TutorForm({ mine, onClose, onSaved }) {
+  const [f, setF] = useState(() => ({
+    name: mine?.name || '', type: mine?.type || 'Репетитор', avatar_url: mine?.avatar_url || DEMO_AVATARS[0],
+    country: mine?.country || 'Германия', city: mine?.city || '', district: mine?.district || '',
+    format: mine?.format || 'Онлайн', price: mine?.price ?? 0, experience: mine?.experience ?? 0,
+    levels: mine?.levels || ['A1', 'A2'], audience: mine?.audience || ['Взрослые'],
+    about: mine?.about || '', contact: mine?.contact || '',
+  }))
+  const [saving, setSaving] = useState(false)
+  const set = (k, v) => setF(p => ({ ...p, [k]: v }))
+  const toggle = (k, v) => setF(p => ({ ...p, [k]: p[k].includes(v) ? p[k].filter(x => x !== v) : [...p[k], v] }))
+
+  const save = async () => {
+    if (!f.name.trim()) { alert('Укажи имя'); return }
+    setSaving(true)
+    try {
+      await api.post('/tutors', { ...f, langs: ['Немецкий'], price: Number(f.price) || 0, experience: Number(f.experience) || 0 })
+      onSaved()
+    } catch (e) { alert('Ошибка: ' + e.message) } finally { setSaving(false) }
+  }
+  const remove = async () => {
+    if (!window.confirm('Удалить свою анкету?')) return
+    try { await api.delete('/tutors/mine'); onSaved() } catch (e) { alert('Ошибка: ' + e.message) }
+  }
+
+  const inp = { width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, marginBottom: 10 }
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', padding: '24px 12px' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, maxWidth: 460, width: '100%', border: '1px solid var(--line)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h2 style={{ fontSize: 18, margin: 0 }}>{mine ? 'Моя анкета' : 'Разместить анкету'}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
+        </div>
+
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>Аватар</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+          {DEMO_AVATARS.map(a => (
+            <img key={a} src={a} alt="" onClick={() => set('avatar_url', a)}
+              style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', cursor: 'pointer', border: `2px solid ${f.avatar_url === a ? 'var(--accent)' : 'var(--line)'}` }} />
+          ))}
+        </div>
+
+        <input style={inp} placeholder="Имя / название школы" value={f.name} onChange={e => set('name', e.target.value)} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <select style={{ ...inp, flex: 1 }} value={f.type} onChange={e => set('type', e.target.value)}><option>Репетитор</option><option>Школа</option></select>
+          <select style={{ ...inp, flex: 1 }} value={f.format} onChange={e => set('format', e.target.value)}><option>Онлайн</option><option>Офлайн</option><option>Оба</option></select>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input style={{ ...inp, flex: 1 }} placeholder="Страна" value={f.country} onChange={e => set('country', e.target.value)} />
+          <input style={{ ...inp, flex: 1 }} placeholder="Город" value={f.city} onChange={e => set('city', e.target.value)} />
+        </div>
+        <input style={inp} placeholder="Район (необязательно)" value={f.district} onChange={e => set('district', e.target.value)} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input style={{ ...inp, flex: 1 }} type="number" placeholder="Цена €/час (0 = бесплатно)" value={f.price} onChange={e => set('price', e.target.value)} />
+          <input style={{ ...inp, flex: 1 }} type="number" placeholder="Опыт, лет" value={f.experience} onChange={e => set('experience', e.target.value)} />
+        </div>
+
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '2px 0 6px' }}>Уровни</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {LEVELS.map(l => <Chip key={l} active={f.levels.includes(l)} onClick={() => toggle('levels', l)}>{l}</Chip>)}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>Для кого</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {AUDS.map(a => <Chip key={a} active={f.audience.includes(a)} onClick={() => toggle('audience', a)}>{a}</Chip>)}
+        </div>
+
+        <textarea style={{ ...inp, minHeight: 70, resize: 'vertical' }} placeholder="О себе: подход, опыт, что предлагаешь" value={f.about} onChange={e => set('about', e.target.value)} />
+        <input style={inp} placeholder="Контакт (Telegram/WhatsApp/email)" value={f.contact} onChange={e => set('contact', e.target.value)} />
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+          <button onClick={save} disabled={saving} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>{saving ? '...' : 'Сохранить'}</button>
+          {mine && <button onClick={remove} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--red)', background: 'transparent', color: 'var(--red)', fontWeight: 600, cursor: 'pointer' }}>Удалить</button>}
+        </div>
+      </div>
+    </div>
+  )
 }
