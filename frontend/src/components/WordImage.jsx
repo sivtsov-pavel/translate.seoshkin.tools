@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const PABLO = '/avatar/pablo.jpg'
+const PABLO = '/avatar/pablo-face.jpg'
 
 // Кружок с аватаром Pablo и пульсирующей рамкой (жёлтая в покое, красная когда говорит).
 // children — видео-реакция (если играет), иначе статичное фото.

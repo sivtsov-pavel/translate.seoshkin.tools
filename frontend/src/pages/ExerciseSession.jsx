@@ -18,6 +18,8 @@ export default function ExerciseSession() {
   // При переходе к следующему упражнению — скроллим наверх (иначе верх карточки/картинка
   // остаётся под хедером после прокрутки к результату предыдущего)
   useEffect(() => {
+    // Скроллер — прямой потомок .exercise-session-content (overflow-y:auto)
+    contentRef.current?.firstElementChild?.scrollTo?.({ top: 0 })
     contentRef.current?.scrollTo?.({ top: 0 })
     window.scrollTo?.({ top: 0 })
   }, [current])

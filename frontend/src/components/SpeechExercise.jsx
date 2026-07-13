@@ -349,7 +349,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
   const micLabel = listening ? '⏺' : phase === 'result' && result?.quality >= 3 ? '✓' : '🎤'
 
   return (
-    <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
+    <div className="exercise-card speech-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
       {reactionClip ? (
         <div className="word-image-bleed">
           <PabloCircle wordDe={word_de} reaction={result && result.quality >= 3 ? 'correct' : 'wrong'}>
@@ -416,12 +416,6 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
               ◄ Слушать образец
             </button>
           </div>
-        </div>
-
-        {/* ── Легенда ударения ── */}
-        <div style={{ fontSize: 11, color: 'var(--ink-soft)', textAlign: 'center', marginBottom: 14, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <span><span style={{ borderBottom: '2px dotted var(--ink-soft)' }}>слог</span> — ударный</span>
-          <span><span style={{ color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }}>буквы</span> — особое чтение</span>
         </div>
 
         {/* ── Кнопка микрофона ── */}
