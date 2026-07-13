@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
+import { ex } from '../utils/extraI18n.js'
 import { useThemeStore } from '../store/theme.js'
 import { useAdminOpStore } from '../store/adminOp.js'
 import { useSettingsStore } from '../store/settings.js'
@@ -13,7 +14,8 @@ const SIDEBAR_W = 220
 
 export default function Layout({ children }) {
   const { user, logout, refreshUser } = useAuthStore()
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
+  const E = ex(lang)
   const { theme, toggle: toggleTheme } = useThemeStore()
   const adminOp = useAdminOpStore()
   const { fetchSettings } = useSettingsStore()
@@ -139,9 +141,9 @@ export default function Layout({ children }) {
     { to: '/vocabulary?status=learning',  icon: 'bi-journal-bookmark-fill',     label: t.nav.learningWords },
     { to: '/reader',                      icon: 'bi-eyeglasses',                label: t.nav.reader },
     { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
-    { to: '/grammar',                     icon: 'bi-mortarboard-fill',          label: 'Грамматика' },
-    { to: '/love',                        icon: 'bi-heart-fill',                label: 'Любовь к детям' },
-    { to: '/tutors',                      icon: 'bi-geo-alt-fill',              label: 'Школы и репетиторы' },
+    { to: '/grammar',                     icon: 'bi-mortarboard-fill',          label: E.navGrammar },
+    { to: '/love',                        icon: 'bi-heart-fill',                label: E.navLove },
+    { to: '/tutors',                      icon: 'bi-geo-alt-fill',              label: E.navTutors },
   ]
 
   const classItems = user?.role === 'owner' ? [
@@ -512,7 +514,7 @@ export default function Layout({ children }) {
           { to: '/vocabulary', icon: 'bi-card-list',            label: t.nav.vocabulary },
           { to: '/reader',     icon: 'bi-eyeglasses',           label: t.nav.reader },
           { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: 'Разговорник' },
-          { to: '/grammar',    icon: 'bi-mortarboard-fill',     label: 'Грамматика' },
+          { to: '/grammar',    icon: 'bi-mortarboard-fill',     label: E.navGrammar },
           { to: '/wiki',       icon: 'bi-question-circle-fill', label: t.nav.wiki },
         ].map(item => {
           const active = isActive(item.to)
@@ -605,7 +607,7 @@ export default function Layout({ children }) {
           { to: '/vocabulary', icon: 'bi-card-list',            label: t.nav.vocabulary },
           { to: '/reader',     icon: 'bi-book-half',            label: t.nav.reader },
           { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: 'Разговорник' },
-          { to: '/grammar',    icon: 'bi-mortarboard-fill',     label: 'Грамматика' },
+          { to: '/grammar',    icon: 'bi-mortarboard-fill',     label: E.navGrammar },
           { to: '/wiki',       icon: 'bi-question-circle-fill', label: t.nav.wiki },
         ].map(item => {
           const active = item.to.includes('?')

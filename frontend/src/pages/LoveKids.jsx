@@ -1,18 +1,21 @@
 import { useNavigate } from 'react-router-dom'
 import loveData from '../data/loveKids.json'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
+import { useI18nStore } from '../store/i18n.js'
+import { ex } from '../utils/extraI18n.js'
 
 // ❤️ Любовь к детям — тёплые немецкие фразы для общения родителя с ребёнком.
 // Комплименты, ласка, забота, спокойной ночи, похвала. С прослушкой и переводом.
 export default function LoveKids() {
   const navigate = useNavigate()
+  const E = ex(useI18nStore(s => s.lang))
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px 48px' }}>
       <div style={{ textAlign: 'center', padding: '12px 0 18px' }}>
         <div style={{ fontSize: 40 }}>❤️</div>
-        <h1 style={{ fontSize: 24, margin: '4px 0 6px' }}>Любовь к детям</h1>
+        <h1 style={{ fontSize: 24, margin: '4px 0 6px' }}>{E.loveTitle}</h1>
         <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: 0 }}>
-          Тёплые немецкие фразы, чтобы говорить детям с любовью. Нажми 🔊 — послушай, как звучит.
+          {E.loveSub}
         </p>
       </div>
 

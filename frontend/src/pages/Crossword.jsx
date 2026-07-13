@@ -5,6 +5,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import { generateCrossword } from '../utils/crossword.js'
 import { speak } from '../hooks/useSpeech.jsx'
+import { ex } from '../utils/extraI18n.js'
 
 export default function Crossword() {
   const [params] = useSearchParams()
@@ -75,10 +76,10 @@ export default function Crossword() {
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
-        <h1 style={{ fontSize: 22, margin: 0 }}>🧩 Кроссворд</h1>
+        <h1 style={{ fontSize: 22, margin: 0 }}>🧩 {ex(lang).crosswordTitle}</h1>
         <button onClick={build} style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>🔄 Новый</button>
       </div>
-      <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 16 }}>Впиши немецкие слова по подсказкам-переводам. Пересечения помогут!</p>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 16 }}>{ex(lang).crosswordSub}</p>
 
       {/* Сетка */}
       <div style={{ overflowX: 'auto', marginBottom: 18 }}>

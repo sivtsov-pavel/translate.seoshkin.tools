@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 import tutors from '../data/tutors.json'
+import { useI18nStore } from '../store/i18n.js'
+import { ex } from '../utils/extraI18n.js'
 
 // 🏫 Каталог школ и репетиторов немецкого (демо). Фильтры: страна, город, формат, для кого.
 export default function Tutors() {
@@ -8,6 +10,7 @@ export default function Tutors() {
   const [format, setFormat] = useState('')
   const [audience, setAudience] = useState('')
   const [search, setSearch] = useState('')
+  const E = ex(useI18nStore(s => s.lang))
 
   const countries = [...new Set(tutors.map(t => t.country))].sort()
   const cities = [...new Set(tutors.filter(t => !country || t.country === country).map(t => t.city))].sort()
@@ -28,8 +31,8 @@ export default function Tutors() {
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 16px 40px' }}>
       <div style={{ textAlign: 'center', padding: '10px 0 14px' }}>
-        <h1 style={{ fontSize: 24, margin: '4px 0 6px' }}>🏫 Школы и репетиторы</h1>
-        <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: 0 }}>Найди учителя немецкого рядом с домом или онлайн. <span style={{ opacity: 0.7 }}>(демо-каталог)</span></p>
+        <h1 style={{ fontSize: 24, margin: '4px 0 6px' }}>🏫 {E.tutorsTitle}</h1>
+        <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: 0 }}>{E.tutorsSub}</p>
       </div>
 
       {/* Фильтры */}

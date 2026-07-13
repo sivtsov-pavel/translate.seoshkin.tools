@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import grammarData from '../data/grammarData.json'
+import { useI18nStore } from '../store/i18n.js'
+import { ex } from '../utils/extraI18n.js'
 
 // Цвета родов как в немецкой школе: der=синий, die=красный, das=зелёный, мн.ч.=серый
 const GENDER = [
@@ -74,12 +76,13 @@ function GrammarSection({ s }) {
 export default function Grammar() {
   const [zoom, setZoom] = useState(null)   // url фото для полноэкранного просмотра
   const [open, setOpen] = useState(0)      // индекс раскрытой карточки
+  const E = ex(useI18nStore(s => s.lang))
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px 40px' }}>
-      <h1 style={{ fontSize: 22, margin: '4px 0 6px' }}>📐 Грамматика</h1>
+      <h1 style={{ fontSize: 22, margin: '4px 0 6px' }}>📐 {E.grammarTitle}</h1>
       <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 20 }}>
-        Справочник-шпаргалка: падежи, предлоги, глаголы. Отдельно от словарных уроков — смотри и повторяй.
+        {E.grammarSub}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
