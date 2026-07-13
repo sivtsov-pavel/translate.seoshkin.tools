@@ -228,6 +228,52 @@ function scoreResult(sim) {
   return { quality: 1, label: '✗ Попробуй ещё',                    color: 'var(--red)' }
 }
 
+// Нормализация для пофонемного сравнения (только буквы, включая умлауты/ß)
+const normForDiff = (s) => (s || '').toLowerCase().replace(/[^a-zäöüß]/gi, '')
+
+// Выравнивание произнесённого и эталонного слова (edit distance + backtrace).
+// Возвращает булев массив по буквам эталона: true = звук произнесён верно.
+function phonemeMatch(transcript, target) {
+  const a = normForDiff(transcript), b = normForDiff(target)
+  const m = a.length, n = b.length
+  if (!n) return []
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
+  for (let i = 0; i <= m; i++) dp[i][0] = i
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost)
+    }
+  const ok = new Array(n).fill(false)
+  let i = m, j = n
+  while (i > 0 && j > 0) {
+    const cost = a[i - 1] === b[j - 1] ? 0 : 1
+    if (dp[i][j] === dp[i - 1][j - 1] + cost) { if (cost === 0) ok[j - 1] = true; i--; j-- }
+    else if (dp[i][j] === dp[i - 1][j] + 1) { i-- }
+    else { j-- }
+  }
+  return ok
+}
+
+// Эталонное слово с пофонемной подсветкой: зелёные буквы — произнёс верно, красные — промах
+function PhonemeDiff({ transcript, word }) {
+  const label = word ? word.replace(/^(der|die|das|ein|eine)\s+/i, '') : ''
+  const ok = phonemeMatch(transcript, label)
+  let k = 0
+  return (
+    <span style={{ fontFamily: 'Georgia,serif', fontSize: 30, fontWeight: 700, letterSpacing: 1 }} dir="ltr">
+      {[...label].map((ch, idx) => {
+        if (/[a-zäöüß]/i.test(ch)) {
+          const good = ok[k++]
+          return <span key={idx} style={{ color: good ? 'var(--good)' : 'var(--red)', borderBottom: good ? 'none' : '2px solid var(--red)' }}>{ch}</span>
+        }
+        return <span key={idx} style={{ color: 'var(--ink)' }}>{ch}</span>
+      })}
+    </span>
+  )
+}
+
 // ── Главный компонент ───────────────────────────────────────────────
 export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, exerciseId }) {
   const { word_de, translation_ru } = payload
@@ -412,19 +458,21 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
         {phase === 'result' && result && (
           <div>
             <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '12px 16px', marginBottom: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: result.color, marginBottom: 4 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: result.color, marginBottom: 8 }}>
                 {result.label}
+              </div>
+              {/* Пофонемная подсветка: зелёные звуки — верно, красные — промах */}
+              <div style={{ marginBottom: 6 }}>
+                <PhonemeDiff transcript={result.transcript} word={word_de} />
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 8 }}>
+                🟢 звук верно · 🔴 подтяни
               </div>
               <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>
                 Распознано: <span style={{ fontWeight: 600, color: 'var(--ink)', fontFamily: 'Georgia,serif' }}>
                   {result.transcript || '—'}
                 </span>
               </div>
-              {result.quality < 3 && (
-                <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 4 }}>
-                  Правильно: <span style={{ fontWeight: 700, color: 'var(--good)', fontFamily: 'Georgia,serif' }}>{word_de}</span>
-                </div>
-              )}
               <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 6 }}>
                 Совпадение: {Math.round(result.sim * 100)}%
               </div>
