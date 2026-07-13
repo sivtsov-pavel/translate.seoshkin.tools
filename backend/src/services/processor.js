@@ -4,6 +4,21 @@ import { db } from '../db/index.js'
 import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
+import { generateWordImage } from './imageGen.js'
+
+// «Нарисовать недостающие»: детсадовские ИИ-картинки для слов урока без фото
+export async function drawLessonImages(lessonId) {
+  const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id=$1 AND image_url IS NULL ORDER BY id', [lessonId])
+  let done = 0
+  for (const w of rows) {
+    await setProgress(lessonId, `Рисую картинки ${done + 1}/${rows.length}...`)
+    try {
+      const url = await generateWordImage(w.word_de, w.translation_ru, w.id)
+      if (url) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [url, w.id]); done++ }
+    } catch (e) { console.error('drawLessonImages', w.word_de, e.message) }
+  }
+  return done
+}
 
 async function setProgress(lessonId, text) {
   await db.query('UPDATE lessons SET progress = $1 WHERE id = $2', [text, lessonId])

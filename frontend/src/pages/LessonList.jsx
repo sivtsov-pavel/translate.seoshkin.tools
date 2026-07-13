@@ -175,6 +175,21 @@ export default function LessonList() {
     } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
   }
 
+  // «Нарисовать недостающие картинки» — детсадовские ИИ-иллюстрации (тратит OpenAI)
+  const handleDrawImages = async (id) => {
+    if (!window.confirm('Нарисовать детские картинки для слов без фото? Это использует генерацию OpenAI (платно).')) return
+    setProcessing(id)
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Рисую картинки...' } : l))
+    try {
+      await api.post(`/lessons/${id}/draw-images`, {})
+      const poll = setInterval(async () => {
+        const updated = await api.get(`/lessons/${id}`)
+        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
+        if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null) }
+      }, 4000)
+    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
+  }
+
   const handleAddLetterFill = async (id) => {
     setAddingLetters(id)
     try {
@@ -347,6 +362,13 @@ export default function LessonList() {
                               title="Дополнить недостающее: переводы, картинки, переводы упражнений на все языки"
                               style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
                               {processing === lesson.id ? '⏳' : '✨ Обработать всё'}
+                            </button>
+                          )}
+                          {status === 'done' && (
+                            <button onClick={() => handleDrawImages(lesson.id)} disabled={processing === lesson.id}
+                              title="Нарисовать детские ИИ-картинки для слов без фото (платно)"
+                              style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
+                              {processing === lesson.id ? '⏳' : '🎨'}
                             </button>
                           )}
                           <button onClick={() => setEditingId(isEditing ? null : lesson.id)}

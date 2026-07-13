@@ -1,7 +1,23 @@
 import { db } from '../db/index.js'
-import { processLesson, enrichLesson, generateCustomSet } from '../services/processor.js'
+import { processLesson, enrichLesson, generateCustomSet, drawLessonImages } from '../services/processor.js'
 
 export async function processRoutes(fastify) {
+  // «Нарисовать недостающие картинки»: детсадовские ИИ-иллюстрации для слов урока без фото
+  fastify.post('/api/lessons/:id/draw-images', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+    const { rows } = await db.query('SELECT status FROM lessons WHERE id = $1', [lessonId])
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    if (rows[0].status === 'processing') return reply.status(409).send({ error: 'Уже обрабатывается' })
+    await db.query("UPDATE lessons SET status = 'processing', progress = 'Рисую картинки...' WHERE id = $1", [lessonId])
+    ;(async () => {
+      try { await drawLessonImages(lessonId) }
+      catch (err) { fastify.log.error({ lessonId, err }, 'Ошибка рисования картинок') }
+      finally { await db.query("UPDATE lessons SET status = 'done', progress = 'Готово! Картинки нарисованы.' WHERE id = $1", [lessonId]) }
+    })()
+    return { started: true, lessonId }
+  })
+
   // «Свои упражнения»: создать набор из выбранных слов словаря
   fastify.post('/api/lessons/custom', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
