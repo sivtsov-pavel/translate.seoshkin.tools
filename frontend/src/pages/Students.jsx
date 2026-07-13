@@ -8,6 +8,7 @@ export default function Students() {
   const [students, setStudents] = useState([])
   const [loading, setLoading]   = useState(true)
   const [editing, setEditing]   = useState(null) // { id, ... }
+  const [q, setQ] = useState('')
   const { t } = useI18nStore()
   const s = t.students
 
@@ -16,16 +17,27 @@ export default function Students() {
 
   if (loading) return <p>{s.loading}</p>
 
+  const query = q.trim().toLowerCase()
+  const filtered = query
+    ? students.filter(st => [st.full_name, st.email, st.profession].some(v => (v || '').toLowerCase().includes(query)))
+    : students
+
   return (
     <div>
-      <h1 style={{ marginBottom: 20 }}>{s.title}</h1>
+      <h1 style={{ marginBottom: 16 }}>{s.title}</h1>
+      {students.length > 0 && (
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍 Поиск по имени, email, профессии…"
+          style={{ width: '100%', boxSizing: 'border-box', marginBottom: 16, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }} />
+      )}
       {students.length === 0 ? (
         <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 12, border: '1px dashed var(--line)' }}>
           {s.empty}
         </div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', color: 'var(--ink-soft)', padding: 24 }}>Никого не найдено</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {students.map(st => (
+          {filtered.map(st => (
             <StudentCard key={st.id} student={st} s={s} onEdit={() => setEditing(st)} />
           ))}
         </div>
