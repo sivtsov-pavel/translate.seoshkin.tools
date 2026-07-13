@@ -180,7 +180,7 @@ export async function processNewMedia(lessonId) {
     for (const w of (cons.words || [])) {
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)
-         VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (user_id, word_de)
+         VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (lesson_id, word_de)
          DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence)`,
         [lessonId, ownerId, w.word_de, w.translation_ru, w.example_sentence || null, src])
     }
@@ -302,7 +302,7 @@ export async function processLesson(lessonId, ownerId) {
         await db.query(
           `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)
            VALUES ($1, $2, $3, $4, $5, $6)
-           ON CONFLICT (user_id, word_de)
+           ON CONFLICT (lesson_id, word_de)
            DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence)`,
           [lessonId, ownerId, word.word_de, word.translation_ru, word.example_sentence || null, source]
         )
