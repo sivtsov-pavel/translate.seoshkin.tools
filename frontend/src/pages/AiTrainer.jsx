@@ -200,7 +200,9 @@ export default function AiTrainer() {
   // Голосовой ввод: распознаватель одноязычный, поэтому даём переключатель
   // «родной / немецкий». По умолчанию — язык локали (без ручных настроек телефона).
   const SPEECH_LANG = { ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', bg: 'bg-BG', tr: 'tr-TR', ar: 'ar-SA', es: 'es-ES', fr: 'fr-FR', sq: 'sq-AL' }
-  const [micDe, setMicDe] = useState(lang === 'de')  // false = родной язык, true = немецкий
+  // По умолчанию распознаём НЕМЕЦКИЙ (это немецкий тренер — ученик говорит по-немецки).
+  // Кнопкой можно переключить на родной язык. Раньше был родной → немецкая речь распознавалась криво.
+  const [micDe, setMicDe] = useState(true)
   const V = voiceStr(lang)
 
   // Голосовой режим «как в Gemini»: большое фото, hands-free диалог
