@@ -1,6 +1,74 @@
 import { useState } from 'react'
 import grammarData from '../data/grammarData.json'
 
+// Цвета родов как в немецкой школе: der=синий, die=красный, das=зелёный, мн.ч.=серый
+const GENDER = [
+  { c: '#2f7bd6', label: 'der' },   // Maskulin
+  { c: '#d64550', label: 'die' },   // Feminin
+  { c: '#3aa856', label: 'das' },   // Neutrum
+  { c: '#7a7f87', label: 'die (мн.)' }, // Plural
+]
+
+// Похоже ли на таблицу по родам (строки из 3-4 немецких форм)?
+function isGenderTable(rows) {
+  if (!Array.isArray(rows) || rows.length < 2) return false
+  const counts = rows.map(r => String(r).trim().split(/\s+/).length)
+  return counts.every(n => n === 3 || n === 4) && counts.some(n => n >= 3)
+}
+
+// Одна секция грамматики: заголовок + вопрос падежа + школьное объяснение + таблица/чипы
+function GrammarSection({ s }) {
+  const gender = { m: 0, f: 1, n: 2, pl: 3 }[s.gender]
+  const headColor = gender != null ? GENDER[gender].c : 'var(--accent)'
+  const table = isGenderTable(s.rows)
+  return (
+    <div style={{ marginBottom: 12, background: 'var(--surface-2)', borderRadius: 12, padding: '12px 14px', border: '1px solid var(--line)', borderLeft: `4px solid ${headColor}` }}>
+      {s.heading && (
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: headColor }}>{s.heading}</span>
+          {s.question_de && (
+            <span style={{ fontSize: 12.5, color: 'var(--ink-soft)', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 999, padding: '2px 9px' }}>{s.question_de}</span>
+          )}
+        </div>
+      )}
+      {s.explain_ru && (
+        <p style={{ fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.55, margin: '0 0 10px' }}>{s.explain_ru}</p>
+      )}
+      {table ? (
+        <div style={{ overflowX: 'auto' }}>
+          {/* Шапка родов */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+            {GENDER.map((g, i) => (
+              <div key={i} style={{ flex: 1, minWidth: 56, fontSize: 11, fontWeight: 700, color: g.c, textAlign: 'center' }}>{g.label}</div>
+            ))}
+          </div>
+          {s.rows.map((r, k) => {
+            const cells = String(r).trim().split(/\s+/)
+            return (
+              <div key={k} style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+                {cells.map((cell, i) => (
+                  <div key={i} dir="ltr" style={{ flex: 1, minWidth: 56, textAlign: 'center', fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: 15, color: GENDER[i]?.c || 'var(--ink)', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8, padding: '6px 4px' }}>
+                    {cell === '_' || cell === '—' ? '—' : cell}
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        Array.isArray(s.rows) && s.rows.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {s.rows.map((r, k) => (
+              <span key={k} dir="ltr" style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8, padding: '6px 11px', fontSize: 15, fontFamily: 'Georgia,serif', fontWeight: 600 }}>{r}</span>
+            ))}
+          </div>
+        )
+      )}
+      {s.note_ru && <div style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 8 }}>{s.note_ru}</div>}
+    </div>
+  )
+}
+
 // 📐 Грамматика — справочник-шпаргалка (падежи, предлоги, глаголы, Konjunktiv).
 // Только просмотр: фото-таблицы из класса + правила текстом. Без флеш-карт и кредитов.
 export default function Grammar() {
@@ -36,24 +104,8 @@ export default function Grammar() {
                   {c.summary_ru && (
                     <p style={{ fontSize: 14.5, color: 'var(--ink)', lineHeight: 1.6, margin: '0 0 16px' }}>{c.summary_ru}</p>
                   )}
-                  {/* Секции — аккуратные таблицы (главное содержимое, вместо «дикого» фото) */}
-                  {(c.sections || []).map((s, j) => (
-                    <div key={j} style={{ marginBottom: 12, background: 'var(--surface-2)', borderRadius: 12, padding: '12px 14px', border: '1px solid var(--line)' }}>
-                      {s.heading && (
-                        <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--accent)', marginBottom: 8 }}>{s.heading}</div>
-                      )}
-                      {Array.isArray(s.rows) && s.rows.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: s.note_ru ? 8 : 0 }}>
-                          {s.rows.map((r, k) => (
-                            <span key={k} dir="ltr" style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8, padding: '6px 11px', fontSize: 15, fontFamily: 'Georgia,serif', fontWeight: 600 }}>{r}</span>
-                          ))}
-                        </div>
-                      )}
-                      {s.note_ru && (
-                        <div style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{s.note_ru}</div>
-                      )}
-                    </div>
-                  ))}
+                  {/* Секции — цветные таблицы (рода) + школьные объяснения падежей */}
+                  {(c.sections || []).map((s, j) => <GrammarSection key={j} s={s} />)}
                   {/* Оригинал-плакат (фото из класса) — вторично, по кнопке */}
                   {c.image && (
                     <button onClick={() => setZoom(c.image)}
