@@ -297,11 +297,15 @@ export async function translateExercisePayloads(exercises) {
 
     // Перевод fill_blank (немецкое предложение → ru, en, uk, fr, ar, bg, tr, es)
     if (fbItems.length) {
-      const list = fbItems.map(ex => `${ex.id}: ${JSON.stringify(ex.payload.sentence || '')}`).join('\n')
+      // Переводим ПОЛНОЕ предложение (пропуск заменён словом) — чтобы в ответе был
+      // нормальный перевод без прочерка. Во время вопроса перевод не показываем.
+      const list = fbItems.map(ex => {
+        const full = (ex.payload.sentence || '').replace('___', ex.payload.blank || '')
+        return `${ex.id}: ${JSON.stringify(full)}`
+      }).join('\n')
       try {
         const text = await ask(
-          `Переведи следующие немецкие предложения на 9 языков (ru, en, uk, fr, ar, bg, tr, es, sq).
-Каждое предложение содержит ___ (пропуск) — сохрани его в переводе.
+          `Переведи следующие немецкие предложения (полные, без пропусков) на 9 языков (ru, en, uk, fr, ar, bg, tr, es, sq).
 Верни ТОЛЬКО JSON (без markdown):
 { "<id>": { "ru": "...", "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "...", "sq": "..." } }
 

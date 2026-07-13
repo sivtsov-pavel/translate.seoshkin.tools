@@ -4,10 +4,12 @@ import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
+import AvatarReaction from './AvatarReaction.jsx'
 
-export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTranslations, exerciseId }) {
+export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, payloadTranslations, exerciseId }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [reaction, setReaction] = useState(null)
   const { t, lang } = useI18nStore()
   const inputRef = useRef(null)
 
@@ -35,6 +37,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
     if (!answer.trim()) return
     const correct = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
     setSubmitted(true)
+    setReaction(correct ? 'correct' : 'wrong')  // Pablo реагирует
     if (correct) playCorrect(); else playWrong()
     const fullSentence = beforeBlank + payload.blank + afterBlank
     setTimeout(() => speak(fullSentence), 300)
@@ -52,7 +55,9 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
   }
 
   return (
-    <div style={{ border: '2px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 16, background: 'var(--surface)' }}>
+    <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
+      <AvatarReaction imageUrl={imageUrl} wordDe={payload.blank} reaction={reaction} />
+      <div className="exercise-card-content" style={{ padding: 24 }}>
 
       {lessonTitle && (
         <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
@@ -73,11 +78,8 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
           </span>
           {afterBlank}
         </p>
-        {sentenceTranslation && (
-          <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0', fontStyle: 'italic' }}>
-            {sentenceTranslation}
-          </p>
-        )}
+        {/* Перевод во время вопроса НЕ показываем — он полный и выдал бы ответ.
+            Полный перевод показывается после ответа (см. блок результата). */}
       </div>
 
       {/* Слова-подсказки */}
@@ -176,6 +178,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, payloadTrans
           </button>
         </div>
       )}
+      </div>
     </div>
   )
 }
