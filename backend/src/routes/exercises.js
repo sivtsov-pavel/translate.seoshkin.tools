@@ -231,17 +231,20 @@ export async function exercisesRoutes(fastify) {
     const { id: userId, role } = request.user
     const { status } = request.query
 
-    let lessonFilter, params
-    if (role === 'owner') {
-      lessonFilter = '1=1'
-      params = [userId]
-    } else {
-      lessonFilter = "l.status = 'done'"
-      params = [userId]
+    // Владелец видит только СВОИ слова; ученик — слова из готовых уроков.
+    // Дедуп по немецкому слову (DISTINCT ON): в общем пуле несколько учителей
+    // могут иметь одно и то же слово — ученик не должен видеть дубли.
+    const params = [userId]
+    const lessonFilter = role === 'owner' ? 'w.user_id = $1' : "l.status = 'done'"
+
+    let statusCond = ''
+    if (status) {
+      statusCond = ` AND COALESCE(uws.status, w.status, 'new') = $${params.length + 1}`
+      params.push(status)
     }
 
-    let query = `
-      SELECT w.*,
+    const inner = `
+      SELECT DISTINCT ON (w.word_de) w.*,
              COALESCE(w.image_url, (
                SELECT e.image_url FROM exercises e
                WHERE e.word_id = w.id AND e.image_url IS NOT NULL LIMIT 1
@@ -255,15 +258,10 @@ export async function exercisesRoutes(fastify) {
       LEFT JOIN lessons l ON l.id = w.lesson_id
       LEFT JOIN courses c ON c.id = l.course_id
       LEFT JOIN user_word_status uws ON uws.word_id = w.id AND uws.user_id = $1
-      WHERE ${lessonFilter}`
+      WHERE ${lessonFilter}${statusCond}
+      ORDER BY w.word_de, (w.image_url IS NOT NULL) DESC, w.created_at DESC`
 
-    if (status) {
-      query += ` AND COALESCE(uws.status, w.status, 'new') = $${params.length + 1}`
-      params.push(status)
-    }
-
-    query += ' ORDER BY w.created_at DESC'
-    const { rows } = await db.query(query, params)
+    const { rows } = await db.query(`SELECT * FROM (${inner}) t ORDER BY t.created_at DESC`, params)
     return rows
   })
 

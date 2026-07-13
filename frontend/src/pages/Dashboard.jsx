@@ -53,7 +53,28 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Игры — наверху, первыми */}
+      {/* AI-тренер — над играми: живой разговор с Pablo */}
+      <div style={{ padding: '4px 12px 8px' }}>
+        <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
+          Тренер
+        </div>
+        <Link to="/ai-trainer" style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(124,92,255,0.14), rgba(59,122,87,0.14))',
+            border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px',
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <img src="/avatar/pablo.jpg" alt="Pablo" style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--accent)' }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>✨ AI-тренер · Pablo</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Поговори по-немецки — голосом или текстом</div>
+            </div>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>🗣️</span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Игры */}
       <div style={{ padding: '4px 12px 8px' }}>
         <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
           Игры
