@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useI18nStore } from '../store/i18n.js'
+import { useAuthStore } from '../store/auth.js'
 
 // ─── Контент справки по языкам ───────────────────────────────────────────────
 
@@ -263,6 +264,37 @@ const WIKI = {
   },
 }
 
+// ─── Раздел «Администрирование» (только для супер-админа id=1) ────────────────
+// Контент на русском (для Павла). Прикрепляется ко всем языкам одинаково.
+const ADMIN_SECTION = [
+  {
+    icon: '⚙️', title: 'Супер-админ панель',
+    body: 'Страница «Супер-админ» в меню (раздел «Платформа») — видна только тебе (пользователь id=1, Administrator).\n\nТри вкладки:\n📊 Обзор — статистика платформы: пользователи (учителя/ученики/активные), контент (уроки, слова, упражнения, репетиторы), ответов за 24ч.\n💶 Монетизация — реклама, тарифы, лимиты, фичи.\n👥 Пользователи — все аккаунты, роли, объём контента, последняя активность.',
+  },
+  {
+    icon: '📢', title: 'Реклама (AdSense)',
+    body: 'Во вкладке «Монетизация» → «Реклама»:\n• Тумблер «Реклама включена»\n• Раздельно по девайсам: 📱 телефон (по умолчанию ВЫКЛ), планшет и десктоп (ВКЛ)\n• Поля AdSense client ID (ca-pub-…) и Slot ID\n\nБаннеры показываются ТОЛЬКО бесплатным пользователям и только на разрешённых девайсах. Пока не вписан client ID — реклама не показывается вообще.\n\n➡️ Активируем на новом домене: завести Google AdSense, дождаться одобрения сайта, вписать client/slot сюда.',
+  },
+  {
+    icon: '💰', title: 'Монетизация и тарифы',
+    body: 'Вкладка «Монетизация»:\n• «Платная версия включена» — главный тумблер (пока ВЫКЛ → всё бесплатно, лимиты не действуют)\n• «Бесплатный дневной лимит» — сколько упражнений в день у бесплатных (режет только когда платная версия включена)\n• Тарифы: валюта (EUR), месяц / год / навсегда\n• Фичи: AI-тренер бесплатно, видео-аватар (D-ID), каталог репетиторов\n\nВсё сохраняется на сервере, применяется сразу.',
+  },
+  {
+    icon: '💳', title: 'Как включить оплату (Stripe)',
+    body: 'Подписки готовы в коде, но спят без ключей. Чтобы включить:\n\n1. Завести аккаунт Stripe\n2. Создать 1 продукт + 2 цены (месяц и год)\n3. Добавить в .env сервера (НЕ в git):\n   STRIPE_SECRET_KEY\n   STRIPE_WEBHOOK_SECRET\n   STRIPE_PRICE_MONTHLY\n   STRIPE_PRICE_YEARLY\n4. В Stripe настроить вебхук на:\n   https://<домен>/api/billing/webhook\n   события: customer.subscription.*, checkout.session.completed\n5. В супер-админке включить «Платная версия»\n\nПосле этого страница «⭐ Premium» (/upgrade) начнёт принимать оплату, а вебхук сам проставит пользователю premium.\n\n➡️ Активируем на новом домене.',
+  },
+  {
+    icon: '⭐', title: 'Тарифы пользователей (plan)',
+    body: 'У каждого пользователя есть тариф: free или premium (поле users.plan).\n• Супер-админ (id=1) — всегда premium (без рекламы и лимитов)\n• Premium ставится оплатой Stripe (или вручную в БД)\n\nУ не-премиум в меню есть пункт «⭐ Premium» → страница /upgrade с тарифами. Premium = без рекламы и без дневных лимитов.',
+  },
+  {
+    icon: '📲', title: 'Установка приложения (PWA)',
+    body: 'Своя кнопка «Установить приложение» появляется автоматически, когда установка доступна (Android/десктоп Chrome/Edge). На iPhone показывается подсказка «Поделиться → На экран „Домой"».\n\nBrowser сам глушит авто-подсказку после установки/удаления — поэтому и сделана своя кнопка. Прячется, если приложение уже установлено или нажали «Позже». Работает на 10 языках.',
+  },
+]
+// Прикрепляем один и тот же раздел ко всем языкам
+for (const l of Object.keys(WIKI)) WIKI[l].admin = ADMIN_SECTION
+
 // ─── Компонент ───────────────────────────────────────────────────────────────
 
 const TAB_SUBTITLES = {
@@ -274,22 +306,26 @@ const TAB_SUBTITLES = {
 
 export default function Wiki() {
   const { lang } = useI18nStore()
+  const { user } = useAuthStore()
   const [tab, setTab] = useState(0)
   // Для языков без перевода — EN как fallback (не RU)
   const content = WIKI[lang] || WIKI.en
+  const isAdmin = user?.id === 1
+  // Вкладка «Администрирование» — только у супер-админа (id=1)
+  const tabs = isAdmin ? [...content.tabs, '⚙️ Админ'] : content.tabs
   const subtitles = TAB_SUBTITLES[lang] || TAB_SUBTITLES.en
-  const sections = tab === 0 ? content.teacher : tab === 1 ? content.student : content.install
+  const sections = tab === 0 ? content.teacher : tab === 1 ? content.student : tab === 2 ? content.install : content.admin
 
   return (
     <div style={{ paddingTop: 24, paddingBottom: 60 }}>
       <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 6px' }}>{content.title}</h1>
       <p style={{ color: 'var(--ink-soft)', fontSize: 13, margin: '0 0 20px' }}>
-        {subtitles[tab]}
+        {subtitles[tab] || 'Настройки платформы — только для администратора'}
       </p>
 
       {/* Вкладки */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
-        {content.tabs.map((label, i) => (
+        {tabs.map((label, i) => (
           <button key={i} onClick={() => setTab(i)} style={{
             padding: '8px 16px', fontSize: 13, fontWeight: 600, borderRadius: 20,
             border: tab === i ? 'none' : '1px solid var(--line)',
