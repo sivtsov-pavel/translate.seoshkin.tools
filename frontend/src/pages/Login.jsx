@@ -10,6 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPw, setShowPw] = useState(false)
   const { login } = useAuthStore()
   const { t } = useI18nStore()
   const navigate = useNavigate()
@@ -42,7 +43,13 @@ export default function Login() {
         </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>{t.auth.password}
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={inputStyle} />
+            <span style={{ position: 'relative', display: 'block' }}>
+              <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required style={{ ...inputStyle, paddingRight: 44 }} />
+              <button type="button" onClick={() => setShowPw(v => !v)} title={showPw ? 'Скрыть' : 'Показать'}
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)', padding: 4 }}>
+                <i className={`bi ${showPw ? 'bi-eye-slash' : 'bi-eye'}`} />
+              </button>
+            </span>
           </label>
         </div>
         {error && <p style={{ color: 'var(--red)', marginBottom: 12 }}>{error}</p>}

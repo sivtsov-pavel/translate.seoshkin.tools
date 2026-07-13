@@ -15,11 +15,19 @@ export default function Crossword() {
   const [answers, setAnswers] = useState({})   // "r,c" -> буква
   const [checked, setChecked] = useState(false)
   const [loading, setLoading] = useState(true)
-  const lessonId = params.get('lesson_id')
+  const [lessons, setLessons] = useState([])
+  // Источник слов: '' = все, 'learning' = в изучении, либо id урока
+  const [source, setSource] = useState(params.get('lesson_id') || '')
 
-  // Загружаем слова (урока или все)
+  // Список уроков для выбора
+  useEffect(() => { api.get('/lessons').then(setLessons).catch(() => {}) }, [])
+
+  // Загружаем слова по выбранному источнику
   useEffect(() => {
-    const url = lessonId ? `/lessons/${lessonId}/words` : '/words'
+    setLoading(true)
+    const url = source === '' ? '/words'
+      : source === 'learning' ? '/words?status=learning'
+      : `/lessons/${source}/words`
     api.get(url).then(rows => {
       const items = (rows || [])
         .map(w => ({ word: (w.word_de || '').replace(/^(der|die|das|ein|eine)\s+/i, ''), clue: getTranslation(w.translations, lang, w.translation_ru), de: w.word_de }))
@@ -27,7 +35,7 @@ export default function Crossword() {
       setAllWords(items)
       setLoading(false)
     }).catch(() => setLoading(false))
-  }, [lessonId, lang])
+  }, [source, lang])
 
   const build = useCallback(() => {
     if (!allWords.length) return
@@ -44,11 +52,22 @@ export default function Crossword() {
 
   useEffect(() => { if (allWords.length) build() }, [allWords, build])
 
-  if (loading) return <p style={{ padding: 20 }}>Загрузка…</p>
-  if (!puzzle) return (
-    <div style={{ maxWidth: 640, margin: '0 auto', padding: 20, textAlign: 'center' }}>
-      <h1>🧩 Кроссворд</h1>
-      <p style={{ color: 'var(--ink-soft)' }}>Недостаточно подходящих слов для кроссворда (нужны короткие слова 3-9 букв с переводом).</p>
+  const sourceSelector = (
+    <select value={source} onChange={e => setSource(e.target.value)}
+      style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, maxWidth: 200 }}>
+      <option value="">📚 Все слова</option>
+      <option value="learning">📖 В изучении</option>
+      {(lessons || []).filter(l => l.status === 'done').map(l => <option key={l.id} value={l.id}>{l.title || `Урок ${l.id}`}</option>)}
+    </select>
+  )
+
+  if (loading || !puzzle) return (
+    <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px 40px' }}>
+      <h1 style={{ fontSize: 22, margin: '4px 0 10px' }}>🧩 {ex(lang).crosswordTitle}</h1>
+      <div style={{ marginBottom: 14 }}>{sourceSelector}</div>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>
+        {loading ? 'Загрузка…' : 'Недостаточно коротких слов (3-9 букв) для кроссворда — выбери другой урок или «Все слова».'}
+      </p>
     </div>
   )
 
@@ -79,7 +98,10 @@ export default function Crossword() {
         <h1 style={{ fontSize: 22, margin: 0 }}>🧩 {ex(lang).crosswordTitle}</h1>
         <button onClick={build} style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>🔄 Новый</button>
       </div>
-      <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 16 }}>{ex(lang).crosswordSub}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+        {sourceSelector}
+        <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{ex(lang).crosswordSub}</span>
+      </div>
 
       {/* Сетка */}
       <div style={{ overflowX: 'auto', marginBottom: 18 }}>

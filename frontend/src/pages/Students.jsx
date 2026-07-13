@@ -118,6 +118,7 @@ function EditModal({ student, onClose, onSaved }) {
     profession: student.profession || '',
   })
   const [newPwd, setNewPwd] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg]       = useState(null)
 
@@ -191,8 +192,14 @@ function EditModal({ student, onClose, onSaved }) {
         {/* Новый пароль */}
         <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 8 }}>СМЕНИТЬ ПАРОЛЬ (оставь пустым чтобы не менять)</div>
-          <input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)}
-            placeholder="Новый пароль (мин. 6 символов)" style={{ width: '100%' }} />
+          <div style={{ position: 'relative' }}>
+            <input type={showPwd ? 'text' : 'password'} value={newPwd} onChange={e => setNewPwd(e.target.value)}
+              placeholder="Новый пароль (мин. 6 символов)" style={{ width: '100%', boxSizing: 'border-box', paddingRight: 44 }} />
+            <button type="button" onClick={() => setShowPwd(v => !v)} title={showPwd ? 'Скрыть' : 'Показать'}
+              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)', padding: 4 }}>
+              <i className={`bi ${showPwd ? 'bi-eye-slash' : 'bi-eye'}`} />
+            </button>
+          </div>
         </div>
 
         {msg && <div style={{ color: 'var(--red)', fontSize: 14, marginBottom: 10 }}>{msg}</div>}
