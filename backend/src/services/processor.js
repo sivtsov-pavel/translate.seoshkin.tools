@@ -137,6 +137,36 @@ export async function regenerateExercisesFromDb(lessonId) {
   }
 }
 
+// «Свои упражнения»: собрать набор упражнений из выбранных слов (по их id).
+// Слова уже существуют (из других уроков/словаря) — упражнения ссылаются на них.
+export async function generateCustomSet(lessonId, wordIds) {
+  try {
+    await setProgress(lessonId, 'Собираю упражнения из выбранных слов...')
+    const { rows: words } = await db.query(
+      'SELECT id, word_de, translation_ru, example_sentence FROM words WHERE id = ANY($1::int[]) ORDER BY id', [wordIds])
+    if (!words.length) {
+      await db.query("UPDATE lessons SET status='error', progress='Нет слов' WHERE id=$1", [lessonId])
+      return
+    }
+    const exercises = await generateExercises(words, [])
+    const wordMap = Object.fromEntries(words.map(w => [w.word_de, w.id]))
+    for (const ex of exercises) {
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+    }
+    for (const w of words) {
+      const payload = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', payload])
+    }
+    await enrichLesson(lessonId)  // переводы упражнений на все языки (у слов картинки/переводы уже есть)
+    await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
+  } catch (err) {
+    console.error('generateCustomSet:', err.message)
+    await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 100), lessonId])
+  }
+}
+
 export async function processLesson(lessonId, ownerId) {
   await db.query("UPDATE lessons SET status = 'processing', progress = 'Начинаем...' WHERE id = $1", [lessonId])
 

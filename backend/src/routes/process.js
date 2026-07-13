@@ -1,7 +1,22 @@
 import { db } from '../db/index.js'
-import { processLesson, enrichLesson } from '../services/processor.js'
+import { processLesson, enrichLesson, generateCustomSet } from '../services/processor.js'
 
 export async function processRoutes(fastify) {
+  // «Свои упражнения»: создать набор из выбранных слов словаря
+  fastify.post('/api/lessons/custom', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const { title, word_ids, course_id } = request.body || {}
+    if (!Array.isArray(word_ids) || !word_ids.length) return reply.status(400).send({ error: 'Выберите слова' })
+    const { rows } = await db.query(
+      "INSERT INTO lessons (owner_id, title, date, course_id, status) VALUES ($1, $2, CURRENT_DATE, $3, 'processing') RETURNING id",
+      [request.user.id, (title && title.trim()) || '✏️ Мой набор', course_id || null]
+    )
+    const lessonId = rows[0].id
+    generateCustomSet(lessonId, word_ids.map(Number).filter(Boolean)).catch(err =>
+      fastify.log.error({ lessonId, err }, 'Ошибка генерации своего набора'))
+    return { lessonId, started: true }
+  })
+
   // Запуск обработки — возвращает сразу, обработка идёт в фоне
   fastify.post('/api/lessons/:id/process', {
     preHandler: [fastify.authenticate],

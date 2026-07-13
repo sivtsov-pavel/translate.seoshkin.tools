@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
@@ -63,7 +63,10 @@ export default function Vocabulary() {
   const [loading, setLoading]   = useState(true)
   const [sending, setSending]   = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [creatingSet, setCreatingSet] = useState(false)
   const { t } = useI18nStore()
+  const { user } = useAuthStore()
+  const navigate = useNavigate()
   const isMobile = useIsMobile()
 
   useEffect(() => {
@@ -147,6 +150,29 @@ export default function Vocabulary() {
     return acc
   }, {})
 
+  // «Свои упражнения»: собрать набор из отфильтрованных слов (учитель)
+  const createSet = async () => {
+    const ids = filtered.map(w => w.id)
+    if (!ids.length) { alert('Нет слов в текущем фильтре'); return }
+    const hint = lessonFilter || (statusFilter ? filterLabels[statusFilter] : 'Мой набор')
+    const title = window.prompt(`Свой набор упражнений из ${ids.length} слов. Название:`, `✏️ ${hint}`.trim())
+    if (title === null) return
+    setCreatingSet(true)
+    try {
+      const res = await api.post('/lessons/custom', { title: title || undefined, word_ids: ids })
+      const poll = setInterval(async () => {
+        try {
+          const st = await api.get(`/lessons/${res.lessonId}/status`)
+          if (st.status !== 'processing') {
+            clearInterval(poll); setCreatingSet(false)
+            if (st.status === 'done') navigate(`/exercise-session?lesson_id=${res.lessonId}`)
+            else alert('Не удалось собрать набор: ' + (st.progress || ''))
+          }
+        } catch {}
+      }, 2500)
+    } catch (e) { setCreatingSet(false); alert('Ошибка: ' + e.message) }
+  }
+
   // Счётчик активных фильтров для бейджа
   const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
   // «Продвинутые» фильтры (курс/урок/часть речи) — на мобиле прячутся за шестерёнку
@@ -201,6 +227,13 @@ export default function Vocabulary() {
           <button onClick={sendToReader} disabled={sending}
             style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--accent)', fontWeight: 600, fontSize: 13, cursor: 'pointer', flex: '0 0 auto' }}>
             {sending ? '...' : '📖'}
+          </button>
+        )}
+        {view === 'words' && user?.role === 'owner' && (
+          <button onClick={createSet} disabled={creatingSet}
+            title="Собрать набор упражнений из отфильтрованных слов"
+            style={{ padding: '7px 12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
+            {creatingSet ? '⏳ Собираю...' : '✏️ Набор'}
           </button>
         )}
       </div>
