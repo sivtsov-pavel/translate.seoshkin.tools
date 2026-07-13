@@ -66,8 +66,8 @@ export default function Dashboard() {
           }}>
             <img src="/avatar/pablo.jpg" alt="Pablo" style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--accent)' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>✨ AI-тренер · Pablo</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Поговори по-немецки — голосом или текстом</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>✨ Hallo! Ich bin Pablo 👋</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Давай поговорим по-немецки — голосом или текстом</div>
             </div>
             <span style={{ fontSize: 22, flexShrink: 0 }}>🗣️</span>
           </div>
