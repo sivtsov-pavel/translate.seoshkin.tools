@@ -1,0 +1,332 @@
+[
+  {
+    "key": "daughter",
+    "emoji": "💝",
+    "title": "Комплименты дочке",
+    "phrases": [
+      {
+        "de": "Du bist so schön.",
+        "ru": "Ты такая красивая."
+      },
+      {
+        "de": "Deine Augen sind wunderschön.",
+        "ru": "Твои глаза такие красивые."
+      },
+      {
+        "de": "Dein Lächeln macht mich glücklich.",
+        "ru": "Твоя улыбка делает меня счастливым."
+      },
+      {
+        "de": "Du bist meine Prinzessin.",
+        "ru": "Ты моя принцесса."
+      },
+      {
+        "de": "Ich liebe dich über alles.",
+        "ru": "Я люблю тебя больше всего на свете."
+      },
+      {
+        "de": "Du bist mein Sonnenschein.",
+        "ru": "Ты мой солнечный лучик."
+      },
+      {
+        "de": "Du hast das schönste Lächeln.",
+        "ru": "У тебя самая красивая улыбка."
+      },
+      {
+        "de": "Du bist mein Schatz.",
+        "ru": "Ты мое сокровище."
+      },
+      {
+        "de": "Du machst die Welt heller.",
+        "ru": "Ты делаешь мир ярче."
+      },
+      {
+        "de": "Du bist einzigartig und besonders.",
+        "ru": "Ты уникальная и особенная."
+      },
+      {
+        "de": "Du bist mein ganzer Stolz.",
+        "ru": "Ты моя гордость."
+      },
+      {
+        "de": "Du bist mein größtes Glück.",
+        "ru": "Ты мое самое большое счастье."
+      }
+    ]
+  },
+  {
+    "key": "son",
+    "emoji": "🦸",
+    "title": "Слова сыну",
+    "phrases": [
+      {
+        "de": "Du bist so stark!",
+        "ru": "Ты такой сильный!"
+      },
+      {
+        "de": "Du bist mein kleiner Held.",
+        "ru": "Ты мой маленький герой."
+      },
+      {
+        "de": "Ich bin stolz auf dich.",
+        "ru": "Я горжусь тобой."
+      },
+      {
+        "de": "Du bist sehr mutig.",
+        "ru": "Ты очень смелый."
+      },
+      {
+        "de": "Du bist schlau.",
+        "ru": "Ты умный."
+      },
+      {
+        "de": "Du bist ein echter Helfer.",
+        "ru": "Ты настоящий помощник."
+      },
+      {
+        "de": "Papa liebt dich.",
+        "ru": "Папа тебя любит."
+      },
+      {
+        "de": "Du machst das toll.",
+        "ru": "Ты отлично справляешься."
+      },
+      {
+        "de": "Du bist mein Schatz.",
+        "ru": "Ты мой сокровище."
+      },
+      {
+        "de": "Du kannst alles schaffen.",
+        "ru": "Ты можешь всё сделать."
+      },
+      {
+        "de": "Ich bin immer für dich da.",
+        "ru": "Я всегда рядом с тобой."
+      },
+      {
+        "de": "Du bist wunderbar.",
+        "ru": "Ты замечательный."
+      }
+    ]
+  },
+  {
+    "key": "care",
+    "emoji": "🤗",
+    "title": "Ласка и забота",
+    "phrases": [
+      {
+        "de": "Komm her, wir kuscheln.",
+        "ru": "Иди сюда, обнимемся."
+      },
+      {
+        "de": "Ich bin immer bei dir.",
+        "ru": "Я всегда рядом с тобой."
+      },
+      {
+        "de": "Alles wird gut.",
+        "ru": "Всё будет хорошо."
+      },
+      {
+        "de": "Hab keine Angst.",
+        "ru": "Не бойся."
+      },
+      {
+        "de": "Ich liebe dich.",
+        "ru": "Я тебя люблю."
+      },
+      {
+        "de": "Du bist mein Sonnenschein.",
+        "ru": "Ты мой солнечный зайчик."
+      },
+      {
+        "de": "Ich bin stolz auf dich.",
+        "ru": "Я горжусь тобой."
+      },
+      {
+        "de": "Du bist so tapfer.",
+        "ru": "Ты такой смелый."
+      },
+      {
+        "de": "Du bist etwas ganz Besonderes.",
+        "ru": "Ты особенный."
+      },
+      {
+        "de": "Ich bin immer für dich da.",
+        "ru": "Я всегда для тебя здесь."
+      },
+      {
+        "de": "Du machst mich glücklich.",
+        "ru": "Ты делаешь меня счастливым."
+      },
+      {
+        "de": "Ich beschütze dich.",
+        "ru": "Я тебя защищу."
+      }
+    ]
+  },
+  {
+    "key": "night",
+    "emoji": "🌙",
+    "title": "Спокойной ночи",
+    "phrases": [
+      {
+        "de": "Gute Nacht, mein Schatz.",
+        "ru": "Спокойной ночи, мой дорогой."
+      },
+      {
+        "de": "Schlaf gut, mein Liebling.",
+        "ru": "Спи хорошо, моя любимая."
+      },
+      {
+        "de": "Ich hab dich lieb.",
+        "ru": "Я тебя люблю."
+      },
+      {
+        "de": "Träum schön, mein Engel.",
+        "ru": "Сладких снов, мой ангел."
+      },
+      {
+        "de": "Bis morgen, mein Kleiner.",
+        "ru": "До завтра, мой маленький."
+      },
+      {
+        "de": "Schöne Träume, mein Herz.",
+        "ru": "Приятных снов, мое сердечко."
+      },
+      {
+        "de": "Ich bin immer bei dir.",
+        "ru": "Я всегда с тобой."
+      },
+      {
+        "de": "Schlafe friedlich, mein Schatz.",
+        "ru": "Спи спокойно, мой дорогой."
+      },
+      {
+        "de": "Hab einen schönen Schlaf.",
+        "ru": "Пусть у тебя будет хороший сон."
+      },
+      {
+        "de": "Ich liebe dich bis zum Mond und zurück.",
+        "ru": "Я люблю тебя до луны и обратно."
+      },
+      {
+        "de": "Morgen ist ein neuer Tag.",
+        "ru": "Завтра будет новый день."
+      },
+      {
+        "de": "Träum süß, mein Kind.",
+        "ru": "Сладких снов, мое дитя."
+      }
+    ]
+  },
+  {
+    "key": "praise",
+    "emoji": "⭐",
+    "title": "Похвала",
+    "phrases": [
+      {
+        "de": "Gut gemacht!",
+        "ru": "Молодец!"
+      },
+      {
+        "de": "Du hast es geschafft!",
+        "ru": "Ты справился!"
+      },
+      {
+        "de": "Ich bin stolz auf dich!",
+        "ru": "Я горжусь тобой!"
+      },
+      {
+        "de": "Tolle Arbeit!",
+        "ru": "Отличная работа!"
+      },
+      {
+        "de": "Das hast du gut hinbekommen!",
+        "ru": "У тебя получилось!"
+      },
+      {
+        "de": "Super gemacht!",
+        "ru": "Супер сделано!"
+      },
+      {
+        "de": "Du bist klasse!",
+        "ru": "Ты классный!"
+      },
+      {
+        "de": "Prima!",
+        "ru": "Здорово!"
+      },
+      {
+        "de": "Du bist ein großer Schatz!",
+        "ru": "Ты большой молодец!"
+      },
+      {
+        "de": "Ganz toll!",
+        "ru": "Просто отлично!"
+      },
+      {
+        "de": "Du hast das super gemacht!",
+        "ru": "Ты это супер сделал!"
+      },
+      {
+        "de": "Ich freue mich so für dich!",
+        "ru": "Я так за тебя рад!"
+      }
+    ]
+  },
+  {
+    "key": "morning",
+    "emoji": "☀️",
+    "title": "Каждый день",
+    "phrases": [
+      {
+        "de": "Guten Morgen, Sonnenschein!",
+        "ru": "Доброе утро, солнышко!"
+      },
+      {
+        "de": "Wie hast du geschlafen?",
+        "ru": "Как спалось?"
+      },
+      {
+        "de": "Guten Appetit!",
+        "ru": "Приятного аппетита!"
+      },
+      {
+        "de": "Hab einen schönen Tag!",
+        "ru": "Хорошего дня!"
+      },
+      {
+        "de": "Ich habe dich vermisst.",
+        "ru": "Я скучал."
+      },
+      {
+        "de": "Schlaf gut, mein Schatz.",
+        "ru": "Спокойной ночи, мой сокровище."
+      },
+      {
+        "de": "Komm her, ich drück dich!",
+        "ru": "Иди сюда, я тебя обниму!"
+      },
+      {
+        "de": "Du bist mein Liebling.",
+        "ru": "Ты мой любимчик."
+      },
+      {
+        "de": "Pass auf dich auf!",
+        "ru": "Береги себя!"
+      },
+      {
+        "de": "Ich bin stolz auf dich.",
+        "ru": "Я горжусь тобой."
+      },
+      {
+        "de": "Alles wird gut.",
+        "ru": "Всё будет хорошо."
+      },
+      {
+        "de": "Du machst mich glücklich.",
+        "ru": "Ты делаешь меня счастливым."
+      }
+    ]
+  }
+]

@@ -140,6 +140,7 @@ export default function Layout({ children }) {
     { to: '/reader',                      icon: 'bi-eyeglasses',                label: t.nav.reader },
     { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
     { to: '/grammar',                     icon: 'bi-mortarboard-fill',          label: 'Грамматика' },
+    { to: '/love',                        icon: 'bi-heart-fill',                label: 'Любовь к детям' },
   ]
 
   const classItems = user?.role === 'owner' ? [

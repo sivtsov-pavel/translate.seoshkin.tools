@@ -74,6 +74,24 @@ export default function Dashboard() {
         </Link>
       </div>
 
+      {/* ❤️ Любовь к детям — душа продукта: тёплые фразы для детей */}
+      <div style={{ padding: '4px 12px 8px' }}>
+        <Link to="/love" style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(224,87,111,0.16), rgba(201,69,94,0.10))',
+            border: '2px solid #e0576f', borderRadius: 16, padding: '14px 16px',
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <span style={{ fontSize: 32, lineHeight: 1 }}>❤️</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Любовь к детям</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Тёплые немецкие фразы для дочки и сына — с любовью</div>
+            </div>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>→</span>
+          </div>
+        </Link>
+      </div>
+
       {/* Игры */}
       <div style={{ padding: '4px 12px 8px' }}>
         <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>

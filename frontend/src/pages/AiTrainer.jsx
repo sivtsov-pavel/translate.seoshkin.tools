@@ -80,6 +80,7 @@ const SCENARIOS = [
   { id: 'hotel',     label: { uk: '🏨 Готель', ru: '🏨 Отель', en: '🏨 Hotel', de: '🏨 Hotel', bg: '🏨 Хотел', tr: '🏨 Otel', ar: '🏨 الفندق', es: '🏨 Hotel', fr: '🏨 Hôtel', sq: '🏨 Hotel' } },
   { id: 'direction', label: { uk: '🗺️ Орієнтування', ru: '🗺️ Ориентирование', en: '🗺️ Directions', de: '🗺️ Orientierung', bg: '🗺️ Ориентиране', tr: '🗺️ Yön bulma', ar: '🗺️ الاتجاهات', es: '🗺️ Orientación', fr: '🗺️ Orientation', sq: '🗺️ Orientim' } },
   { id: 'free',      label: { uk: '💬 Вільна бесіда', ru: '💬 Свободная беседа', en: '💬 Free talk', de: '💬 Freies Gespräch', bg: '💬 Свободен разговор', tr: '💬 Serbest sohbet', ar: '💬 محادثة حرة', es: '💬 Charla libre', fr: '💬 Discussion libre', sq: '💬 Bisedë e lirë' } },
+  { id: 'family_love', label: { uk: '❤️ Любов до дітей', ru: '❤️ Любовь к детям', en: '❤️ Love for kids', de: '❤️ Liebe zu Kindern', bg: '❤️ Любов към децата', tr: '❤️ Çocuk sevgisi', ar: '❤️ حب الأطفال', es: '❤️ Amor por los niños', fr: '❤️ Amour des enfants', sq: '❤️ Dashuria për fëmijët' } },
   { id: 'interview_it',    label: { uk: '💻 Співбесіда: IT-агентство', ru: '💻 Собеседование: IT-агентство', en: '💻 Interview: IT agency', de: '💻 Bewerbung: IT-Agentur', bg: '💻 Интервю: IT агенция', tr: '💻 Mülakat: IT ajansı', ar: '💻 مقابلة: وكالة IT', es: '💻 Entrevista: agencia IT', fr: '💻 Entretien : agence IT', sq: '💻 Intervistë: agjenci IT' } },
   { id: 'interview_clean', label: { uk: '🧹 Співбесіда: клінінг', ru: '🧹 Собеседование: клининг', en: '🧹 Interview: cleaning', de: '🧹 Bewerbung: Reinigung', bg: '🧹 Интервю: почистване', tr: '🧹 Mülakat: temizlik', ar: '🧹 مقابلة: تنظيف', es: '🧹 Entrevista: limpieza', fr: '🧹 Entretien : nettoyage', sq: '🧹 Intervistë: pastrim' } },
   { id: 'interview_food',  label: { uk: '🍽️ Співбесіда: кафе/ресторан', ru: '🍽️ Собеседование: кафе/ресторан', en: '🍽️ Interview: café/restaurant', de: '🍽️ Bewerbung: Café/Restaurant', bg: '🍽️ Интервю: кафе/ресторант', tr: '🍽️ Mülakat: kafe/restoran', ar: '🍽️ مقابلة: مقهى/مطعم', es: '🍽️ Entrevista: café/restaurante', fr: '🍽️ Entretien : café/restaurant', sq: '🍽️ Intervistë: kafe/restorant' } },
@@ -303,6 +304,14 @@ export default function AiTrainer() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     voiceEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Пресет персонажа/сценария из URL (напр. с карточки «Любовь к детям»)
+  useEffect(() => {
+    const sc = searchParams.get('scenario')
+    const ch = searchParams.get('character')
+    if (sc && SCENARIOS.some(s => s.id === sc)) setScenario(sc)
+    if (ch && CHARACTERS.some(c => c.id === ch)) setCharacter(ch)
+  }, [searchParams])
 
   // Режим «Тренер по уроку»: пришли с ?lesson_id=… → подтягиваем слова урока
   useEffect(() => {
