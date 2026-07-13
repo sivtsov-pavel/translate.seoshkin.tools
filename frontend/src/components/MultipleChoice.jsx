@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
-import WordImage from './WordImage.jsx'
+import AvatarReaction from './AvatarReaction.jsx'
 import { getTranslation, getEffectiveLang } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
@@ -36,9 +36,12 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
 
   useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])
 
+  const [reaction, setReaction] = useState(null)
+
   const handleSelect = (idx) => {
     if (selected !== null) return
     setSelected(idx)
+    setReaction(idx === correctIdx ? 'correct' : 'wrong')  // Pablo оживает и реагирует
     if (idx === correctIdx) playCorrect(); else playWrong()
     // Автопрокрутка к результату и кнопке «Далее» — чтобы их было видно сразу
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 80)
@@ -66,7 +69,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
 
-      <WordImage imageUrl={imageUrl} wordDe={wordDe} bleed />
+      <AvatarReaction imageUrl={imageUrl} wordDe={wordDe} reaction={reaction} />
 
       <div className="exercise-card-content" style={{ padding: 24 }}>
       {lessonTitle && (
