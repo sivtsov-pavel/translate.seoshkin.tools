@@ -251,6 +251,14 @@ export default function Layout({ children }) {
             </>
           )}
 
+          {/* Платформа — только супер-админ (id=1) */}
+          {user?.id === 1 && (
+            <>
+              <SectionLabel label="Платформа" />
+              <NavItem item={{ to: '/admin', icon: 'bi-shield-lock-fill', label: 'Супер-админ' }} onClick={close} />
+            </>
+          )}
+
           {/* Настройки, чат и справка */}
           <div style={{ height: 1, background: 'var(--line)', margin: '8px 12px' }} />
           {/* Чат с бейджем */}
