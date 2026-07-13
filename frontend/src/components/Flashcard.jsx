@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
@@ -9,6 +9,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
   const [revealed, setRevealed] = useState(false)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading]   = useState(false)
+  const gradeRef = useRef(0)
   const { t, lang } = useI18nStore()
 
   useEffect(() => { speakAuto(payload.question) }, [payload.question])
@@ -17,12 +18,13 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
   const reveal = () => { setRevealed(true) }
 
-  // Оценка: Pablo реагирует клипом (Помню→верно, Забыл→неверно), потом листаем
+  // Оценка: Pablo реагирует клипом (Помню→верно, Забыл→неверно), листаем ПОСЛЕ клипа
   const grade = (q) => {
     if (grading) return
     setGrading(true)
-    setReaction(q >= 4 ? 'correct' : q <= 2 ? 'wrong' : null)
-    setTimeout(() => onAnswer(q), q === 3 ? 400 : 2600)
+    gradeRef.current = q
+    if (q === 3) { setTimeout(() => onAnswer(q), 300); return }  // «Сложно» — без клипа
+    setReaction(q >= 4 ? 'correct' : 'wrong')
   }
 
   return (
@@ -42,7 +44,8 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
           background: 'var(--surface)', marginBottom: 16, userSelect: 'none',
         }}
       >
-        <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction} />
+        <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
+          onReactionEnd={() => onAnswer(gradeRef.current)} />
 
         <div className="exercise-card-content" style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>

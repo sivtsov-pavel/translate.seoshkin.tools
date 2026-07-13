@@ -26,8 +26,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
     setSubmitted(true)
     setReaction(isCorrect ? 'correct' : 'wrong')  // Pablo реагирует клипом
     if (isCorrect) playCorrect(); else playWrong()
-    // Даём проиграться клипу реакции (со своей озвучкой), потом листаем
-    setTimeout(() => onAnswer(isCorrect ? 5 : 1, input.trim()), 2800)
+    // Листаем ТОЛЬКО после того как Pablo договорил (onReactionEnd) — см. AvatarReaction
   }
 
   const handleKey = (e) => { if (e.key === 'Enter') handleSubmit() }
@@ -52,7 +51,8 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
 
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
-      <AvatarReaction imageUrl={imageUrl} wordDe={payload.word_de} reaction={reaction} />
+      <AvatarReaction imageUrl={imageUrl} wordDe={payload.word_de} reaction={reaction}
+        onReactionEnd={() => onAnswer(correct ? 5 : 1, input.trim())} />
 
       <div className="exercise-card-content" style={{ padding: 24 }}>
       {lessonTitle && (

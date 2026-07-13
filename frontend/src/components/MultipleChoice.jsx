@@ -43,8 +43,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
     setSelected(idx)
     setReaction(idx === correctIdx ? 'correct' : 'wrong')  // Pablo оживает и реагирует
     if (idx === correctIdx) playCorrect(); else playWrong()
-    // Автопрокрутка к результату и кнопке «Далее» — чтобы их было видно сразу
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 80)
+    // Скролл к результату — ТОЛЬКО после того как Pablo договорил (onReactionEnd)
   }
 
   const getStyle = (idx) => {
@@ -69,7 +68,8 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
 
-      <AvatarReaction imageUrl={imageUrl} wordDe={wordDe} reaction={reaction} />
+      <AvatarReaction imageUrl={imageUrl} wordDe={wordDe} reaction={reaction}
+        onReactionEnd={() => setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 60)} />
 
       <div className="exercise-card-content" style={{ padding: 24 }}>
       {lessonTitle && (

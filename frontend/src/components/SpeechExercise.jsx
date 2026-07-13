@@ -351,7 +351,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
       {reactionClip ? (
-        <div className="word-image-bleed" style={{ position: 'relative' }}>
+        <div className="word-image-bleed avatar-reacting" style={{ position: 'relative' }}>
           <video src={reactionClip} autoPlay playsInline onEnded={() => setReactionClip(null)} onError={() => setReactionClip(null)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
