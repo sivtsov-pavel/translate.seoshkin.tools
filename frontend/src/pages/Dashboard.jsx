@@ -64,7 +64,7 @@ export default function Dashboard() {
             border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px',
             display: 'flex', alignItems: 'center', gap: 14,
           }}>
-            <img src="/avatar/pablo.jpg" alt="Pablo" style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--accent)' }} />
+            <div style={{ width: 46, height: 46, borderRadius: '50%', flexShrink: 0, border: '2px solid var(--accent)', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>🤓</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>✨ Hallo! Ich bin Pablo 👋</div>
               <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Давай поговорим по-немецки — голосом или текстом</div>
