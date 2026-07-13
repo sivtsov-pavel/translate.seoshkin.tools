@@ -190,6 +190,7 @@ export default function AiTrainer() {
   const [avatarAvailable, setAvatarAvailable] = useState(false)
   const [avatarBusy, setAvatarBusy] = useState(-1) // индекс сообщения, для которого генерится видео
   const bottomRef = useRef()
+  const voiceEndRef = useRef()  // автопрокрутка лога чата в голосовом режиме
   const inputRef = useRef()
   const lang = useI18nStore(s => s.lang)
   const S = uiStr(lang)
@@ -248,6 +249,7 @@ export default function AiTrainer() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    voiceEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   // Режим «Тренер по уроку»: пришли с ?lesson_id=… → подтягиваем слова урока
@@ -816,12 +818,11 @@ export default function AiTrainer() {
               </button>
             </div>
 
-            {/* Большой аватар */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: 420 }}>
-              <div style={{ position: 'relative', width: 'min(64vw, 240px)', height: 'min(64vw, 240px)', marginBottom: 20 }}>
-                {/* пульсирующее кольцо (цвета Германии) */}
+            {/* Аватар — компактно сверху */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, marginTop: 30 }}>
+              <div style={{ position: 'relative', width: 'min(44vw, 168px)', height: 'min(44vw, 168px)', marginBottom: 12 }}>
                 <div style={{
-                  position: 'absolute', inset: -10, borderRadius: '50%',
+                  position: 'absolute', inset: -8, borderRadius: '50%',
                   border: `3px solid ${stColor}`, opacity: active ? 0.9 : 0.3,
                   boxShadow: active ? `0 0 26px ${glow}` : 'none',
                   animation: active ? 'voice-pulse 1.4s ease-out infinite' : 'none',
@@ -839,33 +840,42 @@ export default function AiTrainer() {
                       transform: speaking ? 'scale(1.02)' : 'scale(1)' }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: char.color + '33',
-                    border: `3px solid ${stColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'min(28vw, 110px)' }}>
+                    border: `3px solid ${stColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'min(22vw, 80px)' }}>
                     {char.emoji}
                   </div>
                 )}
               </div>
-
-              <div style={{ fontWeight: 700, fontSize: 19 }}>{char.name}</div>
-              <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 14 }}>{loc(char.role, lang)}</div>
-
+              <div style={{ fontWeight: 700, fontSize: 17 }}>{char.name}</div>
               {/* Статус */}
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', fontSize: 14, fontWeight: 600, color: stColor }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', fontSize: 13, fontWeight: 600, color: stColor, marginTop: 8 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: stColor, animation: active ? 'pulse 1s infinite' : 'none' }} />
                 {st}
               </div>
+            </div>
 
-              {/* Последняя реплика тренера */}
-              {lastAi?.reply && (
-                <div style={{ marginTop: 18, textAlign: 'center', maxHeight: '22vh', overflowY: 'auto' }}>
-                  <div style={{ fontSize: 17, lineHeight: 1.5 }}>{lastAi.reply}</div>
-                  {lastAi.translation && <div style={{ fontSize: 13, opacity: 0.55, marginTop: 6 }}>{lastAi.translation}</div>}
-                </div>
-              )}
-              {/* Что распознал микрофон */}
-              {lastUser?.content && (
-                <div style={{ marginTop: 12, fontSize: 13, opacity: 0.5, fontStyle: 'italic' }}>« {lastUser.content} »</div>
-              )}
-              {error && <div style={{ marginTop: 12, color: '#ff8a7a', fontSize: 13 }}>{error}</div>}
+            {/* Лог чата — снизу, с прослушкой и переводом */}
+            <div style={{ flex: 1, width: '100%', maxWidth: 540, overflowY: 'auto', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 2px' }}>
+              {messages.map((m, i) => (
+                m.role === 'ai' ? (
+                  <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '88%', background: 'rgba(255,255,255,0.08)', borderRadius: '4px 14px 14px 14px', padding: '10px 13px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <span style={{ fontSize: 15, lineHeight: 1.45, fontWeight: 600 }}>{m.reply}</span>
+                      <button onClick={() => handleSpeak(m.reply)} title="Прослушать"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#fff', opacity: 0.65, flexShrink: 0, padding: 0, marginTop: 2 }}>🔊</button>
+                    </div>
+                    {m.translation && <div style={{ fontSize: 12.5, opacity: 0.55, marginTop: 4 }}>{m.translation}</div>}
+                    {m.correction && m.correction !== 'null' && (
+                      <div style={{ fontSize: 12.5, color: '#ffcf6b', marginTop: 5 }}>✏️ {m.correction}</div>
+                    )}
+                  </div>
+                ) : (
+                  <div key={i} style={{ alignSelf: 'flex-end', maxWidth: '88%', background: 'var(--accent)', color: 'var(--accent-ink)', borderRadius: '14px 4px 14px 14px', padding: '9px 13px', fontSize: 15 }}>
+                    {m.content}
+                  </div>
+                )
+              ))}
+              {error && <div style={{ color: '#ff8a7a', fontSize: 13, textAlign: 'center' }}>{error}</div>}
+              <div ref={voiceEndRef} />
             </div>
 
             {/* Нижние контролы */}
