@@ -176,7 +176,9 @@ export async function processNewMedia(lessonId) {
       } catch (e) { console.error('processNewMedia extract', e.message) }
     }
     if (!extractions.length) continue
-    const cons = await mergeLesson(extractions, null)
+    // Умная обработка: сверяем с уже имеющимися словами урока (тетрадь после учебника)
+    const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
+    const cons = await mergeLesson(extractions, null, existRows.map(r => r.word_de))
     for (const w of (cons.words || [])) {
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)
@@ -297,7 +299,9 @@ export async function processLesson(lessonId, ownerId) {
       const ex = await extractPhotos(list, offset)
       if (ex.length === 0 && !text) return
       await setProgress(lessonId, 'Составляю конспект урока...')
-      const cons = await mergeLesson(ex, text)
+      // Тетрадь/доска (extra) сверяется с уже извлечёнными словами учебника — не дублируем
+      const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
+      const cons = await mergeLesson(ex, text, existRows.map(r => r.word_de))
       for (const word of (cons.words || [])) {
         await db.query(
           `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)

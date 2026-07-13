@@ -69,24 +69,41 @@ export async function extractFromPhoto(filepath) {
 }
 
 const MERGE_PROMPT = `Объедини данные из нескольких фото страниц урока немецкого (A1) в единый конспект.
-Правила:
-- Убери дубли слов (оставь лучший вариант с переводом и примером)
-- Нормализуй существительные: добавь артикль (der/die/das) если известен
-- Объедини грамматические правила без дублей
+Правила нормализации (ВАЖНО, соблюдай строго):
+- Существительные ВСЕГДА с определённым артиклем и с большой буквы: "der Tisch", "die Lampe", "das Buch". Если род не указан в тексте — определи сам, ты знаешь немецкий. НЕ оставляй существительное без артикля.
+- Глаголы — в инфинитиве, с маленькой буквы: "gehen", "trinken".
+- Прилагательные, наречия, частицы, местоимения — с маленькой буквы.
+- Убери дубли: "Kaffee" и "der Kaffee" — это ОДНО слово, оставь форму с артиклем. Разный регистр одного слова — не новый вход (ИСКЛЮЧЕНИЕ: "Sie/sie" и "Ihr/ihr" — это РАЗНЫЕ слова, оставь оба).
+- Объедини грамматические правила без дублей.
 
 Верни ТОЛЬКО JSON без markdown:
 {"words": [{"word_de": "...", "translation_ru": "...", "example_sentence": "..."}], "grammar_points": [{"description": "...", "example": "..."}]}`
 
-async function mergeChunk(extractions, transcription = null) {
+// Ключ для дедупа: без ведущего артикля и регистра, чтобы "Kaffee" и "der Kaffee"
+// схлопывались в одно. Sie/sie и Ihr/ihr — разные слова, для них ключ различаем.
+function wordKey(word_de) {
+  const s = (word_de || '').trim()
+  const bare = s.toLowerCase().replace(/^(der|die|das)\s+/, '').trim()
+  if (bare === 'sie' || bare === 'ihr') return s // регистр важен
+  return bare
+}
+const hasArticle = (s) => /^(der|die|das)\s/i.test(s || '')
+
+async function mergeChunk(extractions, transcription = null, existingWords = []) {
   const slim = extractions.map(e => ({ words: e.words || [], grammar_points: e.grammar_points || [] }))
   const input = JSON.stringify({ extractions: slim, transcription }, null, 2)
-  return parseJson(await ask(`${MERGE_PROMPT}\n\nДанные:\n${input}`, { max_tokens: 8192 }))
+  // Умная обработка тетради/доски: даём модели список уже имеющихся слов урока,
+  // чтобы она НЕ дублировала их, но могла исправить форму (напр. дописать артикль).
+  const existingBlock = existingWords.length
+    ? `\n\nВ УРОКЕ УЖЕ ЕСТЬ эти слова — не добавляй их повторно. Если новое фото уточняет слово (напр. даёт артикль или пример) — верни исправленную форму, иначе пропусти. Возвращай в основном НОВЫЕ слова:\n${existingWords.slice(0, 200).join(', ')}`
+    : ''
+  return parseJson(await ask(`${MERGE_PROMPT}\n\nДанные:\n${input}${existingBlock}`, { max_tokens: 8192 }))
 }
 
-export async function mergeLesson(extractions, transcription = null) {
+export async function mergeLesson(extractions, transcription = null, existingWords = []) {
   const CHUNK = 6
   if (extractions.length <= CHUNK) {
-    return mergeChunk(extractions, transcription)
+    return mergeChunk(extractions, transcription, existingWords)
   }
 
   const chunks = []
@@ -96,15 +113,18 @@ export async function mergeLesson(extractions, transcription = null) {
 
   const partials = []
   for (let i = 0; i < chunks.length; i++) {
-    const partial = await mergeChunk(chunks[i], i === 0 ? transcription : null)
+    const partial = await mergeChunk(chunks[i], i === 0 ? transcription : null, existingWords)
     partials.push(partial)
   }
 
   const seenWords = new Map()
   for (const p of partials) {
     for (const w of (p.words || [])) {
-      const key = w.word_de?.toLowerCase().trim()
-      if (key && !seenWords.has(key)) seenWords.set(key, w)
+      const key = wordKey(w.word_de)
+      if (!key) continue
+      const prev = seenWords.get(key)
+      // При дубле предпочитаем форму с артиклем
+      if (!prev || (hasArticle(w.word_de) && !hasArticle(prev.word_de))) seenWords.set(key, w)
     }
   }
 
