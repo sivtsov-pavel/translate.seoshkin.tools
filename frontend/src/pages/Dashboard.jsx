@@ -4,6 +4,7 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation, getLessonTitle } from '../utils/translation.js'
+import AdSlot from '../components/AdSlot.jsx'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
 const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🃏', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️', speech: '🗣️', dictation: '🎙️' }
@@ -158,6 +159,9 @@ export default function Dashboard() {
           </span>
         </button>
       )}
+
+      {/* Реклама для бесплатных на планшете/десктопе (управляется супер-админкой) */}
+      <AdSlot />
     </div>
   )
 }

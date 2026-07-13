@@ -9,9 +9,20 @@ import { config } from '../config.js'
 
 async function getUserDailyLimit(userId) {
   const { rows } = await db.query(
-    `SELECT daily_limit FROM user_settings WHERE user_id = $1`, [userId]
+    `SELECT us.daily_limit, u.plan,
+            (SELECT config FROM platform_settings WHERE id = 1) AS pconfig
+     FROM users u LEFT JOIN user_settings us ON us.user_id = u.id
+     WHERE u.id = $1`, [userId]
   )
-  return rows[0]?.daily_limit ?? 50
+  let limit = rows[0]?.daily_limit ?? 50
+  // Платформенный лимит для бесплатных (v2): режет личную цель, но только когда
+  // включена платная версия и пользователь не премиум. Иначе не трогаем.
+  const mon = rows[0]?.pconfig?.monetization
+  const plan = rows[0]?.plan ?? 'free'
+  if (mon?.paid_enabled && plan !== 'premium' && mon.free_daily_limit > 0) {
+    limit = Math.min(limit, mon.free_daily_limit)
+  }
+  return limit
 }
 
 export async function exercisesRoutes(fastify) {

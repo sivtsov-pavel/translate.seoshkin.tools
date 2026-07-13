@@ -63,6 +63,33 @@ export async function adminRoutes(fastify) {
     return { ok: true, config }
   })
 
+  // Публичный конфиг для клиента (любой залогиненный): что показывать —
+  // реклама по девайсам и статус лимитов. Без гейта супер-админа, но отдаём
+  // только безопасные поля (без ключей/тарифов).
+  fastify.get('/api/platform/public-config', { preHandler: [fastify.authenticate] }, async (request) => {
+    const [{ rows: prows }, { rows: urows }] = await Promise.all([
+      db.query('SELECT config FROM platform_settings WHERE id=1'),
+      db.query('SELECT plan FROM users WHERE id=$1', [request.user.id]),
+    ])
+    const cfg = prows[0]?.config ?? {}
+    const plan = urows[0]?.plan ?? 'free'
+    const isPremium = plan === 'premium'
+    const ads = cfg.ads ?? {}
+    const mon = cfg.monetization ?? {}
+    return {
+      plan,
+      ads: {
+        showForMe: !!ads.enabled && !isPremium,
+        mobile: !!ads.mobile, tablet: !!ads.tablet, desktop: !!ads.desktop,
+        client: ads.adsense_client || '', slot: ads.adsense_slot || '',
+      },
+      limits: {
+        enforced: !!mon.paid_enabled && !isPremium,
+        dailyLimit: mon.free_daily_limit ?? 0,
+      },
+    }
+  })
+
   // Список всех пользователей с активностью и объёмом контента
   fastify.get('/api/admin/users', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (!isSuperAdmin(request, reply)) return
