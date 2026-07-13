@@ -2,6 +2,7 @@ import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
+import { generateWordImage } from '../services/imageGen.js'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join, extname } from 'path'
 import { config } from '../config.js'
@@ -454,12 +455,11 @@ export async function exercisesRoutes(fastify) {
     if (!rows[0]) return reply.status(404).send({ error: 'Слово не найдено' })
 
     const { word_de, translation_ru } = rows[0]
-    const remoteUrl = (translation_ru ? await fetchImageUrl(translation_ru) : null)
-      ?? await fetchImageUrl(word_de)
-      ?? await fetchRandomImageUrl(word_de)
-    if (!remoteUrl) return reply.status(502).send({ error: 'Unsplash не нашёл картинку' })
+    // Кнопка «обновить фото» теперь ГЕНЕРИРУЕТ новую детскую картинку (gpt-image-1),
+    // а не ищет фото в Unsplash. По просьбе Павла — единый детский стиль.
+    const imageUrl = await generateWordImage(word_de, translation_ru, wordId)
+    if (!imageUrl) return reply.status(502).send({ error: 'Не удалось сгенерировать картинку' })
 
-    const imageUrl = await downloadAndSave(remoteUrl, wordId)
     await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [imageUrl, wordId])
     return { image_url: imageUrl }
   })
