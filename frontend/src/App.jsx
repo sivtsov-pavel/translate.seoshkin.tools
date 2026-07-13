@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import CookieConsent from './components/CookieConsent.jsx'
+import InstallPWA from './components/InstallPWA.jsx'
 import { useAuthStore } from './store/auth.js'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/cookies" element={<Cookies />} />
       </Routes>
       <CookieConsent />
+      <InstallPWA />
     </BrowserRouter>
   )
 }
