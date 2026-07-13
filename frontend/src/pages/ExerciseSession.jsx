@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -14,6 +14,13 @@ import SpeechExercise from '../components/SpeechExercise.jsx'
 export default function ExerciseSession() {
   const [exercises, setExercises] = useState([])
   const [current, setCurrent]     = useState(0)
+  const contentRef = useRef(null)
+  // При переходе к следующему упражнению — скроллим наверх (иначе верх карточки/картинка
+  // остаётся под хедером после прокрутки к результату предыдущего)
+  useEffect(() => {
+    contentRef.current?.scrollTo?.({ top: 0 })
+    window.scrollTo?.({ top: 0 })
+  }, [current])
   const [loading, setLoading]     = useState(true)
   const navigate                  = useNavigate()
   const [searchParams]            = useSearchParams()
@@ -85,7 +92,7 @@ export default function ExerciseSession() {
       </div>
 
       {/* Контент упражнения — заполняет оставшееся место */}
-      <div className="exercise-session-content">
+      <div className="exercise-session-content" ref={contentRef}>
         {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
         {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
         {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}

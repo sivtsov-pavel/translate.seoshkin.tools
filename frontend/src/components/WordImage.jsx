@@ -2,24 +2,14 @@ import { useState } from 'react'
 
 const PABLO = '/avatar/pablo.jpg'
 
-// Кружок с аватаром Pablo и пульсирующей рамкой в цветах Германии (красно-жёлтая).
-// children — видео-реакция (если играет), иначе статичное фото. reaction красит рамку.
-export function PabloCircle({ wordDe, reaction, children }) {
-  const article = wordDe?.match(/^(der|die|das|ein|eine)\s+/i)?.[1] || ''
-  const label = wordDe ? wordDe.replace(/^(der|die|das|ein|eine)\s+/i, '') : ''
-  const cls = 'pablo-circle' + (reaction === 'correct' ? ' react-correct' : reaction === 'wrong' ? ' react-wrong' : '')
+// Кружок с аватаром Pablo и пульсирующей рамкой (жёлтая в покое, красная когда говорит).
+// children — видео-реакция (если играет), иначе статичное фото.
+export function PabloCircle({ reaction, children }) {
+  const cls = 'pablo-circle' + (reaction ? ' speaking' : '')
   return (
-    <>
-      <div className={cls}>
-        {children || <img src={PABLO} alt="" />}
-      </div>
-      {label && (
-        <div className="pablo-word">
-          {article && <span className="pablo-art">{article}</span>}
-          {label}
-        </div>
-      )}
-    </>
+    <div className={cls}>
+      {children || <img src={PABLO} alt="" />}
+    </div>
   )
 }
 

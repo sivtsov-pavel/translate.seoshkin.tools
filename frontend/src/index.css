@@ -212,23 +212,25 @@ a { color: var(--accent); text-decoration: none; }
 .word-image-bleed.has-photo { background: radial-gradient(120% 120% at 50% 12%, #222834 0%, #14171d 82%); }
 .word-photo { max-width: 92%; max-height: 90%; object-fit: contain; border-radius: 10px; display: block; }
 
-/* Кружок аватара Pablo с пульсирующей рамкой в цветах Германии (красно-жёлтая) */
+/* Кружок аватара Pablo: рамка ЖЁЛТАЯ в покое, КРАСНАЯ когда говорит (цвета Германии) */
 .pablo-circle {
-  width: min(48%, 158px); aspect-ratio: 1; border-radius: 50%;
+  width: min(52%, 168px); aspect-ratio: 1; border-radius: 50%;
   overflow: hidden; position: relative; border: 3px solid #FFCE00;
-  animation: ger-pulse 2.2s ease-in-out infinite;
+  animation: pulse-idle 2.4s ease-in-out infinite;
 }
-.pablo-circle img, .pablo-circle video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pablo-circle.react-correct { border-color: #111; animation: none; box-shadow: 0 0 0 4px rgba(255,206,0,.55), 0 0 26px rgba(255,206,0,.6); }
-.pablo-circle.react-wrong   { border-color: #DD0000; animation: none; box-shadow: 0 0 0 4px rgba(221,0,0,.45), 0 0 26px rgba(221,0,0,.6); }
-.pablo-word { color: #fff; font-family: Georgia, serif; font-weight: 700; font-size: clamp(17px, 4.6vw, 26px); text-align: center; padding: 0 12px; line-height: 1.15; text-shadow: 0 1px 5px rgba(0,0,0,.6); }
-.pablo-art { display: block; font-size: .58em; color: #FFCE00; letter-spacing: .05em; }
+.pablo-circle img, .pablo-circle video { width: 100%; height: 100%; object-fit: cover; object-position: 72% 38%; display: block; }
+.pablo-circle.speaking { border-color: #DD0000; animation: pulse-speak 1s ease-in-out infinite; }
 .word-image-mini { width: 120px; max-width: 100%; aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; margin: 0 auto 12px; background: var(--surface-2); }
 
-/* Пульс рамки: красный ↔ жёлтый (флаг Германии на чёрном телефоне) */
-@keyframes ger-pulse {
-  0%, 100% { border-color: #DD0000; box-shadow: 0 0 0 0 rgba(221,0,0,.5),   0 0 16px rgba(221,0,0,.35); }
-  50%      { border-color: #FFCE00; box-shadow: 0 0 0 6px rgba(255,206,0,0), 0 0 16px rgba(255,206,0,.5); }
+/* Покой — мягкий жёлтый пульс */
+@keyframes pulse-idle {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,206,0,.5),  0 0 14px rgba(255,206,0,.3); }
+  50%      { box-shadow: 0 0 0 7px rgba(255,206,0,0), 0 0 14px rgba(255,206,0,.5); }
+}
+/* Говорит — активный красный пульс */
+@keyframes pulse-speak {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(221,0,0,.6),   0 0 18px rgba(221,0,0,.5); }
+  50%      { box-shadow: 0 0 0 8px rgba(221,0,0,0),  0 0 18px rgba(221,0,0,.7); }
 }
 
 @media (min-width: 641px) {
