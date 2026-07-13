@@ -5,6 +5,30 @@ import { usePushNotifications } from '../hooks/usePushNotifications.jsx'
 
 const VOICE_KEY = 'de_voice_name'
 
+// Тумблер «реакции тренера Pablo в упражнениях» (видео верно/неверно). Можно отключить — только текст.
+function TrainerReactionsRow() {
+  const [on, setOn] = useState(() => localStorage.getItem('trainer_reactions') !== 'false')
+  const toggle = () => {
+    const next = !on
+    localStorage.setItem('trainer_reactions', next ? 'true' : 'false')
+    setOn(next)
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderTop: '1px solid var(--line)', marginTop: 8 }}>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: 14 }}>🗣️ Тренер в упражнениях</div>
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Pablo реагирует видео на ответ (верно/неверно). Выключи — только текст.</div>
+      </div>
+      <button onClick={toggle} style={{
+        flexShrink: 0, width: 52, height: 30, borderRadius: 999, border: 'none', cursor: 'pointer', position: 'relative',
+        background: on ? 'var(--accent)' : 'var(--surface-2)', transition: 'background .2s',
+      }}>
+        <span style={{ position: 'absolute', top: 3, left: on ? 25 : 3, width: 24, height: 24, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.3)' }} />
+      </button>
+    </div>
+  )
+}
+
 function VoicePicker() {
   const [voices, setVoices] = useState([])
   const [selected, setSelected] = useState(() => localStorage.getItem(VOICE_KEY) || '')
@@ -403,6 +427,7 @@ export default function Settings() {
         </Row>
 
         <VoicePicker />
+        <TrainerReactionsRow />
       </Section>
 
       {/* ── Видео-аватар (платная опция D-ID) ── */}

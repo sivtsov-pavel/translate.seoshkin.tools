@@ -12,6 +12,11 @@ export default function AvatarReaction({ imageUrl, wordDe, reaction, onReactionE
   useEffect(() => {
     if (reaction !== 'correct' && reaction !== 'wrong') return
     endedRef.current = false
+    // Тренер в упражнениях можно отключить в настройках — тогда без видео, просто листаем
+    if (localStorage.getItem('trainer_reactions') === 'false') {
+      const t = setTimeout(() => end(), 700)
+      return () => clearTimeout(t)
+    }
     setClip(reaction === 'correct' ? '/avatar/clips/correct.mp4' : '/avatar/clips/wrong.mp4')
     // Страховка: если видео не проиграется/не отдаст onEnded — листаем через 5с
     const safety = setTimeout(() => end(), 5000)
