@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
-import WordImage from './WordImage.jsx'
+import AvatarReaction from './AvatarReaction.jsx'
 import { getTranslation } from '../utils/translation.js'
 import { JustifyHint } from './ExerciseActions.jsx'
 
 export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
   const [revealed, setRevealed] = useState(false)
+  const [reaction, setReaction] = useState(null)
+  const [grading, setGrading]   = useState(false)
   const { t, lang } = useI18nStore()
 
   useEffect(() => { speakAuto(payload.question) }, [payload.question])
@@ -14,6 +16,14 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
   const answer = getTranslation(translations, lang, translationRu || payload.answer)
 
   const reveal = () => { setRevealed(true) }
+
+  // Оценка: Pablo реагирует клипом (Помню→верно, Забыл→неверно), потом листаем
+  const grade = (q) => {
+    if (grading) return
+    setGrading(true)
+    setReaction(q >= 4 ? 'correct' : q <= 2 ? 'wrong' : null)
+    setTimeout(() => onAnswer(q), q === 3 ? 400 : 2600)
+  }
 
   return (
     <div>
@@ -32,7 +42,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
           background: 'var(--surface)', marginBottom: 16, userSelect: 'none',
         }}
       >
-        <WordImage imageUrl={imageUrl} wordDe={payload.question} bleed />
+        <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction} />
 
         <div className="exercise-card-content" style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
@@ -55,14 +65,14 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
       <JustifyHint wordDe={payload.question} correctAnswer={payload.answer} type="flashcard" />
 
       {revealed && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-          <button onClick={() => onAnswer(1)} style={{ ...answerBtn, background: 'var(--red)' }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12, opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>
+          <button onClick={() => grade(1)} style={{ ...answerBtn, background: 'var(--red)' }}>
             {t.exercise.forgot}
           </button>
-          <button onClick={() => onAnswer(3)} style={{ ...answerBtn, background: '#B07D1B' }}>
+          <button onClick={() => grade(3)} style={{ ...answerBtn, background: '#B07D1B' }}>
             {t.exercise.hard}
           </button>
-          <button onClick={() => onAnswer(5)} style={{ ...answerBtn, background: 'var(--good)' }}>
+          <button onClick={() => grade(5)} style={{ ...answerBtn, background: 'var(--good)' }}>
             {t.exercise.remembered}
           </button>
         </div>

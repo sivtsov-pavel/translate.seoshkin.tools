@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, speak, SpeakButton } from '../hooks/useSpeech.jsx'
-import WordImage from './WordImage.jsx'
+import AvatarReaction from './AvatarReaction.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 
 export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
   const [input, setInput]       = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [correct, setCorrect]   = useState(false)
+  const [reaction, setReaction] = useState(null)
   const inputRef = useRef(null)
   const { t, lang } = useI18nStore()
   const hint = translations?.[lang] || translationRu || payload.translation_ru
@@ -23,9 +24,10 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
     const isCorrect = input.trim().toLowerCase() === payload.answer.trim().toLowerCase()
     setCorrect(isCorrect)
     setSubmitted(true)
+    setReaction(isCorrect ? 'correct' : 'wrong')  // Pablo реагирует клипом
     if (isCorrect) playCorrect(); else playWrong()
-    setTimeout(() => speak(payload.word_de), 300)
-    setTimeout(() => onAnswer(isCorrect ? 5 : 1, input.trim()), 1500)
+    // Даём проиграться клипу реакции (со своей озвучкой), потом листаем
+    setTimeout(() => onAnswer(isCorrect ? 5 : 1, input.trim()), 2800)
   }
 
   const handleKey = (e) => { if (e.key === 'Enter') handleSubmit() }
@@ -50,7 +52,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
 
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
-      <WordImage imageUrl={imageUrl} wordDe={payload.word_de} bleed />
+      <AvatarReaction imageUrl={imageUrl} wordDe={payload.word_de} reaction={reaction} />
 
       <div className="exercise-card-content" style={{ padding: 24 }}>
       {lessonTitle && (
