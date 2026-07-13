@@ -285,6 +285,9 @@ export default function Layout({ children }) {
             )}
           </Link>
           <NavItem item={{ to: '/settings', icon: 'bi-gear-fill', label: 'Настройки' }} onClick={close} />
+          {user && user.plan !== 'premium' && (
+            <NavItem item={{ to: '/upgrade', icon: 'bi-star-fill', label: '⭐ Premium' }} onClick={close} />
+          )}
           <NavItem item={{ to: '/wiki', icon: 'bi-question-circle-fill', label: t.nav.wiki }} onClick={close} />
         </div>
 

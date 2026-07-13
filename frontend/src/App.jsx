@@ -32,6 +32,7 @@ import Cookies from './pages/Cookies.jsx'
 import Profile from './pages/Profile.jsx'
 import AiTrainer from './pages/AiTrainer.jsx'
 import Admin from './pages/Admin.jsx'
+import Upgrade from './pages/Upgrade.jsx'
 import Layout from './components/Layout.jsx'
 
 function ProtectedRoute({ children }) {
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="/profile"    element={<ProtectedRoute><Layout><Profile    /></Layout></ProtectedRoute>} />
         <Route path="/ai-trainer" element={<ProtectedRoute><Layout><AiTrainer /></Layout></ProtectedRoute>} />
         <Route path="/admin"      element={<ProtectedRoute><Layout><Admin      /></Layout></ProtectedRoute>} />
+        <Route path="/upgrade"    element={<ProtectedRoute><Layout><Upgrade    /></Layout></ProtectedRoute>} />
         <Route path="/docs"    element={<Docs />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms"   element={<Terms />} />

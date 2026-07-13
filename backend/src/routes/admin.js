@@ -87,6 +87,9 @@ export async function adminRoutes(fastify) {
         enforced: !!mon.paid_enabled && !isPremium,
         dailyLimit: mon.free_daily_limit ?? 0,
       },
+      // Тарифы для страницы подписки (можно показывать всем)
+      paidEnabled: !!mon.paid_enabled,
+      pricing: cfg.pricing ?? {},
     }
   })
 

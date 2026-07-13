@@ -75,7 +75,7 @@ export async function authRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request) => {
     const { rows } = await db.query(
-      'SELECT id, email, role, avatar, phone, telegram, whatsapp, profession, full_name FROM users WHERE id = $1',
+      'SELECT id, email, role, avatar, phone, telegram, whatsapp, profession, full_name, plan FROM users WHERE id = $1',
       [request.user.id]
     )
     return rows[0] ?? request.user

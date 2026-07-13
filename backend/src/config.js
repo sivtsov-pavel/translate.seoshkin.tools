@@ -8,4 +8,10 @@ export const config = {
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   unsplashAccessKey: process.env.UNSPLASH_ACCESS_KEY || '',
   uploadDir: process.env.UPLOAD_DIR || './uploads',
+  // Stripe (подписки v2) — только сервер, в git не писать
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+  stripePriceMonthly: process.env.STRIPE_PRICE_MONTHLY || '',
+  stripePriceYearly: process.env.STRIPE_PRICE_YEARLY || '',
+  publicUrl: process.env.PUBLIC_URL || 'https://translate.seoshkin.tools',
 }
