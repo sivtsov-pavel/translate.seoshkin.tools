@@ -1,0 +1,320 @@
+[
+  {
+    "title": "Предлоги с падежами",
+    "emoji": "📚",
+    "topic_de": "Präpositionen",
+    "summary_ru": "Эти предлоги управляют разными падежами в зависимости от смысла. Некоторые предлоги требуют аккузатива, другие — датива, и есть те, которые в зависимости от вопроса требуют разные падежи.",
+    "sections": [
+      {
+        "heading": "Akkusativ",
+        "rows": [
+          "bis",
+          "ohne",
+          "für",
+          "durch",
+          "gegen",
+          "um"
+        ],
+        "note_ru": "Эти предлоги всегда сочетаются с аккузативом."
+      },
+      {
+        "heading": "Akk./Dat.",
+        "rows": [
+          "in",
+          "auf",
+          "an",
+          "über",
+          "unter",
+          "neben",
+          "hinter",
+          "vor",
+          "zwischen"
+        ],
+        "note_ru": "Предлоги, которые требуют либо аккузатива, либо датива в зависимости от вопроса Wohin? или Wo?"
+      },
+      {
+        "heading": "Dativ",
+        "rows": [
+          "ab",
+          "zu",
+          "außer",
+          "bei",
+          "nach",
+          "von",
+          "aus",
+          "mit",
+          "seit",
+          "gegenüber"
+        ],
+        "note_ru": "Эти предлоги всегда требуют датива."
+      }
+    ],
+    "image": "/grammar/g1.jpg"
+  },
+  {
+    "title": "Konjunktiv II для sein и haben",
+    "emoji": "📝",
+    "topic_de": "Konjunktiv II",
+    "summary_ru": "Konjunktiv II используется для выражения фантазий, пожеланий и нереальных ситуаций. Это важно для построения сложных предложений в немецком языке.",
+    "sections": [
+      {
+        "heading": "sein",
+        "rows": [
+          "ich wäre",
+          "du wärst",
+          "er/sie/es wäre",
+          "wir wären",
+          "ihr wärt",
+          "sie/Sie wären"
+        ],
+        "note_ru": "Формы для глагола sein в Konjunktiv II."
+      },
+      {
+        "heading": "würde",
+        "rows": [
+          "ich würde",
+          "du würdest",
+          "er/sie/es würde",
+          "wir würden",
+          "ihr würdet",
+          "sie/Sie würden"
+        ],
+        "note_ru": "Универсальные формы с würde для образа действия."
+      },
+      {
+        "heading": "haben",
+        "rows": [
+          "ich hätte",
+          "du hättest",
+          "er/sie/es hätte",
+          "wir hätten",
+          "ihr hättet",
+          "sie/Sie hätten"
+        ],
+        "note_ru": "Формы для глагола haben в Konjunktiv II."
+      }
+    ],
+    "image": "/grammar/g2.jpg"
+  },
+  {
+    "title": "Спряжение глаголов в настоящем времени",
+    "emoji": "🔤",
+    "topic_de": "die Konjugation",
+    "summary_ru": "Этот плакат показывает, как спрягаются отдельные немецкие глаголы в настоящем времени с разными местоимениями. Это важно для правильного использования глаголов в предложениях.",
+    "sections": [
+      {
+        "heading": "kommen",
+        "rows": [
+          "ich komme",
+          "du kommst",
+          "er/sie/es/man kommt",
+          "wir kommen",
+          "ihr kommt",
+          "sie/Sie kommen"
+        ],
+        "note_ru": "Глагол «kommen» — приходить."
+      },
+      {
+        "heading": "heißen",
+        "rows": [
+          "ich heiße",
+          "du heißt",
+          "er/sie/es/man heißt",
+          "wir heißen",
+          "ihr heißt",
+          "sie/Sie heißen"
+        ],
+        "note_ru": "Глагол «heißen» — называться."
+      },
+      {
+        "heading": "sprechen",
+        "rows": [
+          "ich spreche",
+          "du sprichst",
+          "er/sie/es/man spricht",
+          "wir sprechen",
+          "ihr sprecht",
+          "sie/Sie sprechen"
+        ],
+        "note_ru": "Глагол «sprechen» — говорить."
+      },
+      {
+        "heading": "sein",
+        "rows": [
+          "ich bin",
+          "du bist",
+          "er/sie/es ist",
+          "wir sind",
+          "ihr seid",
+          "sie/Sie sind"
+        ],
+        "note_ru": "Глагол «sein» — быть."
+      },
+      {
+        "heading": "haben",
+        "rows": [
+          "ich habe",
+          "du hast",
+          "er/sie/es hat",
+          "wir haben",
+          "ihr habt",
+          "sie/Sie haben"
+        ],
+        "note_ru": "Глагол «haben» — иметь."
+      }
+    ],
+    "image": "/grammar/g3.jpg"
+  },
+  {
+    "title": "Личные глагольные формы",
+    "emoji": "📝",
+    "topic_de": "Konjugation von Verben",
+    "summary_ru": "Это таблицы спряжения глаголов «kommen», «heißen», «sprechen», «sein» и «haben» в настоящем времени. Запомнить личные формы важно для правильного употребления этих глаголов в речи.",
+    "sections": [
+      {
+        "heading": "kommen",
+        "rows": [
+          "ich komme",
+          "du kommst",
+          "er/sie/es/man kommt",
+          "wir kommen",
+          "ihr kommt",
+          "sie/Sie kommen"
+        ],
+        "note_ru": null
+      },
+      {
+        "heading": "heißen",
+        "rows": [
+          "ich heiße",
+          "du heißt",
+          "er/sie/es/man heißt",
+          "wir heißen",
+          "ihr heißt",
+          "sie/Sie heißen"
+        ],
+        "note_ru": null
+      },
+      {
+        "heading": "sprechen",
+        "rows": [
+          "ich spreche",
+          "du sprichst",
+          "er/sie/es/man spricht",
+          "wir sprechen",
+          "ihr sprecht",
+          "sie/Sie sprechen"
+        ],
+        "note_ru": null
+      },
+      {
+        "heading": "sein",
+        "rows": [
+          "ich bin",
+          "du bist",
+          "er/sie/es ist",
+          "wir sind",
+          "ihr seid",
+          "sie/Sie sind"
+        ],
+        "note_ru": null
+      },
+      {
+        "heading": "haben",
+        "rows": [
+          "ich habe",
+          "du hast",
+          "er/sie/es hat",
+          "wir haben",
+          "ihr habt",
+          "sie/Sie haben"
+        ],
+        "note_ru": null
+      }
+    ],
+    "image": "/grammar/g4.jpg"
+  },
+  {
+    "title": "Изменение гласных в глаголах",
+    "emoji": "🔤",
+    "topic_de": "Vokalwechsel",
+    "summary_ru": "Некоторые немецкие глаголы изменяют корневые гласные во 2-м и 3-м лице в настоящем времени. Это важно для правильного спряжения.",
+    "sections": [
+      {
+        "heading": "a → ä",
+        "rows": [
+          "fahren: du fährst, er/sie fährt",
+          "schlafen: du schläfst, er/sie schläft",
+          "waschen: du wäschst, er/sie wäscht"
+        ],
+        "note_ru": "Гласная 'a' становится 'ä' во 2-м и 3-м лице."
+      },
+      {
+        "heading": "e → ie",
+        "rows": [
+          "lesen: du liest, er/sie liest",
+          "sehen: du siehst, er/sie sieht"
+        ],
+        "note_ru": "Гласная 'e' становится 'ie' во 2-м и 3-м лице."
+      },
+      {
+        "heading": "e → i",
+        "rows": [
+          "essen: du isst, er/sie isst",
+          "nehmen: du nimmst, er/sie nimmt"
+        ],
+        "note_ru": "Гласная 'e' становится 'i' во 2-м и 3-м лице."
+      }
+    ],
+    "image": "/grammar/g5.jpg"
+  },
+  {
+    "title": "Немецкие артикли и местоимения",
+    "emoji": "📚",
+    "topic_de": "Kasus",
+    "summary_ru": "Эта схема показывает использование артиклей и местоимений в немецком языке в различных падежах. На ней можно увидеть, как изменяются формы артиклей и местоимений в зависимости от рода и числа существительного.",
+    "sections": [
+      {
+        "heading": "Nominativ",
+        "rows": [
+          "der die das die",
+          "ein eine ein —",
+          "kein keine kein keine",
+          "mein meine mein meine"
+        ],
+        "note_ru": "Именительный падеж, вопросы: кто? что?"
+      },
+      {
+        "heading": "Akkusativ",
+        "rows": [
+          "den die das die",
+          "einen eine ein —",
+          "keinen keine kein keine",
+          "meinen meine mein meine"
+        ],
+        "note_ru": "Винительный падеж, вопросы: кого? что?"
+      },
+      {
+        "heading": "Dativ",
+        "rows": [
+          "dem der dem den",
+          "einem einer einem —",
+          "keinem keiner keinem keinen",
+          "meinem meiner meinem meinen"
+        ],
+        "note_ru": "Дательный падеж, вопрос: кому? чему?"
+      },
+      {
+        "heading": "Genitiv",
+        "rows": [
+          "des der des der",
+          "eines einer eines —",
+          "keines keiner keines keiner",
+          "meines meiner meines meiner"
+        ],
+        "note_ru": "Родительный падеж, вопросы: чей? чья? чьё?"
+      }
+    ],
+    "image": "/grammar/g6.jpg"
+  }
+]
