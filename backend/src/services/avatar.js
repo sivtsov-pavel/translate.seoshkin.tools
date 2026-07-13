@@ -11,7 +11,7 @@ const PERSONA_PHOTOS = {
   lena: DEFAULT_PHOTO, max: DEFAULT_PHOTO, hanna: DEFAULT_PHOTO,
   otto: DEFAULT_PHOTO, hr: DEFAULT_PHOTO,
   // Pablo Seoshkin — реальное фото (Marienplatz München: ратуша + фонтан за спиной), оживает через D-ID
-  pablo: 's3://d-id-images-prod/google-oauth2|107849838766341455257/img_JCzyPsIRnNlkjWUvKzCbK/pablo_munich_sm.jpg',
+  pablo: 's3://d-id-images-prod/google-oauth2|107849838766341455257/img_Hr5y8R15SA86cSNZTiCdC/pablo_clean.jpg',
 }
 
 export function isAvatarConfigured() {
