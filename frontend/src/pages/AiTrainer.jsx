@@ -313,15 +313,14 @@ export default function AiTrainer() {
     if (ch && CHARACTERS.some(c => c.id === ch)) setCharacter(ch)
   }, [searchParams])
 
-  // Режим «Тренер по уроку»: пришли с ?lesson_id=… → подтягиваем слова урока
+  // Режим «Тренер по уроку»: пришли с ?lesson_id=… → подтягиваем слова ИМЕННО этого урока.
+  // Берём /lessons/:id/words (без дедупа), а не общий /words — иначе слова урока теряются.
   useEffect(() => {
     const lessonId = searchParams.get('lesson_id')
     if (!lessonId) return
     const title = searchParams.get('lesson_title') || ''
-    api.get('/words').then(all => {
-      const words = (all || [])
-        .filter(w => String(w.lesson_id) === String(lessonId))
-        .map(w => w.word_de).filter(Boolean)
+    api.get(`/lessons/${lessonId}/words`).then(rows => {
+      const words = (rows || []).map(w => w.word_de).filter(Boolean)
       if (words.length) setLessonMode({ id: lessonId, title, words })
     }).catch(() => {})
   }, [searchParams])
