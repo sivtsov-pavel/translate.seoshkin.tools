@@ -509,7 +509,7 @@ const L = {
 const LANGS_AVAILABLE = Object.keys(L)
 
 export default function Landing() {
-  const { lang } = useI18nStore()
+  const { lang, t } = useI18nStore()
   const c = L[lang] || L.en
   const tb = TEACHER[lang] || TEACHER.en
   const isRTL = lang === 'ar'
@@ -527,13 +527,13 @@ export default function Landing() {
         <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--accent)', letterSpacing: '-0.5px' }}>
           🇩🇪 Deutsch.lernen
         </span>
+        {/* В шапке — только компактная «Войти»: большая CTA «Начать бесплатно»
+            стоит крупной кнопкой в герое сразу ниже, дублировать в шапке незачем
+            (две длинные надписи ломали вёрстку на телефоне) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LangSwitcher />
-          <Link to="/login" style={{ ...navBtn, background: 'transparent', color: 'var(--ink-soft)', border: '1px solid var(--line)' }}>
-            {c.ctaLogin}
-          </Link>
-          <Link to="/register" style={{ ...navBtn, background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none' }}>
-            {c.cta}
+          <Link to="/login" style={{ ...navBtn, background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)', whiteSpace: 'nowrap' }}>
+            {t?.auth?.login || 'Войти'}
           </Link>
         </div>
       </nav>
