@@ -1,11 +1,81 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads } from './claude.js'
 import { transcribeAudio } from './whisper.js'
+import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 
 async function setProgress(lessonId, text) {
   await db.query('UPDATE lessons SET progress = $1 WHERE id = $2', [text, lessonId])
+}
+
+// «Обработать всё»: докидываем недостающее для урока — переводы/примеры слов, картинки,
+// переводы слов и упражнений на все языки. НЕ трогает упражнения и прогресс ученика.
+// Вызывается в конце обработки и по кнопке «Обработать всё» для готового урока.
+export async function enrichLesson(lessonId) {
+  // 1) Переводы + примеры для неполных слов урока
+  try {
+    const { rows } = await db.query(
+      `SELECT id, word_de, translation_ru FROM words
+       WHERE lesson_id = $1 AND (example_sentence IS NULL OR word_de = translation_ru) ORDER BY id`, [lessonId])
+    for (let i = 0; i < rows.length; i += 20) {
+      const res = await enrichWords(rows.slice(i, i + 20))
+      for (const r of res) {
+        if (!r) continue
+        await db.query(
+          `UPDATE words SET translation_ru = CASE WHEN word_de = translation_ru THEN $1 ELSE translation_ru END,
+             example_sentence = COALESCE(example_sentence, $2), example_sentence_ru = COALESCE(example_sentence_ru, $3) WHERE id = $4`,
+          [r.translation_ru, r.example_sentence, r.example_sentence_ru, r.id])
+      }
+    }
+  } catch (e) { console.error('enrichLesson words:', e.message) }
+
+  // 2) Картинки для слов урока без image_url (по русскому переводу, затем по немецкому)
+  try {
+    await setProgress(lessonId, 'Подбираю картинки...')
+    const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id = $1 AND image_url IS NULL ORDER BY id', [lessonId])
+    for (const w of rows) {
+      try {
+        const remote = (w.translation_ru ? await fetchImageUrl(w.translation_ru) : null) ?? await fetchImageUrl(w.word_de)
+        if (remote) {
+          const local = await downloadAndSave(remote, w.id)
+          await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [local, w.id])
+        }
+        await new Promise(r => setTimeout(r, 200))
+      } catch { /* пропускаем слово */ }
+    }
+  } catch (e) { console.error('enrichLesson images:', e.message) }
+
+  // 3) Переводы слов на все языки локалей
+  try {
+    await setProgress(lessonId, 'Перевожу слова на все языки...')
+    const { rows } = await db.query(
+      `SELECT id, word_de, translation_ru FROM words
+       WHERE lesson_id = $1 AND (translations IS NULL OR translations = '{}' OR NOT (translations ? 'sq')) ORDER BY id`, [lessonId])
+    if (rows.length) {
+      const results = await translateWordsToAllLangs(rows)
+      for (const [id, t] of Object.entries(results)) {
+        await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(t), parseInt(id)])
+      }
+    }
+  } catch (e) { console.error('enrichLesson word-langs:', e.message) }
+
+  // 4) Переводы упражнений (варианты/вопросы) на все языки
+  try {
+    await setProgress(lessonId, 'Перевожу упражнения...')
+    const { rows } = await db.query(
+      `SELECT id, type, payload FROM exercises
+       WHERE lesson_id = $1 AND type IN ('multiple_choice','fill_blank','sentence_write')
+         AND (payload_translations IS NULL OR payload_translations = '{}' OR NOT (payload_translations ? 'sq')) ORDER BY id`, [lessonId])
+    for (let i = 0; i < rows.length; i += 15) {
+      try {
+        const results = await translateExercisePayloads(rows.slice(i, i + 15))
+        for (const [id, langs] of Object.entries(results)) {
+          await db.query('UPDATE exercises SET payload_translations = COALESCE(payload_translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
+        }
+      } catch (e) { console.error('enrichLesson ex-batch:', e.message) }
+    }
+  } catch (e) { console.error('enrichLesson exercises:', e.message) }
 }
 
 // Генерация упражнений из уже существующих слов в БД (без сканирования фото)
@@ -210,6 +280,9 @@ export async function processLesson(lessonId, ownerId) {
         console.error('generateLessonMeta failed:', e.message)
       }
     }
+
+    // «Обработать всё» автоматически: картинки + переводы слов и упражнений на все языки
+    await enrichLesson(lessonId)
 
     await db.query(
       "UPDATE lessons SET status = 'done', progress = $1 WHERE id = $2",

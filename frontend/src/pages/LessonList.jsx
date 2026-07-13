@@ -161,6 +161,20 @@ export default function LessonList() {
     } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
   }
 
+  // «Обработать всё» для готового урока: докидывает переводы, картинки, переводы упражнений
+  const handleEnrich = async (id) => {
+    setProcessing(id)
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Дополняю недостающее...' } : l))
+    try {
+      await api.post(`/lessons/${id}/enrich`, {})
+      const poll = setInterval(async () => {
+        const updated = await api.get(`/lessons/${id}`)
+        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
+        if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null) }
+      }, 3000)
+    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
+  }
+
   const handleAddLetterFill = async (id) => {
     setAddingLetters(id)
     try {
@@ -326,6 +340,13 @@ export default function LessonList() {
                             <button onClick={() => handleProcess(lesson.id)} disabled={processing === lesson.id}
                               style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
                               {processing === lesson.id ? '⏳' : '▶ Обработать'}
+                            </button>
+                          )}
+                          {status === 'done' && (
+                            <button onClick={() => handleEnrich(lesson.id)} disabled={processing === lesson.id}
+                              title="Дополнить недостающее: переводы, картинки, переводы упражнений на все языки"
+                              style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
+                              {processing === lesson.id ? '⏳' : '✨ Обработать всё'}
                             </button>
                           )}
                           <button onClick={() => setEditingId(isEditing ? null : lesson.id)}
