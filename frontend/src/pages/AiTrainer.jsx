@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { api } from '../api/client.js'
+import { api, uploadFiles } from '../api/client.js'
 import { speak, speakWithEvents, cancel as cancelSpeak } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition.jsx'
 import { useI18nStore } from '../store/i18n.js'
@@ -214,19 +214,30 @@ export default function AiTrainer() {
   const clipOnEndRef = useRef(null)
   const voiceModeRef = useRef(false)
   const speakingRef   = useRef(false)
-  const busyRef       = useRef(false)               // ждём ответ ИИ
+  const busyRef       = useRef(false)               // ждём ответ ИИ / транскрипцию
   const listeningRef  = useRef(false)
   const startMicRef   = useRef(null)
   const sendRef       = useRef(null)
+  // Whisper-гибрид: параллельная запись аудио для точной транскрипции
+  const mediaStreamRef = useRef(null)
+  const recorderRef    = useRef(null)
+  const chunksRef      = useRef([])
+  const recordingRef   = useRef(false)
+  const webSpeechTextRef = useRef('')               // запасной текст от Web Speech
   useEffect(() => { voiceModeRef.current = voiceMode }, [voiceMode])
   useEffect(() => { speakingRef.current = speaking }, [speaking])
 
   const { start: startMic, stop: stopMic, listening, isSupported: micSupported } = useSpeechRecognition({
     lang: micDe ? 'de-DE' : (SPEECH_LANG[lang] || 'de-DE'),
     onResult: (text) => {
-      // В голосовом режиме сразу отправляем распознанное; в тексте — дописываем в поле
       if (voiceModeRef.current) {
-        if (text && text.trim()) sendRef.current?.(text.trim())
+        // Гибрид: запоминаем текст Web Speech как запасной. Если идёт запись —
+        // отправит onstop рекордера после точной транскрипции Whisper; иначе шлём сразу.
+        webSpeechTextRef.current = (text || '').trim()
+        if (!recordingRef.current && webSpeechTextRef.current) {
+          sendRef.current?.(webSpeechTextRef.current)
+          webSpeechTextRef.current = ''
+        }
       } else {
         setInput(prev => (prev ? prev.trim() + ' ' : '') + text)
         setTimeout(() => inputRef.current?.focus(), 0)
@@ -246,6 +257,47 @@ export default function AiTrainer() {
     }, 500)
     return () => clearTimeout(t)
   }, [voiceMode, listening, speaking, loading])
+
+  // Точная транскрипция через Whisper (гибрид)
+  const transcribeVoice = async (blob) => {
+    const fd = new FormData()
+    fd.append('file', blob, 'voice.webm')
+    const r = await uploadFiles('/ai-trainer/transcribe', fd)
+    return r?.text || ''
+  }
+
+  // Whisper-гибрид: пишем аудио параллельно распознаванию; после конца фразы —
+  // точный текст от Whisper (запасной — Web Speech). Hands-free сохраняется.
+  useEffect(() => {
+    if (!voiceMode) return
+    const stream = mediaStreamRef.current
+    if (listening && stream && !recordingRef.current && typeof MediaRecorder !== 'undefined') {
+      try {
+        const rec = new MediaRecorder(stream)
+        chunksRef.current = []
+        rec.ondataavailable = e => { if (e.data && e.data.size) chunksRef.current.push(e.data) }
+        rec.onstop = async () => {
+          recordingRef.current = false
+          if (!voiceModeRef.current) return
+          const blob = new Blob(chunksRef.current, { type: rec.mimeType || 'audio/webm' })
+          const fallback = webSpeechTextRef.current
+          webSpeechTextRef.current = ''
+          if (blob.size < 2400) { if (fallback) sendRef.current?.(fallback); return }
+          busyRef.current = true; setLoading(true)
+          let text = ''
+          try { text = await transcribeVoice(blob) } catch {}
+          busyRef.current = false; setLoading(false)
+          const finalText = (text && text.trim()) || fallback
+          if (finalText && finalText.trim()) sendRef.current?.(finalText.trim())
+        }
+        rec.start()
+        recorderRef.current = rec
+        recordingRef.current = true
+      } catch { /* нет доступа к рекордеру — работаем на Web Speech */ }
+    } else if (!listening && recordingRef.current) {
+      try { recorderRef.current?.stop() } catch { recordingRef.current = false }
+    }
+  }, [voiceMode, listening])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -410,6 +462,12 @@ export default function AiTrainer() {
     voiceModeRef.current = true
     setVoiceMode(true)
     cancelSpeak()
+    // Захватываем микрофон для Whisper-записи (параллельно Web Speech)
+    if (!mediaStreamRef.current && navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(s => { mediaStreamRef.current = s })
+        .catch(() => { mediaStreamRef.current = null })
+    }
     // Живое приветствие клипом Pablo, затем цикл начнёт слушать
     playClip(CLIPS.greeting, () => setSpeaking(false))
   }
@@ -422,6 +480,11 @@ export default function AiTrainer() {
     clipOnEndRef.current = null
     stopMic()
     cancelSpeak()
+    // Освобождаем микрофон
+    try { recorderRef.current?.stop() } catch {}
+    recordingRef.current = false
+    mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+    mediaStreamRef.current = null
   }
 
   const handleKey = (e) => {

@@ -2,6 +2,10 @@ import { chatWithTrainer, summarizeTrainerSession } from '../services/claude.js'
 import { db } from '../db/index.js'
 import { mergeMemory, buildReport } from '../services/aiTrainerMemory.js'
 import { isAvatarConfigured, personaPhoto, generateTalkingVideo, getCredits } from '../services/avatar.js'
+import { transcribeAudio } from '../services/whisper.js'
+import { writeFile, unlink } from 'fs/promises'
+import { tmpdir } from 'os'
+import { join } from 'path'
 
 // Загрузить память пользователя (или null)
 async function loadMemory(userId) {
@@ -39,6 +43,29 @@ export async function aiTrainerRoutes(fastify) {
   fastify.get('/api/ai-trainer/memory', { preHandler: [fastify.authenticate] }, async (request) => {
     const memory = await loadMemory(request.user.id)
     return memory || { summary_text: '', known_facts: {}, recurring_mistakes: [], topics_covered: [], sessions_total: 0 }
+  })
+
+  // ── Точная транскрипция голоса (Whisper) для голосового тренера ──
+  // Гибрид: Web Speech ловит конец фразы (hands-free), точный текст даёт Whisper.
+  fastify.post('/api/ai-trainer/transcribe', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    let data
+    try { data = await request.file() } catch { data = null }
+    if (!data) return reply.status(400).send({ error: 'no audio' })
+    const buf = await data.toBuffer()
+    if (!buf || buf.length < 1000) return { text: '' }  // тишина/слишком коротко
+    const mt = data.mimetype || ''
+    const ext = mt.includes('webm') ? 'webm' : mt.includes('ogg') ? 'ogg' : mt.includes('mp4') ? 'mp4' : mt.includes('wav') ? 'wav' : 'webm'
+    const tmp = join(tmpdir(), `voice_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`)
+    try {
+      await writeFile(tmp, buf)
+      const text = await transcribeAudio(tmp)
+      return { text: (typeof text === 'string' ? text : (text?.text || '')).trim() }
+    } catch (e) {
+      fastify.log.error({ err: e }, 'voice transcribe failed')
+      return reply.status(500).send({ error: 'transcribe failed' })
+    } finally {
+      unlink(tmp).catch(() => {})
+    }
   })
 
   // ── Видео-аватар: доступность (настроен ли ключ D-ID) ──
