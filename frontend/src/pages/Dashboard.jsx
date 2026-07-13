@@ -247,6 +247,23 @@ function LessonCard({ lesson, navigate }) {
             </span>
           </button>
         ))}
+
+        {/* 8-я плитка: живое произношение с AI-тренером Pablo (по словам урока) */}
+        {wordsCount > 0 && (
+          <button
+            onClick={() => navigate(`/ai-trainer?lesson_id=${lesson.lesson_id}&lesson_title=${encodeURIComponent(getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || '')}`)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'linear-gradient(135deg, rgba(124,92,255,0.16), rgba(59,122,87,0.16))',
+              border: '1px solid var(--accent)', borderRadius: 12, padding: '10px', fontSize: 13,
+              color: 'var(--ink)', cursor: 'pointer', textAlign: 'left', minWidth: 0, overflow: 'hidden',
+            }}>
+            <span style={{ flexShrink: 0, fontSize: 15 }}>🗣️</span>
+            <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+              {t.exercise.trainerSpeech || 'Произношение с тренером'}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Слова урока — нижняя панель */}
