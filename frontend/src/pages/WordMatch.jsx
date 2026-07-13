@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
+import { getTranslation } from '../utils/translation.js'
 
 // Перемешать массив (Fisher-Yates)
 function shuffle(arr) {
@@ -21,10 +22,10 @@ function buildCards(words, lang) {
   const pairs = shuffle(words).slice(0, 8)
   const cards = []
   pairs.forEach((w, i) => {
-    const target = (lang !== 'de' && lang !== 'en' && w.translations?.[lang]) ? w.translations[lang]
-      : (w.translations?.en || w.translation_ru)
+    // Перевод на язык локали пользователя (для ru — русский из translation_ru), НЕ английский
+    const target = getTranslation(w.translations, lang, w.translation_ru) || w.translation_ru
     cards.push({ uid: `de-${i}`, pairId: i, side: 'de', text: w.word_de, matched: false, flipped: false })
-    cards.push({ uid: `tr-${i}`, pairId: i, side: 'tr', text: target || w.translation_ru, matched: false, flipped: false })
+    cards.push({ uid: `tr-${i}`, pairId: i, side: 'tr', text: target, matched: false, flipped: false })
   })
   return shuffle(cards)
 }
