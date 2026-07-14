@@ -622,14 +622,15 @@ export async function translateSentences(pairs) {
 }
 
 // ─── Игра «Класс говорит» ───────────────────────────────────────────────────
-// Генерируем N разных коротких немецких предложений из слов урока.
-export async function generateClassSentences(words, count = 30) {
+// Генерируем N пар «вопрос — ответ» на немецком A1 из слов урока.
+// Каждая пара — связный мини-диалог (ответ отвечает на вопрос).
+export async function generateClassPairs(words, count = 12) {
   const wl = words.map(w => w.word_de).slice(0, 60).join(', ')
-  const prompt = `Составь ${count} РАЗНЫХ коротких немецких предложений уровня A1 для чтения вслух в классе, используя лексику урока (по возможности в каждом — новое слово): ${wl}.
-Смесь: примерно треть — вопросы (role "question"), треть — ответы (role "answer"), треть — утверждения (role "statement"). Предложения простые, естественные, не повторяются.
-Верни ТОЛЬКО JSON: {"lines":[{"de":"...","role":"question|answer|statement"}]}`
+  const prompt = `Составь ${count} РАЗНЫХ пар «вопрос — ответ» на немецком уровня A1 для чтения вслух в классе, используя лексику урока: ${wl}.
+В каждой паре ответ логично отвечает на вопрос. Предложения короткие, простые, естественные, пары не повторяются.
+Верни ТОЛЬКО JSON: {"pairs":[{"question":"...?","answer":"..."}]}`
   const data = parseJson(await ask(prompt, { max_tokens: 4096 }))
-  return (data.lines || []).slice(0, count)
+  return (data.pairs || []).filter(p => p.question && p.answer).slice(0, count)
 }
 
 // Перевод фраз на все локали интерфейса (кроме de). Возвращает массив объектов
