@@ -219,7 +219,8 @@ export async function exercisesRoutes(fastify) {
         }
       }
     }
-    const lessons = Object.values(lessonsMap)
+    // Последний урок сверху (Object.values по числовому ключу даёт возрастание — сортируем по id убыв.)
+    const lessons = Object.values(lessonsMap).sort((a, b) => b.lesson_id - a.lesson_id)
     const total   = lessons.reduce((s, l) => s + l.total, 0)
     const byType  = {}
     for (const r of rows) byType[r.type] = (byType[r.type] ?? 0) + r.count
