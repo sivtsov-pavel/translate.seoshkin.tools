@@ -8,6 +8,8 @@ async function request(method, url, body) {
   const headers = { 'Content-Type': 'application/json' }
   const token = getToken()
   if (token) headers['Authorization'] = `Bearer ${token}`
+  // Активный изучаемый язык (мульти-таргет) — бэкенд фильтрует контент по нему
+  headers['X-Target-Lang'] = localStorage.getItem('target_lang') || 'de'
 
   const res = await fetch(`${BASE}${url}`, {
     method,
@@ -35,6 +37,7 @@ export async function uploadFiles(url, formData) {
   const headers = {}
   const token = getToken()
   if (token) headers['Authorization'] = `Bearer ${token}`
+  headers['X-Target-Lang'] = localStorage.getItem('target_lang') || 'de'
 
   const res = await fetch(`${BASE}${url}`, { method: 'POST', headers, body: formData })
   if (!res.ok) {

@@ -99,14 +99,17 @@ export async function exercisesRoutes(fastify) {
     // Когда фильтр по конкретному уроку — берём все упражнения урока (max 300),
     // иначе применяем дневной лимит пользователя
     const limit = lesson_id ? 300 : dailyLimit
+    const target = request.headers['x-target-lang'] || 'de'
     let query, params
     if (role === 'owner') {
       params = [userId, today]
       if (type)      params.push(type)
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
+      params.push(target); const tp = params.length
       query = SELECT + `
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
+          AND l.target_lang = $${tp}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
         ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM() LIMIT ${limit}`
@@ -115,8 +118,10 @@ export async function exercisesRoutes(fastify) {
       if (type)      params.push(type)
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
+      params.push(target); const tp = params.length
       query = SELECT + `
         WHERE l.status = 'done'
+          AND l.target_lang = $${tp}
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
@@ -170,9 +175,10 @@ export async function exercisesRoutes(fastify) {
     const { id: userId, role } = request.user
     const today = new Date().toISOString().slice(0, 10)
 
+    const target = request.headers['x-target-lang'] || 'de'
     let query, params
     if (role === 'owner') {
-      params = [userId, today]
+      params = [userId, today, target]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                l.date AS lesson_date,
@@ -181,11 +187,11 @@ export async function exercisesRoutes(fastify) {
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
-        WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
+        WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2 AND l.target_lang = $3
         GROUP BY l.id, l.title, l.description, l.date, l.title_translations, e.type
         ORDER BY l.id, e.type`
     } else {
-      params = [userId, today]
+      params = [userId, today, target]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                l.date AS lesson_date,
@@ -194,7 +200,7 @@ export async function exercisesRoutes(fastify) {
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
-        WHERE l.status = 'done'
+        WHERE l.status = 'done' AND l.target_lang = $3
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
         GROUP BY l.id, l.title, l.description, l.date, l.title_translations, e.type
         ORDER BY l.id, e.type`
@@ -288,10 +294,11 @@ export async function exercisesRoutes(fastify) {
     // Владелец видит только СВОИ слова; ученик — слова из готовых уроков.
     // Дедуп по немецкому слову (DISTINCT ON): в общем пуле несколько учителей
     // могут иметь одно и то же слово — ученик не должен видеть дубли.
-    const params = [userId]
-    // Учитель видит слова СВОИХ уроков (по владельцу урока, а не по автору строки слова —
-    // при загрузке/обработке слово могло получить чужой user_id). Ученик — из готовых уроков.
-    const lessonFilter = role === 'owner' ? 'l.owner_id = $1' : "l.status = 'done'"
+    const target = request.headers['x-target-lang'] || 'de'
+    const params = [userId, target]
+    // Учитель видит слова СВОИХ уроков (по владельцу урока). Ученик — из готовых уроков.
+    // Мульти-таргет: только слова активного изучаемого языка (l.target_lang).
+    const lessonFilter = (role === 'owner' ? 'l.owner_id = $1' : "l.status = 'done'") + ' AND l.target_lang = $2'
 
     let statusCond = ''
     if (status) {

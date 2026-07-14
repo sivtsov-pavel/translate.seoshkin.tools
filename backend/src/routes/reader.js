@@ -11,10 +11,11 @@ export async function readerRoutes(fastify) {
     const part = await request.file()
     if (!part) return reply.status(400).send({ error: 'Нет фото' })
     const lang = request.query.lang || 'ru'
+    const target = request.headers['x-target-lang'] || 'de'
     const { filepath } = await fastify.saveUploadedFile(part)
     let words = []
     try {
-      words = await extractWordsFromImage(filepath, lang)
+      words = await extractWordsFromImage(filepath, lang, target)
     } catch (e) {
       fastify.log.error({ e }, 'camera extract')
       unlink(filepath).catch(() => {})
@@ -40,11 +41,12 @@ export async function readerRoutes(fastify) {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const { lesson_id, title, words } = request.body || {}
     if (!Array.isArray(words) || !words.length) return reply.status(400).send({ error: 'Нет слов' })
+    const target = request.headers['x-target-lang'] || 'de'
     let lid = lesson_id ? parseInt(lesson_id) : null
     if (!lid) {
       const { rows } = await db.query(
-        "INSERT INTO lessons (owner_id, title, date, status) VALUES ($1,$2,CURRENT_DATE,'processing') RETURNING id",
-        [request.user.id, (title && title.trim()) || '📷 Слова с фото'])
+        "INSERT INTO lessons (owner_id, title, date, status, target_lang) VALUES ($1,$2,CURRENT_DATE,'processing',$3) RETURNING id",
+        [request.user.id, (title && title.trim()) || '📷 Слова с фото', target])
       lid = rows[0].id
     } else {
       await db.query("UPDATE lessons SET status='processing' WHERE id=$1", [lid])

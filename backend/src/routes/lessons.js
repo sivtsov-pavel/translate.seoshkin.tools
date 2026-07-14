@@ -31,9 +31,10 @@ export async function lessonsRoutes(fastify) {
       number = q.rows[0].n
     }
 
+    const targetLang = request.headers['x-target-lang'] || 'de'
     const { rows } = await db.query(
-      'INSERT INTO lessons (owner_id, title, description, date, course_id, lesson_number) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [ownerId, title || null, description || null, date || new Date().toISOString().slice(0, 10), course_id || null, number]
+      'INSERT INTO lessons (owner_id, title, description, date, course_id, lesson_number, target_lang) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [ownerId, title || null, description || null, date || new Date().toISOString().slice(0, 10), course_id || null, number, targetLang]
     )
     return reply.status(201).send(rows[0])
   })
@@ -43,7 +44,9 @@ export async function lessonsRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request) => {
     const { role } = request.user
-    const filter = role === 'owner' ? '' : "WHERE l.status = 'done'"
+    const target = request.headers['x-target-lang'] || 'de'
+    // Мульти-таргет: показываем только уроки активного изучаемого языка
+    const filter = role === 'owner' ? 'WHERE l.target_lang = $1' : "WHERE l.status = 'done' AND l.target_lang = $1"
 
     const { rows } = await db.query(
       `SELECT l.*,
@@ -57,7 +60,8 @@ export async function lessonsRoutes(fastify) {
        LEFT JOIN words w ON w.id = e.word_id
        ${filter}
        GROUP BY l.id
-       ORDER BY l.date DESC`
+       ORDER BY l.date DESC`,
+      [target]
     )
     return rows
   })

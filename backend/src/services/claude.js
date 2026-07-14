@@ -29,9 +29,22 @@ async function ask(prompt, { model = 'gpt-4o-mini', max_tokens = 4096 } = {}) {
   return res.choices[0].message.content
 }
 
-const VISION_PROMPT = `Это фото страницы учебника или тетради школьника, изучающего немецкий язык на уровне A1.
+// ─── Целевые (изучаемые) языки — мульти-таргет ──────────────────────────────
+const TARGET_LANGS = {
+  de: { name: 'немецкий', adjN: 'немецкие', tts: 'de-DE', nounRule: 'существительные ВСЕГДА с артиклем (der/die/das) и с большой буквы' },
+  es: { name: 'испанский', adjN: 'испанские', tts: 'es-ES', nounRule: 'существительные с артиклем (el/la/los/las)' },
+  fr: { name: 'французский', adjN: 'французские', tts: 'fr-FR', nounRule: 'существительные с артиклем (le/la/les)' },
+  it: { name: 'итальянский', adjN: 'итальянские', tts: 'it-IT', nounRule: 'существительные с артиклем (il/la/lo)' },
+  en: { name: 'английский', adjN: 'английские', tts: 'en-US', nounRule: 'существительные' },
+  pt: { name: 'португальский', adjN: 'португальские', tts: 'pt-PT', nounRule: 'существительные с артиклем (o/a)' },
+}
+const TL = (code) => TARGET_LANGS[code] || TARGET_LANGS.de
+export function targetTtsLocale(code) { return TL(code).tts }
+export function targetLangName(code) { return TL(code).name }
+
+const VISION_PROMPT = (t) => `Это фото страницы учебника или тетради школьника, изучающего ${t.name} язык на уровне A1.
 Распознай весь текст, включая рукописный. Выдели:
-(а) новые немецкие слова с переводом на русский
+(а) новые ${t.adjN} слова с переводом на русский
 (б) грамматические правила/конструкции
 (в) примеры предложений
 
@@ -48,7 +61,7 @@ function getMimeType(filepath) {
   return { png: 'image/png', gif: 'image/gif', webp: 'image/webp' }[ext] || 'image/jpeg'
 }
 
-export async function extractFromPhoto(filepath) {
+export async function extractFromPhoto(filepath, targetLang = 'de') {
   const imageData = readFileSync(filepath)
   const base64 = imageData.toString('base64')
   const mimeType = getMimeType(filepath)
@@ -60,7 +73,7 @@ export async function extractFromPhoto(filepath) {
       role: 'user',
       content: [
         { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'high' } },
-        { type: 'text', text: VISION_PROMPT },
+        { type: 'text', text: VISION_PROMPT(TL(targetLang)) },
       ],
     }],
   })
@@ -68,14 +81,15 @@ export async function extractFromPhoto(filepath) {
   return parseJson(res.choices[0].message.content)
 }
 
-// Камера в читалке: извлечь немецкие слова/фразы с фото + перевод на локаль ученика.
-export async function extractWordsFromImage(filepath, lang = 'ru') {
+// Камера в читалке: извлечь слова целевого языка с фото + перевод на локаль ученика.
+export async function extractWordsFromImage(filepath, lang = 'ru', targetLang = 'de') {
   const base64 = readFileSync(filepath).toString('base64')
   const mimeType = getMimeType(filepath)
+  const T = TL(targetLang)
   const langNames = { ru: 'русский', uk: 'українську', de: 'немецкий', en: 'English', bg: 'болгарский', tr: 'турецкий', ar: 'арабский', es: 'испанский', fr: 'французский', sq: 'албанский' }
   const langName = langNames[lang] || 'русский'
-  const prompt = `На фото — текст или слова на немецком (страница, вывеска, надпись). Извлеки все РАЗНЫЕ немецкие слова и короткие полезные фразы, которые видно.
-Существительные — с артиклем (der/die/das) и с большой буквы; глаголы — в инфинитиве. Игнорируй нечитаемое, числа-страницы, мусор.
+  const prompt = `На фото — текст или слова на ${T.name} языке (страница, вывеска, надпись). Извлеки все РАЗНЫЕ ${T.adjN} слова и короткие полезные фразы, которые видно.
+${T.nounRule}; глаголы — в инфинитиве. Игнорируй нечитаемое, числа-страницы, мусор.
 Для каждого дай перевод на ${langName}.
 Верни ТОЛЬКО JSON: {"words":[{"de":"...","tr":"..."}]}`
   const res = await client.chat.completions.create({
@@ -88,15 +102,15 @@ export async function extractWordsFromImage(filepath, lang = 'ru') {
   return (parseJson(res.choices[0].message.content).words || []).filter(w => w && w.de)
 }
 
-const MERGE_PROMPT = `Объедини данные из нескольких фото страниц урока немецкого (A1) в единый конспект.
-Правила нормализации (ВАЖНО, соблюдай строго):
-- Существительные ВСЕГДА с определённым артиклем и с большой буквы: "der Tisch", "die Lampe", "das Buch". Если род не указан в тексте — определи сам, ты знаешь немецкий. НЕ оставляй существительное без артикля.
-- Глаголы — в инфинитиве, с маленькой буквы: "gehen", "trinken".
+const MERGE_PROMPT = (t) => `Объедини данные из нескольких фото страниц урока (${t.name} язык, A1) в единый конспект.
+Правила нормализации (соблюдай строго):
+- ${t.nounRule}. Если род не указан в тексте — определи сам, ты знаешь ${t.name} язык. Не оставляй существительное без артикля (если в языке есть артикли).
+- Глаголы — в инфинитиве, с маленькой буквы.
 - Прилагательные, наречия, частицы, местоимения — с маленькой буквы.
-- Убери дубли: "Kaffee" и "der Kaffee" — это ОДНО слово, оставь форму с артиклем. Разный регистр одного слова — не новый вход (ИСКЛЮЧЕНИЕ: "Sie/sie" и "Ihr/ihr" — это РАЗНЫЕ слова, оставь оба).
+- Убери дубли: слово с артиклем и без него — это ОДНО слово, оставь форму с артиклем. Разный регистр одного слова — не новый вход (кроме случаев, где регистр меняет смысл, напр. нем. "Sie/sie").
 - Объедини грамматические правила без дублей.
 
-Верни ТОЛЬКО JSON без markdown:
+Верни ТОЛЬКО JSON без markdown (поле word_de = слово изучаемого языка):
 {"words": [{"word_de": "...", "translation_ru": "...", "example_sentence": "..."}], "grammar_points": [{"description": "...", "example": "..."}]}`
 
 // Ключ для дедупа: без ведущего артикля и регистра, чтобы "Kaffee" и "der Kaffee"
@@ -109,7 +123,7 @@ function wordKey(word_de) {
 }
 const hasArticle = (s) => /^(der|die|das)\s/i.test(s || '')
 
-async function mergeChunk(extractions, transcription = null, existingWords = []) {
+async function mergeChunk(extractions, transcription = null, existingWords = [], targetLang = 'de') {
   const slim = extractions.map(e => ({ words: e.words || [], grammar_points: e.grammar_points || [] }))
   const input = JSON.stringify({ extractions: slim, transcription }, null, 2)
   // Умная обработка тетради/доски: даём модели список уже имеющихся слов урока,
@@ -117,13 +131,13 @@ async function mergeChunk(extractions, transcription = null, existingWords = [])
   const existingBlock = existingWords.length
     ? `\n\nВ УРОКЕ УЖЕ ЕСТЬ эти слова — не добавляй их повторно. Если новое фото уточняет слово (напр. даёт артикль или пример) — верни исправленную форму, иначе пропусти. Возвращай в основном НОВЫЕ слова:\n${existingWords.slice(0, 200).join(', ')}`
     : ''
-  return parseJson(await ask(`${MERGE_PROMPT}\n\nДанные:\n${input}${existingBlock}`, { max_tokens: 8192 }))
+  return parseJson(await ask(`${MERGE_PROMPT(TL(targetLang))}\n\nДанные:\n${input}${existingBlock}`, { max_tokens: 8192 }))
 }
 
-export async function mergeLesson(extractions, transcription = null, existingWords = []) {
+export async function mergeLesson(extractions, transcription = null, existingWords = [], targetLang = 'de') {
   const CHUNK = 6
   if (extractions.length <= CHUNK) {
-    return mergeChunk(extractions, transcription, existingWords)
+    return mergeChunk(extractions, transcription, existingWords, targetLang)
   }
 
   const chunks = []
@@ -133,7 +147,7 @@ export async function mergeLesson(extractions, transcription = null, existingWor
 
   const partials = []
   for (let i = 0; i < chunks.length; i++) {
-    const partial = await mergeChunk(chunks[i], i === 0 ? transcription : null, existingWords)
+    const partial = await mergeChunk(chunks[i], i === 0 ? transcription : null, existingWords, targetLang)
     partials.push(partial)
   }
 
@@ -162,10 +176,10 @@ export async function mergeLesson(extractions, transcription = null, existingWor
 
 // AI-название и описание урока по его содержимому (когда учитель не задал тему).
 // Возвращает { title, description } по-русски.
-export async function generateLessonMeta(words = [], grammarPoints = []) {
+export async function generateLessonMeta(words = [], grammarPoints = [], targetLang = 'de') {
   const wl = words.slice(0, 60).map(w => `${w.word_de} — ${w.translation_ru}`).join(', ')
   const gl = (grammarPoints || []).slice(0, 8).map(g => g.description).filter(Boolean).join('; ')
-  const prompt = `Ты помогаешь учителю немецкого языка. По содержимому урока придумай:
+  const prompt = `Ты помогаешь учителю ${TL(targetLang).name} языка. По содержимому урока придумай:
 1) НАЗВАНИЕ — короткое, 3-6 слов, по-русски, БЕЗ слова «Урок» и без номера (например: «Умлаут Ä, семья и заказ еды»).
 2) ОПИСАНИЕ — 1-2 предложения по-русски: какие темы и что тренируется.
 
@@ -184,21 +198,21 @@ export async function generateLessonMeta(words = [], grammarPoints = []) {
   return { title: (data.title || '').trim(), description: (data.description || '').trim() }
 }
 
-const EXERCISES_PROMPT = `На основе слов и грамматики урока немецкого (A1) создай упражнения для школьника. Объясняй максимально просто и понятно, как для маленьких детей.
+const EXERCISES_PROMPT = (t) => `На основе слов и грамматики урока (${t.name} язык, A1) создай упражнения для школьника. Объясняй максимально просто и понятно, как для маленьких детей.
 
 ⚠️ ГЛАВНОЕ ПРАВИЛО ЯЗЫКА:
-- Все немецкие предложения (поля "sentence", "example") — на ЧИСТОМ немецком (A1), короткие и естественные.
-- НИКОГДА не смешивай русский и немецкий в одном предложении.
-- НИКОГДА не пиши мета-пояснения вида «X значит Y», «Vor — перед», «Haus bedeutet Дом».
-- Даже для служебных слов (предлоги, местоимения, глаголы) придумай нормальное немецкое предложение, где слово стоит в естественном контексте. Пример для «vor»: "Ich stehe vor dem Haus." (НЕ «Vor — перед»).
+- Все предложения на изучаемом языке (поля "sentence", "example") — на ЧИСТОМ ${t.name} языке (A1), короткие и естественные.
+- НИКОГДА не смешивай русский и ${t.name} в одном предложении.
+- НИКОГДА не пиши мета-пояснения вида «X значит Y».
+- Даже для служебных слов (предлоги, местоимения, глаголы) придумай нормальное предложение на ${t.name} языке, где слово стоит в естественном контексте.
 - Русский язык допустим только в переводах ("answer", "translation_ru", "options" у multiple_choice) и в русских подсказках ("hint_ru").
 
 Для каждого слова создай 5 упражнений — по одному каждого типа:
-1. flashcard — карточка "немецкое слово ↔ перевод"
-2. fill_blank — короткое НЕМЕЦКОЕ предложение с пропуском ___ на месте слова (blank = само слово). options — РОВНО 3 НЕМЕЦКИХ слова: правильное (в точности = blank) и 2 похожих отвлекающих немецких слова. НЕ русские! (ученик вставляет выбранное слово прямо в пропуск)
-3. multiple_choice — выбор правильного русского перевода немецкого слова из 4 вариантов
+1. flashcard — карточка "слово изучаемого языка ↔ перевод"
+2. fill_blank — короткое предложение на ${t.name} языке с пропуском ___ на месте слова (blank = само слово). options — РОВНО 3 слова на ${t.name} языке: правильное (в точности = blank) и 2 похожих отвлекающих. НЕ русские! (ученик вставляет выбранное слово прямо в пропуск)
+3. multiple_choice — выбор правильного русского перевода слова изучаемого языка из 4 вариантов
 4. sentence_write — задание написать своё предложение с этим словом (уровень A1, простое)
-5. letter_fill — слово с пропущенными буквами (замени 1-2 буквы внутри слова на "_", первую букву всегда оставляй видимой; артикль der/die/das оставляй без изменений)
+5. letter_fill — слово с пропущенными буквами (замени 1-2 буквы внутри слова на "_", первую букву всегда оставляй видимой; артикль оставляй без изменений)
 
 Верни ТОЛЬКО JSON массив без markdown:
 [
@@ -234,12 +248,12 @@ function shuffleOptions(ex) {
   return { ...ex, payload: { ...ex.payload, options: shuffled, correct: shuffled.indexOf(correctAnswer) } }
 }
 
-export async function generateExercises(words, grammar_points) {
+export async function generateExercises(words, grammar_points, targetLang = 'de') {
   const allExercises = []
   for (let i = 0; i < words.length; i += BATCH_SIZE) {
     const batch = words.slice(i, i + BATCH_SIZE)
     const input = JSON.stringify({ words: batch, grammar_points }, null, 2)
-    const text = await ask(`${EXERCISES_PROMPT}\n\nКонспект урока:\n${input}`, { max_tokens: 8192 })
+    const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192 })
     allExercises.push(...parseJson(text).map(shuffleOptions))
   }
   return allExercises
