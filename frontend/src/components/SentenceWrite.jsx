@@ -3,6 +3,7 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import AvatarReaction from './AvatarReaction.jsx'
+import TapText from './TapText.jsx'
 
 export default function SentenceWrite({ exercise, onAnswer, payloadTranslations }) {
   const [sentence, setSentence] = useState('')
@@ -56,7 +57,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
         {displayHint && <p style={{ color: 'var(--accent)', fontSize: 15, margin: 0 }}>{displayHint}</p>}
         {example && (
           <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 6, fontStyle: 'italic' }}>
-            {t.exercise.sentenceExample}: {example}
+            {t.exercise.sentenceExample}: <TapText>{example}</TapText>
           </p>
         )}
       </div>
