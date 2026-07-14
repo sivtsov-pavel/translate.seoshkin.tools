@@ -47,19 +47,18 @@ export async function enrichLesson(lessonId) {
     }
   } catch (e) { console.error('enrichLesson words:', e.message) }
 
-  // 2) Картинки для слов урока без image_url (по русскому переводу, затем по немецкому)
+  // 2) Картинки для слов урока без image_url — НАШИ детские рисунки (gpt-image-1).
+  //    Unsplash-поиск отключён (давал неподходящие фото). Служебные слова
+  //    (артикли/предлоги/числа/местоимения) пропускаем — им картинка не нужна.
   try {
-    await setProgress(lessonId, 'Подбираю картинки...')
+    await setProgress(lessonId, 'Рисую картинки...')
     const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id = $1 AND image_url IS NULL ORDER BY id', [lessonId])
     for (const w of rows) {
+      if (isFunctionWord(w.word_de)) continue
       try {
-        const remote = (w.translation_ru ? await fetchImageUrl(w.translation_ru) : null) ?? await fetchImageUrl(w.word_de)
-        if (remote) {
-          const local = await downloadAndSave(remote, w.id)
-          await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [local, w.id])
-        }
-        await new Promise(r => setTimeout(r, 200))
-      } catch { /* пропускаем слово */ }
+        const url = await generateWordImage(w.word_de, w.translation_ru, w.id)
+        if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
+      } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
     }
   } catch (e) { console.error('enrichLesson images:', e.message) }
 
