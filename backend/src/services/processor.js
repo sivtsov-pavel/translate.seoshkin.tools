@@ -412,10 +412,20 @@ export async function processLesson(lessonId, ownerId) {
         const needDesc  = !metaRows[0]?.description
         if (needTitle || needDesc) {
           const meta = await generateLessonMeta(consolidated.words, consolidated.grammar_points)
-          // Сохраняем номер в заголовке: «Урок N: <AI-название>»
-          const numMatch = curTitle.match(/^Урок\s+(\d+)/i)
-          const prefix = numMatch ? `Урок ${numMatch[1]}: ` : ''
-          const newTitle = needTitle && meta.title ? `${prefix}${meta.title}` : (curTitle || null)
+          // Номер урока: если задан вручную — сохраняем; иначе берём СЛЕДУЮЩИЙ свободный
+          // (max «Урок N» у учителя + 1), чтобы не было дублей «Урок 3» и урок был новым.
+          const numMatch = curTitle.match(/Урок\s+(\d+)/i)
+          let num = numMatch ? numMatch[1] : null
+          if (!num) {
+            const { rows: mx } = await db.query(
+              `SELECT COALESCE(MAX(n),0)+1 AS next FROM (
+                 SELECT (regexp_match(title, 'Урок\\s+(\\d+)'))[1]::int AS n
+                 FROM lessons WHERE owner_id=$1) t WHERE n IS NOT NULL`, [ownerId])
+            num = mx[0].next
+          }
+          // Убираем «Урок N:», если ИИ добавил свой номер — ставим наш последовательный
+          const cleanTitle = (meta.title || '').replace(/^\s*Урок\s+\d+\s*[:\-–—]?\s*/i, '').trim()
+          const newTitle = needTitle && cleanTitle ? `Урок ${num}: ${cleanTitle}` : (curTitle || null)
           const newDesc  = needDesc && meta.description ? meta.description : (metaRows[0]?.description || null)
           await db.query('UPDATE lessons SET title = $1, description = $2 WHERE id = $3', [newTitle, newDesc, lessonId])
         }
