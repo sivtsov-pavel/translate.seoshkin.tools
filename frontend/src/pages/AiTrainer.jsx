@@ -256,9 +256,16 @@ export default function AiTrainer() {
       if (voiceModeRef.current && !speakingRef.current && !busyRef.current && !listeningRef.current) {
         startMicRef.current?.()
       }
-    }, 500)
+    }, 900)  // пауза после речи Pablo — чтобы микрофон не поймал её хвост (эхо-петля)
     return () => clearTimeout(t)
   }, [voiceMode, listening, speaking, loading])
+
+  // Отсев галлюцинаций Whisper на тишине/шуме (иначе тренер «говорит сам с собой»)
+  const isVoiceJunk = (text) => {
+    const t = (text || '').trim()
+    if (t.replace(/[.!?…\s]/g, '').length < 3) return true
+    return /amara\.?org|untertitel|untertitelung|zuschauen|zdf für funk|abonniert|vielen dank\.?$|^(so|ja|nein|ok|okay|danke)\.?$|copyright|www\./i.test(t)
+  }
 
   // Точная транскрипция через Whisper (гибрид)
   const transcribeVoice = async (blob) => {
@@ -284,13 +291,14 @@ export default function AiTrainer() {
           const blob = new Blob(chunksRef.current, { type: rec.mimeType || 'audio/webm' })
           const fallback = webSpeechTextRef.current
           webSpeechTextRef.current = ''
-          if (blob.size < 2400) { if (fallback) sendRef.current?.(fallback); return }
+          if (blob.size < 2400) { if (fallback && !isVoiceJunk(fallback)) sendRef.current?.(fallback); return }
           busyRef.current = true; setLoading(true)
           let text = ''
           try { text = await transcribeVoice(blob) } catch {}
           busyRef.current = false; setLoading(false)
           const finalText = (text && text.trim()) || fallback
-          if (finalText && finalText.trim()) sendRef.current?.(finalText.trim())
+          // Не отправляем галлюцинации Whisper (тишина/шум) — иначе тренер отвечает сам себе
+          if (finalText && finalText.trim() && !isVoiceJunk(finalText)) sendRef.current?.(finalText.trim())
         }
         rec.start()
         recorderRef.current = rec
