@@ -72,6 +72,7 @@ export default function Admin() {
         {[
           ['overview', '📊 Обзор'],
           ['monetization', '💶 Монетизация'],
+          ['languages', '🌍 Языки'],
           ['users', '👥 Пользователи'],
         ].map(([k, lbl]) => (
           <button key={k} onClick={() => setTab(k)} style={{
@@ -85,6 +86,7 @@ export default function Admin() {
 
       {tab === 'overview' && <Overview />}
       {tab === 'monetization' && <Monetization />}
+      {tab === 'languages' && <Languages />}
       {tab === 'users' && <Users />}
     </div>
   )
@@ -222,6 +224,131 @@ function Monetization() {
         <Toggle checked={!!feat.trainer_free} onChange={v => set('features', 'trainer_free', v)} label="AI-тренер бесплатно" />
         <Toggle checked={!!feat.avatar_video} onChange={v => set('features', 'avatar_video', v)} label="Видео-аватар (D-ID)" hint="Платные кредиты D-ID" />
         <Toggle checked={!!feat.catalog} onChange={v => set('features', 'catalog', v)} label="Каталог репетиторов" />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', bottom: 0, background: 'var(--bg)', padding: '10px 0' }}>
+        <button onClick={save} disabled={saving} style={{
+          padding: '11px 26px', borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 700,
+          background: 'var(--accent)', color: 'var(--accent-ink)', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1,
+        }}>{saving ? 'Сохраняю…' : 'Сохранить'}</button>
+        {saved && <span style={{ color: 'var(--good, #16a34a)', fontWeight: 600 }}>✓ Сохранено</span>}
+        {err && <span style={{ color: 'var(--red)' }}>{err}</span>}
+      </div>
+    </div>
+  )
+}
+
+// Настройка активных РОДНЫХ локалей (языков интерфейса/перевода) для каждого
+// ИЗУЧАЕМОГО языка. Напр. испанский → только ru+es (не тратим токены на перевод
+// на все 10 языков). Пусто/не задано = все языки активны.
+const TARGET_LANGS = [
+  { code: 'de', flag: '🇩🇪', name: 'Немецкий' },
+  { code: 'es', flag: '🇪🇸', name: 'Испанский' },
+  { code: 'fr', flag: '🇫🇷', name: 'Французский' },
+  { code: 'it', flag: '🇮🇹', name: 'Итальянский' },
+  { code: 'en', flag: '🇬🇧', name: 'Английский' },
+  { code: 'pt', flag: '🇵🇹', name: 'Португальский' },
+]
+const NATIVE_LOCALES = [
+  { code: 'ru', flag: '🇷🇺', name: 'Русский' },
+  { code: 'uk', flag: '🇺🇦', name: 'Українська' },
+  { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
+  { code: 'en', flag: '🇬🇧', name: 'English' },
+  { code: 'bg', flag: '🇧🇬', name: 'Български' },
+  { code: 'tr', flag: '🇹🇷', name: 'Türkçe' },
+  { code: 'ar', flag: '🇸🇦', name: 'العربية' },
+  { code: 'es', flag: '🇪🇸', name: 'Español' },
+  { code: 'fr', flag: '🇫🇷', name: 'Français' },
+  { code: 'sq', flag: '🇦🇱', name: 'Shqip' },
+]
+
+function Languages() {
+  const [cfg, setCfg] = useState(null)
+  const [err, setErr] = useState('')
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [active, setActive] = useState('es') // какой изучаемый язык настраиваем
+
+  useEffect(() => { api.get('/admin/platform-settings').then(setCfg).catch(e => setErr(e.message)) }, [])
+  if (err) return <div style={{ color: 'var(--red)' }}>{err}</div>
+  if (!cfg) return <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>
+
+  const map = cfg.targetLocales || {}
+  // выбранные локали для активного языка. undefined = все языки (не ограничено)
+  const sel = map[active] // массив или undefined
+  const isAll = !Array.isArray(sel) || sel.length === 0
+
+  const setLocales = (arr) => {
+    setCfg(c => ({ ...c, targetLocales: { ...(c.targetLocales || {}), [active]: arr } }))
+    setSaved(false)
+  }
+  const toggleLocale = (code) => {
+    const cur = Array.isArray(sel) ? sel : []
+    setLocales(cur.includes(code) ? cur.filter(x => x !== code) : [...cur, code])
+  }
+  const setAll = () => setLocales([]) // пусто = без ограничений (все языки)
+
+  const save = async () => {
+    setSaving(true); setErr('')
+    try { await api.put('/admin/platform-settings', { config: cfg }); setSaved(true) }
+    catch (e) { setErr(e.message) }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={card}>
+        <h3 style={{ margin: '0 0 6px' }}>🌍 Активные языки перевода</h3>
+        <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 12px' }}>
+          Для каждого изучаемого языка выбери, на какие родные языки переводить контент (слова и упражнения).
+          Например, испанский пока переводим только на <b>русский и испанский</b> — остальные не трогаем, чтобы не тратить токены.
+          Ничего не выбрано = переводим на все 10 языков.
+        </p>
+
+        {/* Выбор изучаемого языка */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+          {TARGET_LANGS.map(l => (
+            <button key={l.code} onClick={() => setActive(l.code)} style={{
+              padding: '7px 12px', borderRadius: 999, border: '1px solid var(--line)',
+              background: active === l.code ? 'var(--accent)' : 'var(--surface-2)',
+              color: active === l.code ? 'var(--accent-ink)' : 'var(--ink)',
+              fontWeight: active === l.code ? 700 : 500, fontSize: 13, cursor: 'pointer',
+            }}>{l.flag} {l.name}{Array.isArray(map[l.code]) && map[l.code].length ? ` (${map[l.code].length})` : ''}</button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Родные языки для перевода:</div>
+          <button onClick={setAll} style={{
+            padding: '4px 10px', borderRadius: 8, border: '1px solid var(--line)',
+            background: isAll ? 'var(--accent)' : 'var(--surface-2)',
+            color: isAll ? 'var(--accent-ink)' : 'var(--ink-soft)', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+          }}>Все языки</button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
+          {NATIVE_LOCALES.map(loc => {
+            const on = isAll || sel.includes(loc.code)
+            return (
+              <label key={loc.code} onClick={() => { if (isAll) setLocales([loc.code]); else toggleLocale(loc.code) }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 9,
+                  border: '1px solid var(--line)', cursor: 'pointer',
+                  background: on && !isAll ? 'var(--accent)' : 'var(--surface-2)',
+                  color: on && !isAll ? 'var(--accent-ink)' : (isAll ? 'var(--ink-soft)' : 'var(--ink)'),
+                  opacity: isAll ? 0.7 : 1,
+                }}>
+                <span>{loc.flag}</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{loc.name}</span>
+              </label>
+            )
+          })}
+        </div>
+        {!isAll && (
+          <p style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '10px 0 0' }}>
+            {TARGET_LANGS.find(l => l.code === active)?.name}: перевод только на {sel.length} {sel.length === 1 ? 'язык' : 'языка/языков'}.
+          </p>
+        )}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', bottom: 0, background: 'var(--bg)', padding: '10px 0' }}>

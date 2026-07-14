@@ -304,7 +304,11 @@ ${list}`, { max_tokens: 2048 })
 
 const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
 
-export async function translateWordsToAllLangs(words) {
+// onlyLangs — ограничить набор языков (напр. ['es'] для испанского контента: только ru[база]+es).
+export async function translateWordsToAllLangs(words, onlyLangs = null) {
+  const langs = onlyLangs ? TARGET_LANGS.filter(l => onlyLangs.includes(l)) : TARGET_LANGS
+  if (!langs.length) return {} // активна только базовая локаль — переводить нечего
+  const jsonShape = `{ ${langs.map(l => `"${l}": "..."`).join(', ')} }`
   const BATCH = 20
   const results = {}
   for (let i = 0; i < words.length; i += BATCH) {
@@ -312,9 +316,9 @@ export async function translateWordsToAllLangs(words) {
     const list = batch.map(w => `${w.id}: ${w.word_de} → ${w.translation_ru}`).join('\n')
     try {
       const text = await ask(
-        `Переведи эти немецкие слова на 8 языков (en, uk, fr, ar, bg, tr, es, sq).
+        `Переведи эти слова на языки (${langs.join(', ')}).
 Слова в формате "id: слово → перевод_на_русский".
-Верни ТОЛЬКО JSON (без markdown): { "<id>": { "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "...", "sq": "..." } }
+Верни ТОЛЬКО JSON (без markdown): { "<id>": ${jsonShape} }
 Переводы должны быть краткими (слово или словосочетание), как в словаре.
 
 ${list}`,
@@ -333,9 +337,13 @@ ${list}`,
 // Возвращает объект { id: { en: {...}, fr: {...} } } для упражнений
 // fill_blank: переводим немецкое предложение на 8 языков (включая ru)
 // multiple_choice + sentence_write: переводим русский текст на 7 языков
-export async function translateExercisePayloads(exercises) {
+export async function translateExercisePayloads(exercises, onlyLangs = null) {
   const BATCH = 15
   const results = {}
+  const FB_ALL = ['ru', 'en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq'] // fill_blank (вкл ru)
+  const RU_ALL = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']       // mc/sw (из русского)
+  const fbLangs = onlyLangs ? FB_ALL.filter(l => onlyLangs.includes(l)) : FB_ALL
+  const ruLangs = onlyLangs ? RU_ALL.filter(l => onlyLangs.includes(l)) : RU_ALL
 
   for (let i = 0; i < exercises.length; i += BATCH) {
     const batch = exercises.slice(i, i + BATCH)
@@ -349,8 +357,8 @@ export async function translateExercisePayloads(exercises) {
       return null
     }).filter(Boolean)
 
-    // Перевод fill_blank (немецкое предложение → ru, en, uk, fr, ar, bg, tr, es)
-    if (fbItems.length) {
+    // Перевод fill_blank (предложение изучаемого языка → активные локали)
+    if (fbItems.length && fbLangs.length) {
       // Переводим ПОЛНОЕ предложение (пропуск заменён словом) — чтобы в ответе был
       // нормальный перевод без прочерка. Во время вопроса перевод не показываем.
       const list = fbItems.map(ex => {
@@ -359,9 +367,9 @@ export async function translateExercisePayloads(exercises) {
       }).join('\n')
       try {
         const text = await ask(
-          `Переведи следующие немецкие предложения (полные, без пропусков) на 9 языков (ru, en, uk, fr, ar, bg, tr, es, sq).
+          `Переведи следующие предложения (полные, без пропусков) на языки (${fbLangs.join(', ')}).
 Верни ТОЛЬКО JSON (без markdown):
-{ "<id>": { "ru": "...", "en": "...", "uk": "...", "fr": "...", "ar": "...", "bg": "...", "tr": "...", "es": "...", "sq": "..." } }
+{ "<id>": { ${fbLangs.map(l => `"${l}": "..."`).join(', ')} } }
 
 ${list}`,
           { max_tokens: 4096 }
@@ -373,16 +381,16 @@ ${list}`,
       }
     }
 
-    // Перевод mc + sentence_write (русский → 7 языков)
-    if (ruItems.length) {
+    // Перевод mc + sentence_write (русский → активные локали)
+    if (ruItems.length && ruLangs.length) {
       const list = ruItems.map(it => `${it.id}|${it.type}: ${JSON.stringify(it.data)}`).join('\n')
       try {
         const text = await ask(
-          `Переведи следующие фрагменты текста с русского на 8 языков (en, uk, fr, ar, bg, tr, es, sq).
+          `Переведи следующие фрагменты текста с русского на языки (${ruLangs.join(', ')}).
 Для multiple_choice — массив вариантов, сохрани порядок.
 Для sentence_write — одна строка.
 Верни ТОЛЬКО JSON (без markdown):
-{ "<id>": { "en": <перевод>, "uk": <перевод>, "fr": <перевод>, "ar": <перевод>, "bg": <перевод>, "tr": <перевод>, "es": <перевод>, "sq": <перевод> } }
+{ "<id>": { ${ruLangs.map(l => `"${l}": <перевод>`).join(', ')} } }
 
 ${list}`,
           { max_tokens: 4096 }

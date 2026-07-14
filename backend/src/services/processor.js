@@ -29,7 +29,21 @@ async function setProgress(lessonId, text) {
 // «Обработать всё»: докидываем недостающее для урока — переводы/примеры слов, картинки,
 // переводы слов и упражнений на все языки. НЕ трогает упражнения и прогресс ученика.
 // Вызывается в конце обработки и по кнопке «Обработать всё» для готового урока.
+// Активные родные локали для целевого языка (из супер-админки). Для испанского —
+// только те, что учитель включил (напр. ru+es), чтобы не переводить и не тратить на лишние.
+const ALL_LOCALES = ['ru', 'uk', 'de', 'en', 'bg', 'tr', 'ar', 'es', 'fr', 'sq']
+async function getActiveLocales(targetLang) {
+  try {
+    const { rows } = await db.query("SELECT config #> $1 AS l FROM platform_settings WHERE id=1", [['targetLocales', targetLang]])
+    const l = rows[0]?.l
+    if (Array.isArray(l) && l.length) return l
+  } catch { /* нет настройки — все */ }
+  return ALL_LOCALES
+}
+
 export async function enrichLesson(lessonId) {
+  const targetLang = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
+  const activeLocales = await getActiveLocales(targetLang) // напр. ['ru','es'] для испанского
   // 1) Переводы + примеры для неполных слов урока
   try {
     const { rows } = await db.query(
@@ -73,7 +87,7 @@ export async function enrichLesson(lessonId) {
       `SELECT id, word_de, translation_ru FROM words
        WHERE lesson_id = $1 AND (translations IS NULL OR translations = '{}' OR NOT (translations ? 'sq')) ORDER BY id`, [lessonId])
     if (rows.length) {
-      const results = await translateWordsToAllLangs(rows)
+      const results = await translateWordsToAllLangs(rows, activeLocales)
       for (const [id, t] of Object.entries(results)) {
         await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(t), parseInt(id)])
       }
@@ -89,7 +103,7 @@ export async function enrichLesson(lessonId) {
          AND (payload_translations IS NULL OR payload_translations = '{}' OR NOT (payload_translations ? 'sq')) ORDER BY id`, [lessonId])
     for (let i = 0; i < rows.length; i += 15) {
       try {
-        const results = await translateExercisePayloads(rows.slice(i, i + 15))
+        const results = await translateExercisePayloads(rows.slice(i, i + 15), activeLocales)
         for (const [id, langs] of Object.entries(results)) {
           await db.query('UPDATE exercises SET payload_translations = COALESCE(payload_translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
         }
