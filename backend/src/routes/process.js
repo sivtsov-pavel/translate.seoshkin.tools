@@ -37,6 +37,8 @@ export async function processRoutes(fastify) {
   fastify.post('/api/lessons/:id/process', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
+    // Только учитель — обработка тратит токены (картинки/переводы), ученики не могут
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const lessonId = parseInt(request.params.id)
     const ownerId = request.user.id
 

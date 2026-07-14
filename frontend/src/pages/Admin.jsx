@@ -217,6 +217,8 @@ function Monetization() {
       {/* Фичи */}
       <div style={card}>
         <h3 style={{ margin: '0 0 6px' }}>🧩 Функции</h3>
+        <Toggle checked={feat.autoImages !== false} onChange={v => set('features', 'autoImages', v)}
+          label="Авто-генерация картинок (наши рисунки)" hint="ВКЛ — урок сам рисует картинки (gpt-image-1, платно). ВЫКЛ — рисуешь вручную кнопкой на уроке." />
         <Toggle checked={!!feat.trainer_free} onChange={v => set('features', 'trainer_free', v)} label="AI-тренер бесплатно" />
         <Toggle checked={!!feat.avatar_video} onChange={v => set('features', 'avatar_video', v)} label="Видео-аватар (D-ID)" hint="Платные кредиты D-ID" />
         <Toggle checked={!!feat.catalog} onChange={v => set('features', 'catalog', v)} label="Каталог репетиторов" />

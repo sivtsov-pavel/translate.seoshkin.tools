@@ -47,18 +47,22 @@ export async function enrichLesson(lessonId) {
     }
   } catch (e) { console.error('enrichLesson words:', e.message) }
 
-  // 2) Картинки для слов урока без image_url — НАШИ детские рисунки (gpt-image-1).
-  //    Unsplash-поиск отключён (давал неподходящие фото). Служебные слова
-  //    (артикли/предлоги/числа/местоимения) пропускаем — им картинка не нужна.
+  // 2) Картинки для слов урока — НАШИ детские рисунки (gpt-image-1). Unsplash отключён.
+  //    Режим авто/вручную — из супер-админки (features.autoImages). Вручную → пропускаем
+  //    (учитель нарисует кнопкой). Служебные слова всегда пропускаем (им картинка не нужна).
   try {
-    await setProgress(lessonId, 'Рисую картинки...')
-    const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id = $1 AND image_url IS NULL ORDER BY id', [lessonId])
-    for (const w of rows) {
-      if (isFunctionWord(w.word_de)) continue
-      try {
-        const url = await generateWordImage(w.word_de, w.translation_ru, w.id)
-        if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
-      } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
+    const { rows: ps } = await db.query("SELECT config->'features'->>'autoImages' AS ai FROM platform_settings WHERE id=1")
+    const autoImages = ps[0]?.ai !== 'false' // по умолчанию авто
+    if (autoImages) {
+      await setProgress(lessonId, 'Рисую картинки...')
+      const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id = $1 AND image_url IS NULL ORDER BY id', [lessonId])
+      for (const w of rows) {
+        if (isFunctionWord(w.word_de)) continue
+        try {
+          const url = await generateWordImage(w.word_de, w.translation_ru, w.id)
+          if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
+        } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
+      }
     }
   } catch (e) { console.error('enrichLesson images:', e.message) }
 

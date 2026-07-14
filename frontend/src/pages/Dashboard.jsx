@@ -164,6 +164,21 @@ export default function Dashboard() {
             <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
           </div>
         </Link>
+        {/* 🎮 Игра класса — читаем фразы урока по очереди */}
+        <div onClick={() => games.length && navigate(`/class-game/${games[0].id}`)}
+          style={{
+            background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', marginTop: 8,
+            display: 'flex', alignItems: 'center', gap: 14, cursor: games.length ? 'pointer' : 'default', opacity: games.length ? 1 : 0.7,
+          }}>
+          <span style={{ fontSize: 32, lineHeight: 1 }}>🎮</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Игра класса</div>
+            <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+              {games.length ? 'Готова — читаем фразы урока по очереди' : 'Учитель собирает набор фраз (кнопка «🎮» на уроке)'}
+            </div>
+          </div>
+          {games.length > 0 && <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>ГОТОВА</span>}
+        </div>
       </div>
 
       {/* Секция уроков */}
