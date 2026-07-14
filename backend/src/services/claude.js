@@ -68,6 +68,26 @@ export async function extractFromPhoto(filepath) {
   return parseJson(res.choices[0].message.content)
 }
 
+// Камера в читалке: извлечь немецкие слова/фразы с фото + перевод на локаль ученика.
+export async function extractWordsFromImage(filepath, lang = 'ru') {
+  const base64 = readFileSync(filepath).toString('base64')
+  const mimeType = getMimeType(filepath)
+  const langNames = { ru: 'русский', uk: 'українську', de: 'немецкий', en: 'English', bg: 'болгарский', tr: 'турецкий', ar: 'арабский', es: 'испанский', fr: 'французский', sq: 'албанский' }
+  const langName = langNames[lang] || 'русский'
+  const prompt = `На фото — текст или слова на немецком (страница, вывеска, надпись). Извлеки все РАЗНЫЕ немецкие слова и короткие полезные фразы, которые видно.
+Существительные — с артиклем (der/die/das) и с большой буквы; глаголы — в инфинитиве. Игнорируй нечитаемое, числа-страницы, мусор.
+Для каждого дай перевод на ${langName}.
+Верни ТОЛЬКО JSON: {"words":[{"de":"...","tr":"..."}]}`
+  const res = await client.chat.completions.create({
+    model: 'gpt-4o', max_tokens: 4096,
+    messages: [{ role: 'user', content: [
+      { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'high' } },
+      { type: 'text', text: prompt },
+    ] }],
+  })
+  return (parseJson(res.choices[0].message.content).words || []).filter(w => w && w.de)
+}
+
 const MERGE_PROMPT = `Объедини данные из нескольких фото страниц урока немецкого (A1) в единый конспект.
 Правила нормализации (ВАЖНО, соблюдай строго):
 - Существительные ВСЕГДА с определённым артиклем и с большой буквы: "der Tisch", "die Lampe", "das Buch". Если род не указан в тексте — определи сам, ты знаешь немецкий. НЕ оставляй существительное без артикля.

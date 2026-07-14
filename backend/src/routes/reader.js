@@ -1,9 +1,38 @@
 import { db } from '../db/index.js'
-import { translateParagraphs, translateSingle } from '../services/claude.js'
+import { translateParagraphs, translateSingle, extractWordsFromImage } from '../services/claude.js'
+import { unlink } from 'fs/promises'
 
 const MODEL_MAP = { smart: 'gpt-4o', mini: 'gpt-4o-mini' }
 
 export async function readerRoutes(fastify) {
+  // Камера: фото → извлекаем немецкие слова + перевод; помечаем какие уже в словаре
+  fastify.post('/api/reader/camera', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const part = await request.file()
+    if (!part) return reply.status(400).send({ error: 'Нет фото' })
+    const lang = request.query.lang || 'ru'
+    const { filepath } = await fastify.saveUploadedFile(part)
+    let words = []
+    try {
+      words = await extractWordsFromImage(filepath, lang)
+    } catch (e) {
+      fastify.log.error({ e }, 'camera extract')
+      unlink(filepath).catch(() => {})
+      return reply.status(500).send({ error: 'Не удалось разобрать фото' })
+    }
+    unlink(filepath).catch(() => {})
+    // Помечаем какие слова уже есть в словаре (и берём их перевод на локаль)
+    for (const w of words) {
+      const bare = String(w.de).toLowerCase().replace(/^(der|die|das)\s+/i, '').trim()
+      const { rows } = await db.query(
+        `SELECT translation_ru, COALESCE(translations,'{}') AS translations
+         FROM words WHERE LOWER(word_de)=$1 OR LOWER(word_de)=$2 LIMIT 1`,
+        [String(w.de).toLowerCase(), bare])
+      w.inDict = rows.length > 0
+      if (rows[0]) w.tr = (rows[0].translations && rows[0].translations[lang]) || rows[0].translation_ru || w.tr
+    }
+    return { words }
+  })
+
   // Перевод абзацев с выбором языковой пары
   fastify.post('/api/reader/translate', {
     preHandler: [fastify.authenticate],

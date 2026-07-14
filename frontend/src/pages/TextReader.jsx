@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { speak, cancel, SpeakButton } from '../hooks/useSpeech.jsx'
 import { api } from '../api/client.js'
+import CameraWords from '../components/CameraWords.jsx'
 
 // ───────── helpers ─────────
 
@@ -416,6 +417,7 @@ export default function TextReader() {
             }}>{tab.label}</button>
           ))}
         </div>
+        <div style={{ marginLeft: 'auto' }}><CameraWords /></div>
 
         {/* Выбор модели — для bilingual и conversation */}
         {(mode === 'bilingual' || mode === 'conversation') && (
