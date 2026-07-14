@@ -15,7 +15,16 @@ export default function ClassGame() {
   const [data, setData] = useState(null)
   const [err, setErr] = useState('')
   const [saved, setSaved] = useState('')
+  const [savedIds, setSavedIds] = useState(() => new Set())
   const pollRef = useRef(null)
+
+  // Добавить одну фразу в разговорник (крестик у фразы)
+  const addOne = async (l, title) => {
+    try {
+      await api.post('/phrasebook', { de: l.de, ru: l.tr || '', category: `🎮 ${title}`, source: 'game' })
+      setSavedIds(prev => new Set(prev).add(l.id))
+    } catch (e) { alert('Ошибка: ' + e.message) }
+  }
 
   const load = async () => {
     try {
@@ -51,7 +60,17 @@ export default function ClassGame() {
         <p style={{ color: 'var(--ink-soft)', margin: '0 0 16px', fontSize: 14 }}>Твои {lines.length} фраз. Читай вслух, когда скажет учитель.</p>
         {lines.map(l => (
           <div key={l.id} style={{ background: 'var(--surface)', border: `1px solid ${l.read ? 'var(--good, #16a34a)' : 'var(--line)'}`, borderRadius: 14, padding: 16, marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 6 }}>{ROLE[l.role] || ROLE.statement}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{ROLE[l.role] || ROLE.statement}</span>
+              {/* Крестик «+ в разговорник» */}
+              <button onClick={() => addOne(l, data.game.title || 'Игра класса')} disabled={savedIds.has(l.id)}
+                title="Добавить в разговорник" style={{
+                  width: 30, height: 30, borderRadius: 8, flexShrink: 0, cursor: savedIds.has(l.id) ? 'default' : 'pointer',
+                  border: `1px solid ${savedIds.has(l.id) ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
+                  background: savedIds.has(l.id) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent-soft)',
+                  color: savedIds.has(l.id) ? 'var(--good, #16a34a)' : 'var(--accent)', fontSize: 16, fontWeight: 700,
+                }}>{savedIds.has(l.id) ? '✓' : '+'}</button>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 20, fontWeight: 700, flex: 1 }} dir="ltr">{l.de}</span>
               <SpeakButton text={l.de} size={22} />
