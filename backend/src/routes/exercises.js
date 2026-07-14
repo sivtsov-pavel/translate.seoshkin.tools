@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman } from '../services/claude.js'
+import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { generateWordImage } from '../services/imageGen.js'
 import { writeFileSync, mkdirSync } from 'fs'
@@ -866,5 +866,31 @@ export async function exercisesRoutes(fastify) {
       [q]
     )
     return rows[0] || null
+  })
+
+  // Тап-перевод слова: перевод на ЛОКАЛЬ ученика из словаря; если слова нет —
+  // переводим через GPT и помечаем как «нового» (можно сохранить в разговорник).
+  fastify.get('/api/words/tap', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const raw = (request.query.q || '').trim()
+    const lang = request.query.lang || 'ru'
+    if (!raw) return null
+    const bare = raw.toLowerCase().replace(/^(der|die|das|ein|eine|einen|dem|den|des)\s+/i, '').trim()
+    const { rows } = await db.query(
+      `SELECT word_de, translation_ru, COALESCE(translations,'{}') AS translations, example_sentence, image_url
+       FROM words WHERE LOWER(word_de) = $1 OR LOWER(word_de) = $2
+       ORDER BY (image_url IS NOT NULL) DESC LIMIT 1`,
+      [raw.toLowerCase(), bare]
+    )
+    if (rows[0]) {
+      const w = rows[0]
+      const tr = (w.translations && w.translations[lang]) || w.translation_ru
+      return { word: w.word_de, translation: tr, example: w.example_sentence, image_url: w.image_url, inDict: true }
+    }
+    // нет в словаре — переводим на локаль
+    let tr = null
+    try { tr = await translateSingle(bare || raw, 'de', lang) } catch {}
+    return { word: raw, translation: tr, inDict: false }
   })
 }

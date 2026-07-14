@@ -5,6 +5,7 @@ import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 import AvatarReaction from './AvatarReaction.jsx'
+import TapText from './TapText.jsx'
 
 export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, payloadTranslations, translations, translationRu, exerciseId }) {
   const [answer, setAnswer] = useState('')
@@ -74,7 +75,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
       {/* Предложение с пропуском */}
       <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
         <p style={{ fontSize: 21, margin: 0, lineHeight: 1.7, color: 'var(--ink)' }} dir="ltr">
-          {beforeBlank}
+          <TapText>{beforeBlank}</TapText>
           <span style={{
             color: submitted ? (isCorrect ? 'var(--good)' : 'var(--red)') : 'var(--accent)',
             borderBottom: `2px solid ${submitted ? (isCorrect ? 'var(--good)' : 'var(--red)') : 'var(--accent)'}`,
@@ -82,7 +83,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
           }}>
             {submitted ? (answer || '___') : (answer || '   ')}
           </span>
-          {afterBlank}
+          <TapText>{afterBlank}</TapText>
         </p>
       </div>
 
