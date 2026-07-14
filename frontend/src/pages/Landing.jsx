@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18nStore } from '../store/i18n.js'
 import LangSwitcher from '../components/LangSwitcher.jsx'
+import LandingTutors from '../components/LandingTutors.jsx'
 import { speak } from '../hooks/useSpeech.jsx'
 
 // Блок «для учителей» — привлекаем преподавателей. Иконки общие, текст локализован.
@@ -627,6 +628,9 @@ export default function Landing() {
           ))}
         </div>
       </section>
+
+      {/* 🏫 Карта школ и репетиторов (публичная) */}
+      <LandingTutors />
 
       {/* ИИ объясняет */}
       <section style={{

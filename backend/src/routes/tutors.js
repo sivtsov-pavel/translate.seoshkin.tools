@@ -14,6 +14,16 @@ export async function tutorsRoutes(fastify) {
     return rows
   })
 
+  // ПУБЛИЧНЫЙ список для лендинга (без авторизации) — только безопасные поля
+  fastify.get('/api/public/tutors', async () => {
+    const { rows } = await db.query(
+      `SELECT id, name, type, avatar_url, langs, levels, country, city, district,
+              lat, lng, format, price, rating, reviews, experience, about, verified
+       FROM tutors WHERE published = true
+       ORDER BY verified DESC, rating DESC, reviews DESC`)
+    return rows
+  })
+
   // Своя анкета
   fastify.get('/api/tutors/mine', { preHandler: [fastify.authenticate] }, async (request) => {
     const { rows } = await db.query('SELECT * FROM tutors WHERE user_id = $1', [request.user.id])
