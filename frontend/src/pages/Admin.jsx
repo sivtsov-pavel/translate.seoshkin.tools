@@ -187,6 +187,12 @@ function Monetization() {
             value={mon.free_daily_limit ?? 0}
             onChange={e => set('monetization', 'free_daily_limit', parseInt(e.target.value) || 0)} />
         </label>
+        <label style={{ fontSize: 13, display: 'block', marginTop: 10 }}>
+          Лимит сообщений AI-тренера в день (бесплатно, 0 = без лимита)
+          <input type="number" min="0" style={{ ...input, marginTop: 4, maxWidth: 160 }}
+            value={mon.trainer_daily_limit ?? 0}
+            onChange={e => set('monetization', 'trainer_daily_limit', parseInt(e.target.value) || 0)} />
+        </label>
       </div>
 
       {/* Тарифы */}

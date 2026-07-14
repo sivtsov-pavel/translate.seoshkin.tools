@@ -22,6 +22,23 @@ async function loadSession(sessionId, userId) {
   return rows[0] || null
 }
 
+// Дневной лимит сообщений AI-тренера для бесплатных (v2). Возвращает {limit, used}
+// если лимит исчерпан, иначе null. Действует только при включённой платной версии
+// и plan != premium; premium и супер-админ — безлимит.
+async function trainerLimitExceeded(userId) {
+  const { rows: p } = await db.query('SELECT config FROM platform_settings WHERE id = 1')
+  const mon = p[0]?.config?.monetization || {}
+  const limit = mon.trainer_daily_limit || 0
+  if (!mon.paid_enabled || limit <= 0) return null
+  const { rows: u } = await db.query('SELECT plan FROM users WHERE id = $1', [userId])
+  if (u[0]?.plan === 'premium') return null
+  const { rows: c } = await db.query(
+    `SELECT count(*)::int AS n FROM ai_trainer_messages m
+     JOIN ai_trainer_sessions s ON s.id = m.session_id
+     WHERE s.user_id = $1 AND m.role = 'user' AND m.created_at::date = CURRENT_DATE`, [userId])
+  return c[0].n >= limit ? { limit, used: c[0].n } : null
+}
+
 export async function aiTrainerRoutes(fastify) {
   // ── Старый stateless-эндпоинт (обратная совместимость) ──
   fastify.post('/api/ai-trainer/chat', { preHandler: [fastify.authenticate] }, async (request, reply) => {
@@ -164,6 +181,13 @@ export async function aiTrainerRoutes(fastify) {
 
     const { text, userLang } = request.body || {}
     if (!text || !text.trim()) return reply.status(400).send({ error: 'text required' })
+
+    // Дневной лимит сообщений тренера (бесплатный тариф)
+    const over = await trainerLimitExceeded(request.user.id)
+    if (over) return reply.status(429).send({
+      error: `Дневной лимит сообщений тренера исчерпан (${over.limit}). Оформи Premium для безлимита.`,
+      limit: over.limit, upgrade: true,
+    })
 
     // Сохраняем реплику ученика
     await db.query(
