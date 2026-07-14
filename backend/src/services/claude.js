@@ -564,7 +564,10 @@ const TRAINER_LANG_NAMES = {
   sq: 'Albanian (shqip)',
 }
 
-export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk', memory = null, targetWords = null }) {
+// bilingual (§1.8/§5 ТЗ): переводить ли реплику тренера на язык ученика.
+// По умолчанию ВЫКЛ — тренер говорит только на изучаемом языке, без перевода (§5).
+// Тумблер «сначала на родном» может включить перевод; тогда translation заполняется.
+export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk', memory = null, targetWords = null, bilingual = false }) {
   const char = TRAINER_CHARACTERS[character] || TRAINER_CHARACTERS.lena
   const scenarioDesc = TRAINER_SCENARIOS[scenario] || TRAINER_SCENARIOS.free
   // Мова підказок/перекладу = мова інтерфейсу учня (усі 10 локалей)
@@ -585,6 +588,12 @@ export async function chatWithTrainer({ messages, character = 'lena', scenario =
     memoryBlock = `\nПАМʼЯТЬ ПРО УЧНЯ (ти спілкувався раніше — поводься природно, ненавʼязливо покажи, що памʼятаєш його):\n${sum}\n${mistLine}\n`
   }
 
+  // Правило перекладу залежить від bilingual: за замовчуванням перекладу немає (§5).
+  const translationRule = bilingual
+    ? `5. Дай переклад своєї відповіді мовою: ${userLangName} (translation)`
+    : `5. НЕ перекладай свою відповідь. Поле translation завжди null — учень має розуміти з контексту (§5).`
+  const translationSchema = bilingual ? '"translation":"..."' : '"translation":null'
+
   const systemPrompt = `Ти — ${char.emoji} ${char.name}, ${char.desc}.
 Рівень учня: A1–A2 (початківець).
 Сценарій: ${scenarioDesc}.
@@ -594,11 +603,13 @@ ${wordsBlock}${memoryBlock}
 2. Якщо учень написав не-німецькою — зрозумій сенс та відповідай так, ніби він написав правильно по-німецьки
 3. Виправляй помилки учня дружньо, без осуду (correction — мовою: ${userLangName})
 4. Якщо помилок немає — correction: null
-5. Дай переклад своєї відповіді мовою: ${userLangName} (translation)
+${translationRule}
 6. Речення короткі, прості, рівень A1
+7. Вітайся ТІЛЬКИ на початку розмови, а не в кожній репліці. Не повторюй привітання.
+8. НЕ хвали і НЕ лай у кожній репліці ("молодець", "чудово", "неправильно" тощо). Веди природний живий діалог, як реальна людина. Оцінка і розбір помилок — не в кожній фразі, а в підсумковому звіті сесії.
 
 СТРОГО повертай лише JSON без markdown:
-{"reply":"...","correction":"...або null","translation":"..."}`
+{"reply":"...","correction":"...або null",${translationSchema}}`
 
   const res = await client.chat.completions.create({
     model: 'gpt-4o-mini',
@@ -611,7 +622,10 @@ ${wordsBlock}${memoryBlock}
   })
   const content = res.choices[0].message.content
   try {
-    return parseJson(content)
+    const parsed = parseJson(content)
+    // Гарантия §5: без bilingual перевода не отдаём, даже если модель его вернула
+    if (!bilingual) parsed.translation = null
+    return parsed
   } catch {
     // Подстраховка: если модель всё же вернула не-JSON — не падаем, берём как reply
     return { reply: content, correction: null, translation: null }

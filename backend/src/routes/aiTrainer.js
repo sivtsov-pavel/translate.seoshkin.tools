@@ -42,14 +42,14 @@ async function trainerLimitExceeded(userId) {
 export async function aiTrainerRoutes(fastify) {
   // ── Старый stateless-эндпоинт (обратная совместимость) ──
   fastify.post('/api/ai-trainer/chat', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-    const { messages, character, scenario, userLang } = request.body
+    const { messages, character, scenario, userLang, bilingual = false } = request.body
     if (!Array.isArray(messages) || messages.length === 0) {
       return reply.status(400).send({ error: 'messages required' })
     }
     try {
       // Даже в stateless-режиме подмешиваем память — тренер «помнит» ученика
       const memory = await loadMemory(request.user.id)
-      return await chatWithTrainer({ messages: messages.slice(-20), character, scenario, userLang, memory })
+      return await chatWithTrainer({ messages: messages.slice(-20), character, scenario, userLang, memory, bilingual })
     } catch (e) {
       fastify.log.error(e)
       return reply.status(500).send({ error: e.message })
@@ -133,7 +133,7 @@ export async function aiTrainerRoutes(fastify) {
 
   // ── Создать сессию (подтягивает память для баннера «тренер помнит») ──
   fastify.post('/api/ai-trainer/sessions', { preHandler: [fastify.authenticate] }, async (request) => {
-    const { character = 'lena', scenario = 'free', userLang = 'uk', starter, targetWords } = request.body || {}
+    const { character = 'lena', scenario = 'free', userLang = 'uk', starter, targetWords, bilingual = false } = request.body || {}
     const words = Array.isArray(targetWords) && targetWords.length ? targetWords.slice(0, 25) : null
     const { rows } = await db.query(
       'INSERT INTO ai_trainer_sessions (user_id, character, scenario, target_words) VALUES ($1, $2, $3, $4) RETURNING id',
@@ -150,7 +150,7 @@ export async function aiTrainerRoutes(fastify) {
         : (memory && memory.summary_text)
           ? 'Розпочни розмову першим. Ти вже спілкувався з цим учнем раніше — привітайся і природно згадай щось із минулих розмов АБО постав НОВЕ питання за сценарієм. НЕ повторюй щоразу однакове привітання.'
           : 'Розпочни розмову першим: коротко привітайся і постав перше питання за сценарієм.'
-      const r = await chatWithTrainer({ messages: [{ role: 'user', content: instr }], character, scenario, userLang, memory, targetWords: words })
+      const r = await chatWithTrainer({ messages: [{ role: 'user', content: instr }], character, scenario, userLang, memory, targetWords: words, bilingual })
       opening = r && r.reply ? r.reply : null
       opening_translation = (r && r.translation && r.translation !== 'null') ? r.translation : null
     } catch (e) {
@@ -179,7 +179,7 @@ export async function aiTrainerRoutes(fastify) {
     const session = await loadSession(request.params.id, request.user.id)
     if (!session) return reply.status(404).send({ error: 'session not found' })
 
-    const { text, userLang } = request.body || {}
+    const { text, userLang, bilingual = false } = request.body || {}
     if (!text || !text.trim()) return reply.status(400).send({ error: 'text required' })
 
     // Дневной лимит сообщений тренера (бесплатный тариф)
@@ -214,6 +214,7 @@ export async function aiTrainerRoutes(fastify) {
         userLang,
         memory,
         targetWords: session.target_words,
+        bilingual,
       })
       // Сохраняем ответ тренера
       await db.query(
