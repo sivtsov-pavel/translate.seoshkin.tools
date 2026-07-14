@@ -291,17 +291,18 @@ a { color: var(--accent); text-decoration: none; }
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;   /* сам контейнер скроллится — карточка любой высоты видна целиком */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Прямой потомок — компонент упражнения — тоже flex column */
+/* Прямой потомок — компонент упражнения: натуральная высота, скролл берёт родитель */
 .exercise-session-content > div {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   display: flex !important;
   flex-direction: column !important;
-  overflow-y: auto; /* scroll для упражнений без картинки */
-  overflow-x: hidden;
+  overflow: visible;
 }
 
 /* Карточка упражнения: натуральная высота, скроллится ВСЯ одним блоком

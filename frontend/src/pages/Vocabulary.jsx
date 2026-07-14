@@ -320,7 +320,7 @@ export default function Vocabulary() {
             {lessonTitles.length > 1 && (
               <select value={lessonFilter} onChange={e => setLessonFilter(e.target.value)} style={SELECT_STYLE}>
                 <option value="">Все уроки</option>
-                {lessonTitles.map(lt => <option key={lt} value={lt}>{shortLesson(lt, t.vocabulary.noLesson)}</option>)}
+                {lessonTitles.map(lt => <option key={lt} value={lt}>{lt || t.vocabulary.noLesson}</option>)}
               </select>
             )}
           </div>
