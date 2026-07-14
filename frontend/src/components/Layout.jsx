@@ -124,6 +124,20 @@ export default function Layout({ children }) {
 
   const handleLogout = () => { logout(); navigate('/login') }
 
+  // Поделиться приложением (в PWA нет адресной строки). Web Share API → фолбэк на копирование.
+  const [shared, setShared] = useState(false)
+  const shareApp = async () => {
+    const url = window.location.origin
+    const data = { title: 'Deutsch Lernen', text: 'Учи немецкий — Deutsch Lernen 🇩🇪', url }
+    try {
+      if (navigator.share) { await navigator.share(data); return }
+    } catch { return } // пользователь отменил шеринг
+    try {
+      await navigator.clipboard.writeText(url)
+      setShared(true); setTimeout(() => setShared(false), 2000)
+    } catch {}
+  }
+
   const isActive = (to) => {
     if (to === '/') return location.pathname === '/'
     if (to.includes('?')) {
@@ -423,6 +437,9 @@ export default function Layout({ children }) {
           <button onClick={toggleTheme} style={pill}>
             <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
             {' '}{theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}
+          </button>
+          <button onClick={shareApp} style={pill} title="Поделиться приложением">
+            <i className="bi bi-share-fill" /> {shared ? 'Ссылка скопирована' : 'Поделиться'}
           </button>
           <AutoSpeakToggle pill />
           <SpeakTranslationToggle />
