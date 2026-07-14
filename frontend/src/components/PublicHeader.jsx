@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import LangSwitcher from './LangSwitcher.jsx'
+import { useThemeStore } from '../store/theme.js'
 
 export default function PublicHeader() {
   const { t } = useI18nStore()
@@ -24,6 +25,7 @@ export default function PublicHeader() {
       </Link>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <ThemeToggle />
         <LangSwitcher />
 
         {token ? (
@@ -46,6 +48,17 @@ export default function PublicHeader() {
         )}
       </div>
     </nav>
+  )
+}
+
+function ThemeToggle() {
+  const { theme, toggle } = useThemeStore()
+  return (
+    <button onClick={toggle} title="Светлая / тёмная тема" style={{
+      ...btn('ghost'), padding: '7px 10px', display: 'flex', alignItems: 'center',
+    }}>
+      <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />
+    </button>
   )
 }
 

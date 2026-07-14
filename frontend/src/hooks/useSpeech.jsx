@@ -5,6 +5,12 @@ const AUTO_KEY        = 'auto_speak'
 const VOICE_KEY       = 'de_voice_name'
 const SPEAK_TRANS_KEY = 'speak_translation'
 
+// Локаль озвучки по активному изучаемому языку (мульти-таргет)
+const TARGET_LOCALE = { de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT', en: 'en-US', pt: 'pt-PT' }
+export function targetLocale() {
+  return TARGET_LOCALE[localStorage.getItem('target_lang') || 'de'] || 'de-DE'
+}
+
 export function isAutoSpeakEnabled() {
   return localStorage.getItem(AUTO_KEY) !== 'false'
 }
@@ -19,17 +25,20 @@ function getSelectedVoiceName() {
 
 function getDeVoices() {
   if (!synth) return []
-  return synth.getVoices().filter(v => v.lang.startsWith('de'))
+  // Голоса для АКТИВНОГО изучаемого языка (мульти-таргет)
+  const prefix = targetLocale().slice(0, 2)
+  return synth.getVoices().filter(v => v.lang.startsWith(prefix))
 }
 
 function pickVoice() {
+  const prefix = targetLocale().slice(0, 2)
   const saved = getSelectedVoiceName()
   const voices = getDeVoices()
   if (!voices.length) return null
-  if (saved) return voices.find(v => v.name === saved) || voices[0]
-  // По умолчанию предпочитаем Google Deutsch
-  return voices.find(v => v.name === 'Google Deutsch')
-      || voices.find(v => v.name.toLowerCase().includes('google') && v.lang.startsWith('de'))
+  // Сохранённый голос применяем только если он того же языка
+  if (saved) { const s = voices.find(v => v.name === saved); if (s) return s }
+  // Предпочитаем Google-голос нужного языка
+  return voices.find(v => v.name.toLowerCase().includes('google') && v.lang.startsWith(prefix))
       || voices[0]
 }
 
@@ -38,7 +47,7 @@ function getSavedRate() {
   return isNaN(v) ? 0.9 : Math.max(0.5, Math.min(1.5, v))
 }
 
-export function speak(text, lang = 'de-DE', rate = null) {
+export function speak(text, lang = targetLocale(), rate = null) {
   if (!synth) return
   synth.cancel()
   // Chrome bug: cancel() и speak() в одном тике → utterance молча сбрасывается
@@ -52,13 +61,13 @@ export function speak(text, lang = 'de-DE', rate = null) {
   }, 50)
 }
 
-export function speakAuto(text, lang = 'de-DE') {
+export function speakAuto(text, lang = targetLocale()) {
   if (isAutoSpeakEnabled()) speak(text, lang)
 }
 
 // Озвучка с событиями начала/конца — для голосового режима тренера (hands-free):
 // пока аватар «говорит» — микрофон молчит, после onEnd — снова слушаем.
-export function speakWithEvents(text, lang = 'de-DE', { onStart, onEnd } = {}) {
+export function speakWithEvents(text, lang = targetLocale(), { onStart, onEnd } = {}) {
   if (!synth || !text) { onEnd?.(); return }
   synth.cancel()
   setTimeout(() => {
@@ -87,7 +96,7 @@ export function speakAppend(text, lang = 'ru-RU') {
   synth.speak(utt)
 }
 
-export function SpeakButton({ text, lang = 'de-DE', size = 18, style = {}, appendText = null }) {
+export function SpeakButton({ text, lang = targetLocale(), size = 18, style = {}, appendText = null }) {
   return (
     <button
       onClick={e => { e.stopPropagation(); speak(text, lang); if (appendText) speakAppend(appendText) }}

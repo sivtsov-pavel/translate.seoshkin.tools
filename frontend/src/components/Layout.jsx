@@ -8,6 +8,7 @@ import { useAdminOpStore } from '../store/adminOp.js'
 import { useSettingsStore } from '../store/settings.js'
 import { api } from '../api/client.js'
 import LangSwitcher from './LangSwitcher.jsx'
+import TargetSwitcher from './TargetSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 
 const SIDEBAR_W = 220
@@ -242,6 +243,8 @@ export default function Layout({ children }) {
               </div>
             </Link>
           )}
+          {/* Переключатель изучаемого языка (мульти-таргет) */}
+          <div style={{ marginTop: 10 }}><TargetSwitcher /></div>
         </div>
 
         {/* Прокручиваемая область: навигация + admin + подвал. Шапка зафиксирована,
