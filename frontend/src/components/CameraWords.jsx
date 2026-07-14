@@ -1,17 +1,41 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
+import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
 // Камера в читалке: сфоткал текст → gpt-4o vision разбирает немецкие слова →
 // показывает какие уже в словаре (✓), какие новые (🆕) → сохранить выбранные в разговорник.
 export default function CameraWords() {
   const { lang } = useI18nStore()
+  const { user } = useAuthStore()
+  const isOwner = user?.role === 'owner'
   const fileRef = useRef(null)
   const [busy, setBusy] = useState(false)
   const [words, setWords] = useState(null)   // [{de, tr, inDict, _save}]
   const [err, setErr] = useState('')
   const [savedCount, setSavedCount] = useState(0)
+  const [lessons, setLessons] = useState([])
+  const [target, setTarget] = useState('')     // '' = новый набор, иначе lesson_id
+  const [lessonMsg, setLessonMsg] = useState('')
+
+  useEffect(() => {
+    if (isOwner) api.get('/lessons').then(d => setLessons((Array.isArray(d) ? d : d.lessons || []).filter(l => l.status === 'done' || l.words_count > 0))).catch(() => {})
+  }, [isOwner])
+
+  const saveToLesson = async () => {
+    const chosen = words.filter(w => w._save)
+    if (!chosen.length) { setLessonMsg('Отметь слова галочками'); return }
+    setLessonMsg('Сохраняю в урок…')
+    try {
+      const res = await api.post('/reader/save-to-lesson', {
+        lesson_id: target || undefined,
+        title: target ? undefined : '📷 Слова с фото',
+        words: chosen.map(w => ({ de: w.de, tr: w.tr })),
+      })
+      setLessonMsg(`✓ Отправлено в урок (упражнения создаются в фоне). Урок #${res.lesson_id}`)
+    } catch (e) { setLessonMsg('Ошибка: ' + e.message) }
+  }
 
   const pick = () => fileRef.current?.click()
 
@@ -87,6 +111,24 @@ export default function CameraWords() {
                 marginTop: 14, width: '100%', padding: '12px', borderRadius: 10, border: 'none',
                 background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer',
               }}>＋ Сохранить отмеченные в разговорник</button>
+            )}
+
+            {/* Учитель: сохранить отмеченные слова в УРОК (группу) — создаст упражнения */}
+            {isOwner && words.length > 0 && (
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>Или добавить в урок (группу):</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <select value={target} onChange={e => setTarget(e.target.value)}
+                    style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }}>
+                    <option value="">➕ Новый набор «📷 Слова с фото»</option>
+                    {lessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+                  </select>
+                  <button onClick={saveToLesson} style={{ padding: '10px 16px', borderRadius: 9, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+                    В урок
+                  </button>
+                </div>
+                {lessonMsg && <div style={{ fontSize: 12, color: lessonMsg.startsWith('✓') ? 'var(--good, #16a34a)' : 'var(--ink-soft)', marginTop: 6 }}>{lessonMsg}</div>}
+              </div>
             )}
           </div>
         </div>

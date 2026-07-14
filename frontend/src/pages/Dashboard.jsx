@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [games, setGames] = useState([])
   const [completed, setCompleted] = useState([])
+  const [lessonQuery, setLessonQuery] = useState('')
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
 
@@ -170,10 +171,26 @@ export default function Dashboard() {
         {t.dashboard.lessons}
       </div>
 
+      {/* Поиск по урокам — когда их много, отобрать по теме */}
+      {lessons.length > 5 && (
+        <div style={{ padding: '0 12px 10px' }}>
+          <input value={lessonQuery} onChange={e => setLessonQuery(e.target.value)}
+            placeholder="🔍 Поиск урока по теме…"
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }} />
+        </div>
+      )}
+
       <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {lessons.map(lesson => (
-          <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} />
-        ))}
+        {(() => {
+          const q = lessonQuery.trim().toLowerCase()
+          const shown = q
+            ? lessons.filter(l => (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || '').toLowerCase().includes(q))
+            : lessons
+          if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 8px', fontSize: 14 }}>Ничего не найдено</div>
+          return shown.map(lesson => (
+            <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} />
+          ))
+        })()}
       </div>
 
       {/* Круглая кнопка «Повторить всё» в правом нижнем углу — не перекрывает

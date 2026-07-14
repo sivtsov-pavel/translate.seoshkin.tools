@@ -1,5 +1,6 @@
 import { db } from '../db/index.js'
 import { translateParagraphs, translateSingle, extractWordsFromImage } from '../services/claude.js'
+import { saveCameraWords } from '../services/processor.js'
 import { unlink } from 'fs/promises'
 
 const MODEL_MAP = { smart: 'gpt-4o', mini: 'gpt-4o-mini' }
@@ -31,6 +32,25 @@ export async function readerRoutes(fastify) {
       if (rows[0]) w.tr = (rows[0].translations && rows[0].translations[lang]) || rows[0].translation_ru || w.tr
     }
     return { words }
+  })
+
+  // Сохранить слова с фото в УРОК (существующий или новый набор) — учитель.
+  // words: [{de, tr}]. Генерация упражнений идёт в фоне.
+  fastify.post('/api/reader/save-to-lesson', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const { lesson_id, title, words } = request.body || {}
+    if (!Array.isArray(words) || !words.length) return reply.status(400).send({ error: 'Нет слов' })
+    let lid = lesson_id ? parseInt(lesson_id) : null
+    if (!lid) {
+      const { rows } = await db.query(
+        "INSERT INTO lessons (owner_id, title, date, status) VALUES ($1,$2,CURRENT_DATE,'processing') RETURNING id",
+        [request.user.id, (title && title.trim()) || '📷 Слова с фото'])
+      lid = rows[0].id
+    } else {
+      await db.query("UPDATE lessons SET status='processing' WHERE id=$1", [lid])
+    }
+    saveCameraWords(lid, words).catch(e => fastify.log.error({ e }, 'saveCameraWords'))
+    return { lesson_id: lid, started: true }
   })
 
   // Перевод абзацев с выбором языковой пары

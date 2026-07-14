@@ -211,6 +211,47 @@ export async function processNewMedia(lessonId) {
 
 // «Свои упражнения»: собрать набор упражнений из выбранных слов (по их id).
 // Слова уже существуют (из других уроков/словаря) — упражнения ссылаются на них.
+// Добавить слова с фото (камера) в урок: вставить новые слова, сгенерировать им
+// упражнения (без пересоздания существующих) и дополнить переводами/картинками.
+export async function saveCameraWords(lessonId, words) {
+  try {
+    const { rows: lrow } = await db.query('SELECT owner_id FROM lessons WHERE id=$1', [lessonId])
+    const ownerId = lrow[0]?.owner_id
+    if (!ownerId) throw new Error('Урок не найден')
+    await setProgress(lessonId, 'Добавляю слова с фото...')
+    for (const w of words) {
+      if (!w || !w.de) continue
+      await db.query(
+        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
+         VALUES ($1,$2,$3,$4,'camera') ON CONFLICT (lesson_id, word_de) DO NOTHING`,
+        [lessonId, ownerId, String(w.de).trim(), (w.tr || '').trim() || null])
+    }
+    // Упражнения только для слов урока БЕЗ упражнений (новые)
+    const { rows: wordRows } = await db.query(
+      `SELECT w.id, w.word_de, w.translation_ru, w.example_sentence FROM words w
+       WHERE w.lesson_id=$1 AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id=w.id AND e.lesson_id=$1)`, [lessonId])
+    if (wordRows.length) {
+      await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
+      const exercises = await generateExercises(wordRows, [])
+      const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+      for (const ex of exercises) {
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+          [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+      }
+      for (const w of wordRows) {
+        const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', p])
+      }
+    }
+    await enrichLesson(lessonId)
+    await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слова с фото добавлены.`, lessonId])
+  } catch (err) {
+    console.error('saveCameraWords:', err.message)
+    await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [String(err.message).slice(0, 100), lessonId])
+  }
+}
+
 export async function generateCustomSet(lessonId, wordIds) {
   try {
     await setProgress(lessonId, 'Собираю упражнения из выбранных слов...')
