@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
+import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation, getLessonTitle } from '../utils/translation.js'
 import AdSlot from '../components/AdSlot.jsx'
@@ -12,12 +13,33 @@ const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🃏', letter_fill: 
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
+  const [games, setGames] = useState([])
   const navigate = useNavigate()
   const { t } = useI18nStore()
 
   useEffect(() => {
     api.get('/exercises/stats').then(setStats).catch(console.error).finally(() => setLoading(false))
+    api.get('/class-games').then(rows => setGames((rows || []).filter(g => g.status === 'ready'))).catch(() => {})
   }, [])
+
+  // Баннер «Игра класса» — самая свежая готовая игра (для ученика; учитель тоже видит свои)
+  const gameBanner = games.length > 0 && (
+    <div style={{ padding: '4px 12px 8px' }}>
+      <div onClick={() => navigate(`/class-game/${games[0].id}`)} style={{
+        cursor: 'pointer', background: 'linear-gradient(135deg, rgba(201,165,74,0.16), rgba(124,92,255,0.14))',
+        border: '1px solid var(--accent)', borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+      }}>
+        <div style={{ fontSize: 30 }}>🎮</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: 15 }}>Игра класса готова!</div>
+          <div style={{ fontSize: 13, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {games[0].title || 'Читаем фразы по очереди'}{games[0].my_lines ? ` · твоих фраз: ${games[0].my_lines}` : ''}
+          </div>
+        </div>
+        <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>Открыть →</span>
+      </div>
+    </div>
+  )
 
   if (loading) return (
     <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-soft)' }}>
@@ -30,12 +52,15 @@ export default function Dashboard() {
 
   if (total === 0) {
     return (
-      <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-        <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-          {t.dashboard.allDone}
+      <div style={{ paddingTop: 12 }}>
+        {gameBanner}
+        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+          <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
+            {t.dashboard.allDone}
+          </div>
+          <div style={{ color: 'var(--ink-soft)', fontSize: 15 }}>{t.dashboard.comeBack}</div>
         </div>
-        <div style={{ color: 'var(--ink-soft)', fontSize: 15 }}>{t.dashboard.comeBack}</div>
       </div>
     )
   }
@@ -53,6 +78,8 @@ export default function Dashboard() {
           {t.dashboard.exercisesWaiting(total)}
         </p>
       </div>
+
+      {gameBanner}
 
       {/* AI-тренер — над играми: живой разговор с Pablo */}
       <div style={{ padding: '4px 12px 8px' }}>
@@ -168,9 +195,22 @@ export default function Dashboard() {
 
 function LessonCard({ lesson, navigate }) {
   const { t, lang } = useI18nStore()
+  const { user } = useAuthStore()
   const [words, setWords]         = useState(null)
   const [showWords, setShowWords] = useState(false)
   const [listening, setListening] = useState(false)
+  const [gameBusy, setGameBusy]   = useState(false)
+
+  // Учитель: собрать «Игру класса» из слов урока
+  const makeClassGame = async () => {
+    const n = window.prompt('Сколько фраз собрать для класса? (раздам ученикам по кругу)', '30')
+    if (n === null) return
+    setGameBusy(true)
+    try {
+      const res = await api.post('/class-games', { lesson_id: lesson.lesson_id, count: parseInt(n) || 30 })
+      navigate(`/class-game/${res.id}`)
+    } catch (e) { alert('Ошибка: ' + e.message); setGameBusy(false) }
+  }
 
   const typeLabels = {
     flashcard:       t.exercise.flashcard,
@@ -297,6 +337,22 @@ function LessonCard({ lesson, navigate }) {
             <span style={{ flexShrink: 0, fontSize: 15 }}>🗣️</span>
             <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
               {t.exercise.trainerSpeech || 'Произношение с тренером'}
+            </span>
+          </button>
+        )}
+
+        {/* Учитель: собрать «Игру класса» — фразы из урока раздаются ученикам */}
+        {user?.role === 'owner' && wordsCount > 0 && (
+          <button onClick={makeClassGame} disabled={gameBusy}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'linear-gradient(135deg, rgba(201,165,74,0.18), rgba(124,92,255,0.14))',
+              border: '1px solid var(--accent)', borderRadius: 12, padding: '10px', fontSize: 13,
+              color: 'var(--ink)', cursor: gameBusy ? 'default' : 'pointer', textAlign: 'left', minWidth: 0, overflow: 'hidden', opacity: gameBusy ? 0.6 : 1,
+            }}>
+            <span style={{ flexShrink: 0, fontSize: 15 }}>🎮</span>
+            <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+              {gameBusy ? 'Собираю…' : 'Игра класса'}
             </span>
           </button>
         )}

@@ -620,3 +620,36 @@ export async function translateSentences(pairs) {
   }
   return all
 }
+
+// ─── Игра «Класс говорит» ───────────────────────────────────────────────────
+// Генерируем N разных коротких немецких предложений из слов урока.
+export async function generateClassSentences(words, count = 30) {
+  const wl = words.map(w => w.word_de).slice(0, 60).join(', ')
+  const prompt = `Составь ${count} РАЗНЫХ коротких немецких предложений уровня A1 для чтения вслух в классе, используя лексику урока (по возможности в каждом — новое слово): ${wl}.
+Смесь: примерно треть — вопросы (role "question"), треть — ответы (role "answer"), треть — утверждения (role "statement"). Предложения простые, естественные, не повторяются.
+Верни ТОЛЬКО JSON: {"lines":[{"de":"...","role":"question|answer|statement"}]}`
+  const data = parseJson(await ask(prompt, { max_tokens: 4096 }))
+  return (data.lines || []).slice(0, count)
+}
+
+// Перевод фраз на все локали интерфейса (кроме de). Возвращает массив объектов
+// {ru, uk, en, bg, tr, ar, es, fr, sq} в том же порядке, что и sentences.
+export async function translateSentencesAllLangs(sentences) {
+  const LANGS = { ru: 'русский', uk: 'українська', en: 'English', bg: 'български', tr: 'Türkçe', ar: 'العربية', es: 'español', fr: 'français', sq: 'shqip' }
+  const codes = Object.keys(LANGS)
+  const out = sentences.map(() => ({}))
+  const BATCH = 12
+  for (let i = 0; i < sentences.length; i += BATCH) {
+    const batch = sentences.slice(i, i + BATCH)
+    const list = batch.map((s, j) => `${j + 1}. ${s}`).join('\n')
+    const langList = codes.map(c => `"${c}" (${LANGS[c]})`).join(', ')
+    const prompt = `Переведи каждое немецкое предложение на ВСЕ языки: ${langList}.
+Верни ТОЛЬКО JSON вида {"1":{"ru":"...","uk":"...","en":"...","bg":"...","tr":"...","ar":"...","es":"...","fr":"...","sq":"..."}, ...} для номеров 1..${batch.length}.
+Предложения:\n${list}`
+    try {
+      const map = parseJson(await ask(prompt, { max_tokens: 8192 }))
+      batch.forEach((_, j) => { out[i + j] = map[String(j + 1)] || {} })
+    } catch (e) { console.error('translateSentencesAllLangs batch', e.message) }
+  }
+  return out
+}
