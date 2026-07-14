@@ -127,6 +127,42 @@ export async function exercisesRoutes(fastify) {
     return rows
   })
 
+  // «Пройти урок заново»: сбрасываем даты повторения — все упражнения урока
+  // снова становятся «на сегодня» (прогресс не удаляем, только возвращаем в очередь).
+  fastify.post('/api/exercises/reset-lesson/:lessonId', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const lessonId = parseInt(request.params.lessonId)
+    await db.query(
+      `UPDATE user_exercise_progress SET next_review_date = CURRENT_DATE
+       WHERE user_id = $1 AND exercise_id IN (SELECT id FROM exercises WHERE lesson_id = $2)`,
+      [request.user.id, lessonId]
+    )
+    return { ok: true }
+  })
+
+  // Список пройденных уроков (нет упражнений «на сегодня») — для кнопки «повторить»
+  fastify.get('/api/exercises/completed-lessons', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const { id: userId, role } = request.user
+    const doneFilter = role === 'owner' ? '' : "AND l.status='done'"
+    const { rows } = await db.query(
+      `SELECT l.id, l.title, COALESCE(l.title_translations,'{}') AS title_translations,
+              count(*)::int AS total,
+              count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE)::int AS done
+       FROM lessons l JOIN exercises e ON e.lesson_id=l.id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id=e.id AND uep.user_id=$1
+       WHERE 1=1 ${doneFilter}
+       GROUP BY l.id, l.title, l.title_translations
+       HAVING count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE) > 0
+          AND count(*) FILTER (WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= CURRENT_DATE) = 0
+       ORDER BY l.date DESC, l.id`,
+      [userId]
+    )
+    return rows
+  })
+
   // Статистика для дашборда — по урокам и типам, per-user
   fastify.get('/api/exercises/stats', {
     preHandler: [fastify.authenticate],

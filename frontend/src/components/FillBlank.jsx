@@ -12,8 +12,6 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
   const [reaction, setReaction] = useState(null)
   const { t, lang } = useI18nStore()
   const inputRef = useRef(null)
-  // Перевод искомого слова на локаль ученика — показываем под словом (важно для понимания)
-  const wordTranslation = getTranslation(translations, lang, translationRu) || translationRu || payload.blank_ru
 
   const isCorrect = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
   const parts = payload.sentence.split('___')
@@ -86,14 +84,12 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
           </span>
           {afterBlank}
         </p>
-        {/* Перевод ВСЕГО предложения не показываем во время вопроса (выдал бы ответ).
-            Показываем только ПЕРЕВОД искомого слова на язык ученика — подсказка смысла. */}
       </div>
 
-      {/* Перевод искомого слова на локаль ученика (немецкое слово не раскрываем) */}
-      {wordTranslation && (
-        <div style={{ textAlign: 'center', fontSize: 15, color: 'var(--ink-soft)', margin: '-4px 0 14px' }}>
-          {t.exercise.wordHint || 'Слово'}: <span style={{ fontStyle: 'italic', fontWeight: 600, color: 'var(--ink)' }}>{wordTranslation}</span>
+      {/* Перевод всего предложения на локаль ученика — чтобы понимать суть */}
+      {sentenceTranslation && (
+        <div style={{ textAlign: 'center', fontSize: 15, color: 'var(--ink-soft)', fontStyle: 'italic', margin: '-4px 0 14px' }}>
+          {sentenceTranslation}
         </div>
       )}
 

@@ -24,9 +24,19 @@ export default function ExerciseSession() {
     window.scrollTo?.({ top: 0 })
   }, [current])
   const [loading, setLoading]     = useState(true)
+  const [starred, setStarred]     = useState(() => new Set()) // слова, помеченные «в изучение»
   const navigate                  = useNavigate()
   const [searchParams]            = useSearchParams()
   const { t, lang }               = useI18nStore()
+
+  // Пометить слово текущего упражнения «в изучение» (сложные/интересные слова)
+  const markLearning = async (wordId) => {
+    if (!wordId) return
+    try {
+      await api.patch(`/words/${wordId}`, { status: 'learning' })
+      setStarred(prev => new Set(prev).add(wordId))
+    } catch (e) { console.error('mark learning', e) }
+  }
   const lessonId                  = searchParams.get('lesson_id')
 
   useEffect(() => {
@@ -80,6 +90,16 @@ export default function ExerciseSession() {
       <div className="exercise-session-type">
         <span>{typeLabel}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {ex.word_id && (
+            <button onClick={() => markLearning(ex.word_id)} disabled={starred.has(ex.word_id)}
+              title="Добавить слово в изучение (учить/повторять)"
+              style={{ padding: '3px 10px', borderRadius: 8, cursor: starred.has(ex.word_id) ? 'default' : 'pointer', fontSize: 12, fontWeight: 600, textTransform: 'none', letterSpacing: 0,
+                border: `1px solid ${starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
+                background: starred.has(ex.word_id) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent-soft)',
+                color: starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--accent)' }}>
+              {starred.has(ex.word_id) ? '★ В изучении' : '⭐ В изучение'}
+            </button>
+          )}
           {lessonId && (
             <button onClick={() => navigate(`/ai-trainer?lesson_id=${lessonId}`)}
               title="Поговорить с AI-тренером по словам этого урока"

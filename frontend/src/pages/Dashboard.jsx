@@ -14,13 +14,23 @@ export default function Dashboard() {
   const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
   const [games, setGames] = useState([])
+  const [completed, setCompleted] = useState([])
   const navigate = useNavigate()
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
 
-  useEffect(() => {
+  const reloadStats = () => {
     api.get('/exercises/stats').then(setStats).catch(console.error).finally(() => setLoading(false))
+    api.get('/exercises/completed-lessons').then(setCompleted).catch(() => {})
+  }
+  useEffect(() => {
+    reloadStats()
     api.get('/class-games').then(rows => setGames((rows || []).filter(g => g.status === 'ready'))).catch(() => {})
-  }, [])
+  }, []) // eslint-disable-line
+
+  // Повторить пройденный урок — вернуть его упражнения «на сегодня»
+  const repeatLesson = async (id) => {
+    try { await api.post(`/exercises/reset-lesson/${id}`, {}); reloadStats() } catch (e) { alert('Ошибка: ' + e.message) }
+  }
 
   // Баннер «Игра класса» — самая свежая готовая игра (для ученика; учитель тоже видит свои)
   const gameBanner = games.length > 0 && (
@@ -185,6 +195,25 @@ export default function Dashboard() {
             {total}
           </span>
         </button>
+      )}
+
+      {/* Повторить пройденный урок — вернуть его в «Сегодня» */}
+      {completed.length > 0 && (
+        <div style={{ padding: '12px 12px 20px' }}>
+          <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 8 }}>
+            🔄 Повторить пройденное
+          </div>
+          {completed.map(l => (
+            <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '10px 14px', marginBottom: 8 }}>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {getLessonTitle(l.title, l.title_translations, lang)}
+              </span>
+              <button onClick={() => repeatLesson(l.id)} style={{ padding: '7px 14px', borderRadius: 9, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
+                🔄 Повторить
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Реклама для бесплатных на планшете/десктопе (управляется супер-админкой) */}
