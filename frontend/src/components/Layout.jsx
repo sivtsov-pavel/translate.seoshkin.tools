@@ -635,7 +635,6 @@ export default function Layout({ children }) {
           { to: '/vocabulary', icon: 'bi-card-list',            label: t.nav.vocabulary },
           { to: '/reader',     icon: 'bi-book-half',            label: t.nav.reader },
           { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: 'Разговорник' },
-          { to: '/grammar',    icon: 'bi-mortarboard-fill',     label: E.navGrammar },
           { to: '/wiki',       icon: 'bi-question-circle-fill', label: t.nav.wiki },
         ].map(item => {
           const active = item.to.includes('?')
