@@ -30,7 +30,7 @@ async function ask(prompt, { model = 'gpt-4o-mini', max_tokens = 4096 } = {}) {
 }
 
 // ─── Целевые (изучаемые) языки — мульти-таргет ──────────────────────────────
-const TARGET_LANGS = {
+const LEARN_LANGS = {
   de: { name: 'немецкий', adjN: 'немецкие', tts: 'de-DE', nounRule: 'существительные ВСЕГДА с артиклем (der/die/das) и с большой буквы' },
   es: { name: 'испанский', adjN: 'испанские', tts: 'es-ES', nounRule: 'существительные с артиклем (el/la/los/las)' },
   fr: { name: 'французский', adjN: 'французские', tts: 'fr-FR', nounRule: 'существительные с артиклем (le/la/les)' },
@@ -38,7 +38,7 @@ const TARGET_LANGS = {
   en: { name: 'английский', adjN: 'английские', tts: 'en-US', nounRule: 'существительные' },
   pt: { name: 'португальский', adjN: 'португальские', tts: 'pt-PT', nounRule: 'существительные с артиклем (o/a)' },
 }
-const TL = (code) => TARGET_LANGS[code] || TARGET_LANGS.de
+const TL = (code) => LEARN_LANGS[code] || LEARN_LANGS.de
 export function targetTtsLocale(code) { return TL(code).tts }
 export function targetLangName(code) { return TL(code).name }
 
