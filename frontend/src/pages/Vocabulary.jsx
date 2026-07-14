@@ -4,6 +4,7 @@ import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
+import { cardUrl, shareLink } from '../utils/share.js'
 
 const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
 
@@ -791,6 +792,11 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
             <span title="Из тетради / с доски (дополнительное)" style={{ fontSize: 11, padding: '1px 6px', borderRadius: 6, background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>✏️</span>
           )}
           <SpeakButton text={word.word_de} appendText={translation} />
+          <button onClick={() => shareLink({ title: word.word_de, text: `${word.word_de} — ${translation}`, url: cardUrl(word.id) })}
+            title="Поделиться карточкой"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--ink-soft)', padding: '0 2px', lineHeight: 1 }}>
+            <i className="bi bi-share-fill" />
+          </button>
           <span style={{ color: 'var(--ink-soft)' }}>—</span>
           {editing ? (
             <>
