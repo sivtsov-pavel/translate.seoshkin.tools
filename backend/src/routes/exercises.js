@@ -222,8 +222,10 @@ export async function exercisesRoutes(fastify) {
       }
     }
     // Последний урок сверху по дате; части/темы одного урока (одна дата) идут подряд по id возр.
+    // ВАЖНО: сравниваем как числа-таймстампы (pg отдаёт DATE объектом — строковое сравнение ломалось).
+    const ts = (d) => { const t = new Date(d).getTime(); return isNaN(t) ? 0 : t }
     const lessons = Object.values(lessonsMap).sort((a, b) =>
-      String(b.lesson_date).localeCompare(String(a.lesson_date)) || (a.lesson_id - b.lesson_id))
+      ts(b.lesson_date) - ts(a.lesson_date) || (a.lesson_id - b.lesson_id))
     const total   = lessons.reduce((s, l) => s + l.total, 0)
     const byType  = {}
     for (const r of rows) byType[r.type] = (byType[r.type] ?? 0) + r.count

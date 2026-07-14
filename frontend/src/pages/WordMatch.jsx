@@ -17,17 +17,23 @@ function formatTime(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-// Создать 16 карточек из 8 пар слов
-function buildCards(words, lang) {
-  const pairs = shuffle(words).slice(0, 8)
+// Создать карточки из пар слов. mode:
+//  'translation' — немецкое слово ↔ перевод; 'image' — немецкое слово ↔ картинка.
+function buildCards(words, lang, mode) {
+  const pool = mode === 'image' ? words.filter(w => w.image_url) : words
+  const pairs = shuffle(pool).slice(0, 8)
   const cards = []
   pairs.forEach((w, i) => {
-    // Перевод на язык локали пользователя (для ru — русский из translation_ru), НЕ английский
-    const target = getTranslation(w.translations, lang, w.translation_ru) || w.translation_ru
     cards.push({ uid: `de-${i}`, pairId: i, side: 'de', text: w.word_de, matched: false, flipped: false })
-    cards.push({ uid: `tr-${i}`, pairId: i, side: 'tr', text: target, matched: false, flipped: false })
+    if (mode === 'image') {
+      cards.push({ uid: `img-${i}`, pairId: i, side: 'img', image: w.image_url, text: w.word_de, matched: false, flipped: false })
+    } else {
+      // Перевод на язык локали пользователя (для ru — русский из translation_ru), НЕ английский
+      const target = getTranslation(w.translations, lang, w.translation_ru) || w.translation_ru
+      cards.push({ uid: `tr-${i}`, pairId: i, side: 'tr', text: target, matched: false, flipped: false })
+    }
   })
-  return shuffle(cards)
+  return { cards: shuffle(cards), pairCount: pairs.length }
 }
 
 // Одна карточка
@@ -61,7 +67,7 @@ function Card({ card, onClick, disabled, showAll }) {
 
       {/* Лицевая сторона */}
       <div style={{
-        position: 'absolute', inset: 0, borderRadius: 14,
+        position: 'absolute', inset: 0, borderRadius: 14, overflow: 'hidden',
         border: `2px solid ${card.matched ? 'var(--good, #22c55e)' : 'var(--accent)'}`,
         background: card.matched
           ? 'var(--good-soft, rgba(34,197,94,.12))'
@@ -69,22 +75,26 @@ function Card({ card, onClick, disabled, showAll }) {
             ? 'var(--surface)'
             : 'var(--surface-2)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '6px 10px', textAlign: 'center',
+        padding: card.side === 'img' ? 0 : '6px 10px', textAlign: 'center',
         opacity: visible ? 1 : 0,
         transition: 'opacity .25s',
         pointerEvents: 'none',
       }}>
-        <span style={{
-          fontSize: card.text.length > 12 ? 12 : card.text.length > 8 ? 14 : 16,
-          fontWeight: 700,
-          fontFamily: isDE ? 'Georgia, serif' : 'inherit',
-          fontStyle: isDE ? 'normal' : 'italic',
-          color: 'var(--ink)',
-          lineHeight: 1.2,
-          wordBreak: 'break-word',
-        }}>
-          {card.text}
-        </span>
+        {card.side === 'img' ? (
+          <img src={card.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        ) : (
+          <span style={{
+            fontSize: card.text.length > 12 ? 12 : card.text.length > 8 ? 14 : 16,
+            fontWeight: 700,
+            fontFamily: isDE ? 'Georgia, serif' : 'inherit',
+            fontStyle: isDE ? 'normal' : 'italic',
+            color: 'var(--ink)',
+            lineHeight: 1.2,
+            wordBreak: 'break-word',
+          }}>
+            {card.text}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -94,6 +104,8 @@ export default function WordMatch() {
   const { lang } = useI18nStore()
   const [lessons, setLessons] = useState([])
   const [lessonId, setLessonId] = useState('')
+  const [mode, setMode] = useState('translation') // 'translation' | 'image'
+  const [pairCount, setPairCount] = useState(8)
   const [cards, setCards] = useState([])
   const [flippedUids, setFlippedUids] = useState([])
   const [matchedCount, setMatchedCount] = useState(0)
@@ -122,12 +134,14 @@ export default function WordMatch() {
     setLoading(true)
     try {
       const words = await api.get(`/lessons/${lessonId}/words`)
-      if (!words || words.length < 4) {
-        alert('Нужно минимум 4 слова в уроке')
+      const usable = mode === 'image' ? (words || []).filter(w => w.image_url) : (words || [])
+      if (usable.length < 4) {
+        alert(mode === 'image' ? 'Нужно минимум 4 слова с картинками в уроке' : 'Нужно минимум 4 слова в уроке')
         return
       }
-      const c = buildCards(words, lang)
+      const { cards: c, pairCount: pc } = buildCards(words, lang, mode)
       setCards(c)
+      setPairCount(pc)
       setFlippedUids([])
       setMatchedCount(0)
       setMoves(0)
@@ -141,7 +155,7 @@ export default function WordMatch() {
     } finally {
       setLoading(false)
     }
-  }, [lessonId, lang])
+  }, [lessonId, lang, mode])
 
   // Обратный отсчёт предпросмотра
   useEffect(() => {
@@ -196,7 +210,7 @@ export default function WordMatch() {
         setMatchedCount(newMatched)
         setFlippedUids([])
         lockRef.current = false
-        if (newMatched === 8) {
+        if (newMatched === pairCount) {
           setFinished(true)
           setRunning(false)
         }
@@ -213,7 +227,7 @@ export default function WordMatch() {
         return prev
       }
     })
-  }, [flippedUids, matchedCount])
+  }, [flippedUids, matchedCount, pairCount])
 
   const lessonName = lessons.find(l => String(l.id) === lessonId)?.title || ''
 
@@ -248,15 +262,32 @@ export default function WordMatch() {
           🃏 Словопара
         </h2>
         <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '0 0 24px' }}>
-          Найди все пары немецких слов и переводов
+          Найди все пары: немецкое слово и его {mode === 'image' ? 'картинку' : 'перевод'}
         </p>
+
+        {/* Тумблер режима: перевод / картинки */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>Режим</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[['translation', '🔤 Слово + перевод'], ['image', '🖼️ Слово + картинка']].map(([m, label]) => (
+              <button key={m} onClick={() => setMode(m)} style={{
+                flex: 1, padding: '10px 8px', borderRadius: 10, fontSize: 14, fontWeight: mode === m ? 700 : 500,
+                border: `1.5px solid ${mode === m ? 'var(--accent)' : 'var(--line)'}`,
+                background: mode === m ? 'var(--accent)' : 'var(--surface-2)',
+                color: mode === m ? 'var(--accent-ink)' : 'var(--ink)', cursor: 'pointer',
+              }}>{label}</button>
+            ))}
+          </div>
+        </div>
 
         {/* Правила */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '14px 16px', marginBottom: 20, fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--ink)', display: 'block', marginBottom: 6 }}>Как играть</strong>
           Переверни карточку — найди её пару.<br />
-          <span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = немецкое</span> · <span style={{ fontStyle: 'italic' }}>Italic = перевод</span><br />
-          8 пар · 4×4 сетка
+          {mode === 'image'
+            ? <><span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = немецкое слово</span> · 🖼️ картинка</>
+            : <><span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = немецкое</span> · <span style={{ fontStyle: 'italic' }}>Italic = перевод</span></>}
+          <br />до 8 пар · сетка
         </div>
 
         <div style={{ marginBottom: 16 }}>
@@ -290,7 +321,7 @@ export default function WordMatch() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: 'var(--ink-soft)' }}>
           <span>⏱ {formatTime(seconds)}</span>
-          <span>🎯 {matchedCount}/8</span>
+          <span>🎯 {matchedCount}/{pairCount}</span>
           <span>👆 {moves}</span>
           <button onClick={() => { setCards([]); setRunning(false) }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 18, padding: 4 }}>✕</button>
@@ -299,7 +330,7 @@ export default function WordMatch() {
 
       {/* Прогресс-бар */}
       <div style={{ height: 4, background: 'var(--line)', borderRadius: 2, marginBottom: 14, overflow: 'hidden' }}>
-        <div style={{ height: '100%', background: 'var(--accent)', borderRadius: 2, width: `${(matchedCount / 8) * 100}%`, transition: 'width .3s' }} />
+        <div style={{ height: '100%', background: 'var(--accent)', borderRadius: 2, width: `${(matchedCount / pairCount) * 100}%`, transition: 'width .3s' }} />
       </div>
 
       {/* Баннер предпросмотра */}
@@ -323,7 +354,7 @@ export default function WordMatch() {
       {/* Подсказка по шрифтам */}
       <div style={{ marginTop: 14, display: 'flex', gap: 16, justifyContent: 'center', fontSize: 11, color: 'var(--ink-soft)' }}>
         <span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = 🇩🇪 DE</span>
-        <span style={{ fontStyle: 'italic' }}>Italic = перевод</span>
+        <span>{mode === 'image' ? '🖼️ картинка' : <span style={{ fontStyle: 'italic' }}>Italic = перевод</span>}</span>
       </div>
     </div>
   )
