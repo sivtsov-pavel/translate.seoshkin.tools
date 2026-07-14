@@ -139,18 +139,20 @@ export async function exercisesRoutes(fastify) {
       params = [userId, today]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
+               l.date AS lesson_date,
                COALESCE(l.title_translations, '{}') AS lesson_title_translations,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, l.description, l.title_translations, e.type
+        GROUP BY l.id, l.title, l.description, l.date, l.title_translations, e.type
         ORDER BY l.id, e.type`
     } else {
       params = [userId, today]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
+               l.date AS lesson_date,
                COALESCE(l.title_translations, '{}') AS lesson_title_translations,
                e.type, COUNT(*)::int AS count
         FROM exercises e
@@ -158,7 +160,7 @@ export async function exercisesRoutes(fastify) {
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.status = 'done'
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, l.description, l.title_translations, e.type
+        GROUP BY l.id, l.title, l.description, l.date, l.title_translations, e.type
         ORDER BY l.id, e.type`
     }
 
@@ -183,7 +185,7 @@ export async function exercisesRoutes(fastify) {
     const lessonsMap = {}
     for (const r of rows) {
       if (!lessonsMap[r.lesson_id]) {
-        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_title_translations: r.lesson_title_translations, lesson_description: r.lesson_description, total: 0, byType: {}, words_count: 0 }
+        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_title_translations: r.lesson_title_translations, lesson_description: r.lesson_description, lesson_date: r.lesson_date, total: 0, byType: {}, words_count: 0 }
       }
       lessonsMap[r.lesson_id].byType[r.type] = r.count
       lessonsMap[r.lesson_id].total += r.count
@@ -219,8 +221,9 @@ export async function exercisesRoutes(fastify) {
         }
       }
     }
-    // Последний урок сверху (Object.values по числовому ключу даёт возрастание — сортируем по id убыв.)
-    const lessons = Object.values(lessonsMap).sort((a, b) => b.lesson_id - a.lesson_id)
+    // Последний урок сверху по дате; части/темы одного урока (одна дата) идут подряд по id возр.
+    const lessons = Object.values(lessonsMap).sort((a, b) =>
+      String(b.lesson_date).localeCompare(String(a.lesson_date)) || (a.lesson_id - b.lesson_id))
     const total   = lessons.reduce((s, l) => s + l.total, 0)
     const byType  = {}
     for (const r of rows) byType[r.type] = (byType[r.type] ?? 0) + r.count
