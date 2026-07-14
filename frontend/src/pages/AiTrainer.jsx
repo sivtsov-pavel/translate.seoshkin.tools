@@ -901,10 +901,12 @@ export default function AiTrainer() {
             position: 'fixed', inset: 0, zIndex: 300,
             background: 'radial-gradient(120% 80% at 50% 0%, #223 0%, #0d1014 70%)',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
-            padding: '24px 20px', color: '#fff',
+            // safe-area: чёлка сверху, home-полоса снизу — иначе аватар/кнопка микрофона обрезаются
+            padding: 'calc(16px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom))',
+            color: '#fff',
           }}>
             {/* Верхняя панель: оживить (D-ID, если есть кредиты) / текст */}
-            <div style={{ position: 'absolute', top: 14, right: 16, display: 'flex', gap: 8 }}>
+            <div style={{ position: 'absolute', top: 'calc(14px + env(safe-area-inset-top))', right: 16, display: 'flex', gap: 8 }}>
               {avatarAvailable && lastAi && !lastAi.videoUrl && (
                 <button onClick={() => generateAvatar(lastAiIdx, lastAi.reply)} disabled={avatarBusy === lastAiIdx}
                   title={V.animate}
