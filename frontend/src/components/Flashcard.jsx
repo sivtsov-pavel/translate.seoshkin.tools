@@ -3,6 +3,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
 import { getTranslation } from '../utils/translation.js'
+import TapText from './TapText.jsx'
 import { JustifyHint } from './ExerciseActions.jsx'
 
 export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
@@ -50,7 +51,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
         <div className="exercise-card-content" style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
           <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center', color: 'var(--ink)' }} dir="ltr">
-            {payload.question}
+            <TapText>{payload.question}</TapText>
           </div>
           <SpeakButton text={payload.question} size={22} />
         </div>

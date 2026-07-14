@@ -51,7 +51,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
           {t.exercise.sentenceWrite}
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 10 }}>
-          <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}>{word_de}</span>
+          <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}><TapText>{word_de}</TapText></span>
           <span style={{ fontSize: 18, color: 'var(--ink-soft)' }}>— {displayTranslation}</span>
         </div>
         {displayHint && <p style={{ color: 'var(--accent)', fontSize: 15, margin: 0 }}>{displayHint}</p>}
