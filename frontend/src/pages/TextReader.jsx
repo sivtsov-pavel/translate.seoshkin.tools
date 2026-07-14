@@ -49,10 +49,19 @@ function LangSelect({ value, onChange, style }) {
 // ───────── панель выбранных слов ─────────
 
 function WordPanel({ words, onRemove, onClear }) {
+  const [saved, setSaved] = useState(() => new Set())
   if (!words.size) return null
   const entries = [...words.values()]
   const count = words.size
   const label = count === 1 ? 'слово' : count < 5 ? 'слова' : 'слов'
+
+  // Добавить слово в разговорник (плюсик у каждого слова)
+  const addWord = async (entry) => {
+    try {
+      await api.post('/phrasebook', { de: entry.word, ru: entry.translation || '', source: 'reader' })
+      setSaved(prev => new Set(prev).add(entry.key))
+    } catch {}
+  }
 
   return (
     <div style={{
@@ -99,6 +108,16 @@ function WordPanel({ words, onRemove, onClear }) {
                 </div>
               )}
             </div>
+            {/* Плюсик — добавить слово в разговорник */}
+            {!entry.loading && (
+              <button onClick={() => addWord(entry)} disabled={saved.has(entry.key)}
+                title="Добавить в разговорник" style={{
+                  width: 32, height: 32, borderRadius: 8, flexShrink: 0, cursor: saved.has(entry.key) ? 'default' : 'pointer',
+                  border: `1px solid ${saved.has(entry.key) ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
+                  background: saved.has(entry.key) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent-soft)',
+                  color: saved.has(entry.key) ? 'var(--good, #16a34a)' : 'var(--accent)', fontSize: 16, fontWeight: 700,
+                }}>{saved.has(entry.key) ? '✓' : '+'}</button>
+            )}
             <button onClick={() => onRemove(entry.key)} style={{ background: 'none', border: 'none', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 20, flexShrink: 0, padding: '0 4px' }}>×</button>
           </div>
         ))}

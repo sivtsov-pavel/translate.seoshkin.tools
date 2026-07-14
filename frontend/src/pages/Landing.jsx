@@ -629,6 +629,26 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* 👆📷 Фишки: тап-перевод и «немецкий объектив» */}
+      <section style={{ maxWidth: 900, margin: '0 auto', padding: '8px 16px 40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '22px 20px' }}>
+            <div style={{ fontSize: 38 }}>👆</div>
+            <h3 style={{ margin: '8px 0 6px', color: 'var(--ink)' }}>Читай нажатием</h3>
+            <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 15, lineHeight: 1.6 }}>
+              Нажми на любое немецкое слово или предлог — прямо в упражнении или тексте — и сразу увидишь перевод на свой язык и услышишь произношение. Новое слово — в один тап в разговорник.
+            </p>
+          </div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '22px 20px' }}>
+            <div style={{ fontSize: 38 }}>📷</div>
+            <h3 style={{ margin: '8px 0 6px', color: 'var(--ink)' }}>Немецкий объектив</h3>
+            <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 15, lineHeight: 1.6 }}>
+              Сфотографируй текст, вывеску или страницу учебника — приложение распознает немецкие слова, покажет перевод и предложит сохранить новые в твой словарь.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* 🏫 Карта школ и репетиторов (публичная) */}
       <LandingTutors />
 
