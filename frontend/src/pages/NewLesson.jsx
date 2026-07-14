@@ -279,8 +279,20 @@ function DropZone({ onFiles, onDrop, accept, idKey, multiple = true, label, disa
       }}>
       <div style={{ fontSize: 28, marginBottom: 6 }}>{accept.startsWith('image') ? '📷' : '🎵'}</div>
       <p style={{ margin: 0, color: 'var(--ink-soft)', fontSize: 14 }}>{label}</p>
+      {/* Для фото — кнопка прямой съёмки камерой (мимо телефона/ноута/Google Photos) */}
+      {accept.startsWith('image') && (
+        <button type="button" disabled={disabled}
+          onClick={e => { e.stopPropagation(); if (!disabled) document.getElementById(inputId + '-cam').click() }}
+          style={{ marginTop: 10, padding: '8px 16px', borderRadius: 9, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: disabled ? 'not-allowed' : 'pointer' }}>
+          📷 Сфотографировать
+        </button>
+      )}
       <input id={inputId} type="file" accept={accept} multiple={multiple} style={{ display: 'none' }}
         onChange={e => onFiles(Array.from(e.target.files))} disabled={disabled} />
+      {accept.startsWith('image') && (
+        <input id={inputId + '-cam'} type="file" accept="image/*" capture="environment" multiple={multiple} style={{ display: 'none' }}
+          onChange={e => onFiles(Array.from(e.target.files))} disabled={disabled} />
+      )}
     </div>
   )
 }
