@@ -187,6 +187,7 @@ export default function AiTrainer() {
   const [sessions, setSessions] = useState([])
   const [history, setHistory] = useState(null) // { session, messages } — просмотр прошлого диалога
   const [lessonMode, setLessonMode] = useState(null) // { title, words } — тренировка по словам урока
+  const [lessonLoadFailed, setLessonLoadFailed] = useState(false) // слова урока не загрузились — фолбэк на обычный экран
   const [searchParams] = useSearchParams()
   const [avatarAvailable, setAvatarAvailable] = useState(false)
   const [avatarBusy, setAvatarBusy] = useState(-1) // индекс сообщения, для которого генерится видео
@@ -322,7 +323,8 @@ export default function AiTrainer() {
     api.get(`/lessons/${lessonId}/words`).then(rows => {
       const words = (rows || []).map(w => w.word_de).filter(Boolean)
       if (words.length) setLessonMode({ id: lessonId, title, words })
-    }).catch(() => {})
+      else setLessonLoadFailed(true) // нет слов — покажем обычный экран, не зависаем
+    }).catch(() => setLessonLoadFailed(true))
   }, [searchParams])
 
   // Доступность видео-аватара (только для учителя — экономим кредиты)
@@ -357,30 +359,46 @@ export default function AiTrainer() {
     }
   }, [])
 
-  const startSession = async () => {
-    const fallback = STARTER_PHRASES[character]?.[scenario]
-      || (scenario.startsWith('interview') ? 'Guten Tag! Setzen Sie sich bitte. Erzählen Sie mir von sich.' : 'Hallo!')
+  const startSession = async (opts = {}) => {
+    const ch = opts.character || character
+    const sc = opts.scenario || scenario
+    const words = opts.words || lessonMode?.words
+    const fallback = STARTER_PHRASES[ch]?.[sc]
+      || (sc.startsWith('interview') ? 'Guten Tag! Setzen Sie sich bitte. Erzählen Sie mir von sich.'
+        : words ? 'Hallo! Lass uns die Wörter aus deiner Lektion üben.' : 'Hallo!')
     setMessages([])
     setMemoryHint('')
     setStep('chat')
     setLoading(true)  // «печатает…» пока ИИ генерит первую реплику с учётом памяти
     const userLang = localStorage.getItem('lang') || 'uk'
     try {
-      const res = await api.post('/ai-trainer/sessions', { character, scenario, userLang, starter: fallback, targetWords: lessonMode?.words })
+      const res = await api.post('/ai-trainer/sessions', { character: ch, scenario: sc, userLang, starter: fallback, targetWords: words })
       setSessionId(res.session_id)
       if (res.memory?.summary_text) setMemoryHint(res.memory.summary_text)
       const opening = res.opening || fallback
-      setMessages([{ role: 'ai', reply: opening, translation: res.opening_translation || null, correction: null, character }])
+      setMessages([{ role: 'ai', reply: opening, translation: res.opening_translation || null, correction: null, character: ch }])
       if (opening) speak(opening, 'de-DE')
     } catch {
       setSessionId(null)
-      setMessages([{ role: 'ai', reply: fallback, translation: null, correction: null, character }])
+      setMessages([{ role: 'ai', reply: fallback, translation: null, correction: null, character: ch }])
       if (fallback) speak(fallback, 'de-DE')
     } finally {
       setLoading(false)
       setTimeout(() => inputRef.current?.focus(), 100)
     }
   }
+
+  // Автостарт «Произношение с тренером»: пришли с урока → сразу тренируем ИМЕННО его слова
+  // (Pablo, сценарий lesson), без экрана выбора темы/знакомства.
+  const autoStartedRef = useRef(false)
+  useEffect(() => {
+    if (autoStartedRef.current) return
+    if (step === 'select' && lessonMode?.words?.length) {
+      autoStartedRef.current = true
+      setCharacter('pablo'); setScenario('lesson')
+      startSession({ character: 'pablo', scenario: 'lesson', words: lessonMode.words })
+    }
+  }, [lessonMode, step]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendMessage = async (overrideText) => {
     // overrideText приходит из голосового режима (распознанная фраза)
@@ -551,6 +569,16 @@ export default function AiTrainer() {
   const char = CHARACTERS.find(c => c.id === character)
 
   if (step === 'select') {
+    // Пришли с урока («Произношение с тренером») — не показываем выбор темы,
+    // ждём загрузку слов урока и сразу автостартуем (см. useEffect автостарта).
+    if (searchParams.get('lesson_id') && !lessonMode && !lessonLoadFailed) {
+      return (
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '60px 16px', textAlign: 'center', color: 'var(--ink-soft)' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🗣️</div>
+          Готовлю тренировку по словам урока…
+        </div>
+      )
+    }
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px 40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
