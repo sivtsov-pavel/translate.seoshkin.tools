@@ -6,12 +6,14 @@ import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 import AvatarReaction from './AvatarReaction.jsx'
 
-export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, payloadTranslations, exerciseId }) {
+export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, payloadTranslations, translations, translationRu, exerciseId }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [reaction, setReaction] = useState(null)
   const { t, lang } = useI18nStore()
   const inputRef = useRef(null)
+  // Перевод искомого слова на локаль ученика — показываем под словом (важно для понимания)
+  const wordTranslation = getTranslation(translations, lang, translationRu) || translationRu || payload.blank_ru
 
   const isCorrect = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
   const parts = payload.sentence.split('___')
@@ -39,8 +41,8 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
     setSubmitted(true)
     setReaction(correct ? 'correct' : 'wrong')  // Pablo реагирует
     if (correct) playCorrect(); else playWrong()
-    const fullSentence = beforeBlank + payload.blank + afterBlank
-    setTimeout(() => speak(fullSentence), 300)
+    // Озвучку предложения НЕ запускаем здесь — иначе наложится на клип аватара.
+    // speak(fullSentence) вызовется ПОСЛЕ того как Pablo договорит (onReactionEnd).
   }
 
   const fullSentence = beforeBlank + payload.blank + afterBlank
@@ -56,7 +58,8 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
 
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
-      <AvatarReaction imageUrl={imageUrl} wordDe={payload.blank} reaction={reaction} />
+      <AvatarReaction imageUrl={imageUrl} wordDe={payload.blank} reaction={reaction}
+        onReactionEnd={() => speak(fullSentence)} />
       <div className="exercise-card-content" style={{ padding: 24 }}>
 
       {lessonTitle && (
@@ -78,9 +81,16 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
           </span>
           {afterBlank}
         </p>
-        {/* Перевод во время вопроса НЕ показываем — он полный и выдал бы ответ.
-            Полный перевод показывается после ответа (см. блок результата). */}
+        {/* Перевод ВСЕГО предложения не показываем во время вопроса (выдал бы ответ).
+            Показываем только ПЕРЕВОД искомого слова на язык ученика — подсказка смысла. */}
       </div>
+
+      {/* Перевод искомого слова на локаль ученика (немецкое слово не раскрываем) */}
+      {wordTranslation && (
+        <div style={{ textAlign: 'center', fontSize: 15, color: 'var(--ink-soft)', margin: '-4px 0 14px' }}>
+          {t.exercise.wordHint || 'Слово'}: <span style={{ fontStyle: 'italic', fontWeight: 600, color: 'var(--ink)' }}>{wordTranslation}</span>
+        </div>
+      )}
 
       {/* Слова-подсказки */}
       {!submitted && payload.options?.length > 0 && (
