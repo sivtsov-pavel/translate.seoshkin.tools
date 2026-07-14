@@ -68,6 +68,11 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
         </div>
       )}
 
+      {/* Описание задания — понятно, как для детей */}
+      <div style={{ fontSize: 14, color: 'var(--ink-soft)', marginBottom: 12, textAlign: 'center' }}>
+        ✏️ {t.exercise.fillBlankTask || 'Найдите нужное слово и вставьте его в пропуск'}
+      </div>
+
       {/* Предложение с пропуском */}
       <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
         <p style={{ fontSize: 21, margin: 0, lineHeight: 1.7, color: 'var(--ink)' }} dir="ltr">

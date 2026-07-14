@@ -154,7 +154,7 @@ export default function Layout({ children }) {
     { to: '/ai-trainer',                  icon: 'bi-person-video3',             label: 'AI тренер' },
     { to: '/vocabulary?status=learning',  icon: 'bi-journal-bookmark-fill',     label: t.nav.learningWords },
     { to: '/reader',                      icon: 'bi-eyeglasses',                label: t.nav.reader },
-    { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: 'Разговорник' },
+    { to: '/phrasebook',                  icon: 'bi-chat-quote-fill',           label: E.navPhrasebook },
     { to: '/grammar',                     icon: 'bi-mortarboard-fill',          label: E.navGrammar },
     { to: '/love',                        icon: 'bi-heart-fill',                label: E.navLove },
     { to: '/tutors',                      icon: 'bi-geo-alt-fill',              label: E.navTutors },
@@ -288,7 +288,7 @@ export default function Layout({ children }) {
           }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
               <i className="bi bi-chat-dots-fill" style={{ width: 17, textAlign: 'center', fontSize: 15, flexShrink: 0 }} />
-              Чат
+
             </span>
             {unreadChat > 0 && (
               <span style={{
@@ -298,7 +298,7 @@ export default function Layout({ children }) {
               }}>{unreadChat > 9 ? '9+' : unreadChat}</span>
             )}
           </Link>
-          <NavItem item={{ to: '/settings', icon: 'bi-gear-fill', label: 'Настройки' }} onClick={close} />
+          <NavItem item={{ to: '/settings', icon: 'bi-gear-fill', label: E.navSettings }} onClick={close} />
           {user && user.plan !== 'premium' && (
             <NavItem item={{ to: '/upgrade', icon: 'bi-star-fill', label: '⭐ Premium' }} onClick={close} />
           )}
@@ -541,7 +541,7 @@ export default function Layout({ children }) {
           { to: '/lessons',    icon: 'bi-book-fill',            label: t.nav.lessons },
           { to: '/vocabulary', icon: 'bi-card-list',            label: t.nav.vocabulary },
           { to: '/reader',     icon: 'bi-eyeglasses',           label: t.nav.reader },
-          { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: 'Разговорник' },
+          { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: E.navPhrasebook },
           { to: '/grammar',    icon: 'bi-mortarboard-fill',     label: E.navGrammar },
           { to: '/wiki',       icon: 'bi-question-circle-fill', label: t.nav.wiki },
         ].map(item => {
@@ -561,7 +561,7 @@ export default function Layout({ children }) {
         })}
 
         {/* Чат с бейджем */}
-        <Link to="/chat" title="Чат" style={{
+        <Link to="/chat" title={E.navChat} style={{
           width: 44, height: 44, borderRadius: 12, position: 'relative',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 18, textDecoration: 'none',
@@ -634,7 +634,7 @@ export default function Layout({ children }) {
           { to: '/',           icon: 'bi-house-door-fill',      label: t.nav.today },
           { to: '/vocabulary', icon: 'bi-card-list',            label: t.nav.vocabulary },
           { to: '/reader',     icon: 'bi-book-half',            label: t.nav.reader },
-          { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: 'Разговорник' },
+          { to: '/phrasebook', icon: 'bi-chat-quote-fill',      label: E.navPhrasebook },
           { to: '/wiki',       icon: 'bi-question-circle-fill', label: t.nav.wiki },
         ].map(item => {
           const active = item.to.includes('?')

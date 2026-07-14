@@ -10,7 +10,10 @@
     "crosswordTitle": "Кроссворд",
     "crosswordSub": "Впиши немецкие слова по подсказкам-переводам. Пересечения помогут!",
     "tutorsTitle": "Школы и репетиторы",
-    "tutorsSub": "Найди учителя немецкого рядом с домом или онлайн."
+    "tutorsSub": "Найди учителя немецкого рядом с домом или онлайн.",
+    "navPhrasebook": "Разговорник",
+    "navSettings": "Настройки",
+    "navChat": "Чат"
   },
   "uk": {
     "navGrammar": "Граматика",
@@ -23,7 +26,10 @@
     "crosswordTitle": "Кросворд",
     "crosswordSub": "Впиши німецькі слова за підказками-перекладами. Перетини допоможуть!",
     "tutorsTitle": "Школи та репетитори",
-    "tutorsSub": "Знайди вчителя німецької поблизу або онлайн."
+    "tutorsSub": "Знайди вчителя німецької поблизу або онлайн.",
+    "navPhrasebook": "Розмовник",
+    "navSettings": "Налаштування",
+    "navChat": "Чат"
   },
   "en": {
     "navGrammar": "Grammar",
@@ -36,7 +42,10 @@
     "crosswordTitle": "Crossword",
     "crosswordSub": "Fill in German words based on translation hints. Intersections will help!",
     "tutorsTitle": "Schools and Tutors",
-    "tutorsSub": "Find a German teacher near you or online."
+    "tutorsSub": "Find a German teacher near you or online.",
+    "navPhrasebook": "Phrasebook",
+    "navSettings": "Settings",
+    "navChat": "Chat"
   },
   "de": {
     "navGrammar": "Grammatik",
@@ -49,7 +58,10 @@
     "crosswordTitle": "Kreuzworträtsel",
     "crosswordSub": "Schreibe deutsche Wörter nach den Übersetzungs-Hinweisen. Kreuzungen helfen!",
     "tutorsTitle": "Schulen und Tutoren",
-    "tutorsSub": "Finde einen Deutschlehrer in deiner Nähe oder online."
+    "tutorsSub": "Finde einen Deutschlehrer in deiner Nähe oder online.",
+    "navPhrasebook": "Sprachführer",
+    "navSettings": "Einstellungen",
+    "navChat": "Chat"
   },
   "bg": {
     "navGrammar": "Граматика",
@@ -62,7 +74,10 @@
     "crosswordTitle": "Кросворд",
     "crosswordSub": "Впиши немски думи по подсказките. Пресечките помагат!",
     "tutorsTitle": "Училища и репетитори",
-    "tutorsSub": "Намери учител по немски близо до дома или онлайн."
+    "tutorsSub": "Намери учител по немски близо до дома или онлайн.",
+    "navPhrasebook": "Разговорник",
+    "navSettings": "Настройки",
+    "navChat": "Чат"
   },
   "tr": {
     "navGrammar": "Dilbilgisi",
@@ -75,7 +90,10 @@
     "crosswordTitle": "Çengel Bulmaca",
     "crosswordSub": "İpuçlarına göre Almanca kelimeleri yaz. Kesişimler yardımcı olacak!",
     "tutorsTitle": "Okullar ve Özel Dersler",
-    "tutorsSub": "Evine yakın veya çevrimiçi Almanca öğretmeni bul."
+    "tutorsSub": "Evine yakın veya çevrimiçi Almanca öğretmeni bul.",
+    "navPhrasebook": "Konuşma kılavuzu",
+    "navSettings": "Ayarlar",
+    "navChat": "Sohbet"
   },
   "ar": {
     "navGrammar": "قواعد",
@@ -88,7 +106,10 @@
     "crosswordTitle": "كلمات متقاطعة",
     "crosswordSub": "اكتب الكلمات الألمانية بناءً على التلميحات. التداخلات ستساعد!",
     "tutorsTitle": "المدارس والمعلمون",
-    "tutorsSub": "ابحث عن معلم ألماني بالقرب من منزلك أو عبر الإنترنت."
+    "tutorsSub": "ابحث عن معلم ألماني بالقرب من منزلك أو عبر الإنترنت.",
+    "navPhrasebook": "دليل العبارات",
+    "navSettings": "الإعدادات",
+    "navChat": "دردشة"
   },
   "es": {
     "navGrammar": "Gramática",
@@ -101,7 +122,10 @@
     "crosswordTitle": "Crucigrama",
     "crosswordSub": "Escribe palabras alemanas según las pistas-traducciones. ¡Las intersecciones ayudarán!",
     "tutorsTitle": "Escuelas y tutores",
-    "tutorsSub": "Encuentra un profesor de alemán cerca de casa o en línea."
+    "tutorsSub": "Encuentra un profesor de alemán cerca de casa o en línea.",
+    "navPhrasebook": "Guía de frases",
+    "navSettings": "Ajustes",
+    "navChat": "Chat"
   },
   "fr": {
     "navGrammar": "Grammaire",
@@ -114,7 +138,10 @@
     "crosswordTitle": "Mots croisés",
     "crosswordSub": "Remplis les mots allemands selon les indices. Les intersections aideront !",
     "tutorsTitle": "Écoles et tuteurs",
-    "tutorsSub": "Trouve un professeur d'allemand près de chez toi ou en ligne."
+    "tutorsSub": "Trouve un professeur d'allemand près de chez toi ou en ligne.",
+    "navPhrasebook": "Guide de conversation",
+    "navSettings": "Paramètres",
+    "navChat": "Chat"
   },
   "sq": {
     "navGrammar": "Gramatika",
@@ -127,6 +154,9 @@
     "crosswordTitle": "Kryqëzim",
     "crosswordSub": "Shkruaj fjalët në gjermanisht sipas sugjerimeve-përkthimeve. Prerjet do të ndihmojnë!",
     "tutorsTitle": "Shkollat dhe mësuesit",
-    "tutorsSub": "Gjej një mësues gjermanishtje pranë shtëpisë ose online."
+    "tutorsSub": "Gjej një mësues gjermanishtje pranë shtëpisë ose online.",
+    "navPhrasebook": "Fjalor bisedash",
+    "navSettings": "Cilësimet",
+    "navChat": "Bisedë"
   }
 }
