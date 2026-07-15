@@ -303,6 +303,40 @@ ${list}`, { max_tokens: 2048 })
 }
 
 const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
+const TARGET_LANG_NAMES = { en: 'English', uk: 'українською', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español', sq: 'shqip' }
+
+// Перевод заголовка и описания урока с русского на локали интерфейса (для страницы «Сегодня»
+// и списка уроков). База — русский (title/description уже по-русски). onlyLangs — активные локали.
+// Возвращает { title: {lang: '...'}, description: {lang: '...'} }.
+export async function translateLessonMeta(title, description, onlyLangs = null) {
+  const langs = onlyLangs ? TARGET_LANGS.filter(l => onlyLangs.includes(l)) : TARGET_LANGS
+  if (!langs.length || !title) return { title: {}, description: {} }
+  const prompt = `Переведи НАЗВАНИЕ и ОПИСАНИЕ урока с русского на языки: ${langs.map(l => TARGET_LANG_NAMES[l] || l).join(', ')}.
+Сохраняй смысл, естественность и краткость. НЕ добавляй слово «Урок» и номера.
+
+Название: "${title}"
+Описание: "${(description || '').replace(/"/g, "'")}"
+
+Верни СТРОГО JSON без markdown — для каждого языка объект {title, description}:
+{ ${langs.map(l => `"${l}": {"title":"...","description":"..."}`).join(', ')} }`
+  try {
+    const res = await client.chat.completions.create({
+      model: 'gpt-4o-mini', max_tokens: 900, temperature: 0.2,
+      response_format: { type: 'json_object' },
+      messages: [{ role: 'user', content: prompt }],
+    })
+    const data = parseJson(res.choices[0].message.content)
+    const titleT = {}, descT = {}
+    for (const l of langs) {
+      if (data[l]?.title) titleT[l] = String(data[l].title).trim()
+      if (data[l]?.description) descT[l] = String(data[l].description).trim()
+    }
+    return { title: titleT, description: descT }
+  } catch (e) {
+    console.error('translateLessonMeta:', e.message)
+    return { title: {}, description: {} }
+  }
+}
 
 // onlyLangs — ограничить набор языков (напр. ['es'] для испанского контента: только ru[база]+es).
 export async function translateWordsToAllLangs(words, onlyLangs = null) {

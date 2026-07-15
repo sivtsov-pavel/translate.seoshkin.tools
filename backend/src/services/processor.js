@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
@@ -122,6 +122,28 @@ export async function enrichLesson(lessonId) {
       } catch (e) { console.error('enrichLesson ex-batch:', e.message) }
     }
   } catch (e) { console.error('enrichLesson exercises:', e.message) }
+
+  // 5) Перевод ЗАГОЛОВКА и ОПИСАНИЯ урока на активные локали (для страницы «Сегодня»/списка)
+  try {
+    const { rows: lr } = await db.query(
+      'SELECT title, description, title_translations, description_translations FROM lessons WHERE id=$1', [lessonId])
+    const L = lr[0]
+    if (L && L.title) {
+      // Языки, на которые реально переводим (без ru[база] и de[фолбэк на ru])
+      const need = (activeLocales || ALL_LOCALES).filter(l => l !== 'ru' && l !== 'de')
+      const missing = need.some(l => !(L.title_translations && L.title_translations[l]))
+      if (missing) {
+        await setProgress(lessonId, 'Перевожу заголовок и описание урока...')
+        const meta = await translateLessonMeta(L.title, L.description, activeLocales)
+        await db.query(
+          `UPDATE lessons SET
+             title_translations = COALESCE(title_translations, '{}'::jsonb) || $1::jsonb,
+             description_translations = COALESCE(description_translations, '{}'::jsonb) || $2::jsonb
+           WHERE id = $3`,
+          [JSON.stringify(meta.title), JSON.stringify(meta.description), lessonId])
+      }
+    }
+  } catch (e) { console.error('enrichLesson meta-langs:', e.message) }
 }
 
 // Генерация упражнений из уже существующих слов в БД (без сканирования фото)

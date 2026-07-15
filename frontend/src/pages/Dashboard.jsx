@@ -4,7 +4,7 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
-import { getTranslation, getLessonTitle } from '../utils/translation.js'
+import { getTranslation, getLessonTitle, getLessonDesc } from '../utils/translation.js'
 import AdSlot from '../components/AdSlot.jsx'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
@@ -366,7 +366,7 @@ function LessonCard({ lesson, navigate }) {
           </div>
           {lesson.lesson_description && (
             <div style={{ fontSize: 12, color: 'var(--ink-soft)', fontStyle: 'italic' }}>
-              {lesson.lesson_description}
+              {getLessonDesc(lesson.lesson_description, lesson.lesson_description_translations, lang)}
             </div>
           )}
           <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4 }}>

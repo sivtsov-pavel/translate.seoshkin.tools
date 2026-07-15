@@ -183,12 +183,13 @@ export async function exercisesRoutes(fastify) {
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                l.date AS lesson_date,
                COALESCE(l.title_translations, '{}') AS lesson_title_translations,
+               COALESCE(l.description_translations, '{}') AS lesson_description_translations,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2 AND l.target_lang = $3
-        GROUP BY l.id, l.title, l.description, l.date, l.title_translations, e.type
+        GROUP BY l.id, l.title, l.description, l.date, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
     } else {
       params = [userId, today, target]
@@ -196,13 +197,14 @@ export async function exercisesRoutes(fastify) {
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                l.date AS lesson_date,
                COALESCE(l.title_translations, '{}') AS lesson_title_translations,
+               COALESCE(l.description_translations, '{}') AS lesson_description_translations,
                e.type, COUNT(*)::int AS count
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.status = 'done' AND l.target_lang = $3
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, l.description, l.date, l.title_translations, e.type
+        GROUP BY l.id, l.title, l.description, l.date, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
     }
 

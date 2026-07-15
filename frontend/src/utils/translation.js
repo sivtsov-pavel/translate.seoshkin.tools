@@ -10,6 +10,15 @@ export function getLessonTitle(title, titleTranslations, lang) {
   return title
 }
 
+// Получить локализованное описание урока (как getLessonTitle, но для описания)
+export function getLessonDesc(description, descTranslations, lang) {
+  if (!descTranslations || typeof descTranslations !== 'object') return description
+  if (descTranslations[lang]) return descTranslations[lang]
+  const fb = LANG_FALLBACK[lang]
+  if (fb && descTranslations[fb]) return descTranslations[fb]
+  return description
+}
+
 // Получить перевод строки (слова, предложения, подсказки) на нужный язык
 export function getTranslation(translations, lang, fallbackRu) {
   if (!translations || typeof translations !== 'object') return fallbackRu || ''
