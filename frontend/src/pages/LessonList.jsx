@@ -46,6 +46,7 @@ function EditForm({ lesson, onSave, onCancel }) {
   }
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef()
+  const camRef = useRef()
   const sourceRef = useRef('textbook')  // какой источник грузим: учебник / тетрадь
 
   const save = async () => {
@@ -66,6 +67,8 @@ function EditForm({ lesson, onSave, onCancel }) {
   }
 
   const pickFiles = (source) => { sourceRef.current = source; fileRef.current?.click() }
+  // Открыть камеру напрямую (сфотографировать сейчас), а не выбрать существующий файл
+  const pickCamera = (source) => { sourceRef.current = source; camRef.current?.click() }
 
   const uploadMedia = async (files) => {
     if (!files.length) return
@@ -111,14 +114,27 @@ function EditForm({ lesson, onSave, onCancel }) {
         <button onClick={() => pickFiles('textbook')} disabled={uploading}
           title="Слова из учебника (базовые)"
           style={{ padding: '7px 14px', background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          {uploading ? '⏳...' : '📘 Из учебника'}
+          {uploading ? '⏳...' : '📁 Из учебника'}
+        </button>
+        <button type="button" onClick={() => pickCamera('textbook')} disabled={uploading}
+          title="Сфотографировать страницу учебника"
+          style={{ padding: '7px 10px', background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+          📷
         </button>
         <button onClick={() => pickFiles('extra')} disabled={uploading}
           title="Тетрадь, доска, дополнительные слова"
           style={{ padding: '7px 14px', background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          {uploading ? '⏳...' : '✏️ Из тетради/доски'}
+          {uploading ? '⏳...' : '📁 Из тетради/доски'}
+        </button>
+        <button type="button" onClick={() => pickCamera('extra')} disabled={uploading}
+          title="Сфотографировать тетрадь/доску"
+          style={{ padding: '7px 10px', background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+          📷
         </button>
         <input ref={fileRef} type="file" multiple accept="image/*,audio/*" style={{ display: 'none' }}
+          onChange={e => uploadMedia([...e.target.files])} />
+        {/* Отдельный инпут с capture — открывает камеру устройства напрямую, а не пикер файлов */}
+        <input ref={camRef} type="file" accept="image/*" capture="environment" multiple style={{ display: 'none' }}
           onChange={e => uploadMedia([...e.target.files])} />
         <button onClick={onCancel}
           style={{ padding: '7px 12px', background: 'none', color: 'var(--ink-soft)', border: 'none', cursor: 'pointer', fontSize: 13 }}>
