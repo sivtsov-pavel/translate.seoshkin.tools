@@ -29,7 +29,7 @@ export async function drawLessonImages(lessonId) {
     await setProgress(lessonId, `Рисую картинки ${done + 1}/${target.length}...`)
     try {
       // Банк слов: переиспользуем существующую картинку такого же слова (0 затрат)
-      const existing = await findExistingWordImage(w.word_de, targetLang, w.id)
+      const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
       if (existing) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [existing, w.id]); done++; continue }
       const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
       if (url) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [url, w.id]); done++ }
@@ -154,7 +154,17 @@ async function getActiveLocales(targetLang) {
 // «Банк слов» (фаза 1): если такое же слово (без артикля, регистронезависимо) уже имеет
 // картинку/переводы в другом уроке того же изучаемого языка — переиспользуем, не тратим OpenAI.
 const WORD_MATCH = `regexp_replace(lower(w.word_de),'^(der|die|das|ein|eine)\\s+','')=regexp_replace(lower($1),'^(der|die|das|ein|eine)\\s+','')`
-async function findExistingWordImage(wordDe, targetLang, excludeId = 0) {
+async function findExistingWordImage(wordDe, translationRu, targetLang, excludeId = 0) {
+  // Картинка = смысл, не зависит от языка. Ищем по переводу (значению) среди ЛЮБЫХ языков —
+  // картинка дома одна на нем./исп./фр. Картинки теперь без текста, поэтому шарятся.
+  const tr = String(translationRu || '').trim().toLowerCase()
+  if (tr.length > 1) {
+    const { rows } = await db.query(
+      `SELECT image_url FROM words WHERE lower(trim(translation_ru))=$1 AND image_url IS NOT NULL AND id<>$2 LIMIT 1`,
+      [tr, excludeId])
+    if (rows[0]?.image_url) return rows[0].image_url
+  }
+  // Фолбэк: точное слово того же изучаемого языка
   const { rows } = await db.query(
     `SELECT w.image_url FROM words w JOIN lessons l ON l.id=w.lesson_id
      WHERE ${WORD_MATCH} AND l.target_lang=$2 AND w.image_url IS NOT NULL AND w.id<>$3 LIMIT 1`,
@@ -202,7 +212,7 @@ export async function enrichLesson(lessonId) {
         if (isFunctionWord(w.word_de)) continue
         try {
           // Банк слов: уже есть картинка такого же слова → переиспользуем (0 затрат)
-          const existing = await findExistingWordImage(w.word_de, targetLang, w.id)
+          const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
           if (existing) { await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [existing, w.id]); continue }
           const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
           if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
