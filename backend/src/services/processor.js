@@ -28,6 +28,9 @@ export async function drawLessonImages(lessonId) {
   for (const w of target) {
     await setProgress(lessonId, `Рисую картинки ${done + 1}/${target.length}...`)
     try {
+      // Банк слов: переиспользуем существующую картинку такого же слова (0 затрат)
+      const existing = await findExistingWordImage(w.word_de, targetLang, w.id)
+      if (existing) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [existing, w.id]); done++; continue }
       const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
       if (url) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [url, w.id]); done++ }
     } catch (e) { console.error('drawLessonImages', w.word_de, e.message) }
@@ -148,6 +151,24 @@ async function getActiveLocales(targetLang) {
   return ALL_LOCALES
 }
 
+// «Банк слов» (фаза 1): если такое же слово (без артикля, регистронезависимо) уже имеет
+// картинку/переводы в другом уроке того же изучаемого языка — переиспользуем, не тратим OpenAI.
+const WORD_MATCH = `regexp_replace(lower(w.word_de),'^(der|die|das|ein|eine)\\s+','')=regexp_replace(lower($1),'^(der|die|das|ein|eine)\\s+','')`
+async function findExistingWordImage(wordDe, targetLang, excludeId = 0) {
+  const { rows } = await db.query(
+    `SELECT w.image_url FROM words w JOIN lessons l ON l.id=w.lesson_id
+     WHERE ${WORD_MATCH} AND l.target_lang=$2 AND w.image_url IS NOT NULL AND w.id<>$3 LIMIT 1`,
+    [wordDe, targetLang, excludeId])
+  return rows[0]?.image_url || null
+}
+async function findExistingTranslations(wordDe, targetLang, excludeId = 0) {
+  const { rows } = await db.query(
+    `SELECT w.translations FROM words w JOIN lessons l ON l.id=w.lesson_id
+     WHERE ${WORD_MATCH} AND l.target_lang=$2 AND w.translations IS NOT NULL AND (w.translations ? 'sq') AND w.id<>$3 LIMIT 1`,
+    [wordDe, targetLang, excludeId])
+  return rows[0]?.translations || null
+}
+
 export async function enrichLesson(lessonId) {
   const targetLang = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
   const activeLocales = await getActiveLocales(targetLang) // напр. ['ru','es'] для испанского
@@ -180,6 +201,9 @@ export async function enrichLesson(lessonId) {
       for (const w of rows) {
         if (isFunctionWord(w.word_de)) continue
         try {
+          // Банк слов: уже есть картинка такого же слова → переиспользуем (0 затрат)
+          const existing = await findExistingWordImage(w.word_de, targetLang, w.id)
+          if (existing) { await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [existing, w.id]); continue }
           const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
           if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
         } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
@@ -194,7 +218,14 @@ export async function enrichLesson(lessonId) {
       `SELECT id, word_de, translation_ru FROM words
        WHERE lesson_id = $1 AND (translations IS NULL OR translations = '{}' OR NOT (translations ? 'sq')) ORDER BY id`, [lessonId])
     if (rows.length) {
-      const results = await translateWordsToAllLangs(rows, activeLocales)
+      // Банк слов: если перевод такого же слова уже есть — переиспользуем, остальные переводим
+      const toTranslate = []
+      for (const w of rows) {
+        const existing = await findExistingTranslations(w.word_de, targetLang, w.id)
+        if (existing) await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(existing), w.id])
+        else toTranslate.push(w)
+      }
+      const results = toTranslate.length ? await translateWordsToAllLangs(toTranslate, activeLocales) : {}
       for (const [id, t] of Object.entries(results)) {
         await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(t), parseInt(id)])
       }
