@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs'
+import { unlink } from 'fs/promises'
 import { db } from '../db/index.js'
 import { saveCourseCover } from '../services/imageOptimize.js'
 
@@ -83,7 +84,12 @@ export async function coursesRoutes(fastify) {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const courseId = parseInt(request.params.id)
 
-    const { rows: existing } = await db.query('SELECT id FROM courses WHERE id = $1', [courseId])
+    // Проверка существования И владения курсом ДО записи файла на диск —
+    // иначе владелец B может перезаписать обложку курса владельца A
+    // (путь файла детерминирован по courseId, запись не зависит от owner_id).
+    const { rows: existing } = await db.query(
+      'SELECT id FROM courses WHERE id = $1 AND owner_id = $2', [courseId, request.user.id]
+    )
     if (!existing[0]) return reply.status(404).send({ error: 'Курс не найден' })
 
     const parts = request.parts()
@@ -97,8 +103,13 @@ export async function coursesRoutes(fastify) {
     }
 
     const { filepath } = await fastify.saveUploadedFile(filePart)
-    const buffer = readFileSync(filepath)
-    const coverUrl = await saveCourseCover(buffer, courseId)
+    let coverUrl
+    try {
+      const buffer = readFileSync(filepath)
+      coverUrl = await saveCourseCover(buffer, courseId)
+    } finally {
+      unlink(filepath).catch(() => {})
+    }
 
     const { rows } = await db.query(
       'UPDATE courses SET cover_image_url = $1 WHERE id = $2 AND owner_id = $3 RETURNING *',
@@ -112,10 +123,11 @@ export async function coursesRoutes(fastify) {
   fastify.delete('/api/courses/:id/cover', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const courseId = parseInt(request.params.id)
-    await db.query(
-      'UPDATE courses SET cover_image_url = NULL WHERE id = $1 AND owner_id = $2',
+    const { rows } = await db.query(
+      'UPDATE courses SET cover_image_url = NULL WHERE id = $1 AND owner_id = $2 RETURNING id',
       [courseId, request.user.id]
     )
+    if (!rows[0]) return reply.status(404).send({ error: 'Курс не найден' })
     return reply.status(204).send()
   })
 

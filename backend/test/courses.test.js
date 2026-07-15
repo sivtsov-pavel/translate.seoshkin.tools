@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { existsSync, rmSync } from 'fs'
+import { join } from 'path'
 import { createTestApp, clearTestData, registerAndLogin } from './helpers.js'
+import { config } from '../src/config.js'
 
 let app, ownerToken, studentToken
 
@@ -80,6 +83,35 @@ describe('POST /api/courses/:id/cover', () => {
 
     expect(res.statusCode).toBe(404)
   })
+
+  it('404 для чужого курса — обложка владельца A не подменяется владельцем B, файл не пишется на диск', async () => {
+    const course = await createCourse(ownerToken)
+    const otherOwner = await registerAndLogin(app, 'owner')
+    const { payload, contentType } = multipartPayload(TINY_PNG)
+
+    // Из-за RESTART IDENTITY id курса в тестах повторяется (напр. 1) — снимаем
+    // возможный «хвостовой» файл от предыдущего теста, чтобы проверка existsSync
+    // ниже реально доказывала отсутствие записи, а не совпадение по имени файла.
+    const coverPath = join(config.uploadDir, 'course-covers', `course_${course.id}.webp`)
+    rmSync(coverPath, { force: true })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/courses/${course.id}/cover`,
+      headers: { authorization: `Bearer ${otherOwner.token}`, 'content-type': contentType },
+      payload,
+    })
+    expect(res.statusCode).toBe(404)
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/courses',
+      headers: { authorization: `Bearer ${ownerToken}` },
+    })
+    const found = JSON.parse(list.body).find(c => c.id === course.id)
+    expect(found.cover_image_url).toBeNull()
+    expect(existsSync(coverPath)).toBe(false)
+  })
 })
 
 describe('DELETE /api/courses/:id/cover', () => {
@@ -107,6 +139,18 @@ describe('DELETE /api/courses/:id/cover', () => {
     })
     const found = JSON.parse(list.body).find(c => c.id === course.id)
     expect(found.cover_image_url).toBeNull()
+  })
+
+  it('404 для чужого курса', async () => {
+    const course = await createCourse(ownerToken)
+    const otherOwner = await registerAndLogin(app, 'owner')
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/courses/${course.id}/cover`,
+      headers: { authorization: `Bearer ${otherOwner.token}` },
+    })
+    expect(res.statusCode).toBe(404)
   })
 })
 
