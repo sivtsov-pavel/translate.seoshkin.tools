@@ -226,7 +226,7 @@ export default function Dashboard() {
             : lessons
           if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 8px', fontSize: 14 }}>Ничего не найдено</div>
           return shown.map(lesson => (
-            <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} />
+            <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} onReset={repeatLesson} />
           ))
         })()}
       </div>
@@ -277,13 +277,20 @@ export default function Dashboard() {
   )
 }
 
-function LessonCard({ lesson, navigate }) {
+function LessonCard({ lesson, navigate, onReset }) {
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const [words, setWords]         = useState(null)
   const [showWords, setShowWords] = useState(false)
   const [listening, setListening] = useState(false)
   const [gameBusy, setGameBusy]   = useState(false)
+
+  // Сбросить прогресс урока и начать заново — доступно для любого урока,
+  // не только для уже пройденных (см. блок «Повторить пройденное» выше)
+  const handleReset = () => {
+    if (!window.confirm('Точно сбросить прогресс урока и пройти заново?')) return
+    onReset(lesson.lesson_id)
+  }
 
   // Учитель: собрать «Игру класса» из слов урока
   const makeClassGame = async () => {
@@ -460,6 +467,21 @@ function LessonCard({ lesson, navigate }) {
             }}>
             <i className={`bi ${listening ? 'bi-volume-up-fill' : 'bi-volume-up'}`} style={{ fontSize: 14 }} />
             {t.dashboard.listen}
+          </button>
+        )}
+
+        {/* Сбросить прогресс — начать урок заново (не только для завершённых) */}
+        {onReset && (
+          <button
+            onClick={handleReset}
+            title="Сбросить прогресс и пройти урок заново"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'var(--surface-2)', border: '1px solid var(--line)',
+              color: 'var(--ink-soft)', borderRadius: 10, padding: '7px 12px', fontSize: 12.5,
+              cursor: 'pointer', fontWeight: 500, flexShrink: 0,
+            }}>
+            🔄 Сбросить
           </button>
         )}
 
