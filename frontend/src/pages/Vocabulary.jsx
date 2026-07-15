@@ -59,6 +59,7 @@ export default function Vocabulary() {
   const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(location.search).get('status') || '')
   const [courseFilter, setCourseFilter] = useState(() => localStorage.getItem('vocab_course') || '')
   const [lessonFilter, setLessonFilter] = useState('')
+  const [scanFilter, setScanFilter] = useState('') // media_id скана внутри урока
   const [grammarFilter, setGrammarFilter] = useState('')
   const [search, setSearch]     = useState('')
   const [loading, setLoading]   = useState(true)
@@ -116,6 +117,18 @@ export default function Vocabulary() {
 
   // Запоминаем выбранный курс между визитами
   useEffect(() => { localStorage.setItem('vocab_course', courseFilter) }, [courseFilter])
+  // При смене урока/курса сбрасываем выбранный скан
+  useEffect(() => { setScanFilter('') }, [lessonFilter, courseFilter])
+
+  // Сканы (страницы учебника) внутри выбранного урока — фильтр «слова именно с этой страницы».
+  // Показываем, только когда выбран урок и у слов есть привязка к ≥2 разным сканам.
+  const scanIds = lessonFilter
+    ? [...new Set(words
+        .filter(w => (!courseFilter || w.course_title === courseFilter) &&
+                     (w.lesson_title || t.vocabulary.noLesson) === lessonFilter)
+        .map(w => w.media_id).filter(Boolean))].sort((a, b) => a - b)
+    : []
+  const scanNo = Object.fromEntries(scanIds.map((id, i) => [id, i + 1]))
 
   // Счётчики по статусам (для чипов)
   const statusCounts = {
@@ -140,6 +153,7 @@ export default function Vocabulary() {
     if (courseFilter  && w.course_title !== courseFilter) return false
     if (lessonFilter  && (w.lesson_title || t.vocabulary.noLesson) !== lessonFilter) return false
     if (grammarFilter && detectGrammar(w.word_de) !== grammarFilter) return false
+    if (scanFilter && w.media_id !== scanFilter) return false
     if (q) return w.word_de.toLowerCase().includes(q) || w.translation_ru.toLowerCase().includes(q)
     return true
   })
@@ -175,12 +189,12 @@ export default function Vocabulary() {
   }
 
   // Счётчик активных фильтров для бейджа
-  const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
+  const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter, scanFilter].filter(Boolean).length
   // «Продвинутые» фильтры (курс/урок/часть речи) — на мобиле прячутся за шестерёнку
   const advancedCount  = [courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
   const advancedActive = advancedCount > 0
 
-  const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter('') }
+  const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter(''); setScanFilter('') }
 
   // Стиль чипа-фильтра («капелька»)
   const chipStyle = (active, color) => ({
@@ -324,6 +338,21 @@ export default function Vocabulary() {
                 {lessonTitles.map(lt => <option key={lt} value={lt}>{lt || t.vocabulary.noLesson}</option>)}
               </select>
             )}
+          </div>
+        )}
+
+        {/* Сканы (страницы учебника) выбранного урока — «слова именно с этой страницы» */}
+        {(!isMobile || filtersOpen) && scanIds.length > 1 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+            <span style={FILTER_LABEL}>Скан</span>
+            <button style={chipStyle(scanFilter === '')} onClick={() => setScanFilter('')}>
+              {t.vocabulary.all}
+            </button>
+            {scanIds.map(id => (
+              <button key={id} style={chipStyle(scanFilter === id)} onClick={() => setScanFilter(scanFilter === id ? '' : id)}>
+                📄 Скан {scanNo[id]}
+              </button>
+            ))}
           </div>
         )}
 

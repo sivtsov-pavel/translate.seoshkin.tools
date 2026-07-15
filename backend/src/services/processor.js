@@ -6,6 +6,18 @@ import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
 
+// К какому скану (lesson_media) относится слово — ищем в извлечениях по каждому фото.
+// pairs: [{ mediaId, extraction }]. Совпадение по слову (без артикля, регистронезависимо).
+function mediaIdForWord(wordDe, pairs) {
+  const norm = s => String(s || '').toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '').trim()
+  const t = norm(wordDe)
+  for (const p of pairs) {
+    const ws = p.extraction?.words || []
+    if (ws.some(w => norm(w.word_de) === t)) return p.mediaId || null
+  }
+  return null
+}
+
 // «Нарисовать недостающие»: детсадовские ИИ-картинки для слов урока без фото.
 // Служебные слова (предлоги/артикли/местоимения/числа) пропускаем — им картинка не нужна.
 export async function drawLessonImages(lessonId) {
@@ -186,24 +198,26 @@ export async function processNewMedia(lessonId) {
   for (const src of ['textbook', 'extra']) {
     const list = media.filter(m => (m.source === 'extra' ? 'extra' : 'textbook') === src)
     if (!list.length) continue
-    const extractions = []
+    const pairs = []
     for (const photo of list) {
       try {
         const extraction = await extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang)
-        extractions.push(extraction)
+        pairs.push({ mediaId: photo.id, extraction })
         await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
       } catch (e) { console.error('processNewMedia extract', e.message) }
     }
-    if (!extractions.length) continue
+    if (!pairs.length) continue
     // Умная обработка: сверяем с уже имеющимися словами урока (тетрадь после учебника)
     const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
-    const cons = await mergeLesson(extractions, null, existRows.map(r => r.word_de), targetLang)
+    const cons = await mergeLesson(pairs.map(p => p.extraction), null, existRows.map(r => r.word_de), targetLang)
     for (const w of (cons.words || [])) {
+      const mediaId = mediaIdForWord(w.word_de, pairs) // с какого скана слово
       await db.query(
-        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)
-         VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (lesson_id, word_de)
-         DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence)`,
-        [lessonId, ownerId, w.word_de, w.translation_ru, w.example_sentence || null, src])
+        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
+         DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
+                       media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
+        [lessonId, ownerId, w.word_de, w.translation_ru, w.example_sentence || null, src, mediaId])
     }
   }
 
@@ -361,17 +375,21 @@ export async function processLesson(lessonId, ownerId) {
     async function ingest(list, offset, text, source) {
       const ex = await extractPhotos(list, offset)
       if (ex.length === 0 && !text) return
+      // Пары фото↔извлечение (выровнены по порядку list) — для привязки слова к скану
+      const pairs = ex.map((extraction, k) => ({ mediaId: list[k]?.id, extraction }))
       await setProgress(lessonId, 'Составляю конспект урока...')
       // Тетрадь/доска (extra) сверяется с уже извлечёнными словами учебника — не дублируем
       const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
       const cons = await mergeLesson(ex, text, existRows.map(r => r.word_de), targetLang)
       for (const word of (cons.words || [])) {
+        const mediaId = mediaIdForWord(word.word_de, pairs) // с какого скана слово
         await db.query(
-          `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source)
-           VALUES ($1, $2, $3, $4, $5, $6)
+          `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
            ON CONFLICT (lesson_id, word_de)
-           DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence)`,
-          [lessonId, ownerId, word.word_de, word.translation_ru, word.example_sentence || null, source]
+           DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
+                         media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
+          [lessonId, ownerId, word.word_de, word.translation_ru, word.example_sentence || null, source, mediaId]
         )
       }
       allWords.push(...(cons.words || []))
