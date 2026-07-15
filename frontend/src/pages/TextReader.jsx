@@ -31,6 +31,8 @@ const CONV_LANGS = [
   { code: 'es', label: 'Español',    flag: '🇪🇸', speech: 'es-ES' },
   { code: 'tr', label: 'Türkçe',     flag: '🇹🇷', speech: 'tr-TR' },
   { code: 'ar', label: 'العربية',    flag: '🇸🇦', speech: 'ar-SA' },
+  { code: 'bg', label: 'Български',   flag: '🇧🇬', speech: 'bg-BG' },
+  { code: 'sq', label: 'Shqip',      flag: '🇦🇱', speech: 'sq-AL' },
 ]
 
 function getLang(code) { return CONV_LANGS.find(l => l.code === code) || CONV_LANGS[0] }
