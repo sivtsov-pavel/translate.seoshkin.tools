@@ -110,7 +110,7 @@ export default function Tutors() {
                   <Popup>
                     <div style={{ minWidth: 160 }}>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <img src={t.avatar_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />
+                        <img src={t.avatar_url} alt="" loading="lazy" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />
                         <div>
                           <div style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</div>
                           <div style={{ fontSize: 11, color: '#666' }}>{t.type} · {t.city}</div>
@@ -150,7 +150,7 @@ function TutorCard({ t }) {
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', gap: 12, padding: 14 }}>
-        <img src={t.avatar_url} alt="" style={{ width: 64, height: 64, borderRadius: 14, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--line)' }} />
+        <img src={t.avatar_url} alt="" loading="lazy" style={{ width: 64, height: 64, borderRadius: 14, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--line)' }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ fontWeight: 700, fontSize: 15 }}>{t.name}</span>
