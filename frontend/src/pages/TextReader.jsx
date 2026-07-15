@@ -46,6 +46,33 @@ function LangSelect({ value, onChange, style }) {
   )
 }
 
+// ───────── плавающая панель «Копировать» (только текст на изучаемом языке) ─────────
+
+function CopySelectionBar({ count, onCopy, onCancel, copied, bottomOffset }) {
+  if (!count) return null
+  const label = count === 1 ? 'предложение' : count < 5 ? 'предложения' : 'предложений'
+  return (
+    <div style={{
+      position: 'fixed', bottom: bottomOffset, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 400, display: 'flex', alignItems: 'center', gap: 10,
+      background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 999,
+      padding: '8px 10px 8px 16px', boxShadow: '0 8px 24px rgba(0,0,0,.25)',
+      transition: 'bottom .15s',
+    }}>
+      <span style={{ fontSize: 13, color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>{count} {label}</span>
+      <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 13, padding: '6px 8px' }}>
+        Отмена
+      </button>
+      <button onClick={onCopy} style={{
+        padding: '8px 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
+        background: copied ? 'var(--good, #16a34a)' : 'var(--accent)', color: 'var(--accent-ink)',
+      }}>
+        {copied ? '✓ Скопировано' : '📋 Копировать'}
+      </button>
+    </div>
+  )
+}
+
 // ───────── панель выбранных слов ─────────
 
 function WordPanel({ words, onRemove, onClear }) {
@@ -196,6 +223,12 @@ export default function TextReader() {
   const [selectedWords, setSelectedWords] = useState(new Map())
   const selectedRef = useRef(new Map())
 
+  // Выбор предложений для копирования (только текст на изучаемом языке —
+  // sentences[i] в «Читать», pair.original в «Двуязычном»; перевод НИКОГДА не копируем)
+  const [readCopySelected, setReadCopySelected] = useState(new Set())
+  const [bilingualCopySelected, setBilingualCopySelected] = useState(new Set())
+  const [copyFeedback, setCopyFeedback] = useState(false)
+
   // Сохранённые наборы
   const [sets, setSets]             = useState([])
   const [saveTitle, setSaveTitle]   = useState('')
@@ -264,12 +297,52 @@ export default function TextReader() {
     }
   }, [])
 
+  // ─── копирование предложений (изучаемый язык) ───
+
+  const toggleReadCopy = useCallback((i) => {
+    setReadCopySelected(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i); else next.add(i)
+      return next
+    })
+  }, [])
+
+  const toggleBilingualCopy = useCallback((i) => {
+    setBilingualCopySelected(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i); else next.add(i)
+      return next
+    })
+  }, [])
+
+  const flashCopied = () => { setCopyFeedback(true); setTimeout(() => setCopyFeedback(false), 1500) }
+
+  // Копируем ТОЛЬКО текст на изучаемом языке — sentences[i], в порядке следования
+  const copyReadSelection = async () => {
+    const ordered = [...readCopySelected].sort((a, b) => a - b)
+    const textToCopy = ordered.map(i => sentences[i]).join(' ').trim()
+    if (!textToCopy) return
+    await navigator.clipboard.writeText(textToCopy)
+    setReadCopySelected(new Set())
+    flashCopied()
+  }
+
+  // Копируем ТОЛЬКО pair.original (изучаемый язык), НИКОГДА pair.translation
+  const copyBilingualSelection = async () => {
+    const ordered = [...bilingualCopySelected].sort((a, b) => a - b)
+    const textToCopy = ordered.map(i => bilingual[i].original).join('\n\n').trim()
+    if (!textToCopy) return
+    await navigator.clipboard.writeText(textToCopy)
+    setBilingualCopySelected(new Set())
+    flashCopied()
+  }
+
   // ─── TTS ───
 
   const start = (fromIdx = 0) => {
     const parts = splitSentences(text)
     if (!parts.length) return
-    setSentences(parts); setPlaying(true); setActive(fromIdx); clearSelection()
+    setSentences(parts); setPlaying(true); setActive(fromIdx); clearSelection(); setReadCopySelected(new Set())
     cancelRef.current = false
 
     const playNext = (i) => {
@@ -290,14 +363,14 @@ export default function TextReader() {
   }
 
   const stop = () => { cancelRef.current = true; cancel(); setPlaying(false); setActive(-1) }
-  const prepare = () => { setSentences(splitSentences(text)); setActive(-1) }
+  const prepare = () => { setSentences(splitSentences(text)); setActive(-1); setReadCopySelected(new Set()) }
 
   // ─── двуязычный перевод ───
 
   const handleTranslate = async () => {
     const paragraphs = splitParagraphs(text)
     if (!paragraphs.length) return
-    setTranslating(true); setTranslateError(''); setBilingual([])
+    setTranslating(true); setTranslateError(''); setBilingual([]); setBilingualCopySelected(new Set())
     try {
       const res = await api.post('/reader/translate', { paragraphs, sourceLang: biSrc, targetLang: biTgt, model: transModel })
       setBilingual(res.translations || [])
@@ -380,7 +453,7 @@ export default function TextReader() {
     try {
       const res = await api.get(`/lessons/${lesson.id}/reader-text`)
       if (res.text) {
-        setText(res.text); setSentences([]); setBilingual([]); setActive(-1)
+        setText(res.text); setSentences([]); setBilingual([]); setActive(-1); setReadCopySelected(new Set()); setBilingualCopySelected(new Set())
       } else {
         alert('У этого урока нет примеров предложений')
       }
@@ -403,7 +476,7 @@ export default function TextReader() {
     setSaving(false)
   }
 
-  const loadSet = (set) => { stop(); setText(set.content); setSentences([]); setBilingual([]); setActive(-1) }
+  const loadSet = (set) => { stop(); setText(set.content); setSentences([]); setBilingual([]); setActive(-1); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()) }
   const deleteSet = async (id, e) => {
     e.stopPropagation()
     try { await api.delete(`/phrase-sets/${id}`); setSets(prev => prev.filter(s => s.id !== id)) } catch {}
@@ -411,6 +484,7 @@ export default function TextReader() {
 
   const textHasContent = text.trim().length > 0
   const hasSelection = selectedWords.size > 0
+  const hasCopySelection = mode === 'read' ? readCopySelected.size > 0 : mode === 'bilingual' ? bilingualCopySelected.size > 0 : false
 
   const srcInfo = getLang(convSrcLang)
   const tgtInfo = getLang(convTgtLang)
@@ -427,7 +501,7 @@ export default function TextReader() {
             { key: 'bilingual',    label: '🌐 Двуязычный' },
             { key: 'conversation', label: '💬 Разговор' },
           ].map(tab => (
-            <button key={tab.key} onClick={() => setMode(tab.key)} style={{
+            <button key={tab.key} onClick={() => { setMode(tab.key); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()) }} style={{
               padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600,
               cursor: 'pointer',
               background: mode === tab.key ? 'var(--accent)' : 'transparent',
@@ -616,7 +690,7 @@ export default function TextReader() {
           {/* Поле ввода */}
           <textarea
             value={text}
-            onChange={e => { setText(e.target.value); setSentences([]); setActive(-1) }}
+            onChange={e => { setText(e.target.value); setSentences([]); setActive(-1); setReadCopySelected(new Set()) }}
             placeholder="Вставь текст... (абзацы разделяй пустой строкой)"
             rows={6}
             style={{ width: '100%', fontSize: 15, lineHeight: 1.7, resize: 'vertical', boxSizing: 'border-box' }}
@@ -698,21 +772,37 @@ export default function TextReader() {
               {sentences.length > 0 ? (
                 <>
                   <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>
-                    💡 Нажми на предложение — начать с него · Нажми на слово — перевод из словаря
+                    💡 Нажми на предложение — начать с него · Нажми на слово — перевод из словаря · ☐ слева — выбрать для копирования
                   </div>
                   <div style={{
                     background: 'var(--surface)', border: '1px solid var(--line)',
                     borderRadius: 16, padding: '20px 18px', lineHeight: 2.4,
-                    paddingBottom: hasSelection ? 160 : 20,
+                    paddingBottom: (hasSelection || hasCopySelection) ? 160 : 20,
                   }}>
-                    {sentences.map((s, i) => (
+                    {sentences.map((s, i) => {
+                      const copySelected = readCopySelected.has(i)
+                      return (
                       <span key={i} style={{ display: 'inline' }}>
+                        {/* Чекбокс выбора предложения для копирования — отдельное действие, TTS-клик не трогаем */}
+                        <span
+                          onClick={e => { e.stopPropagation(); toggleReadCopy(i) }}
+                          title="Выбрать для копирования"
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: 16, height: 16, marginRight: 4, verticalAlign: 'middle',
+                            borderRadius: 4, cursor: 'pointer', fontSize: 11, lineHeight: 1,
+                            border: `1px solid ${copySelected ? 'var(--accent)' : 'var(--line)'}`,
+                            background: copySelected ? 'var(--accent)' : 'transparent',
+                            color: copySelected ? 'var(--accent-ink)' : 'transparent',
+                          }}
+                        >✓</span>
                         <span onClick={() => !playing && start(i)} style={{
                           display: 'inline',
                           background: active === i ? 'var(--accent-soft)' : 'transparent',
                           borderRadius: 6, padding: '1px 0',
                           cursor: playing ? 'default' : 'pointer',
                           borderBottom: active === i ? '2px solid var(--accent)' : 'none',
+                          outline: copySelected ? '1px solid var(--accent)' : 'none',
                         }}>
                           {tokenize(s).map((token, j) => {
                             const key = token.toLowerCase()
@@ -737,7 +827,8 @@ export default function TextReader() {
                         </span>
                         {' '}
                       </span>
-                    ))}
+                      )
+                    })}
                   </div>
                 </>
               ) : (
@@ -763,11 +854,31 @@ export default function TextReader() {
                 </div>
               )}
               {!translating && bilingual.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: hasSelection ? 180 : 20 }}>
-                  {bilingual.map((pair, i) => (
-                    <div key={i} style={{ border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: (hasSelection || hasCopySelection) ? 180 : 20 }}>
+                  {bilingual.map((pair, i) => {
+                    const copySelected = bilingualCopySelected.has(i)
+                    return (
+                    <div key={i} style={{
+                      border: `1px solid ${copySelected ? 'var(--accent)' : 'var(--line)'}`,
+                      borderRadius: 14, overflow: 'hidden', background: 'var(--surface)',
+                    }}>
                       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
-                        <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 6 }}>{getLang(biSrc).flag} {getLang(biSrc).label}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                          {/* Чекбокс выбора абзаца для копирования — копируем только pair.original (изучаемый язык) */}
+                          <span
+                            onClick={() => toggleBilingualCopy(i)}
+                            title="Выбрать для копирования"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              width: 16, height: 16, verticalAlign: 'middle',
+                              borderRadius: 4, cursor: 'pointer', fontSize: 11, lineHeight: 1, flexShrink: 0,
+                              border: `1px solid ${copySelected ? 'var(--accent)' : 'var(--line)'}`,
+                              background: copySelected ? 'var(--accent)' : 'transparent',
+                              color: copySelected ? 'var(--accent-ink)' : 'transparent',
+                            }}
+                          >✓</span>
+                          <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{getLang(biSrc).flag} {getLang(biSrc).label}</div>
+                        </div>
                         <ClickableParagraph text={pair.original} selectedWords={selectedWords} onWordClick={handleWordClick} />
                       </div>
                       <div style={{ padding: '10px 16px', background: 'var(--surface-2)' }}>
@@ -777,7 +888,8 @@ export default function TextReader() {
                         </p>
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
               {!translating && bilingual.length === 0 && (
@@ -793,6 +905,26 @@ export default function TextReader() {
 
       {/* Панель выбранных слов */}
       <WordPanel words={selectedWords} onRemove={removeWord} onClear={clearSelection} />
+
+      {/* Плавающая панель «Копировать» — только текст на изучаемом языке */}
+      {mode === 'read' && (
+        <CopySelectionBar
+          count={readCopySelected.size}
+          onCopy={copyReadSelection}
+          onCancel={() => setReadCopySelected(new Set())}
+          copied={copyFeedback}
+          bottomOffset={hasSelection ? 'calc(55vh + 16px)' : 16}
+        />
+      )}
+      {mode === 'bilingual' && (
+        <CopySelectionBar
+          count={bilingualCopySelected.size}
+          onCopy={copyBilingualSelection}
+          onCancel={() => setBilingualCopySelected(new Set())}
+          copied={copyFeedback}
+          bottomOffset={hasSelection ? 'calc(55vh + 16px)' : 16}
+        />
+      )}
 
       <style>{`
         @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
