@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { api } from '../api/client.js'
+import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
+import CoursePlaceholder from '../components/CoursePlaceholder.jsx'
 
 const STATUS_COLOR = { pending: 'var(--ink-soft)', processing: '#f59e0b', done: 'var(--good)', error: 'var(--red)' }
 const STATUS_ICON  = { pending: '○', processing: '⏳', done: '✓', error: '✗' }
@@ -15,6 +16,8 @@ export default function CourseView() {
   const [editTitle, setEditTitle] = useState('')
   const [allLessons, setAllLessons] = useState([])
   const [attachId, setAttachId]   = useState('')
+  const [uploadingCover, setUploadingCover] = useState(false)
+  const coverInputRef = useRef()
   const { t } = useI18nStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
@@ -39,6 +42,28 @@ export default function CourseView() {
     navigate('/courses')
   }
 
+  const handleCoverPick = () => coverInputRef.current?.click()
+
+  const handleCoverUpload = async (file) => {
+    if (!file) return
+    setUploadingCover(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const updated = await uploadFiles(`/courses/${id}/cover`, form)
+      setData(d => ({ ...d, course: { ...d.course, cover_image_url: updated.cover_image_url } }))
+    } catch (e) {
+      alert('Ошибка загрузки: ' + e.message)
+    } finally {
+      setUploadingCover(false)
+    }
+  }
+
+  const handleCoverRemove = async () => {
+    await api.delete(`/courses/${id}/cover`)
+    setData(d => ({ ...d, course: { ...d.course, cover_image_url: null } }))
+  }
+
   if (loading) return <p>{c.loading}</p>
   if (!data)   return <p>{t.common.error}</p>
 
@@ -47,6 +72,36 @@ export default function CourseView() {
   return (
     <div style={{ paddingTop: 30 }}>
       <Link to="/courses" style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: 14 }}>{c.back}</Link>
+
+      <div style={{
+        position: 'relative', width: 160, aspectRatio: '3/4', borderRadius: 14,
+        overflow: 'hidden', margin: '16px 0', boxShadow: '0 4px 16px rgba(0,0,0,.15)',
+        cursor: user?.role === 'owner' ? 'pointer' : 'default',
+      }}
+        onClick={user?.role === 'owner' ? handleCoverPick : undefined}>
+        {course.cover_image_url ? (
+          <img src={course.cover_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        ) : (
+          <CoursePlaceholder title={course.title} />
+        )}
+        {uploadingCover && (
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13 }}>
+            ⏳
+          </div>
+        )}
+      </div>
+      {user?.role === 'owner' && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+          <button type="button" onClick={handleCoverPick} disabled={uploadingCover} style={btnSecondary}>
+            {course.cover_image_url ? '🖼 Сменить обложку' : '🖼 Загрузить обложку'}
+          </button>
+          {course.cover_image_url && (
+            <button type="button" onClick={handleCoverRemove} style={btnSecondary}>Убрать обложку</button>
+          )}
+          <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+            onChange={e => handleCoverUpload(e.target.files[0])} />
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, margin: '16px 0 24px', flexWrap: 'wrap' }}>
         {editing ? (
