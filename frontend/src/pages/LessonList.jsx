@@ -334,14 +334,18 @@ export default function LessonList() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                   {/* Левая часть: название + мета */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 4 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>
                       {lesson.title || `${t.lessons.newLesson} #${lesson.id}`}
                     </div>
+                    {lesson.description && (
+                      <div style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic', marginBottom: 4 }}>
+                        {lesson.description}
+                      </div>
+                    )}
                     <div style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                       {dateStr && <span>{dateStr}</span>}
                       {lesson.media_count > 0 && <span>{lesson.media_count} файл{lesson.media_count === 1 ? '' : lesson.media_count < 5 ? 'а' : 'ов'}</span>}
                       {lesson.words_total > 0 && <span>{lesson.words_total} слов</span>}
-                      {lesson.description && <span style={{ fontStyle: 'italic' }}>{lesson.description}</span>}
                     </div>
 
                     {/* Прогресс обработки */}
