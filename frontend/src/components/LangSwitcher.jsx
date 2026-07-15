@@ -18,8 +18,43 @@ export default function LangSwitcher({ pill = false, dropUp = false }) {
   const { lang, setLang } = useI18nStore()
   const [open, setOpen] = useState(false)
   const ref = useRef()
+  const dropdownRef = useRef()
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480)
+  const [alignLeft, setAlignLeft] = useState(false)
 
   const current = LANGS.find(l => l.code === lang) || LANGS[0]
+
+  // Отслеживаем размер экрана для мобильной версии
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 480)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Рассчитываем положение дропдауна (влево/вправо) в зависимости от свободного места
+  useEffect(() => {
+    if (!open || !ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    const dropdownWidth = isMobile ? 160 : 220 // на мобиле уже, чем на десктопе
+
+    // Проверяем, поместится ли дропдаун с выравниванием по правому краю
+    const leftEdgeWithRight = rect.right - dropdownWidth
+    // Проверяем, поместится ли дропдаун с выравниванием по левому краю
+    const rightEdgeWithLeft = rect.left + dropdownWidth
+
+    // Если выравнивание по правому краю вызовет переполнение влево, используем левый край
+    if (leftEdgeWithRight < 0) {
+      setAlignLeft(true)
+    }
+    // Если выравнивание по левому краю вызовет переполнение вправо, но правое выравнивание вписывается, используем правый край
+    else if (rightEdgeWithLeft > window.innerWidth && leftEdgeWithRight >= 0) {
+      setAlignLeft(false)
+    }
+    // В остальных случаях по умолчанию используем правый край
+    else {
+      setAlignLeft(false)
+    }
+  }, [open, isMobile])
 
   // Закрываем при клике вне
   useEffect(() => {
@@ -67,8 +102,9 @@ export default function LangSwitcher({ pill = false, dropUp = false }) {
 
       {/* Дропдаун с флагами — залипает пока не выберешь */}
       {open && (
-        <div style={{
-          position: 'absolute', [dropUp ? 'bottom' : 'top']: 'calc(100% + 6px)', right: 0,
+        <div ref={dropdownRef} style={{
+          position: 'absolute', [dropUp ? 'bottom' : 'top']: 'calc(100% + 6px)',
+          ...(alignLeft ? { left: 0 } : { right: 0 }),
           zIndex: 2000,
           background: 'var(--surface)',
           border: '1px solid var(--line)',
@@ -76,9 +112,10 @@ export default function LangSwitcher({ pill = false, dropUp = false }) {
           boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
           padding: 8,
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
           gap: 4,
-          minWidth: 220,
+          minWidth: isMobile ? 160 : 220,
+          maxWidth: 'calc(100vw - 20px)',
         }}>
           {LANGS.map(l => (
             <button
