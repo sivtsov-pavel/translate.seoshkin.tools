@@ -21,13 +21,14 @@ function mediaIdForWord(wordDe, pairs) {
 // «Нарисовать недостающие»: детсадовские ИИ-картинки для слов урока без фото.
 // Служебные слова (предлоги/артикли/местоимения/числа) пропускаем — им картинка не нужна.
 export async function drawLessonImages(lessonId) {
+  const targetLang = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
   const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id=$1 AND image_url IS NULL ORDER BY id', [lessonId])
   const target = rows.filter(w => !isFunctionWord(w.word_de))
   let done = 0
   for (const w of target) {
     await setProgress(lessonId, `Рисую картинки ${done + 1}/${target.length}...`)
     try {
-      const url = await generateWordImage(w.word_de, w.translation_ru, w.id)
+      const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
       if (url) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [url, w.id]); done++ }
     } catch (e) { console.error('drawLessonImages', w.word_de, e.message) }
   }
@@ -36,6 +37,28 @@ export async function drawLessonImages(lessonId) {
 
 async function setProgress(lessonId, text) {
   await db.query('UPDATE lessons SET progress = $1 WHERE id = $2', [text, lessonId])
+}
+
+// Сохранить реальные предложения урока (из учебника/тетради/доски) — источник упражнений.
+// Дедуп по тексту в рамках урока. Служебные пустые/короткие обрывки пропускаем.
+async function saveSentences(lessonId, sentences, source) {
+  if (!Array.isArray(sentences)) return
+  for (const s of sentences) {
+    const text = (typeof s === 'string' ? s : s?.text || '').trim()
+    if (!text || text.length < 4) continue
+    const tr = (typeof s === 'object' && s) ? (s.translation_ru || null) : null
+    await db.query(
+      `INSERT INTO lesson_sentences (lesson_id, text, translation_ru, source)
+       SELECT $1, $2, $3, $4
+       WHERE NOT EXISTS (SELECT 1 FROM lesson_sentences WHERE lesson_id = $1 AND lower(text) = lower($2))`,
+      [lessonId, text, tr, source])
+  }
+}
+
+// Реальные предложения урока — для генерации упражнений из них
+async function getLessonSentences(lessonId) {
+  const { rows } = await db.query('SELECT text FROM lesson_sentences WHERE lesson_id = $1 ORDER BY id', [lessonId])
+  return rows.map(r => r.text)
 }
 
 // «Обработать всё»: докидываем недостающее для урока — переводы/примеры слов, картинки,
@@ -85,7 +108,7 @@ export async function enrichLesson(lessonId) {
       for (const w of rows) {
         if (isFunctionWord(w.word_de)) continue
         try {
-          const url = await generateWordImage(w.word_de, w.translation_ru, w.id)
+          const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
           if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
         } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
       }
@@ -175,7 +198,7 @@ export async function regenerateExercisesFromDb(lessonId) {
     await setProgress(lessonId, `Генерирую упражнения для ${words.length} слов...`)
 
     // Генерируем упражнения батчами по 15 слов
-    const exercises = await generateExercises(words, [], targetLang)
+    const exercises = await generateExercises(words, [], targetLang, await getLessonSentences(lessonId))
 
     for (const ex of exercises) {
       const wordId = wordMap[ex.word_de] || null
@@ -243,6 +266,7 @@ export async function processNewMedia(lessonId) {
                        media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
         [lessonId, ownerId, w.word_de, w.translation_ru, w.example_sentence || null, src, mediaId])
     }
+    await saveSentences(lessonId, cons.sentences, src) // реальные предложения урока
   }
 
   // Упражнения ТОЛЬКО для слов урока без упражнений (новые) — без дублей
@@ -251,7 +275,7 @@ export async function processNewMedia(lessonId) {
      WHERE w.lesson_id=$1 AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id=w.id AND e.lesson_id=$1)`, [lessonId])
   if (wordRows.length) {
     await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
-    const exercises = await generateExercises(wordRows, [], targetLang)
+    const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId))
     const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
     for (const ex of exercises) {
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -290,7 +314,7 @@ export async function saveCameraWords(lessonId, words) {
        WHERE w.lesson_id=$1 AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id=w.id AND e.lesson_id=$1)`, [lessonId])
     if (wordRows.length) {
       await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
-      const exercises = await generateExercises(wordRows, [], targetLang)
+      const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId))
       const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
       for (const ex of exercises) {
         await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -320,7 +344,7 @@ export async function generateCustomSet(lessonId, wordIds) {
       await db.query("UPDATE lessons SET status='error', progress='Нет слов' WHERE id=$1", [lessonId])
       return
     }
-    const exercises = await generateExercises(words, [], tl)
+    const exercises = await generateExercises(words, [], tl, await getLessonSentences(lessonId))
     const wordMap = Object.fromEntries(words.map(w => [w.word_de, w.id]))
     for (const ex of exercises) {
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -416,6 +440,7 @@ export async function processLesson(lessonId, ownerId) {
           [lessonId, ownerId, word.word_de, word.translation_ru, word.example_sentence || null, source, mediaId]
         )
       }
+      await saveSentences(lessonId, cons.sentences, source) // реальные предложения урока
       allWords.push(...(cons.words || []))
       allGrammar.push(...(cons.grammar_points || []))
 
@@ -442,7 +467,7 @@ export async function processLesson(lessonId, ownerId) {
     await setProgress(lessonId, `Создаю упражнения для ${totalWords} слов...`)
     let exercises = []
     if (totalWords > 0) {
-      exercises = await generateExercises(consolidated.words, consolidated.grammar_points, targetLang)
+      exercises = await generateExercises(consolidated.words, consolidated.grammar_points, targetLang, await getLessonSentences(lessonId))
     }
 
     const { rows: wordRows } = await db.query(

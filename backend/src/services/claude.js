@@ -109,9 +109,10 @@ const MERGE_PROMPT = (t) => `Объедини данные из нескольк
 - Прилагательные, наречия, частицы, местоимения — с маленькой буквы.
 - Убери дубли: слово с артиклем и без него — это ОДНО слово, оставь форму с артиклем. Разный регистр одного слова — не новый вход (кроме случаев, где регистр меняет смысл, напр. нем. "Sie/sie").
 - Объедини грамматические правила без дублей.
+- ПРЕДЛОЖЕНИЯ ("sentences"): собери РЕАЛЬНЫЕ предложения-примеры со страниц (учебник/тетрадь/доска) ДОСЛОВНО — не выдумывай новые. Убери дубли и мусор (обрывки, заголовки, номера). Для каждого дай перевод на русский. Это основа для упражнений урока.
 
 Верни ТОЛЬКО JSON без markdown (поле word_de = слово изучаемого языка):
-{"words": [{"word_de": "...", "translation_ru": "...", "example_sentence": "..."}], "grammar_points": [{"description": "...", "example": "..."}]}`
+{"words": [{"word_de": "...", "translation_ru": "...", "example_sentence": "..."}], "grammar_points": [{"description": "...", "example": "..."}], "sentences": [{"text": "реальное предложение со страницы", "translation_ru": "перевод"}]}`
 
 // Ключ для дедупа: без ведущего артикля и регистра, чтобы "Kaffee" и "der Kaffee"
 // схлопывались в одно. Sie/sie и Ihr/ihr — разные слова, для них ключ различаем.
@@ -124,7 +125,7 @@ function wordKey(word_de) {
 const hasArticle = (s) => /^(der|die|das)\s/i.test(s || '')
 
 async function mergeChunk(extractions, transcription = null, existingWords = [], targetLang = 'de') {
-  const slim = extractions.map(e => ({ words: e.words || [], grammar_points: e.grammar_points || [] }))
+  const slim = extractions.map(e => ({ words: e.words || [], grammar_points: e.grammar_points || [], example_sentences: e.example_sentences || [] }))
   const input = JSON.stringify({ extractions: slim, transcription }, null, 2)
   // Умная обработка тетради/доски: даём модели список уже имеющихся слов урока,
   // чтобы она НЕ дублировала их, но могла исправить форму (напр. дописать артикль).
@@ -171,7 +172,18 @@ export async function mergeLesson(extractions, transcription = null, existingWor
     }
   }
 
-  return { words: [...seenWords.values()], grammar_points }
+  // Консолидируем реальные предложения из всех частей (дедуп по тексту)
+  const seenSent = new Set()
+  const sentences = []
+  for (const p of partials) {
+    for (const s of (p.sentences || [])) {
+      const text = (typeof s === 'string' ? s : s?.text || '').trim()
+      const key = text.toLowerCase().slice(0, 80)
+      if (text && !seenSent.has(key)) { seenSent.add(key); sentences.push(typeof s === 'string' ? { text } : s) }
+    }
+  }
+
+  return { words: [...seenWords.values()], grammar_points, sentences }
 }
 
 // AI-название и описание урока по его содержимому (когда учитель не задал тему).
@@ -199,6 +211,12 @@ export async function generateLessonMeta(words = [], grammarPoints = [], targetL
 }
 
 const EXERCISES_PROMPT = (t) => `На основе слов и грамматики урока (${t.name} язык, A1) создай упражнения для школьника. Объясняй максимально просто и понятно, как для маленьких детей.
+
+⚠️ ГЛАВНЫЙ ИСТОЧНИК — РЕАЛЬНЫЕ ПРЕДЛОЖЕНИЯ УРОКА:
+- В конспекте есть поле "sentences" — это реальные предложения из учебника/тетради/доски, которые класс разбирал.
+- Для "fill_blank" и "sentence_write" бери В ПЕРВУЮ ОЧЕРЕДЬ эти предложения (делай пропуск на изучаемом слове, сохраняй их грамматику и склонения — именно это закрепляем).
+- Выдумывай НОВОЕ предложение только если среди "sentences" нет подходящего для данного слова.
+- Так упражнения тренируют ровно ту тему и формы, что были на уроке, а не абстрактные.
 
 ⚠️ ГЛАВНОЕ ПРАВИЛО ЯЗЫКА:
 - Все предложения на изучаемом языке (поля "sentence", "example") — на ЧИСТОМ ${t.name} языке (A1), короткие и естественные.
@@ -248,11 +266,13 @@ function shuffleOptions(ex) {
   return { ...ex, payload: { ...ex.payload, options: shuffled, correct: shuffled.indexOf(correctAnswer) } }
 }
 
-export async function generateExercises(words, grammar_points, targetLang = 'de') {
+export async function generateExercises(words, grammar_points, targetLang = 'de', sentences = []) {
   const allExercises = []
+  // Реальные предложения урока — приоритетный источник для fill_blank/sentence_write
+  const realSentences = (sentences || []).map(s => (typeof s === 'string' ? s : s?.text)).filter(Boolean).slice(0, 40)
   for (let i = 0; i < words.length; i += BATCH_SIZE) {
     const batch = words.slice(i, i + BATCH_SIZE)
-    const input = JSON.stringify({ words: batch, grammar_points }, null, 2)
+    const input = JSON.stringify({ words: batch, grammar_points, sentences: realSentences }, null, 2)
     const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192 })
     allExercises.push(...parseJson(text).map(shuffleOptions))
   }
