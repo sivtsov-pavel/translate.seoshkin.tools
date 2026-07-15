@@ -119,9 +119,11 @@ export async function exercisesRoutes(fastify) {
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
       params.push(target); const tp = params.length
+      params.push(request.user.school_id ?? null); const sp = params.length // школа ученика (null-safe)
       query = SELECT + `
         WHERE l.status = 'done'
           AND l.target_lang = $${tp}
+          AND ($${sp}::int IS NULL OR l.school_id = $${sp})
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
@@ -192,7 +194,8 @@ export async function exercisesRoutes(fastify) {
         GROUP BY l.id, l.title, l.description, l.date, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
     } else {
-      params = [userId, today, target]
+      // Ученик видит готовые уроки СВОЕЙ школы (null-safe: без школы — как раньше, всё)
+      params = [userId, today, target, request.user.school_id ?? null]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                l.date AS lesson_date,
@@ -203,6 +206,7 @@ export async function exercisesRoutes(fastify) {
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.status = 'done' AND l.target_lang = $3
+          AND ($4::int IS NULL OR l.school_id = $4)
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
         GROUP BY l.id, l.title, l.description, l.date, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
@@ -298,9 +302,16 @@ export async function exercisesRoutes(fastify) {
     // могут иметь одно и то же слово — ученик не должен видеть дубли.
     const target = request.headers['x-target-lang'] || 'de'
     const params = [userId, target]
-    // Учитель видит слова СВОИХ уроков (по владельцу урока). Ученик — из готовых уроков.
+    // Учитель видит слова СВОИХ уроков (по владельцу урока). Ученик — из готовых уроков
+    // СВОЕЙ школы (мультиарендность; null-safe: без школы — как раньше, всё).
     // Мульти-таргет: только слова активного изучаемого языка (l.target_lang).
-    const lessonFilter = (role === 'owner' ? 'l.owner_id = $1' : "l.status = 'done'") + ' AND l.target_lang = $2'
+    let lessonFilter
+    if (role === 'owner') {
+      lessonFilter = 'l.owner_id = $1 AND l.target_lang = $2'
+    } else {
+      params.push(request.user.school_id ?? null) // $3
+      lessonFilter = "l.status = 'done' AND l.target_lang = $2 AND ($3::int IS NULL OR l.school_id = $3)"
+    }
 
     let statusCond = ''
     if (status) {
