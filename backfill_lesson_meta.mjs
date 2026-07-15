@@ -14,7 +14,7 @@ async function getActiveLocales(targetLang) {
 }
 
 const { rows } = await db.query(
-  "SELECT id, title, description, target_lang, title_translations FROM lessons WHERE title IS NOT NULL AND title <> '' ORDER BY id")
+  "SELECT id, title, description, target_lang, title_translations, description_translations FROM lessons WHERE title IS NOT NULL AND title <> '' ORDER BY id")
 console.log(`Уроков к обработке: ${rows.length}`)
 
 let done = 0, skipped = 0, failed = 0
@@ -22,8 +22,10 @@ for (const L of rows) {
   try {
     const active = await getActiveLocales(L.target_lang || 'de')
     const need = active.filter(l => l !== 'ru' && l !== 'de')
-    const missing = need.some(l => !(L.title_translations && L.title_translations[l]))
-    if (!missing) { skipped++; continue }
+    const titleMissing = need.some(l => !(L.title_translations && L.title_translations[l]))
+    const hasDesc = L.description && String(L.description).trim()
+    const descMissing = hasDesc && need.some(l => !(L.description_translations && L.description_translations[l]))
+    if (!titleMissing && !descMissing) { skipped++; continue }
     const meta = await translateLessonMeta(L.title, L.description, active)
     await db.query(
       `UPDATE lessons SET

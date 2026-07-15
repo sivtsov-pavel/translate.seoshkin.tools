@@ -131,8 +131,10 @@ export async function enrichLesson(lessonId) {
     if (L && L.title) {
       // Языки, на которые реально переводим (без ru[база] и de[фолбэк на ru])
       const need = (activeLocales || ALL_LOCALES).filter(l => l !== 'ru' && l !== 'de')
-      const missing = need.some(l => !(L.title_translations && L.title_translations[l]))
-      if (missing) {
+      const titleMissing = need.some(l => !(L.title_translations && L.title_translations[l]))
+      const hasDesc = L.description && String(L.description).trim()
+      const descMissing = hasDesc && need.some(l => !(L.description_translations && L.description_translations[l]))
+      if (titleMissing || descMissing) {
         await setProgress(lessonId, 'Перевожу заголовок и описание урока...')
         const meta = await translateLessonMeta(L.title, L.description, activeLocales)
         await db.query(
