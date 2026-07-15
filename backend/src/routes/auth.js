@@ -32,8 +32,16 @@ export async function authRoutes(fastify) {
       [email, password_hash, role]
     )
     const user = rows[0]
-    const token = fastify.jwt.sign({ id: user.id, email: user.email, role: user.role })
 
+    // Учитель-арендатор → своя школа, он её админ (SaaS). Ученик присоединится по коду позже.
+    if (role === 'owner') {
+      const schoolName = `Школа ${email.split('@')[0]}`
+      const { rows: sr } = await db.query(
+        'INSERT INTO schools (name, owner_id) VALUES ($1, $2) RETURNING id', [schoolName, user.id])
+      await db.query('UPDATE users SET school_id=$1, is_school_admin=true WHERE id=$2', [sr[0].id, user.id])
+    }
+
+    const token = fastify.jwt.sign({ id: user.id, email: user.email, role: user.role })
     return reply.status(201).send({ token, user })
   })
 
