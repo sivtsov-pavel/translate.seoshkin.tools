@@ -162,11 +162,14 @@ export default function Layout({ children }) {
   ]
 
   const classItems = user?.role === 'owner' ? [
+    { to: '/school',       icon: 'bi-building-fill',    label: 'Школа' },
     { to: '/courses',      icon: 'bi-mortarboard-fill', label: t.nav.courses },
     { to: '/students',     icon: 'bi-people-fill',      label: t.nav.students },
     { to: '/translations', icon: 'bi-globe2',           label: 'Переводы' },
     { to: '/report',       icon: 'bi-bar-chart-fill',   label: 'Отчёт' },
-  ] : []
+  ] : [
+    { to: '/join',         icon: 'bi-building-fill',    label: 'Мой класс' },
+  ]
 
   const adminLinks = user?.role === 'owner' ? [
     { to: '/lessons/new', icon: 'bi-plus-circle-fill', label: t.nav.newLesson  || 'Новый урок' },
@@ -260,7 +263,7 @@ export default function Layout({ children }) {
           <SectionLabel label="Обучение" />
           {learningItems.map(item => <NavItem key={item.to} item={item} onClick={close} />)}
 
-          {/* Класс (только для owner) */}
+          {/* Класс: учителю — школа/курсы/ученики; ученику — вход в класс по коду */}
           {classItems.length > 0 && (
             <>
               <SectionLabel label="Класс" />
