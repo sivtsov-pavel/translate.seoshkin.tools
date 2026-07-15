@@ -21,6 +21,56 @@ function isWord(token) {
   return /[\wäöüÄÖÜß]/.test(token)
 }
 
+// ───────── история Читалки (localStorage, без сервера) ─────────
+// Формат записи: {id, ts, mode: 'bilingual'|'conversation', src, tgt, items}
+// items — соответствующий bilingual-массив [{original, translation}]
+// или convMessages-массив [{id, side, original, translation}] на момент сохранения.
+
+const READER_HISTORY_KEY = 'reader_history'
+const READER_HISTORY_LIMIT = 50
+
+function getReaderHistory() {
+  try {
+    const raw = window.localStorage.getItem(READER_HISTORY_KEY)
+    const arr = raw ? JSON.parse(raw) : []
+    return Array.isArray(arr) ? arr : []
+  } catch {
+    return []
+  }
+}
+
+// Добавляет новую запись или обновляет существующую по id (нужно для
+// разговора — одна запись на сессию, дополняется по мере реплик),
+// обрезает список до последних READER_HISTORY_LIMIT записей.
+function saveReaderHistoryEntry(entry) {
+  try {
+    const list = getReaderHistory()
+    const idx = list.findIndex(e => e.id === entry.id)
+    if (idx >= 0) list[idx] = entry
+    else list.push(entry)
+    window.localStorage.setItem(READER_HISTORY_KEY, JSON.stringify(list.slice(-READER_HISTORY_LIMIT)))
+  } catch {
+    // localStorage недоступен (приватный режим, квота и т.п.) — молча игнорируем
+  }
+}
+
+function clearReaderHistory() {
+  try { window.localStorage.removeItem(READER_HISTORY_KEY) } catch {}
+}
+
+// Краткий текст записи для превью в панели истории
+function historyPreviewText(entry) {
+  if (!entry.items?.length) return ''
+  return entry.items.map(it => it.original).filter(Boolean).join(' ')
+}
+
+function historyMatchesQuery(entry, query) {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const haystack = entry.items?.map(it => `${it.original} ${it.translation}`).join(' ').toLowerCase() || ''
+  return haystack.includes(q)
+}
+
 // Языки для переводчика и разговора
 const CONV_LANGS = [
   { code: 'de', label: 'Deutsch',    flag: '🇩🇪', speech: 'de-DE' },
@@ -156,6 +206,68 @@ function WordPanel({ words, onRemove, onClear }) {
   )
 }
 
+// ───────── панель истории Читалки (localStorage, без сервера) ─────────
+
+function ReaderHistoryPanel({ entries, search, onSearchChange, onClear, onClose }) {
+  const filtered = entries.filter(e => historyMatchesQuery(e, search))
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+      width: '100%', maxWidth: 640, zIndex: 350,
+      background: 'var(--surface)', borderTop: '1px solid var(--line)',
+      borderRadius: '20px 20px 0 0',
+      maxHeight: '65vh',
+      boxShadow: '0 -12px 40px rgba(0,0,0,.35)',
+      animation: 'slideUp .2s ease',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '14px 20px 10px', borderBottom: '1px solid var(--line)', flexShrink: 0, gap: 10,
+      }}>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>🕘 История ({entries.length})</span>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 20, padding: '0 4px' }}>×</button>
+      </div>
+      <div style={{ padding: '10px 20px', display: 'flex', gap: 8, flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
+        <input
+          value={search}
+          onChange={e => onSearchChange(e.target.value)}
+          placeholder="Поиск по истории…"
+          style={{ flex: 1, fontSize: 14 }}
+        />
+        {entries.length > 0 && (
+          <button onClick={onClear} style={{ padding: '7px 12px', background: 'none', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', color: 'var(--red)', fontSize: 13, whiteSpace: 'nowrap' }}>
+            Очистить историю
+          </button>
+        )}
+      </div>
+      <div style={{ overflowY: 'auto', flex: 1 }}>
+        {filtered.length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--ink-soft)', fontSize: 14 }}>
+            {entries.length === 0 ? 'История пуста' : 'Ничего не найдено'}
+          </div>
+        ) : filtered.map(entry => {
+          const srcInfo = getLang(entry.src)
+          const tgtInfo = getLang(entry.tgt)
+          const full = historyPreviewText(entry)
+          const preview = full.length > 60 ? full.slice(0, 60) + '…' : full
+          return (
+            <div key={entry.id} style={{ padding: '12px 20px', borderBottom: '1px solid var(--line)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, fontSize: 12, color: 'var(--ink-soft)' }}>
+                <span>{entry.mode === 'bilingual' ? '🌐' : '💬'}</span>
+                <span>{srcInfo.flag}→{tgtInfo.flag}</span>
+                <span>{new Date(entry.ts).toLocaleString('ru-RU')}</span>
+              </div>
+              <div style={{ fontSize: 14, color: 'var(--ink)' }}>{preview || '—'}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ height: 24, flexShrink: 0 }} />
+    </div>
+  )
+}
+
 // ───────── кликабельный абзац ─────────
 
 function ClickableParagraph({ text, selectedWords, onWordClick }) {
@@ -218,6 +330,13 @@ export default function TextReader() {
   const messagesEndRef = useRef(null)
   const hasSpeechApi = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
 
+  // История Читалки (localStorage) — id текущей сессии разговора,
+  // чтобы обновлять одну запись по мере пополнения convMessages, а не плодить новые
+  const convSessionIdRef = useRef(null)
+  const [showHistory, setShowHistory] = useState(false)
+  const [historyEntries, setHistoryEntries] = useState([])
+  const [historySearch, setHistorySearch] = useState('')
+
   // Модель перевода
   const [transModel, setTransModel] = useState('mini')  // 'mini' | 'smart'
 
@@ -253,6 +372,26 @@ export default function TextReader() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [convMessages])
+
+  // Снимок разговора в localStorage: одна запись на сессию, обновляется по мере
+  // пополнения convMessages (а не на каждую реплику отдельной записью в списке).
+  // Очистка текущего разговора (setConvMessages([])) сбрасывает id сессии —
+  // следующая реплика начнёт новую запись истории.
+  useEffect(() => {
+    if (convMessages.length === 0) {
+      convSessionIdRef.current = null
+      return
+    }
+    if (!convSessionIdRef.current) convSessionIdRef.current = `conv-${Date.now()}`
+    saveReaderHistoryEntry({
+      id: convSessionIdRef.current,
+      ts: Date.now(),
+      mode: 'conversation',
+      src: convSrcLang,
+      tgt: convTgtLang,
+      items: convMessages,
+    })
+  }, [convMessages, convSrcLang, convTgtLang])
 
   // закрыть дропдаун при клике вне
   useEffect(() => {
@@ -376,6 +515,17 @@ export default function TextReader() {
     try {
       const res = await api.post('/reader/translate', { paragraphs, sourceLang: biSrc, targetLang: biTgt, model: transModel })
       setBilingual(res.translations || [])
+      // Сохраняем одну запись истории на каждый успешный перевод (клиентски, localStorage)
+      if (res.translations?.length) {
+        saveReaderHistoryEntry({
+          id: `bi-${Date.now()}`,
+          ts: Date.now(),
+          mode: 'bilingual',
+          src: biSrc,
+          tgt: biTgt,
+          items: res.translations,
+        })
+      }
     } catch (e) {
       setTranslateError('Ошибка перевода: ' + e.message)
     } finally {
@@ -448,6 +598,23 @@ export default function TextReader() {
 
   const swapConvLangs = () => { setConvSrcLang(convTgtLang); setConvTgtLang(convSrcLang) }
 
+  // ─── история Читалки (localStorage) ───
+  // Список читается лениво — только по клику на кнопку, не при монтировании/рендере
+  const toggleHistory = () => {
+    setShowHistory(prev => {
+      const next = !prev
+      if (next) setHistoryEntries(getReaderHistory().slice().reverse()) // новые сверху
+      return next
+    })
+  }
+  const handleClearHistory = () => {
+    clearReaderHistory()
+    setHistoryEntries([])
+    // Сбрасываем id текущей сессии разговора, иначе следующая реплика
+    // «воскресит» только что очищенную запись под старым id
+    convSessionIdRef.current = null
+  }
+
   // ─── загрузить из урока ───
 
   const loadLesson = async (lesson) => {
@@ -512,6 +679,18 @@ export default function TextReader() {
             }}>{tab.label}</button>
           ))}
         </div>
+
+        {/* История переводов/разговоров — клиентски, localStorage, без сервера */}
+        <button onClick={toggleHistory} title="История переводов и разговоров (сохранено локально в браузере)"
+          style={{
+            padding: '7px 14px', borderRadius: 10, border: '1px solid var(--line)', cursor: 'pointer',
+            fontSize: 13, fontWeight: 600,
+            background: showHistory ? 'var(--accent)' : 'var(--surface-2)',
+            color: showHistory ? 'var(--accent-ink)' : 'var(--ink)',
+          }}>
+          🕘 История
+        </button>
+
         <div style={{ marginLeft: 'auto' }}><CameraWords /></div>
 
         {/* Выбор модели — для bilingual и conversation */}
@@ -907,6 +1086,17 @@ export default function TextReader() {
 
       {/* Панель выбранных слов */}
       <WordPanel words={selectedWords} onRemove={removeWord} onClear={clearSelection} />
+
+      {/* Панель истории Читалки — читает localStorage только при открытии (лениво) */}
+      {showHistory && (
+        <ReaderHistoryPanel
+          entries={historyEntries}
+          search={historySearch}
+          onSearchChange={setHistorySearch}
+          onClear={handleClearHistory}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
 
       {/* Плавающая панель «Копировать» — только текст на изучаемом языке */}
       {mode === 'read' && (
