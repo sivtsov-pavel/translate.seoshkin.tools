@@ -588,10 +588,11 @@ export default function Landing() {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gridAutoRows: '1fr', // одинаковая высота строк → все карточки одного размера
           gap: 16,
         }}>
           {c.modules.map((m, i) => (
-            <Link to={m.link || '/docs'} key={i} style={{ textDecoration: 'none' }}>
+            <Link to={m.link || '/docs'} key={i} style={{ textDecoration: 'none', display: 'flex' }}>
               <div style={{
                 background: m.isSoon ? 'var(--surface-2)' : 'var(--surface)',
                 border: `1px solid ${m.isNew ? 'var(--accent)' : m.isSoon ? 'var(--line)' : 'var(--line)'}`,
@@ -599,6 +600,7 @@ export default function Landing() {
                 transition: 'border-color .2s, transform .15s',
                 cursor: 'pointer', position: 'relative', overflow: 'hidden',
                 opacity: m.isSoon ? 0.85 : 1,
+                width: '100%', height: '100%', boxSizing: 'border-box',
               }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = m.isNew ? 'var(--accent)' : 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}
