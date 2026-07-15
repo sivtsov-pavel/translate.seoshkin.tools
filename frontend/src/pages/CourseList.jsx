@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
+import CoursePlaceholder from '../components/CoursePlaceholder.jsx'
 
 export default function CourseList() {
   const [courses, setCourses]   = useState([])
@@ -73,6 +74,13 @@ export default function CourseList() {
               <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: '20px 22px', background: 'var(--surface)', transition: 'box-shadow .15s', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.2)'}
                 onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+                <div style={{ width: '100%', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
+                  {course.cover_image_url ? (
+                    <img src={course.cover_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  ) : (
+                    <CoursePlaceholder title={course.title} />
+                  )}
+                </div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>{course.title}</div>
                 {course.description && (
                   <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 12 }}>{course.description}</div>
