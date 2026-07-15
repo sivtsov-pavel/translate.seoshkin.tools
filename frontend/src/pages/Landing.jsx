@@ -597,10 +597,10 @@ export default function Landing() {
                 border: `1px solid ${m.isNew ? 'var(--accent)' : m.isSoon ? 'var(--line)' : 'var(--line)'}`,
                 borderRadius: 16, padding: '20px 20px 18px',
                 transition: 'border-color .2s, transform .15s',
-                cursor: m.isSoon ? 'default' : 'pointer', position: 'relative', overflow: 'hidden',
-                opacity: m.isSoon ? 0.75 : 1,
+                cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                opacity: m.isSoon ? 0.85 : 1,
               }}
-                onMouseEnter={e => { if (!m.isSoon) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = m.isNew ? 'var(--accent)' : 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}
               >
                 {m.isNew && (

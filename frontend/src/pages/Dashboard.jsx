@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [lessonQuery, setLessonQuery] = useState('')
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
+  const { user } = useAuthStore()
 
   const reloadStats = () => {
     api.get('/exercises/stats').then(setStats).catch(console.error).finally(() => setLoading(false))
@@ -91,6 +92,28 @@ export default function Dashboard() {
       </div>
 
       {gameBanner}
+
+      {/* 📊 Аналитика класса — для учителя (отчётность по ученикам) */}
+      {user?.role === 'owner' && (
+        <div style={{ padding: '4px 12px 8px' }}>
+          <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
+            Новое для учителя
+          </div>
+          <div onClick={() => navigate('/analytics')} style={{
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, rgba(59,122,87,0.16), rgba(124,92,255,0.12))',
+            border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px',
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <span style={{ fontSize: 30, lineHeight: 1 }}>📊</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Аналитика класса</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Прогресс учеников, точность ответов, трудные слова — кто где буксует</div>
+            </div>
+            <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
+          </div>
+        </div>
+      )}
 
       {/* AI-тренер — над играми: живой разговор с Pablo */}
       <div style={{ padding: '4px 12px 8px' }}>

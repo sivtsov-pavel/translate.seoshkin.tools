@@ -73,6 +73,18 @@ const WIKI = {
         icon: '🎥', title: 'Видео-аватар тренера (платно, D-ID)',
         body: 'В AI-тренере наставник Pablo может по-настоящему оживать (движение губ) через сервис D-ID — это ПЛАТНАЯ опция.\n\n🟢 Голосовой режим ✨ и готовые видео-клипы (приветствие, «верно/неверно») работают БЕСПЛАТНО и безлимитно.\n\nКнопка 🎥 «оживить» появляется, только когда на балансе D-ID есть кредиты. Подробнее — в Настройках.',
       },
+      {
+        icon: '📊', title: 'Аналитика класса (НОВОЕ)',
+        body: 'Раздел «📊 Аналитика класса» — кнопка на странице «Ученики» (или блок на главной).\n\nЧто видно по твоим урокам:\n• Итоги: сколько учеников, кто активен за 7 дней, всего ответов, общая точность\n• По каждому ученику: сколько ответов (и за неделю), точность %, сколько слов знает/учит, когда был(а) последний раз\n• 🔥 Трудные слова — где больше всего ошибок (что стоит переучить)\n• Где застревают — точность по типам упражнений (диктант, произношение, выбор…)\n\nЦвет точности: красный <60%, жёлтый <80%, зелёный выше. Данные копятся сами, пока ученики решают.',
+      },
+      {
+        icon: '🔍', title: 'Фильтры Словаря: скан, буквы (НОВОЕ)',
+        body: 'В Словаре теперь можно быстро отобрать слова:\n\n📄 По СКАНУ — выбери урок, и появятся чипы «Скан 1 / Скан 2…» (страницы учебника). Показывает слова именно с этой страницы. Работает для уроков, залитых несколькими фото.\n\n🔤 По БУКВЕ — чипы алфавита: только слова на выбранную букву.\n\nФильтры складываются с курсом/уроком/статусом и поиском.',
+      },
+      {
+        icon: '🗣️', title: 'AI-тренер стал естественнее (ОБНОВЛЕНО)',
+        body: 'Тренер теперь ведёт живой диалог, а не «урок»:\n• По умолчанию НЕ переводит свои реплики на русский — ученик понимает из контекста (перевод можно включить отдельно)\n• Не здоровается в каждом сообщении и не хвалит/ругает ритуально\n• Разбор ошибок и общая оценка — в итоговом отчёте, а не после каждой фразы\n\nЭто ближе к реальному разговору с носителем.',
+      },
     ],
     student: [
       {
@@ -143,6 +155,18 @@ const WIKI = {
         icon: '🔊', title: 'Голос и настройки',
         body: 'В меню (кнопка ☰ слева или снизу на телефоне):\n\n🔊 вкл/выкл — включить автопроизношение слов\n🎤 Голос — выбрать немецкий голос (Google Deutsch звучит лучше всего)\n🌙/☀️ — тёмная или светлая тема\n🌍 Язык — переключить язык интерфейса\n\nМожно включить произношение перевода — тогда после немецкого слова прозвучит и русский.',
       },
+      {
+        icon: '🔗', title: 'Поделиться карточкой (НОВОЕ)',
+        body: 'Понравилось слово — поделись им с другом!\n\nВ Словаре у слова есть кнопка 🔗. Нажми — ссылка на карточку скопируется (или откроется меню «Поделиться» на телефоне: Telegram, WhatsApp…).\n\nДруг откроет ссылку и увидит карточку: слово, перевод на СВОЙ язык, картинку, пример, кнопку 🔊 послушать и «➕ в разговорник» — добавить слово себе.',
+      },
+      {
+        icon: '🔍', title: 'Словарь: фильтр по букве и скану (НОВОЕ)',
+        body: 'В Словаре теперь легко найти нужные слова:\n\n🔤 Буква — нажми букву алфавита, останутся только слова на неё.\n\n📄 Скан — если выбрать урок, появятся чипы «Скан 1 / Скан 2…» (страницы учебника) — слова именно с той страницы.\n\nМожно совмещать с поиском и статусом (новое/учу/знаю).',
+      },
+      {
+        icon: '🗣️', title: 'AI-тренер — живее (ОБНОВЛЕНО)',
+        body: 'Тренер теперь общается как настоящий собеседник:\n• Не переводит каждую свою фразу — старайся понять по смыслу (перевод можно включить в настройках)\n• Не здоровается и не хвалит в каждом сообщении — просто живой разговор\n• Разбор ошибок — в конце, в отчёте\n\nТак ты быстрее привыкаешь понимать немецкий на слух.',
+      },
     ],
     install: [
       {
@@ -185,6 +209,9 @@ const WIKI = {
       { icon: '5️⃣', title: 'Students', body: 'Students register themselves. View their progress under "Students": words learned, attempts today, which lessons they study.' },
       { icon: '📖', title: 'Reader', body: 'Three modes:\n▶ Read — clickable text with TTS playback, click a word to see its translation.\n🌐 Bilingual — AI translates paragraphs in any of 8 language pairs. Choose ⚡ Fast (GPT-4o-mini) or ✨ Accurate (GPT-4o).\n💬 Conversation — like Google Translate: two people speak into the mic in turn, the system translates and reads the answer aloud. Chrome only.' },
       { icon: '💬', title: 'Phrasebook', body: 'Students save phrases from exercises with the 📖 button. Or add them manually — when a German phrase is typed, AI auto-translates it.' },
+      { icon: '📊', title: 'Class analytics (NEW)', body: '"Class analytics" — a button on the Students page. For your lessons: totals (students, active in 7 days, answers, overall accuracy), per student (answers, accuracy, words known/learning, last seen), 🔥 hardest words (most mistakes), and where students struggle by exercise type. Data builds up as students practice.' },
+      { icon: '🔍', title: 'Dictionary filters: scan, letters (NEW)', body: 'In the Dictionary you can filter words: 📄 by SCAN — pick a lesson to get "Scan 1 / Scan 2…" chips (textbook pages), showing words from that page (for lessons uploaded as several photos). 🔤 by LETTER — alphabet chips. Combines with course/lesson/status/search.' },
+      { icon: '🗣️', title: 'AI trainer feels more natural (UPDATED)', body: 'The trainer now holds a real conversation: by default it does NOT translate its replies (understand from context; translation can be enabled), it does not greet or praise in every message, and error review plus the overall score go into the final report.' },
     ],
     student: [
       { icon: '🎯', title: 'How learning works — simple', body: 'Think of the app as a smart trainer. It remembers which words you know well and which you don\'t.\n\n📅 Know it well → see it in a week\n😐 Almost → in 2-3 days\n❌ Forgot → repeats today\n\n🔑 Key rule: open the app EVERY DAY and do your exercises. Even 10 minutes gives great results!' },
@@ -199,6 +226,9 @@ const WIKI = {
       { icon: '🗣️', title: 'Speaking — say it aloud', body: 'You see the Russian translation — say the German word aloud into the microphone.\n\n1. Read the translation\n2. Press the 🎤 button\n3. Speak the German word\n4. System shows what it heard and the match score\n\n✅ Correct — move on\n😕 Off — try again or skip\n\n⚠️ Works in Chrome (Android / PC). Tip: press 🔊 first to hear the correct pronunciation.' },
       { icon: '📖', title: 'Reader', body: '▶ Read — paste text, click Split, click any word to see its translation.\n🌐 Bilingual — AI translates paragraph by paragraph (8 language pairs, 2 model options).\n💬 Conversation — two people speak in turns, AI translates and reads the reply aloud. Great for class or talking with a native speaker. Chrome only.' },
       { icon: '💬', title: 'Phrasebook', body: 'Save phrases from exercises with 📖. Or add manually — type German, tab out, AI translates automatically. Mark ✅ when you\'ve learned it.' },
+      { icon: '🔗', title: 'Share a card (NEW)', body: 'Like a word? Share it! In the Dictionary each word has a 🔗 button — tap it to copy a link (or open the phone Share sheet: Telegram, WhatsApp…). Your friend opens it and sees the card: the word, a translation in THEIR language, an image, a 🔊 listen button and "➕ to phrasebook".' },
+      { icon: '🔍', title: 'Dictionary: filter by letter and scan (NEW)', body: '🔤 Letter — tap an alphabet letter to keep only those words. 📄 Scan — pick a lesson to get "Scan 1/2…" chips (textbook pages) with words from that page. Works together with search and status.' },
+      { icon: '🗣️', title: 'AI trainer — livelier (UPDATED)', body: 'The trainer now talks like a real partner: it does not translate every line (try to understand by meaning; you can enable translation in settings), it does not greet or praise in every message, and it reviews mistakes at the end. You get used to understanding German faster.' },
     ],
     install: [
       { icon: '📱', title: 'What is app installation?', body: 'Our site is a PWA (Progressive Web App). This means you can install it like a regular app on your phone or laptop.\n\nAfter installation:\n✅ Opens without a browser\n✅ Loads faster\n✅ Full screen (no address bar)\n✅ Appears in your app list' },
@@ -218,6 +248,9 @@ const WIKI = {
       { icon: '2️⃣', title: 'Kurs erstellen', body: 'Gehe zu „Kurse" → „+ Kurs". Gib einen Namen ein (z.B. „Klasse 6, 2024/2025").' },
       { icon: '3️⃣', title: 'Lektion hochladen', body: '1. Klicke „+ Lektion hinzufügen"\n2. Fotografiere die Seiten des Lehrbuchs\n3. Optional: Audioaufnahme\n4. Klicke „Lektion verarbeiten"' },
       { icon: '4️⃣', title: 'Was erstellt wird', body: 'Für jedes Wort erstellt die KI 6 Übungen:\n🃏 Lernkarte\n✏️ Lückentext\n☑️ Mehrfachauswahl\n✍️ Satz schreiben\n🔤 Buchstabe ergänzen\n🎙️ Diktat' },
+      { icon: '📊', title: 'Klassen-Analytik (NEU)', body: '„Klassen-Analytik" — Button auf der Seite „Schüler". Zu deinen Lektionen: Gesamtwerte (Schüler, aktiv in 7 Tagen, Antworten, Gesamtgenauigkeit), pro Schüler (Antworten, Genauigkeit, gelernte/lernende Wörter, zuletzt aktiv), 🔥 schwierigste Wörter (meiste Fehler) und wo es hakt — nach Übungstyp. Die Daten sammeln sich automatisch.' },
+      { icon: '🔍', title: 'Wörterbuch-Filter: Scan, Buchstaben (NEU)', body: 'Im Wörterbuch kannst du Wörter filtern: 📄 nach SCAN — wähle eine Lektion, dann erscheinen Chips „Scan 1 / Scan 2…" (Buchseiten) mit Wörtern genau von dieser Seite (für Lektionen aus mehreren Fotos). 🔤 nach BUCHSTABE — Alphabet-Chips. Kombinierbar mit Kurs/Lektion/Status/Suche.' },
+      { icon: '🗣️', title: 'KI-Trainer wirkt natürlicher (AKTUALISIERT)', body: 'Der Trainer führt jetzt ein echtes Gespräch: standardmäßig übersetzt er seine Antworten NICHT (Verständnis aus dem Kontext; Übersetzung separat aktivierbar), begrüßt/lobt nicht in jeder Nachricht, und Fehleranalyse plus Gesamtbewertung stehen im Abschlussbericht.' },
     ],
     student: [
       { icon: '🎯', title: 'Wie das Lernen funktioniert', body: 'Die App ist wie ein kluger Trainer. Sie merkt sich welche Wörter du kennst.\n📅 Gut bekannt → in einer Woche\n😐 Fast → in 2-3 Tagen\n❌ Vergessen → heute nochmal\n\n🔑 Jeden Tag üben — schon 10 Minuten helfen!' },
@@ -228,6 +261,9 @@ const WIKI = {
       { icon: '✍️', title: 'Satz schreiben', body: 'Schreibe einen einfachen deutschen Satz mit dem gegebenen Wort. Die KI prüft ihn.' },
       { icon: '🔤', title: 'Buchstabe ergänzen', body: 'Ein Wort mit fehlendem Buchstaben. Rate welcher Buchstabe fehlt.\nBeispiel: „_aus" → „H" → „Haus" ✓' },
       { icon: '🎙️', title: 'Diktat', body: 'Ein Wort wird auf Deutsch ausgesprochen. Du hörst es, siehst es aber nicht — schreibe es richtig!\n1. Höre genau zu 🎵\n2. Drücke ◄ zum Wiederholen\n3. Schreibe das Wort\n4. Drücke „Prüfen"' },
+      { icon: '🔗', title: 'Karte teilen (NEU)', body: 'Ein Wort gefällt dir? Teile es! Im Wörterbuch hat jedes Wort einen 🔗-Button — tippe darauf, um einen Link zu kopieren (oder das Teilen-Menü zu öffnen: Telegram, WhatsApp…). Dein Freund öffnet ihn und sieht die Karte: das Wort, eine Übersetzung in SEINER Sprache, ein Bild, eine 🔊-Taste zum Anhören und „➕ ins Sprachbuch".' },
+      { icon: '🔍', title: 'Wörterbuch: Filter nach Buchstabe und Scan (NEU)', body: '🔤 Buchstabe — tippe einen Buchstaben, es bleiben nur diese Wörter. 📄 Scan — wähle eine Lektion für Chips „Scan 1/2…" (Buchseiten) mit Wörtern von dieser Seite. Funktioniert mit Suche und Status.' },
+      { icon: '🗣️', title: 'KI-Trainer — lebendiger (AKTUALISIERT)', body: 'Der Trainer spricht wie ein echter Partner: übersetzt nicht jede Zeile (versuche, den Sinn zu verstehen; Übersetzung aktivierbar), begrüßt/lobt nicht in jeder Nachricht, und Fehler werden am Ende besprochen.' },
     ],
     install: [
       { icon: '📱', title: 'Was ist App-Installation?', body: 'Unsere Seite ist eine PWA. Sie kann wie eine normale App installiert werden.\n✅ Startet ohne Browser\n✅ Lädt schneller\n✅ Vollbild (keine Adressleiste)' },
@@ -245,6 +281,9 @@ const WIKI = {
       { icon: '1️⃣', title: 'Реєстрація', body: 'Зареєструйтесь з роллю «Вчитель / Батьки».' },
       { icon: '3️⃣', title: 'Завантажте урок', body: '1. Натисніть «+ Додати урок»\n2. Сфотографуйте сторінки підручника\n3. За бажанням додайте аудіо\n4. Натисніть «Обробити урок»' },
       { icon: '4️⃣', title: 'Що створюється', body: 'З кожного слова ШІ створює 6 вправ:\n🃏 Картка\n✏️ Заповни пропуск\n☑️ Обери відповідь\n✍️ Напиши речення\n🔤 Додай букву\n🎙️ Диктант' },
+      { icon: '📊', title: 'Аналітика класу (НОВЕ)', body: '«Аналітика класу» — кнопка на сторінці «Учні». За твоїми уроками: підсумки (учні, активні за 7 днів, відповіді, загальна точність), по кожному учню (відповіді, точність, слів знає/вчить, коли був востаннє), 🔥 найважчі слова (найбільше помилок) та де застрягають — за типом вправи. Дані накопичуються самі.' },
+      { icon: '🔍', title: 'Фільтри Словника: скан, букви (НОВЕ)', body: 'У Словнику можна фільтрувати слова: 📄 за СКАНОМ — обери урок, і зʼявляться чіпи «Скан 1 / Скан 2…» (сторінки підручника) зі словами саме з цієї сторінки (для уроків із кількох фото). 🔤 за БУКВОЮ — чіпи алфавіту. Поєднується з курсом/уроком/статусом/пошуком.' },
+      { icon: '🗣️', title: 'AI-тренер природніший (ОНОВЛЕНО)', body: 'Тренер тепер веде справжню розмову: за замовчуванням НЕ перекладає свої репліки (розумій із контексту; переклад можна ввімкнути), не вітається/не хвалить у кожному повідомленні, а розбір помилок і оцінка — у підсумковому звіті.' },
     ],
     student: [
       { icon: '🎯', title: 'Як влаштоване навчання', body: 'Уявляй що додаток — це розумний тренер. Він пам\'ятає які слова ти вже знаєш.\n📅 Добре знаєш → через тиждень\n😐 Майже → через 2-3 дні\n❌ Забув → повториться сьогодні\n\n🔑 Заходь ЩОДНЯ і роби вправи!' },
@@ -254,6 +293,9 @@ const WIKI = {
       { icon: '✍️', title: 'Напиши речення', body: 'Напиши просте речення німецькою з даним словом. ШІ перевірить його.' },
       { icon: '🔤', title: 'Додай букву', body: 'Слово з пропущеною буквою. Вгадай яка буква пропущена.\nПриклад: «_aus» → «H» → «Haus» ✓' },
       { icon: '🎙️', title: 'Диктант', body: 'Слово вимовляється вголос. Ти чуєш але не бачиш — напиши правильно!\n1. Слухай уважно 🎵\n2. ◄ — послухати ще раз\n3. Напиши слово\n4. «Перевірити»' },
+      { icon: '🔗', title: 'Поділитися карткою (НОВЕ)', body: 'Сподобалося слово — поділися ним! У Словнику біля слова є кнопка 🔗 — натисни, щоб скопіювати посилання (або відкрити меню «Поділитися»: Telegram, WhatsApp…). Друг відкриє його й побачить картку: слово, переклад СВОЄЮ мовою, картинку, 🔊 послухати та «➕ до розмовника».' },
+      { icon: '🔍', title: 'Словник: фільтр за буквою і сканом (НОВЕ)', body: '🔤 Буква — натисни букву алфавіту, залишаться лише ці слова. 📄 Скан — обери урок, зʼявляться чіпи «Скан 1/2…» (сторінки підручника) зі словами з тієї сторінки. Працює з пошуком і статусом.' },
+      { icon: '🗣️', title: 'AI-тренер — живіший (ОНОВЛЕНО)', body: 'Тренер тепер спілкується як справжній співрозмовник: не перекладає кожну репліку (намагайся зрозуміти зі змісту; переклад можна ввімкнути), не вітається/не хвалить у кожному повідомленні, помилки розбирає наприкінці.' },
     ],
     install: [
       { icon: '📱', title: 'Що таке встановлення?', body: 'Наш сайт — це PWA. Його можна встановити як звичайний застосунок.\n✅ Запускається без браузера\n✅ Завантажується швидше\n✅ Повноекранний режим' },
