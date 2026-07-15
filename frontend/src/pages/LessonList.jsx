@@ -175,6 +175,21 @@ export default function LessonList() {
     } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
   }
 
+  // «Перераспределить» — разбить урок на тематические под-уроки (14 → 14.1, 14.2…)
+  const handleRedistribute = async (id) => {
+    if (!window.confirm('Разбить урок на тематические под-уроки (14.1, 14.2…) по темам слов? Исходный урок останется. Создаст новые уроки и упражнения.')) return
+    setProcessing(id)
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Разбиваю на темы...' } : l))
+    try {
+      await api.post(`/lessons/${id}/redistribute`, {})
+      const poll = setInterval(async () => {
+        const updated = await api.get(`/lessons/${id}`)
+        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
+        if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null); api.get('/lessons').then(setLessons).catch(() => {}) }
+      }, 3000)
+    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
+  }
+
   // «Нарисовать недостающие картинки» — детсадовские ИИ-иллюстрации (тратит OpenAI)
   const handleDrawImages = async (id) => {
     if (!window.confirm('Нарисовать детские картинки для слов без фото? Это использует генерацию OpenAI (платно).')) return
@@ -369,6 +384,13 @@ export default function LessonList() {
                               title="Нарисовать детские ИИ-картинки для слов без фото (платно)"
                               style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
                               {processing === lesson.id ? '⏳' : '🎨'}
+                            </button>
+                          )}
+                          {status === 'done' && (
+                            <button onClick={() => handleRedistribute(lesson.id)} disabled={processing === lesson.id}
+                              title="Разбить урок на тематические под-уроки (14.1, 14.2…). Исходный останется."
+                              style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
+                              {processing === lesson.id ? '⏳' : '🧩 Перераспределить'}
                             </button>
                           )}
                           <button onClick={() => setEditingId(isEditing ? null : lesson.id)}

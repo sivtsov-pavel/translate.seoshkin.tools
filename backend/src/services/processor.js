@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
@@ -59,6 +59,78 @@ async function saveSentences(lessonId, sentences, source) {
 async function getLessonSentences(lessonId) {
   const { rows } = await db.query('SELECT text FROM lesson_sentences WHERE lesson_id = $1 ORDER BY id', [lessonId])
   return rows.map(r => r.text)
+}
+
+// «Перераспределить»: разбить урок на тематические под-уроки (14 → 14.1, 14.2, …).
+// Исходный урок остаётся как есть («книга»); под-уроки — отдельные тематические наборы
+// из его слов. Слова копируются С картинками и переводами (без затрат OpenAI на них),
+// упражнения генерируются заново из слов + релевантных предложений.
+export async function redistributeLesson(lessonId) {
+  try {
+    const { rows: lr } = await db.query(
+      'SELECT owner_id, course_id, target_lang, lesson_number, title FROM lessons WHERE id=$1', [lessonId])
+    const L = lr[0]
+    if (!L) return
+    await setProgress(lessonId, 'Разбиваю урок на темы...')
+    const { rows: words } = await db.query(
+      'SELECT id, word_de, translation_ru, example_sentence, image_url, translations, source, media_id FROM words WHERE lesson_id=$1 ORDER BY id', [lessonId])
+    if (words.length < 4) { await db.query("UPDATE lessons SET progress='Мало слов для разбивки (нужно ≥4)' WHERE id=$1", [lessonId]); return }
+
+    const groups = await groupWordsByTheme(words, L.target_lang)
+    if (!groups.length) { await db.query("UPDATE lessons SET progress='Не удалось разбить на темы' WHERE id=$1", [lessonId]); return }
+
+    const base = (String(L.title || '').match(/(\d+)/) || [])[1] || L.lesson_number || lessonId
+    const { rows: sents } = await db.query('SELECT text, translation_ru, source FROM lesson_sentences WHERE lesson_id=$1', [lessonId])
+    const wById = Object.fromEntries(words.map(w => [w.id, w]))
+    const norm = s => String(s || '').toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '').trim()
+
+    let n = 0
+    for (const g of groups) {
+      const gw = (g.word_ids || []).map(id => wById[id]).filter(Boolean)
+      if (!gw.length) continue
+      n++
+      await setProgress(lessonId, `Создаю набор ${n}/${groups.length}: ${g.title}...`)
+      const { rows: nl } = await db.query(
+        `INSERT INTO lessons (owner_id, title, course_id, lesson_number, target_lang, status, progress)
+         VALUES ($1,$2,$3,$4,$5,'processing','Готовлю набор...') RETURNING id`,
+        [L.owner_id, `Урок ${base}.${n} — ${g.title}`, L.course_id, L.lesson_number, L.target_lang])
+      const newId = nl[0].id
+
+      // Копируем слова (картинки/переводы переносятся как есть — без затрат)
+      for (const w of gw) {
+        await db.query(
+          `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, image_url, translations, source, media_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (lesson_id, word_de) DO NOTHING`,
+          [newId, L.owner_id, w.word_de, w.translation_ru, w.example_sentence, w.image_url, w.translations, w.source, w.media_id])
+      }
+      // Копируем релевантные предложения (где встречается слово группы)
+      for (const s of sents) {
+        const low = String(s.text || '').toLowerCase()
+        if (gw.some(w => low.includes(norm(w.word_de)))) {
+          await saveSentences(newId, [{ text: s.text, translation_ru: s.translation_ru }], s.source || 'textbook')
+        }
+      }
+      // Упражнения из слов набора + его предложений
+      const { rows: nw } = await db.query('SELECT id, word_de, translation_ru, example_sentence FROM words WHERE lesson_id=$1 ORDER BY id', [newId])
+      const exercises = await generateExercises(nw, [], L.target_lang, await getLessonSentences(newId))
+      const wordMap = Object.fromEntries(nw.map(w => [w.word_de, w.id]))
+      for (const ex of exercises) {
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+          [newId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+      }
+      for (const w of nw) {
+        const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [newId, w.id, 'dictation', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [newId, w.id, 'speech', p])
+      }
+      await enrichLesson(newId) // переводы упражнений/заголовка (слова и картинки уже есть → пропустит)
+      await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${nw.length}`, newId])
+    }
+    await db.query("UPDATE lessons SET progress=$1 WHERE id=$2", [`Разбито на ${n} тематических набора`, lessonId])
+  } catch (e) {
+    console.error('redistributeLesson:', e.message)
+    await db.query("UPDATE lessons SET progress=$1 WHERE id=$2", [String(e.message).slice(0, 100), lessonId])
+  }
 }
 
 // «Обработать всё»: докидываем недостающее для урока — переводы/примеры слов, картинки,

@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia } from '../services/processor.js'
+import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson } from '../services/processor.js'
 
 export async function processRoutes(fastify) {
   // «Нарисовать недостающие картинки»: детсадовские ИИ-иллюстрации для слов урока без фото
@@ -15,6 +15,18 @@ export async function processRoutes(fastify) {
       catch (err) { fastify.log.error({ lessonId, err }, 'Ошибка рисования картинок') }
       finally { await db.query("UPDATE lessons SET status = 'done', progress = 'Готово! Картинки нарисованы.' WHERE id = $1", [lessonId]) }
     })()
+    return { started: true, lessonId }
+  })
+
+  // «Перераспределить»: разбить урок на тематические под-уроки (14 → 14.1, 14.2…).
+  // Исходный урок остаётся; создаются отдельные тематические наборы из его слов.
+  fastify.post('/api/lessons/:id/redistribute', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+    const { rows } = await db.query('SELECT owner_id, status FROM lessons WHERE id = $1', [lessonId])
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    if (rows[0].owner_id !== request.user.id) return reply.status(403).send({ error: 'Не ваш урок' })
+    redistributeLesson(lessonId).catch(err => fastify.log.error({ lessonId, err }, 'Ошибка перераспределения урока'))
     return { started: true, lessonId }
   })
 

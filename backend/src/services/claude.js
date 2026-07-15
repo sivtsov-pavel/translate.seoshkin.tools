@@ -266,6 +266,19 @@ function shuffleOptions(ex) {
   return { ...ex, payload: { ...ex.payload, options: shuffled, correct: shuffled.indexOf(correctAnswer) } }
 }
 
+// Разбивка слов урока на тематические группы (для кнопки «Перераспределить»).
+// Возвращает [{title, word_ids:[...]}] — каждое слово ровно в одну группу.
+export async function groupWordsByTheme(words, targetLang = 'de') {
+  const list = words.map(w => `${w.id}: ${w.word_de} — ${w.translation_ru}`).join('\n')
+  const prompt = `Раздели слова урока (${TL(targetLang).name} язык) на 2–6 ТЕМАТИЧЕСКИХ групп по смыслу (например «Школа», «Еда», «Семья», «Глаголы движения»). Каждое слово помести РОВНО в одну группу. Дай каждой группе короткое название по-русски (1–3 слова). Не оставляй слов без группы.
+Слова (формат "id: слово — перевод"):
+${list}
+
+Верни СТРОГО JSON без markdown: {"groups":[{"title":"Тема","word_ids":[1,2,3]}]}`
+  const data = parseJson(await ask(prompt, { max_tokens: 2048 }))
+  return (data.groups || []).filter(g => g && g.title && Array.isArray(g.word_ids) && g.word_ids.length)
+}
+
 export async function generateExercises(words, grammar_points, targetLang = 'de', sentences = []) {
   const allExercises = []
   // Реальные предложения урока — приоритетный источник для fill_blank/sentence_write
