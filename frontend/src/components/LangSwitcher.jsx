@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18nStore } from '../store/i18n.js'
 
 const LANGS = [
@@ -14,53 +15,77 @@ const LANGS = [
   { code: 'ru', label: '🇷🇺', name: 'RU' },
 ]
 
+// Брейкпоинт мобильной раскладки (3 колонки вместо 5) и запасные ширины
+// дропдауна на случай самого первого прохода измерения (см. useLayoutEffect ниже).
+const MOBILE_BREAKPOINT = 480
+const DROPDOWN_WIDTH_MOBILE = 160
+const DROPDOWN_WIDTH_DESKTOP = 220
+// Минимальный отступ от края реального вьюпорта при клэмпинге позиции
+const EDGE_MARGIN = 8
+
 export default function LangSwitcher({ pill = false, dropUp = false }) {
   const { lang, setLang } = useI18nStore()
   const [open, setOpen] = useState(false)
   const ref = useRef()
   const dropdownRef = useRef()
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 480)
-  const [alignLeft, setAlignLeft] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT)
+  // null пока позиция не измерена/не открыт дропдаун — в этот момент дропдаун
+  // отрисован, но скрыт (visibility: hidden), чтобы можно было измерить его
+  // реальную ширину через dropdownRef до первой отрисовки на экране (без мигания)
+  const [pos, setPos] = useState(null)
 
   const current = LANGS.find(l => l.code === lang) || LANGS[0]
 
   // Отслеживаем размер экрана для мобильной версии
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 480)
+    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Рассчитываем положение дропдауна (влево/вправо) в зависимости от свободного места
-  useEffect(() => {
-    if (!open || !ref.current) return
-    const rect = ref.current.getBoundingClientRect()
-    const dropdownWidth = isMobile ? 160 : 220 // на мобиле уже, чем на десктопе
+  // Рассчитываем позицию дропдауна относительно РЕАЛЬНОГО вьюпорта.
+  // Дропдаун рендерится порталом в document.body (см. рендер ниже), поэтому
+  // ему не мешает overflow:hidden шторки сайдбара (.layout-drawer) — предыдущая
+  // версия считала переполнение от window.innerWidth, хотя реальным родителем
+  // с overflow:hidden была более узкая шторка, и дропдаун мог обрезаться.
+  // useLayoutEffect — до отрисовки кадра браузером, чтобы не было мигания
+  // дефолтной/устаревшей позиции.
+  useLayoutEffect(() => {
+    if (!open) { setPos(null); return }
+    if (!ref.current || !dropdownRef.current) return
 
-    // Проверяем, поместится ли дропдаун с выравниванием по правому краю
-    const leftEdgeWithRight = rect.right - dropdownWidth
-    // Проверяем, поместится ли дропдаун с выравниванием по левому краю
-    const rightEdgeWithLeft = rect.left + dropdownWidth
+    const triggerRect = ref.current.getBoundingClientRect()
+    // Реальная отрисованная ширина дропдауна (он уже в DOM на этом проходе,
+    // просто скрыт через visibility:hidden, пока позиция не посчитана —
+    // offsetWidth при этом корректен, в отличие от display:none)
+    const dropdownWidth = dropdownRef.current.offsetWidth
+      || (isMobile ? DROPDOWN_WIDTH_MOBILE : DROPDOWN_WIDTH_DESKTOP)
+    const viewportWidth = document.documentElement.clientWidth
 
-    // Если выравнивание по правому краю вызовет переполнение влево, используем левый край
-    if (leftEdgeWithRight < 0) {
-      setAlignLeft(true)
-    }
-    // Если выравнивание по левому краю вызовет переполнение вправо, но правое выравнивание вписывается, используем правый край
-    else if (rightEdgeWithLeft > window.innerWidth && leftEdgeWithRight >= 0) {
-      setAlignLeft(false)
-    }
-    // В остальных случаях по умолчанию используем правый край
-    else {
-      setAlignLeft(false)
-    }
-  }, [open, isMobile])
+    // Симметричный клэмп: сперва выравниваем правый край дропдауна по правому
+    // краю кнопки-триггера, затем зажимаем между левым и правым отступом
+    // реального вьюпорта — работает одинаково для лево- и право-переполнения,
+    // без раздельных веток alignLeft/alignRight с разной строгостью проверки
+    const maxLeft = Math.max(EDGE_MARGIN, viewportWidth - dropdownWidth - EDGE_MARGIN)
+    const left = Math.min(Math.max(triggerRect.right - dropdownWidth, EDGE_MARGIN), maxLeft)
 
-  // Закрываем при клике вне
+    const vertical = dropUp
+      ? window.innerHeight - triggerRect.top + 6
+      : triggerRect.bottom + 6
+
+    setPos({ left, vertical })
+  }, [open, isMobile, dropUp])
+
+  // Закрываем при клике вне. Дропдаун теперь портал в document.body — он больше
+  // не вложен в ref.current, поэтому проверяем containment по обоим узлам,
+  // иначе клик по самому дропдауну считался бы «внешним» и закрывал меню
+  // раньше, чем сработает onClick на кнопке языка.
   useEffect(() => {
     if (!open) return
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+      const insideTrigger = ref.current && ref.current.contains(e.target)
+      const insideDropdown = dropdownRef.current && dropdownRef.current.contains(e.target)
+      if (!insideTrigger && !insideDropdown) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     document.addEventListener('touchstart', handler)
@@ -100,11 +125,15 @@ export default function LangSwitcher({ pill = false, dropUp = false }) {
         <i className={`bi bi-chevron-${open ? 'up' : 'down'}`} style={{ fontSize: 10, opacity: 0.6 }} />
       </button>
 
-      {/* Дропдаун с флагами — залипает пока не выберешь */}
-      {open && (
+      {/* Дропдаун с флагами — портал в document.body, чтобы position:fixed
+          позиционировался от реального вьюпорта и не обрезался overflow:hidden
+          промежуточных контейнеров (шторка сайдбара на мобиле) */}
+      {open && createPortal(
         <div ref={dropdownRef} style={{
-          position: 'absolute', [dropUp ? 'bottom' : 'top']: 'calc(100% + 6px)',
-          ...(alignLeft ? { left: 0 } : { right: 0 }),
+          position: 'fixed',
+          left: pos ? pos.left : -9999,
+          [dropUp ? 'bottom' : 'top']: pos ? pos.vertical : -9999,
+          visibility: pos ? 'visible' : 'hidden',
           zIndex: 2000,
           background: 'var(--surface)',
           border: '1px solid var(--line)',
@@ -114,8 +143,8 @@ export default function LangSwitcher({ pill = false, dropUp = false }) {
           display: 'grid',
           gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
           gap: 4,
-          minWidth: isMobile ? 160 : 220,
-          maxWidth: 'calc(100vw - 20px)',
+          minWidth: isMobile ? DROPDOWN_WIDTH_MOBILE : DROPDOWN_WIDTH_DESKTOP,
+          maxWidth: `calc(100vw - ${EDGE_MARGIN * 2}px)`,
         }}>
           {LANGS.map(l => (
             <button
@@ -135,7 +164,8 @@ export default function LangSwitcher({ pill = false, dropUp = false }) {
               <span>{l.name}</span>
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
