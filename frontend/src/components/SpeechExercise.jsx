@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition, speechSimilarity, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
 import { useI18nStore } from '../store/i18n.js'
@@ -283,6 +283,8 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
   const [result, setResult] = useState(null)
   // Реакция наставника Pablo на произношение (объединение с тренером — живой аватар)
   const [reactionClip, setReactionClip] = useState(null)
+  // Блок результата — скроллим к нему, чтобы на маленьком экране его было видно без ручной прокрутки
+  const resultRef = useRef(null)
 
   const russianPhonetic = germanPhonetic(word_de)
 
@@ -314,6 +316,14 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
     if (listening) setPhase('listening')
     else if (phase === 'listening' && !result) setPhase('ready')
   }, [listening])
+
+  // Скролл к результату: когда видео-реакция Пабло закончилась/не загрузилось (reactionClip
+  // сброшен в null) либо когда видео вообще не показывается — как только результат появился.
+  useEffect(() => {
+    if (phase === 'result' && !reactionClip) {
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 60)
+    }
+  }, [phase, reactionClip])
 
   const handleMic = () => {
     if (phase === 'result') {
@@ -404,9 +414,12 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
             </span>
           </div>
 
-          {/* Перевод */}
-          <div style={{ textAlign: 'center', fontSize: 15, color: 'var(--ink-soft)' }}>
-            {displayTranslation}
+          {/* Перевод — крупнее и контрастнее, чтобы не сливался с фоном (по образцу «читать:» выше) */}
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: 11, color: 'var(--ink-soft)', marginRight: 4 }}>перевод:</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>
+              {displayTranslation}
+            </span>
           </div>
 
           {/* Прослушать образец */}
@@ -451,7 +464,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
 
         {/* ── Результат ── */}
         {phase === 'result' && result && (
-          <div>
+          <div ref={resultRef}>
             <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '12px 16px', marginBottom: 12, textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: result.color, marginBottom: 8 }}>
                 {result.label}
