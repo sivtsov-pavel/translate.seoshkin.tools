@@ -1,4 +1,6 @@
+import { readFileSync } from 'fs'
 import { db } from '../db/index.js'
+import { saveCourseCover } from '../services/imageOptimize.js'
 
 export async function coursesRoutes(fastify) {
 
@@ -12,7 +14,7 @@ export async function coursesRoutes(fastify) {
 
     const { rows } = await db.query(`
       SELECT
-        c.id, c.title, c.description, c.sort_order, c.created_at,
+        c.id, c.title, c.description, c.cover_image_url, c.sort_order, c.created_at,
         COUNT(l.id)::int                                                  AS lessons_total,
         COUNT(CASE WHEN l.status = 'done'       THEN 1 END)::int         AS lessons_done,
         COUNT(CASE WHEN l.status = 'processing' THEN 1 END)::int         AS lessons_processing
@@ -74,6 +76,47 @@ export async function coursesRoutes(fastify) {
     )
     if (!rows[0]) return reply.status(404).send({ error: 'Курс не найден' })
     return rows[0]
+  })
+
+  // Загрузить/сменить обложку курса (фото учебника)
+  fastify.post('/api/courses/:id/cover', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const courseId = parseInt(request.params.id)
+
+    const { rows: existing } = await db.query('SELECT id FROM courses WHERE id = $1', [courseId])
+    if (!existing[0]) return reply.status(404).send({ error: 'Курс не найден' })
+
+    const parts = request.parts()
+    let filePart = null
+    for await (const part of parts) {
+      if (part.type === 'file') { filePart = part; break }
+    }
+    if (!filePart) return reply.status(400).send({ error: 'Файл не передан' })
+    if (!filePart.mimetype?.startsWith('image/')) {
+      return reply.status(400).send({ error: 'Обложка должна быть изображением' })
+    }
+
+    const { filepath } = await fastify.saveUploadedFile(filePart)
+    const buffer = readFileSync(filepath)
+    const coverUrl = await saveCourseCover(buffer, courseId)
+
+    const { rows } = await db.query(
+      'UPDATE courses SET cover_image_url = $1 WHERE id = $2 AND owner_id = $3 RETURNING *',
+      [coverUrl, courseId, request.user.id]
+    )
+    if (!rows[0]) return reply.status(404).send({ error: 'Курс не найден' })
+    return rows[0]
+  })
+
+  // Убрать обложку курса
+  fastify.delete('/api/courses/:id/cover', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const courseId = parseInt(request.params.id)
+    await db.query(
+      'UPDATE courses SET cover_image_url = NULL WHERE id = $1 AND owner_id = $2',
+      [courseId, request.user.id]
+    )
+    return reply.status(204).send()
   })
 
   // Удалить курс (уроки остаются, course_id → NULL); owner удаляет любой курс

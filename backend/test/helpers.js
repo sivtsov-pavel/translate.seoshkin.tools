@@ -11,7 +11,7 @@ export async function createTestApp() {
 // Очистка тестовых данных между тестами
 export async function clearTestData() {
   await db.query(
-    'TRUNCATE exercise_attempts, exercises, grammar_points, words, lesson_media, lessons, users RESTART IDENTITY CASCADE'
+    'TRUNCATE exercise_attempts, exercises, grammar_points, words, lesson_media, lessons, courses, users RESTART IDENTITY CASCADE'
   )
 }
 
