@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 
@@ -11,6 +12,7 @@ export default function Students() {
   const [q, setQ] = useState('')
   const { t } = useI18nStore()
   const s = t.students
+  const navigate = useNavigate()
 
   const reload = () => api.get('/students').then(setStudents).finally(() => setLoading(false))
   useEffect(() => { reload() }, [])
@@ -24,7 +26,13 @@ export default function Students() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 16 }}>{s.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <h1 style={{ margin: 0 }}>{s.title}</h1>
+        <button onClick={() => navigate('/analytics')} style={{
+          padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
+          background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 14, fontWeight: 700,
+        }}>📊 Аналитика класса</button>
+      </div>
       {students.length > 0 && (
         <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍 Поиск по имени, email, профессии…"
           style={{ width: '100%', boxSizing: 'border-box', marginBottom: 16, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }} />

@@ -8,6 +8,7 @@ import Landing from './pages/Landing.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import LessonList from './pages/LessonList.jsx'
 import ShareCard from './pages/ShareCard.jsx'
+import TeacherAnalytics from './pages/TeacherAnalytics.jsx'
 import NewLesson from './pages/NewLesson.jsx'
 import ExerciseSession from './pages/ExerciseSession.jsx'
 import Vocabulary from './pages/Vocabulary.jsx'
@@ -79,6 +80,7 @@ export default function App() {
         <Route path="/upgrade"    element={<ProtectedRoute><Layout><Upgrade    /></Layout></ProtectedRoute>} />
         <Route path="/class-game/:id" element={<ProtectedRoute><Layout><ClassGame /></Layout></ProtectedRoute>} />
         <Route path="/w/:id" element={<ProtectedRoute><Layout><ShareCard /></Layout></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><Layout><TeacherAnalytics /></Layout></ProtectedRoute>} />
         <Route path="/docs"    element={<Docs />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms"   element={<Terms />} />

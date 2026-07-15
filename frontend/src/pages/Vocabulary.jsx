@@ -60,6 +60,7 @@ export default function Vocabulary() {
   const [courseFilter, setCourseFilter] = useState(() => localStorage.getItem('vocab_course') || '')
   const [lessonFilter, setLessonFilter] = useState('')
   const [scanFilter, setScanFilter] = useState('') // media_id скана внутри урока
+  const [letterFilter, setLetterFilter] = useState('') // первая буква слова
   const [grammarFilter, setGrammarFilter] = useState('')
   const [search, setSearch]     = useState('')
   const [loading, setLoading]   = useState(true)
@@ -130,6 +131,13 @@ export default function Vocabulary() {
     : []
   const scanNo = Object.fromEntries(scanIds.map((id, i) => [id, i + 1]))
 
+  // Первая буква слова (без артикля) — для фильтра по алфавиту
+  const firstLetter = w => (w.word_de || '').replace(/^(der|die|das|ein|eine)\s+/i, '').trim().charAt(0).toUpperCase()
+  const letters = [...new Set(words
+    .filter(w => (!courseFilter || w.course_title === courseFilter) &&
+                 (!lessonFilter || (w.lesson_title || t.vocabulary.noLesson) === lessonFilter))
+    .map(firstLetter).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'))
+
   // Счётчики по статусам (для чипов)
   const statusCounts = {
     '':       words.length,
@@ -154,6 +162,7 @@ export default function Vocabulary() {
     if (lessonFilter  && (w.lesson_title || t.vocabulary.noLesson) !== lessonFilter) return false
     if (grammarFilter && detectGrammar(w.word_de) !== grammarFilter) return false
     if (scanFilter && w.media_id !== scanFilter) return false
+    if (letterFilter && firstLetter(w) !== letterFilter) return false
     if (q) return w.word_de.toLowerCase().includes(q) || w.translation_ru.toLowerCase().includes(q)
     return true
   })
@@ -189,12 +198,12 @@ export default function Vocabulary() {
   }
 
   // Счётчик активных фильтров для бейджа
-  const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter, scanFilter].filter(Boolean).length
+  const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter, scanFilter, letterFilter].filter(Boolean).length
   // «Продвинутые» фильтры (курс/урок/часть речи) — на мобиле прячутся за шестерёнку
   const advancedCount  = [courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
   const advancedActive = advancedCount > 0
 
-  const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter(''); setScanFilter('') }
+  const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter(''); setScanFilter(''); setLetterFilter('') }
 
   // Стиль чипа-фильтра («капелька»)
   const chipStyle = (active, color) => ({
@@ -351,6 +360,21 @@ export default function Vocabulary() {
             {scanIds.map(id => (
               <button key={id} style={chipStyle(scanFilter === id)} onClick={() => setScanFilter(scanFilter === id ? '' : id)}>
                 📄 Скан {scanNo[id]}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Буквы (алфавит) — фильтр слов по первой букве */}
+        {(!isMobile || filtersOpen) && letters.length > 1 && (
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+            <span style={FILTER_LABEL}>Буква</span>
+            <button style={chipStyle(letterFilter === '')} onClick={() => setLetterFilter('')}>
+              {t.vocabulary.all}
+            </button>
+            {letters.map(l => (
+              <button key={l} style={chipStyle(letterFilter === l)} onClick={() => setLetterFilter(letterFilter === l ? '' : l)}>
+                {l}
               </button>
             ))}
           </div>
