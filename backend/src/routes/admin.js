@@ -63,6 +63,37 @@ export async function adminRoutes(fastify) {
     return { ok: true, config }
   })
 
+  // Школы: список с лимитами и текущим использованием (супер-админ выставляет тарифы)
+  fastify.get('/api/admin/schools', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const { rows } = await db.query(`
+      SELECT s.id, s.name, s.plan, COALESCE(s.limits,'{}') AS limits,
+             COALESCE(u.email, '') AS owner_email,
+             (SELECT count(*) FROM users us WHERE us.school_id=s.id AND us.role='student')::int AS students,
+             (SELECT count(*) FROM lessons l WHERE l.school_id=s.id)::int AS lessons,
+             (SELECT count(*) FROM words w JOIN lessons l ON l.id=w.lesson_id
+              WHERE l.school_id=s.id AND w.image_url IS NOT NULL
+                AND w.created_at >= date_trunc('month', now()))::int AS images_this_month
+      FROM schools s LEFT JOIN users u ON u.id=s.owner_id
+      ORDER BY s.id`)
+    return rows
+  })
+
+  // Обновить школу: имя / тариф / лимиты (картинки, OCR, ученики)
+  fastify.patch('/api/admin/schools/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const { name, plan, limits } = request.body || {}
+    const { rows } = await db.query(
+      `UPDATE schools SET
+         name   = COALESCE($2, name),
+         plan   = COALESCE($3, plan),
+         limits = COALESCE($4::jsonb, limits)
+       WHERE id=$1 RETURNING id, name, plan, limits`,
+      [request.params.id, name ?? null, plan ?? null, limits ? JSON.stringify(limits) : null])
+    if (!rows[0]) return reply.status(404).send({ error: 'Школа не найдена' })
+    return rows[0]
+  })
+
   // Публичный конфиг для клиента (любой залогиненный): что показывать —
   // реклама по девайсам и статус лимитов. Без гейта супер-админа, но отдаём
   // только безопасные поля (без ключей/тарифов).

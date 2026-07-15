@@ -73,6 +73,7 @@ export default function Admin() {
           ['overview', '📊 Обзор'],
           ['monetization', '💶 Монетизация'],
           ['languages', '🌍 Языки'],
+          ['schools', '🏫 Школы'],
           ['users', '👥 Пользователи'],
         ].map(([k, lbl]) => (
           <button key={k} onClick={() => setTab(k)} style={{
@@ -87,6 +88,7 @@ export default function Admin() {
       {tab === 'overview' && <Overview />}
       {tab === 'monetization' && <Monetization />}
       {tab === 'languages' && <Languages />}
+      {tab === 'schools' && <Schools />}
       {tab === 'users' && <Users />}
     </div>
   )
@@ -359,6 +361,73 @@ function Languages() {
         {saved && <span style={{ color: 'var(--good, #16a34a)', fontWeight: 600 }}>✓ Сохранено</span>}
         {err && <span style={{ color: 'var(--red)' }}>{err}</span>}
       </div>
+    </div>
+  )
+}
+
+// Школы: супер-админ выставляет тариф и лимиты (картинки/OCR/ученики) каждой школе.
+// limits = { images_month, ocr_month, max_students }. 0/пусто = без лимита.
+function Schools() {
+  const [rows, setRows] = useState(null)
+  const [err, setErr] = useState('')
+  const [savingId, setSavingId] = useState(null)
+  useEffect(() => { api.get('/admin/schools').then(setRows).catch(e => setErr(e.message)) }, [])
+  if (err) return <div style={{ color: 'var(--red)' }}>{err}</div>
+  if (!rows) return <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>
+
+  const setLimit = (id, key, val) => setRows(rs => rs.map(s => s.id === id
+    ? { ...s, limits: { ...s.limits, [key]: val === '' ? null : parseInt(val) || 0 } } : s))
+
+  const save = async (s) => {
+    setSavingId(s.id); setErr('')
+    try {
+      const upd = await api.patch(`/admin/schools/${s.id}`, { plan: s.plan, limits: s.limits })
+      setRows(rs => rs.map(x => x.id === s.id ? { ...x, ...upd } : x))
+    } catch (e) { setErr(e.message) } finally { setSavingId(null) }
+  }
+
+  const Num = ({ s, k, label, hint }) => (
+    <label style={{ fontSize: 12 }}>{label}
+      <input type="number" min="0" placeholder="∞" value={s.limits?.[k] ?? ''}
+        onChange={e => setLimit(s.id, k, e.target.value)}
+        style={{ ...input, marginTop: 3, maxWidth: 110 }} />
+      {hint && <div style={{ fontSize: 10, color: 'var(--ink-soft)' }}>{hint}</div>}
+    </label>
+  )
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 13, margin: 0 }}>
+        Тарифы и лимиты школ. Пустое поле = без лимита (∞). Картинки/OCR тратят OpenAI — ограничивай школы на бесплатном тарифе.
+      </p>
+      {rows.map(s => (
+        <div key={s.id} style={card}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>🏫 {s.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
+                {s.owner_email} · {s.students} учеников · {s.lessons} уроков · картинок в этом месяце: <b>{s.images_this_month}</b>
+              </div>
+            </div>
+            <select value={s.plan || 'free'} onChange={e => setRows(rs => rs.map(x => x.id === s.id ? { ...x, plan: e.target.value } : x))}
+              style={{ ...input, maxWidth: 140 }}>
+              <option value="free">free</option>
+              <option value="pro">pro</option>
+              <option value="unlimited">unlimited</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <Num s={s} k="images_month" label="Картинок / мес" hint="генерация gpt-image-1" />
+            <Num s={s} k="ocr_month"    label="OCR фото / мес" hint="разбор фото (gpt-4o)" />
+            <Num s={s} k="max_students" label="Макс. учеников" />
+            <button onClick={() => save(s)} disabled={savingId === s.id} style={{
+              padding: '9px 18px', borderRadius: 9, border: 'none', cursor: 'pointer',
+              background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 13,
+              opacity: savingId === s.id ? 0.6 : 1,
+            }}>{savingId === s.id ? 'Сохраняю…' : 'Сохранить'}</button>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
