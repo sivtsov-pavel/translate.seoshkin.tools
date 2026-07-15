@@ -690,7 +690,7 @@ export default function TextReader() {
           {/* Поле ввода */}
           <textarea
             value={text}
-            onChange={e => { setText(e.target.value); setSentences([]); setActive(-1); setReadCopySelected(new Set()) }}
+            onChange={e => { setText(e.target.value); setSentences([]); setBilingual([]); setActive(-1); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()) }}
             placeholder="Вставь текст... (абзацы разделяй пустой строкой)"
             rows={6}
             style={{ width: '100%', fontSize: 15, lineHeight: 1.7, resize: 'vertical', boxSizing: 'border-box' }}
