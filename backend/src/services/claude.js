@@ -336,13 +336,15 @@ ${list}`, { max_tokens: 2048 })
 }
 
 const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
-const TARGET_LANG_NAMES = { en: 'English', uk: 'українською', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español', sq: 'shqip' }
+const TARGET_LANG_NAMES = { en: 'English', uk: 'українською', de: 'Deutsch', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español', sq: 'shqip' }
+// Для заголовков/описаний уроков переводим И на немецкий (учитель немецкого проверяет контент)
+const META_LANGS = ['en', 'uk', 'de', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
 
 // Перевод заголовка и описания урока с русского на локали интерфейса (для страницы «Сегодня»
 // и списка уроков). База — русский (title/description уже по-русски). onlyLangs — активные локали.
 // Возвращает { title: {lang: '...'}, description: {lang: '...'} }.
 export async function translateLessonMeta(title, description, onlyLangs = null) {
-  const langs = onlyLangs ? TARGET_LANGS.filter(l => onlyLangs.includes(l)) : TARGET_LANGS
+  const langs = onlyLangs ? META_LANGS.filter(l => onlyLangs.includes(l)) : META_LANGS
   if (!langs.length || !title) return { title: {}, description: {} }
   const prompt = `Переведи НАЗВАНИЕ и ОПИСАНИЕ урока с русского на языки: ${langs.map(l => TARGET_LANG_NAMES[l] || l).join(', ')}.
 Сохраняй смысл, естественность и краткость. НЕ добавляй слово «Урок» и номера.

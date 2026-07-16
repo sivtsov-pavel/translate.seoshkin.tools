@@ -266,7 +266,7 @@ export async function enrichLesson(lessonId) {
     const L = lr[0]
     if (L && L.title) {
       // Языки, на которые реально переводим (без ru[база] и de[фолбэк на ru])
-      const need = (activeLocales || ALL_LOCALES).filter(l => l !== 'ru' && l !== 'de')
+      const need = (activeLocales || ALL_LOCALES).filter(l => l !== 'ru') // вкл. de: учитель немецкого проверяет
       const titleMissing = need.some(l => !(L.title_translations && L.title_translations[l]))
       const hasDesc = L.description && String(L.description).trim()
       const descMissing = hasDesc && need.some(l => !(L.description_translations && L.description_translations[l]))

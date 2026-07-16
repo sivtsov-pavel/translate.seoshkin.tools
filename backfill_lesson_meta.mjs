@@ -21,7 +21,7 @@ let done = 0, skipped = 0, failed = 0
 for (const L of rows) {
   try {
     const active = await getActiveLocales(L.target_lang || 'de')
-    const need = active.filter(l => l !== 'ru' && l !== 'de')
+    const need = active.filter(l => l !== 'ru')
     const titleMissing = need.some(l => !(L.title_translations && L.title_translations[l]))
     const hasDesc = L.description && String(L.description).trim()
     const descMissing = hasDesc && need.some(l => !(L.description_translations && L.description_translations[l]))
