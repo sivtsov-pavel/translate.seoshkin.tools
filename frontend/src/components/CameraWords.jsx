@@ -24,6 +24,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
   const [lessonMsg, setLessonMsg] = useState('')
   const [distMsg, setDistMsg] = useState('')
   const [distBusy, setDistBusy] = useState(false)
+  const [savedSentIdx, setSavedSentIdx] = useState(() => new Set()) // предложения, сохранённые в разговорник
 
   useEffect(() => {
     if (isOwner) api.get('/lessons').then(d => setLessons((Array.isArray(d) ? d : d.lessons || []).filter(l => l.status === 'done' || l.words_count > 0))).catch(() => {})
@@ -104,7 +105,15 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
     finally { setBusy(false) }
   }
 
-  const closeModal = () => { setWords(null); setSentences(null) }
+  const closeModal = () => { setWords(null); setSentences(null); setSavedSentIdx(new Set()) }
+
+  // Сохранить ЦЕЛОЕ предложение в разговорник (оригинал + перевод) — полезные фразы с урока
+  const saveSentenceToPhrasebook = async (s, si) => {
+    try {
+      await api.post('/phrasebook', { de: s.original, ru: s.translation || '', source: 'camera-sentence' })
+      setSavedSentIdx(prev => new Set(prev).add(si))
+    } catch {}
+  }
 
   const toggle = (i) => setWords(ws => ws.map((w, j) => j === i ? { ...w, _save: !w._save } : w))
   // Галочка слова внутри предложения (режим предложений)
@@ -168,6 +177,12 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                 <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'flex-start', gap: 6 }} dir="ltr">
                   <span style={{ flex: 1 }}>{s.original}</span>
                   <SpeakButton text={s.original} size={16} />
+                  {/* Сохранить всё предложение в разговорник */}
+                  <button onClick={() => saveSentenceToPhrasebook(s, si)} disabled={savedSentIdx.has(si)}
+                    title="Сохранить предложение в разговорник"
+                    style={{ background: 'none', border: 'none', cursor: savedSentIdx.has(si) ? 'default' : 'pointer', fontSize: 15, flexShrink: 0, color: savedSentIdx.has(si) ? 'var(--good, #16a34a)' : 'var(--accent)', padding: 0 }}>
+                    {savedSentIdx.has(si) ? '✓' : '➕💬'}
+                  </button>
                 </div>
                 {s.translation && <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 4 }}>{s.translation}</div>}
                 {s.words && s.words.length > 0 && (
