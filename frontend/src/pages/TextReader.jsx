@@ -667,6 +667,14 @@ export default function TextReader() {
 
   const swapConvLangs = () => { setConvSrcLang(convTgtLang); setConvTgtLang(convSrcLang) }
 
+  // Меняем местами исходный/целевой язык двуязычного режима — и уже загруженные
+  // пары (original↔translation), чтобы не терять готовый перевод при развороте.
+  const swapBiLangs = () => {
+    setBiSrc(biTgt)
+    setBiTgt(biSrc)
+    setBilingual(prev => prev.map(p => ({ original: p.translation, translation: p.original })))
+  }
+
   // ─── история Читалки (localStorage) ───
   // Список читается лениво — только по клику на кнопку, не при монтировании/рендере
   const toggleHistory = () => {
@@ -988,15 +996,20 @@ export default function TextReader() {
             )}
 
             {mode === 'bilingual' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <LangSelect value={biSrc} onChange={v => { setBiSrc(v); setBilingual([]) }} />
-                <span style={{ color: 'var(--ink-soft)', fontSize: 18 }}>→</span>
-                <LangSelect value={biTgt} onChange={v => { setBiTgt(v); setBilingual([]) }} />
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <LangSelect value={biSrc} onChange={v => { setBiSrc(v); setBilingual([]) }} />
+                  <button onClick={swapBiLangs} title="Поменять языки"
+                    style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)' }}>
+                    ⇄
+                  </button>
+                  <LangSelect value={biTgt} onChange={v => { setBiTgt(v); setBilingual([]) }} />
+                </div>
                 <button onClick={handleTranslate} disabled={!textHasContent || translating}
-                  style={{ padding: '8px 20px', background: textHasContent && !translating ? 'var(--accent)' : 'var(--surface-2)', color: textHasContent && !translating ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: textHasContent && !translating ? 'pointer' : 'default', fontSize: 14, fontWeight: 700 }}>
+                  style={{ padding: '8px 20px', background: textHasContent && !translating ? 'var(--accent)' : 'var(--surface-2)', color: textHasContent && !translating ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: textHasContent && !translating ? 'pointer' : 'default', fontSize: 14, fontWeight: 700, width: '100%' }}>
                   {translating ? '⏳ Перевожу…' : '🌐 Перевести'}
                 </button>
-              </div>
+              </>
             )}
 
             {textHasContent && !showSave && (
