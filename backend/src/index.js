@@ -27,6 +27,7 @@ import { shareRoutes } from './routes/share.js'
 import { analyticsRoutes } from './routes/analytics.js'
 import { classesRoutes } from './routes/classes.js'
 import { catalogRoutes } from './routes/catalog.js'
+import { personalWordsRoutes } from './routes/personalWords.js'
 import { startReminderCron } from './services/reminders.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
@@ -64,6 +65,7 @@ async function registerRoutes(app) {
   await app.register(analyticsRoutes)
   await app.register(classesRoutes)
   await app.register(catalogRoutes)
+  await app.register(personalWordsRoutes)
   await app.register(mediaRoutes)
 }
 

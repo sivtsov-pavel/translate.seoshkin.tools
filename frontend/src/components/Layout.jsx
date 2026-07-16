@@ -169,7 +169,8 @@ export default function Layout({ children }) {
     { to: '/translations', icon: 'bi-globe2',           label: 'Переводы' },
     { to: '/report',       icon: 'bi-bar-chart-fill',   label: 'Отчёт' },
   ] : [
-    { to: '/join',         icon: 'bi-building-fill',    label: 'Мой класс' },
+    { to: '/join',         icon: 'bi-building-fill',        label: 'Мой класс' },
+    { to: '/my-words',     icon: 'bi-journal-bookmark-fill', label: 'Мой словарь' },
   ]
 
   const adminLinks = user?.role === 'owner' ? [
