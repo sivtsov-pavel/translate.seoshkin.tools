@@ -276,7 +276,7 @@ export default function Dashboard() {
 
       {/* Круглая кнопка камеры — сразу открывает фотоаппарат (capture), разбирает слова
           с фото и предлагает добавить их в урок / набор / новый урок. Над «Повторить всё». */}
-      <CameraWords renderTrigger={(pick, busy) => (
+      <CameraWords mode="sentences" renderTrigger={(pick, busy) => (
         <button
           onClick={pick}
           disabled={busy}

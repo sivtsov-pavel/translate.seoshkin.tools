@@ -102,6 +102,33 @@ ${T.nounRule}; глаголы — в инфинитиве. Игнорируй н
   return (parseJson(res.choices[0].message.content).words || []).filter(w => w && w.de)
 }
 
+// Разбор ФОТО ПРЕДЛОЖЕНИЙ: для каждого предложения/абзаца — оригинал, перевод и разбор
+// по ключевым словам. Даёт «круче, чем Google Фото»: сверху абзац, под ним перевод, потом слова.
+export async function extractSentencesFromImage(filepath, lang = 'ru', targetLang = 'de') {
+  const base64 = readFileSync(filepath).toString('base64')
+  const mimeType = getMimeType(filepath)
+  const T = TL(targetLang)
+  const langNames = { ru: 'русский', uk: 'украинский', de: 'немецкий', en: 'английский', bg: 'болгарский', tr: 'турецкий', ar: 'арабский', es: 'испанский', fr: 'французский', sq: 'албанский' }
+  const langName = langNames[lang] || 'русский'
+  const prompt = `На фото — текст на ${T.name} языке (предложения, абзац, диалог). Извлеки связный текст и разбей на предложения (или короткие абзацы).
+Для КАЖДОГО предложения дай:
+- "original" — точный текст предложения на ${T.name} языке (как на фото),
+- "translation" — естественный перевод на ${langName},
+- "words" — разбор по ключевым словам: массив {"de":"...","tr":"..."}. ${T.nounRule}; глаголы — в инфинитиве; служебные слова можно опустить. Перевод слов — на ${langName}.
+Игнорируй мусор, номера страниц, нечитаемое.
+Верни ТОЛЬКО JSON: {"sentences":[{"original":"...","translation":"...","words":[{"de":"...","tr":"..."}]}]}`
+  const res = await client.chat.completions.create({
+    model: 'gpt-4o', max_tokens: 4096,
+    messages: [{ role: 'user', content: [
+      { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'high' } },
+      { type: 'text', text: prompt },
+    ] }],
+  })
+  return (parseJson(res.choices[0].message.content).sentences || [])
+    .filter(s => s && s.original)
+    .map(s => ({ original: s.original, translation: s.translation || '', words: (s.words || []).filter(w => w && w.de) }))
+}
+
 const MERGE_PROMPT = (t) => `Объедини данные из нескольких фото страниц урока (${t.name} язык, A1) в единый конспект.
 Правила нормализации (соблюдай строго):
 - ${t.nounRule}. Если род не указан в тексте — определи сам, ты знаешь ${t.name} язык. Не оставляй существительное без артикля (если в языке есть артикли).

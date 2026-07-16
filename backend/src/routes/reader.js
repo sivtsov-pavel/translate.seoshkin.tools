@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { translateParagraphs, translateSingle, extractWordsFromImage } from '../services/claude.js'
+import { translateParagraphs, translateSingle, extractWordsFromImage, extractSentencesFromImage } from '../services/claude.js'
 import { saveCameraWords } from '../services/processor.js'
 import { unlink } from 'fs/promises'
 
@@ -33,6 +33,37 @@ export async function readerRoutes(fastify) {
       if (rows[0]) w.tr = (rows[0].translations && rows[0].translations[lang]) || rows[0].translation_ru || w.tr
     }
     return { words }
+  })
+
+  // Фото ПРЕДЛОЖЕНИЙ: абзац + перевод + разбор по словам (каждое слово помечаем — есть ли в словаре)
+  fastify.post('/api/reader/camera-sentences', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const part = await request.file()
+    if (!part) return reply.status(400).send({ error: 'Нет фото' })
+    const lang = request.query.lang || 'ru'
+    const target = request.headers['x-target-lang'] || 'de'
+    const { filepath } = await fastify.saveUploadedFile(part)
+    let sentences = []
+    try {
+      sentences = await extractSentencesFromImage(filepath, lang, target)
+    } catch (e) {
+      fastify.log.error({ e }, 'camera sentences')
+      unlink(filepath).catch(() => {})
+      return reply.status(500).send({ error: 'Не удалось разобрать фото' })
+    }
+    unlink(filepath).catch(() => {})
+    // Помечаем слова разбора: есть ли в словаре + перевод на локаль
+    for (const s of sentences) {
+      for (const w of (s.words || [])) {
+        const bare = String(w.de).toLowerCase().replace(/^(der|die|das)\s+/i, '').trim()
+        const { rows } = await db.query(
+          `SELECT translation_ru, COALESCE(translations,'{}') AS translations
+           FROM words WHERE LOWER(word_de)=$1 OR LOWER(word_de)=$2 LIMIT 1`,
+          [String(w.de).toLowerCase(), bare])
+        w.inDict = rows.length > 0
+        if (rows[0]) w.tr = (rows[0].translations && rows[0].translations[lang]) || rows[0].translation_ru || w.tr
+      }
+    }
+    return { sentences }
   })
 
   // Сохранить слова с фото в УРОК (существующий или новый набор) — учитель.

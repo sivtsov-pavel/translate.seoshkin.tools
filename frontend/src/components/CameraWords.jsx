@@ -8,13 +8,15 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 // показывает какие уже в словаре (✓), какие новые (🆕) → сохранить выбранные в разговорник.
 // renderTrigger(pick, busy) — необязательная кастомная кнопка запуска (для плавающей
 // кнопки на дашборде). Если не передана — рисуется стандартная кнопка «📷 Слова с фото».
-export default function CameraWords({ renderTrigger }) {
+// mode: 'words' — просто разбор слов (Читалка); 'sentences' — абзац + перевод + разбор по словам (дашборд)
+export default function CameraWords({ renderTrigger, mode = 'words' }) {
   const { lang } = useI18nStore()
   const { user } = useAuthStore()
   const isOwner = user?.role === 'owner'
   const fileRef = useRef(null)
   const [busy, setBusy] = useState(false)
   const [words, setWords] = useState(null)   // [{de, tr, inDict, _save}]
+  const [sentences, setSentences] = useState(null) // [{original, translation, words:[{de,tr,inDict}]}]
   const [err, setErr] = useState('')
   const [savedCount, setSavedCount] = useState(0)
   const [lessons, setLessons] = useState([])
@@ -45,16 +47,31 @@ export default function CameraWords({ renderTrigger }) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    setBusy(true); setErr(''); setWords(null); setSavedCount(0)
+    setBusy(true); setErr(''); setWords(null); setSentences(null); setSavedCount(0)
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const r = await uploadFiles(`/reader/camera?lang=${lang}`, fd)
-      // новые слова по умолчанию отмечены на сохранение
-      setWords((r.words || []).map(w => ({ ...w, _save: !w.inDict })))
+      if (mode === 'sentences') {
+        const r = await uploadFiles(`/reader/camera-sentences?lang=${lang}`, fd)
+        const sents = r.sentences || []
+        setSentences(sents)
+        // Плоский список слов из разбора (дедуп по de) — для сохранения в урок/разговорник
+        const seen = new Set(); const flat = []
+        for (const s of sents) for (const w of (s.words || [])) {
+          const k = String(w.de).toLowerCase()
+          if (seen.has(k)) continue; seen.add(k)
+          flat.push({ ...w, _save: !w.inDict })
+        }
+        setWords(flat)
+      } else {
+        const r = await uploadFiles(`/reader/camera?lang=${lang}`, fd)
+        setWords((r.words || []).map(w => ({ ...w, _save: !w.inDict })))
+      }
     } catch (e) { setErr(e.message || 'Ошибка') }
     finally { setBusy(false) }
   }
+
+  const closeModal = () => { setWords(null); setSentences(null) }
 
   const toggle = (i) => setWords(ws => ws.map((w, j) => j === i ? { ...w, _save: !w._save } : w))
 
@@ -94,17 +111,48 @@ export default function CameraWords({ renderTrigger }) {
       {err && <div style={{ color: 'var(--red)', marginTop: 8, fontSize: 13 }}>{err}</div>}
 
       {words && (
-        <div onClick={() => setWords(null)} style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div onClick={closeModal} style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{
             width: '100%', maxWidth: 520, maxHeight: '85vh', background: 'var(--surface)',
             borderRadius: '18px 18px 0 0', padding: 16, overflowY: 'auto',
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom,0px))',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-              <h3 style={{ margin: 0, flex: 1 }}>📷 Слова с фото ({words.length})</h3>
-              <button onClick={() => setWords(null)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
+              <h3 style={{ margin: 0, flex: 1 }}>📷 {sentences ? 'Разбор фото' : `Слова с фото (${words.length})`}</h3>
+              <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
             </div>
-            {words.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>Немецких слов не распознано. Попробуй чётче фото.</p>}
+
+            {/* Режим предложений: сверху абзац, под ним перевод, затем разбор по словам */}
+            {sentences && sentences.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                {sentences.map((s, si) => (
+                  <div key={si} style={{ border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px', marginBottom: 10, background: 'var(--surface-2)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'flex-start', gap: 6 }} dir="ltr">
+                      <span style={{ flex: 1 }}>{s.original}</span>
+                      <SpeakButton text={s.original} size={16} />
+                    </div>
+                    {s.translation && <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 4 }}>{s.translation}</div>}
+                    {s.words && s.words.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                        {s.words.map((w, wi) => (
+                          <span key={wi} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 999, fontSize: 12.5, background: 'var(--surface)', border: '1px solid var(--line)' }}>
+                            <b dir="ltr">{w.de}</b>
+                            <span style={{ color: 'var(--ink-soft)' }}>— {w.tr}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {sentences && sentences.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>Предложений не распознано. Попробуй чётче фото.</p>}
+
+            {/* Список слов для сохранения */}
+            {words.length > 0 && sentences && (
+              <div style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '4px 0 8px', fontWeight: 600 }}>Слова для сохранения:</div>
+            )}
+            {words.length === 0 && !sentences && <p style={{ color: 'var(--ink-soft)' }}>Немецких слов не распознано. Попробуй чётче фото.</p>}
             {savedCount > 0 && <div style={{ color: 'var(--good, #16a34a)', marginBottom: 8 }}>✓ Сохранено в разговорник: {savedCount}</div>}
             {words.map((w, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderBottom: '1px solid var(--line)' }}>
