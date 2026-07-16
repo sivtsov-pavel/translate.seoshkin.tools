@@ -163,6 +163,7 @@ export default function Layout({ children }) {
 
   const classItems = user?.role === 'owner' ? [
     { to: '/school',       icon: 'bi-building-fill',    label: 'Школа' },
+    { to: '/catalog',      icon: 'bi-book-fill',        label: 'Каталог' },
     { to: '/courses',      icon: 'bi-mortarboard-fill', label: t.nav.courses },
     { to: '/students',     icon: 'bi-people-fill',      label: t.nav.students },
     { to: '/translations', icon: 'bi-globe2',           label: 'Переводы' },
