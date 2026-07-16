@@ -424,12 +424,12 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
       background: 'var(--surface)', border: '1px solid var(--line)',
       borderRadius: 'var(--radius)', padding: 16,
     }}>
-      {/* Шапка */}
+      {/* Шапка — клик по заголовку раскрывает/сворачивает список упражнений (как аккордеон) */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0, cursor: 'pointer', flex: 1 }} onClick={() => setShowExercises(v => !v)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
             {onTogglePin && (
-              <button onClick={onTogglePin} title="Закрепить наверху"
+              <button onClick={(e) => { e.stopPropagation(); onTogglePin() }} title="Закрепить наверху"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, lineHeight: 1, flexShrink: 0, padding: 0, color: pinned ? 'var(--accent)' : 'var(--ink-soft)' }}>
                 {pinned ? '⭐' : '☆'}
               </button>
@@ -446,8 +446,9 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
               {getLessonDesc(lesson.lesson_description, lesson.lesson_description_translations, lang)}
             </div>
           )}
-          <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
             {t.dashboard.exercisesWaiting(lesson.total)}
+            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{showExercises ? '▲' : '▼ упражнения'}</span>
           </div>
         </div>
         <button

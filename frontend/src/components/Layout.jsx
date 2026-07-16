@@ -295,9 +295,9 @@ export default function Layout({ children }) {
             transition: 'background .15s',
             justifyContent: 'space-between',
           }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 11, color: 'inherit' }}>
               <i className="bi bi-chat-dots-fill" style={{ width: 17, textAlign: 'center', fontSize: 15, flexShrink: 0 }} />
-
+              {E.navChat}
             </span>
             {unreadChat > 0 && (
               <span style={{
