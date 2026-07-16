@@ -236,4 +236,15 @@ export const en = {
     read: 'I read it',
     readDone: '✓ Read',
   },
+
+  // Printable exercise sheet (A4)
+  print: {
+    name: 'Name',
+    date: 'Date',
+    letterFillTask: 'Fill in the missing letters',
+    fillBlankTask: 'Fill in the missing word in the sentence',
+    wordBank: 'Word bank',
+    lessonWords: 'Lesson words',
+    print: 'Print',
+  },
 }

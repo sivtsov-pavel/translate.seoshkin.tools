@@ -224,4 +224,15 @@ export const fr = {
     read: 'Lu',
     readDone: '✓ Lu',
   },
+
+  // Feuille d’exercices imprimable (A4)
+  print: {
+    name: 'Nom',
+    date: 'Date',
+    letterFillTask: 'Complète les lettres manquantes',
+    fillBlankTask: 'Écris le mot qui convient dans la phrase',
+    wordBank: 'Mots d’aide',
+    lessonWords: 'Mots de la leçon',
+    print: 'Imprimer',
+  },
 }

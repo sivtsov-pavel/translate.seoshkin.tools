@@ -31,6 +31,7 @@ import Phrasebook from './pages/Phrasebook.jsx'
 import Translations from './pages/Translations.jsx'
 import Settings from './pages/Settings.jsx'
 import Docs from './pages/Docs.jsx'
+import PrintSheet from './pages/PrintSheet.jsx'
 import Chat from './pages/Chat.jsx'
 import WordMatch from './pages/WordMatch.jsx'
 import Privacy from './pages/Privacy.jsx'
@@ -92,6 +93,8 @@ export default function App() {
         <Route path="/sets"       element={<ProtectedRoute><Layout><Sets /></Layout></ProtectedRoute>} />
         <Route path="/join"       element={<ProtectedRoute><Layout><JoinClass /></Layout></ProtectedRoute>} />
         <Route path="/join/:code" element={<ProtectedRoute><Layout><JoinClass /></Layout></ProtectedRoute>} />
+        {/* Печатный лист урока — без Layout: чистая страница под A4 */}
+        <Route path="/print/:lessonId" element={<ProtectedRoute><PrintSheet /></ProtectedRoute>} />
         <Route path="/docs"    element={<Docs />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms"   element={<Terms />} />

@@ -236,4 +236,15 @@ export const uk = {
     read: 'Прочитав',
     readDone: '✓ Прочитав',
   },
+
+  // Друкований аркуш вправ (A4)
+  print: {
+    name: 'Ім’я',
+    date: 'Дата',
+    letterFillTask: 'Встав пропущені літери',
+    fillBlankTask: 'Впиши потрібне слово в речення',
+    wordBank: 'Слова-підказки',
+    lessonWords: 'Слова уроку',
+    print: 'Друк',
+  },
 }

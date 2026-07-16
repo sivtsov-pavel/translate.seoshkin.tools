@@ -224,4 +224,15 @@ export const es = {
     read: 'Leído',
     readDone: '✓ Leído',
   },
+
+  // Hoja de ejercicios imprimible (A4)
+  print: {
+    name: 'Nombre',
+    date: 'Fecha',
+    letterFillTask: 'Completa las letras que faltan',
+    fillBlankTask: 'Escribe la palabra adecuada en la frase',
+    wordBank: 'Banco de palabras',
+    lessonWords: 'Palabras de la lección',
+    print: 'Imprimir',
+  },
 }

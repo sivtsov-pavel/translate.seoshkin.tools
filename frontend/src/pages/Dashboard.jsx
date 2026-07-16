@@ -578,6 +578,21 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
           ✏️ {lesson.total} {showExercises ? '▲' : '▼'}
         </button>
 
+        {/* Учитель: печатный лист упражнений урока (A4) — открывается в новой вкладке */}
+        {user?.role === 'owner' && wordsCount > 0 && (
+          <button
+            onClick={() => window.open(`/print/${lesson.lesson_id}`, '_blank')}
+            title="Распечатать лист упражнений (A4)"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'var(--surface-2)', border: '1px solid var(--line)',
+              color: 'var(--ink-soft)', borderRadius: 10, padding: '7px 12px', fontSize: 12.5,
+              cursor: 'pointer', fontWeight: 500, flexShrink: 0,
+            }}>
+            🖨️
+          </button>
+        )}
+
         {/* Раскрыть/скрыть слова */}
         <button onClick={toggleWords} style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',

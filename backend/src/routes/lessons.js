@@ -219,6 +219,33 @@ export async function lessonsRoutes(fastify) {
     return rows
   })
 
+  // Упражнения урока для печатного листа A4 — БЕЗ SRS-фильтра «на сегодня»
+  // (учителю нужен полный набор, а не только несделанные). Только учитель.
+  fastify.get('/api/lessons/:id/print', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+
+    const { rows: lessons } = await db.query(
+      `SELECT id, title, COALESCE(title_translations, '{}') AS title_translations
+       FROM lessons WHERE id = $1`,
+      [lessonId]
+    )
+    if (!lessons[0]) return reply.status(404).send({ error: 'Урок не найден' })
+
+    const { rows: exercises } = await db.query(
+      `SELECT e.id, e.type, e.payload,
+              w.word_de, w.translation_ru, COALESCE(w.translations, '{}') AS translations
+       FROM exercises e
+       LEFT JOIN words w ON w.id = e.word_id
+       WHERE e.lesson_id = $1 AND e.type IN ('letter_fill', 'fill_blank')
+       ORDER BY e.type, e.id`,
+      [lessonId]
+    )
+    return { lesson: lessons[0], exercises }
+  })
+
   // Получить один урок
   fastify.get('/api/lessons/:id', {
     preHandler: [fastify.authenticate],

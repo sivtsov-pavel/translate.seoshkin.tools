@@ -226,4 +226,15 @@ export const ar = {
     read: 'قرأت',
     readDone: '✓ تم',
   },
+
+  // ورقة تمارين للطباعة (A4)
+  print: {
+    name: 'الاسم',
+    date: 'التاريخ',
+    letterFillTask: 'أكمل الحروف الناقصة',
+    fillBlankTask: 'اكتب الكلمة المناسبة في الجملة',
+    wordBank: 'كلمات مساعدة',
+    lessonWords: 'كلمات الدرس',
+    print: 'طباعة',
+  },
 }

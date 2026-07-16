@@ -234,4 +234,15 @@ export const sq = {
     read: 'Lexova',
     readDone: '✓ Lexuar',
   },
+
+  // Fletë ushtrimesh për printim (A4)
+  print: {
+    name: 'Emri',
+    date: 'Data',
+    letterFillTask: 'Plotëso shkronjat që mungojnë',
+    fillBlankTask: 'Shkruaj fjalën e duhur në fjali',
+    wordBank: 'Fjalë ndihmëse',
+    lessonWords: 'Fjalët e mësimit',
+    print: 'Printo',
+  },
 }

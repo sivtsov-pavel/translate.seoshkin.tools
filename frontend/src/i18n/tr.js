@@ -224,4 +224,15 @@ export const tr = {
     read: 'Okudum',
     readDone: '✓ Okundu',
   },
+
+  // Yazdırılabilir alıştırma sayfası (A4)
+  print: {
+    name: 'Ad',
+    date: 'Tarih',
+    letterFillTask: 'Eksik harfleri doldur',
+    fillBlankTask: 'Cümledeki boşluğa uygun kelimeyi yaz',
+    wordBank: 'Yardımcı kelimeler',
+    lessonWords: 'Ders kelimeleri',
+    print: 'Yazdır',
+  },
 }

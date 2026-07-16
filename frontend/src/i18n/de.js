@@ -242,4 +242,15 @@ export const de = {
     read: 'Gelesen',
     readDone: '✓ Gelesen',
   },
+
+  // Druckblatt mit Übungen (A4)
+  print: {
+    name: 'Name',
+    date: 'Datum',
+    letterFillTask: 'Setze die fehlenden Buchstaben ein',
+    fillBlankTask: 'Setze das passende Wort in den Satz ein',
+    wordBank: 'Hilfswörter',
+    lessonWords: 'Wörter der Lektion',
+    print: 'Drucken',
+  },
 }
