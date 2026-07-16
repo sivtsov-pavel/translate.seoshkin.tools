@@ -27,8 +27,23 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
     if (isOwner) api.get('/lessons').then(d => setLessons((Array.isArray(d) ? d : d.lessons || []).filter(l => l.status === 'done' || l.words_count > 0))).catch(() => {})
   }, [isOwner])
 
+  // Отмеченные слова: в режиме предложений собираем из разбора всех предложений (дедуп по de),
+  // иначе — из плоского списка. Единый источник и для разговорника, и для урока.
+  const collectChosen = () => {
+    if (sentences) {
+      const seen = new Set(); const out = []
+      for (const s of sentences) for (const w of (s.words || [])) {
+        if (!w._save) continue
+        const k = String(w.de).toLowerCase()
+        if (seen.has(k)) continue; seen.add(k); out.push(w)
+      }
+      return out
+    }
+    return (words || []).filter(w => w._save)
+  }
+
   const saveToLesson = async () => {
-    const chosen = words.filter(w => w._save)
+    const chosen = collectChosen()
     if (!chosen.length) { setLessonMsg('Отметь слова галочками'); return }
     setLessonMsg('Сохраняю в урок…')
     try {
@@ -53,16 +68,11 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
       fd.append('file', file)
       if (mode === 'sentences') {
         const r = await uploadFiles(`/reader/camera-sentences?lang=${lang}`, fd)
-        const sents = r.sentences || []
+        // Каждое слово разбора — сразу с галочкой сохранения (новые отмечены)
+        const sents = (r.sentences || []).map(s => ({
+          ...s, words: (s.words || []).map(w => ({ ...w, _save: !w.inDict })),
+        }))
         setSentences(sents)
-        // Плоский список слов из разбора (дедуп по de) — для сохранения в урок/разговорник
-        const seen = new Set(); const flat = []
-        for (const s of sents) for (const w of (s.words || [])) {
-          const k = String(w.de).toLowerCase()
-          if (seen.has(k)) continue; seen.add(k)
-          flat.push({ ...w, _save: !w.inDict })
-        }
-        setWords(flat)
       } else {
         const r = await uploadFiles(`/reader/camera?lang=${lang}`, fd)
         setWords((r.words || []).map(w => ({ ...w, _save: !w.inDict })))
@@ -74,18 +84,25 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
   const closeModal = () => { setWords(null); setSentences(null) }
 
   const toggle = (i) => setWords(ws => ws.map((w, j) => j === i ? { ...w, _save: !w._save } : w))
+  // Галочка слова внутри предложения (режим предложений)
+  const toggleSentWord = (si, wi) => setSentences(ss => ss.map((s, i) => i !== si ? s
+    : { ...s, words: s.words.map((w, j) => j !== wi ? w : { ...w, _save: !w._save }) }))
 
   const saveSelected = async () => {
-    const chosen = words.filter(w => w._save)
+    const chosen = collectChosen()
     let n = 0
     for (const w of chosen) {
       try { await api.post('/phrasebook', { de: w.de, ru: w.tr || '', source: 'camera' }); n++ } catch {}
     }
     setSavedCount(n)
-    setWords(ws => ws.map(w => w._save ? { ...w, inDict: true, _save: false } : w))
+    // Помечаем сохранённые как «в словаре» и снимаем галочки
+    if (sentences) setSentences(ss => ss.map(s => ({ ...s, words: s.words.map(w => w._save ? { ...w, inDict: true, _save: false } : w) })))
+    else setWords(ws => ws.map(w => w._save ? { ...w, inDict: true, _save: false } : w))
   }
 
-  const newCount = words ? words.filter(w => !w.inDict).length : 0
+  const newCount = sentences
+    ? sentences.reduce((a, s) => a + s.words.filter(w => !w.inDict).length, 0)
+    : (words ? words.filter(w => !w.inDict).length : 0)
 
   return (
     <>
@@ -110,7 +127,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
 
       {err && <div style={{ color: 'var(--red)', marginTop: 8, fontSize: 13 }}>{err}</div>}
 
-      {words && (
+      {(words || sentences) && (
         <div onClick={closeModal} style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} style={{
             width: '100%', maxWidth: 520, maxHeight: '85vh', background: 'var(--surface)',
@@ -122,39 +139,37 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
               <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
             </div>
 
-            {/* Режим предложений: сверху абзац, под ним перевод, затем разбор по словам */}
-            {sentences && sentences.length > 0 && (
-              <div style={{ marginBottom: 14 }}>
-                {sentences.map((s, si) => (
-                  <div key={si} style={{ border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px', marginBottom: 10, background: 'var(--surface-2)' }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'flex-start', gap: 6 }} dir="ltr">
-                      <span style={{ flex: 1 }}>{s.original}</span>
-                      <SpeakButton text={s.original} size={16} />
-                    </div>
-                    {s.translation && <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 4 }}>{s.translation}</div>}
-                    {s.words && s.words.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-                        {s.words.map((w, wi) => (
-                          <span key={wi} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 999, fontSize: 12.5, background: 'var(--surface)', border: '1px solid var(--line)' }}>
-                            <b dir="ltr">{w.de}</b>
-                            <span style={{ color: 'var(--ink-soft)' }}>— {w.tr}</span>
-                          </span>
-                        ))}
+            {/* Режим предложений: абзац → перевод → полный список слов (с галочками, он же сохраняется) */}
+            {sentences && sentences.length > 0 && sentences.map((s, si) => (
+              <div key={si} style={{ border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px', marginBottom: 10, background: 'var(--surface-2)' }}>
+                <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'flex-start', gap: 6 }} dir="ltr">
+                  <span style={{ flex: 1 }}>{s.original}</span>
+                  <SpeakButton text={s.original} size={16} />
+                </div>
+                {s.translation && <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 4 }}>{s.translation}</div>}
+                {s.words && s.words.length > 0 && (
+                  <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column' }}>
+                    {s.words.map((w, wi) => (
+                      <div key={wi} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 2px', borderTop: '1px solid var(--line)' }}>
+                        <input type="checkbox" checked={!!w._save} disabled={w.inDict} onChange={() => toggleSentWord(si, wi)} style={{ width: 17, height: 17, flexShrink: 0 }} />
+                        <b dir="ltr" style={{ fontSize: 14 }}>{w.de}</b>
+                        <SpeakButton text={w.de} size={14} />
+                        {w.inDict
+                          ? <span style={{ fontSize: 10, color: 'var(--good, #16a34a)', fontWeight: 700 }}>✓</span>
+                          : <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700 }}>🆕</span>}
+                        <span style={{ fontSize: 13, color: 'var(--ink-soft)', marginLeft: 'auto', textAlign: 'right' }}>{w.tr}</span>
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
+            ))}
             {sentences && sentences.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>Предложений не распознано. Попробуй чётче фото.</p>}
 
-            {/* Список слов для сохранения */}
-            {words.length > 0 && sentences && (
-              <div style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '4px 0 8px', fontWeight: 600 }}>Слова для сохранения:</div>
-            )}
-            {words.length === 0 && !sentences && <p style={{ color: 'var(--ink-soft)' }}>Немецких слов не распознано. Попробуй чётче фото.</p>}
+            {/* Режим слов: плоский список */}
+            {!sentences && words && words.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>Немецких слов не распознано. Попробуй чётче фото.</p>}
             {savedCount > 0 && <div style={{ color: 'var(--good, #16a34a)', marginBottom: 8 }}>✓ Сохранено в разговорник: {savedCount}</div>}
-            {words.map((w, i) => (
+            {!sentences && words && words.map((w, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderBottom: '1px solid var(--line)' }}>
                 <input type="checkbox" checked={!!w._save} disabled={w.inDict} onChange={() => toggle(i)} style={{ width: 18, height: 18, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -176,7 +191,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
             )}
 
             {/* Учитель: сохранить отмеченные слова в УРОК (группу) — создаст упражнения */}
-            {isOwner && words.length > 0 && (
+            {isOwner && ((words?.length || 0) > 0 || (sentences?.length || 0) > 0) && (
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
                 <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>Или добавить в урок (группу):</div>
                 <div style={{ display: 'flex', gap: 8 }}>
