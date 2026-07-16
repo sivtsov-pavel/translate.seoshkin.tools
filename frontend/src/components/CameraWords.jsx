@@ -81,6 +81,16 @@ export default function CameraWords({ renderTrigger }) {
         }}>📷 {busy ? 'Разбираю фото…' : 'Слова с фото'}</button>
       )}
 
+      {/* Явный индикатор обработки фото — на весь экран, чтобы было видно, что идёт разбор */}
+      {busy && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 4500, background: 'rgba(0,0,0,.55)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, color: '#fff' }}>
+          <div style={{ width: 54, height: 54, border: '5px solid rgba(255,255,255,.25)', borderTopColor: '#fff', borderRadius: '50%', animation: 'cwspin 0.8s linear infinite' }} />
+          <div style={{ fontSize: 16, fontWeight: 700 }}>📷 Разбираю фото…</div>
+          <div style={{ fontSize: 13, opacity: 0.8 }}>ИИ распознаёт слова, пара секунд</div>
+          <style>{`@keyframes cwspin { to { transform: rotate(360deg) } }`}</style>
+        </div>
+      )}
+
       {err && <div style={{ color: 'var(--red)', marginTop: 8, fontSize: 13 }}>{err}</div>}
 
       {words && (

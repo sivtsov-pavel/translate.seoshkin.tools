@@ -357,7 +357,7 @@ export default function TextReader() {
   const [historySearch, setHistorySearch] = useState('')
 
   // Модель перевода
-  const [transModel, setTransModel] = useState('mini')  // 'mini' | 'smart'
+  const [transModel, setTransModel] = useState('smart')  // 'smart' (gpt-4o, качество) | 'mini' (дешевле)
 
   // Выбранные слова
   const [selectedWords, setSelectedWords] = useState(new Map())

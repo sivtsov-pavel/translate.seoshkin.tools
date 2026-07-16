@@ -59,7 +59,7 @@ export async function readerRoutes(fastify) {
   fastify.post('/api/reader/translate', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
-    const { paragraphs, sourceLang = 'de', targetLang = 'ru', model = 'mini' } = request.body
+    const { paragraphs, sourceLang = 'de', targetLang = 'ru', model = 'smart' } = request.body
     if (!Array.isArray(paragraphs) || !paragraphs.length) {
       return reply.status(400).send({ error: 'paragraphs required' })
     }
@@ -75,7 +75,7 @@ export async function readerRoutes(fastify) {
   fastify.post('/api/reader/speak-translate', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
-    const { text, sourceLang = 'de', targetLang = 'ru', model = 'mini' } = request.body
+    const { text, sourceLang = 'de', targetLang = 'ru', model = 'smart' } = request.body
     if (!text?.trim()) return reply.status(400).send({ error: 'text required' })
     const gptModel = MODEL_MAP[model] || 'gpt-4o-mini'
     const translation = await translateSingle(text.trim(), sourceLang, targetLang, gptModel)

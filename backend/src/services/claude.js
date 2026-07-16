@@ -520,7 +520,7 @@ const LANG_NAMES_EN = {
   fr: 'French', es: 'Spanish', tr: 'Turkish', ar: 'Arabic', bg: 'Bulgarian', sq: 'Albanian',
 }
 
-export async function translateParagraphs(paragraphs, sourceLang = 'de', targetLang = 'ru', model = 'gpt-4o-mini') {
+export async function translateParagraphs(paragraphs, sourceLang = 'de', targetLang = 'ru', model = 'gpt-4o') {
   const from = LANG_NAMES_EN[sourceLang] || sourceLang
   const to   = LANG_NAMES_EN[targetLang] || targetLang
   const list = paragraphs.map((p, i) => `${i + 1}: ${p}`).join('\n\n')
@@ -534,7 +534,7 @@ ${list}`,
   return parseJson(text)
 }
 
-export async function translateSingle(text, sourceLang, targetLang, model = 'gpt-4o-mini') {
+export async function translateSingle(text, sourceLang, targetLang, model = 'gpt-4o') {
   const from = LANG_NAMES_EN[sourceLang] || sourceLang
   const to   = LANG_NAMES_EN[targetLang] || targetLang
   const result = await ask(
