@@ -101,7 +101,7 @@ function Card({ card, onClick, disabled, showAll }) {
 }
 
 export default function WordMatch() {
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const [lessons, setLessons] = useState([])
   const [lessonId, setLessonId] = useState('')
   const [mode, setMode] = useState('translation') // 'translation' | 'image'
@@ -136,7 +136,7 @@ export default function WordMatch() {
       const words = await api.get(`/lessons/${lessonId}/words`)
       const usable = mode === 'image' ? (words || []).filter(w => w.image_url) : (words || [])
       if (usable.length < 4) {
-        alert(mode === 'image' ? 'Нужно минимум 4 слова с картинками в уроке' : 'Нужно минимум 4 слова в уроке')
+        alert(mode === 'image' ? t.games.need4img : t.games.need4)
         return
       }
       const { cards: c, pairCount: pc } = buildCards(words, lang, mode)
@@ -240,8 +240,8 @@ export default function WordMatch() {
           Все пары найдены!
         </h2>
         <div style={{ fontSize: 15, color: 'var(--ink-soft)', marginBottom: 24 }}>
-          <div>Ходов: <strong>{moves}</strong></div>
-          <div>Время: <strong>{formatTime(seconds)}</strong></div>
+          <div>{t.games.moves}: <strong>{moves}</strong></div>
+          <div>{t.games.time}: <strong>{formatTime(seconds)}</strong></div>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={startGame} style={btnStyle('accent')}>
@@ -262,14 +262,14 @@ export default function WordMatch() {
           🃏 Словопара
         </h2>
         <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '0 0 24px' }}>
-          Найди все пары: немецкое слово и его {mode === 'image' ? 'картинку' : 'перевод'}
+          Найди все пары: немецкое слово и его {mode === 'image' ? t.games.picture : t.games.translation}
         </p>
 
         {/* Тумблер режима: перевод / картинки */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>Режим</label>
+          <label style={{ fontSize: 13, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>{t.games.mode}</label>
           <div style={{ display: 'flex', gap: 8 }}>
-            {[['translation', '🔤 Слово + перевод'], ['image', '🖼️ Слово + картинка']].map(([m, label]) => (
+            {[['translation', t.games.modeWordTr], ['image', t.games.modeWordImg]].map(([m, label]) => (
               <button key={m} onClick={() => setMode(m)} style={{
                 flex: 1, padding: '10px 8px', borderRadius: 10, fontSize: 14, fontWeight: mode === m ? 700 : 500,
                 border: `1.5px solid ${mode === m ? 'var(--accent)' : 'var(--line)'}`,
@@ -282,7 +282,7 @@ export default function WordMatch() {
 
         {/* Правила */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '14px 16px', marginBottom: 20, fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
-          <strong style={{ color: 'var(--ink)', display: 'block', marginBottom: 6 }}>Как играть</strong>
+          <strong style={{ color: 'var(--ink)', display: 'block', marginBottom: 6 }}>{t.games.howToPlay}</strong>
           Переверни карточку — найди её пару.<br />
           {mode === 'image'
             ? <><span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = немецкое слово</span> · 🖼️ картинка</>
@@ -291,9 +291,9 @@ export default function WordMatch() {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>Урок</label>
+          <label style={{ fontSize: 13, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>{t.games.lesson}</label>
           {lessons.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Нет доступных уроков</p>
+            <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.games.noLessons}</p>
           ) : (
             <select value={lessonId} onChange={e => setLessonId(e.target.value)}
               style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }}>
@@ -305,7 +305,7 @@ export default function WordMatch() {
         </div>
 
         <button onClick={startGame} disabled={!lessonId || loading} style={btnStyle('accent')}>
-          {loading ? 'Загрузка…' : '▶ Начать игру'}
+          {loading ? t.games.loading : t.games.startGame}
         </button>
       </div>
     )

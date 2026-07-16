@@ -9,7 +9,7 @@ import { ex } from '../utils/extraI18n.js'
 
 export default function Crossword() {
   const [params] = useSearchParams()
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const [allWords, setAllWords] = useState([])
   const [puzzle, setPuzzle] = useState(null)
   const [answers, setAnswers] = useState({})   // "r,c" -> буква
@@ -55,8 +55,8 @@ export default function Crossword() {
   const sourceSelector = (
     <select value={source} onChange={e => setSource(e.target.value)}
       style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, maxWidth: 200 }}>
-      <option value="">📚 Все слова</option>
-      <option value="learning">📖 В изучении</option>
+      <option value="">{t.games.allWords}</option>
+      <option value="learning">{t.games.inLearning}</option>
       {(lessons || []).filter(l => l.status === 'done').map(l => <option key={l.id} value={l.id}>{l.title || `Урок ${l.id}`}</option>)}
     </select>
   )
@@ -66,7 +66,7 @@ export default function Crossword() {
       <h1 style={{ fontSize: 22, margin: '4px 0 10px' }}>🧩 {ex(lang).crosswordTitle}</h1>
       <div style={{ marginBottom: 14 }}>{sourceSelector}</div>
       <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>
-        {loading ? 'Загрузка…' : 'Недостаточно коротких слов (3-9 букв) для кроссворда — выбери другой урок или «Все слова».'}
+        {loading ? t.games.loading : t.games.notEnoughWords}
       </p>
     </div>
   )
@@ -96,7 +96,7 @@ export default function Crossword() {
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
         <h1 style={{ fontSize: 22, margin: 0 }}>🧩 {ex(lang).crosswordTitle}</h1>
-        <button onClick={build} style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>🔄 Новый</button>
+        <button onClick={build} style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{t.games.newPuzzle}</button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
         {sourceSelector}
@@ -129,13 +129,13 @@ export default function Crossword() {
 
       {/* Кнопки */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        <button onClick={() => setChecked(true)} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>✓ Проверить</button>
-        <button onClick={reveal} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink-soft)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Показать</button>
+        <button onClick={() => setChecked(true)} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>{t.games.check}</button>
+        <button onClick={reveal} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink-soft)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>{t.games.reveal}</button>
       </div>
 
       {/* Подсказки */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {[['По горизонтали ➡️', across], ['По вертикали ⬇️', down]].map(([title, list]) => (
+        {[[t.games.across, across], [t.games.down, down]].map(([title, list]) => (
           <div key={title}>
             <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--accent)', marginBottom: 8 }}>{title}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>

@@ -5,11 +5,11 @@ import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { speak, SpeakButton } from '../hooks/useSpeech.jsx'
 
-const ROLE = { question: '❓ Вопрос', answer: '💬 Ответ', statement: '📗 Фраза' }
 
 export default function ClassGame() {
   const { id } = useParams()
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
+  const ROLE = { question: t.games.roleQuestion, answer: t.games.roleAnswer, statement: t.games.roleStatement }
   const { user } = useAuthStore()
   const isOwner = user?.role === 'owner'
   const [data, setData] = useState(null)
@@ -47,8 +47,8 @@ export default function ClassGame() {
   }
 
   if (err) return <Wrap><div style={{ color: 'var(--red)' }}>{err}</div></Wrap>
-  if (!data) return <Wrap><div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div></Wrap>
-  if (data.generating) return <Wrap><div style={{ textAlign: 'center', padding: 40 }}><div style={{ fontSize: 40 }}>🎮</div><p style={{ color: 'var(--ink-soft)' }}>{data.progress || 'Собираю игру…'}</p></div></Wrap>
+  if (!data) return <Wrap><div style={{ color: 'var(--ink-soft)' }}>{t.games.loading}</div></Wrap>
+  if (data.generating) return <Wrap><div style={{ textAlign: 'center', padding: 40 }}><div style={{ fontSize: 40 }}>🎮</div><p style={{ color: 'var(--ink-soft)' }}>{data.progress || t.games.building}</p></div></Wrap>
 
   const lines = data.lines || []
 
@@ -56,14 +56,14 @@ export default function ClassGame() {
   if (!isOwner) {
     return (
       <Wrap>
-        <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>🎮 {data.game.title || 'Игра класса'}</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>🎮 {data.game.title || t.games.classGame}</h1>
         <p style={{ color: 'var(--ink-soft)', margin: '0 0 16px', fontSize: 14 }}>Твои {lines.length} фраз. Читай вслух, когда скажет учитель.</p>
         {lines.map(l => (
           <div key={l.id} style={{ background: 'var(--surface)', border: `1px solid ${l.read ? 'var(--good, #16a34a)' : 'var(--line)'}`, borderRadius: 14, padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{ROLE[l.role] || ROLE.statement}</span>
               {/* Крестик «+ в разговорник» */}
-              <button onClick={() => addOne(l, data.game.title || 'Игра класса')} disabled={savedIds.has(l.id)}
+              <button onClick={() => addOne(l, data.game.title || t.games.classGame)} disabled={savedIds.has(l.id)}
                 title="Добавить в разговорник" style={{
                   width: 30, height: 30, borderRadius: 8, flexShrink: 0, cursor: savedIds.has(l.id) ? 'default' : 'pointer',
                   border: `1px solid ${savedIds.has(l.id) ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
@@ -80,7 +80,7 @@ export default function ClassGame() {
               marginTop: 10, padding: '8px 16px', borderRadius: 9, border: 'none', fontSize: 14, fontWeight: 600,
               background: l.read ? 'var(--surface-2)' : 'var(--accent)', color: l.read ? 'var(--ink-soft)' : 'var(--accent-ink)',
               cursor: l.read ? 'default' : 'pointer',
-            }}>{l.read ? '✓ Прочитал' : 'Прочитал'}</button>
+            }}>{l.read ? t.games.readDone : t.games.read}</button>
           </div>
         ))}
         <button onClick={toPhrasebook} style={{ marginTop: 8, padding: '11px 20px', borderRadius: 10, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, cursor: 'pointer' }}>
@@ -96,7 +96,7 @@ export default function ClassGame() {
   for (const l of lines) { (byStudent[l.student || '—'] ||= []).push(l) }
   return (
     <Wrap>
-      <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>🎮 {data.game.title || 'Игра класса'}</h1>
+      <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>🎮 {data.game.title || t.games.classGame}</h1>
       <p style={{ color: 'var(--ink-soft)', margin: '0 0 16px', fontSize: 14 }}>
         {lines.length} фраз · {Object.keys(byStudent).length} учеников. Ведущий — ты: даёшь читать по очереди.
       </p>
