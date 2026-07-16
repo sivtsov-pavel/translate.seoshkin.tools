@@ -84,7 +84,7 @@ const { rows: missing } = await db.query(
        SELECT 1 FROM words s JOIN lessons ls ON ls.id=s.lesson_id AND ls.is_set AND ls.owner_id=$2
        WHERE regexp_replace(lower(s.word_de), '^(der|die|das|ein|eine)\\s+', '')
            = regexp_replace(lower(w.word_de), '^(der|die|das|ein|eine)\\s+', ''))
-   ORDER BY 1, w.id`, [SUB_LESSONS, ownerId])
+   ORDER BY regexp_replace(lower(w.word_de), '^(der|die|das|ein|eine)\\s+', ''), w.id`, [SUB_LESSONS, ownerId])
 log(`  недостающих слов: ${missing.length}`)
 const affectedSets = new Set()
 if (missing.length) {
