@@ -90,11 +90,11 @@ export async function readerRoutes(fastify) {
   // в верную из 22 тем, нормализует артикли, дедуплицирует. Слова оседают в нужных наборах.
   fastify.post('/api/reader/distribute', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
-    const { words } = request.body || {}
+    const { words, sentences } = request.body || {}
     if (!Array.isArray(words) || !words.length) return reply.status(400).send({ error: 'Нет слов' })
     const target = request.headers['x-target-lang'] || 'de'
     try {
-      const res = await distributeWordsToSets(words, request.user.id, target)
+      const res = await distributeWordsToSets(words, request.user.id, target, Array.isArray(sentences) ? sentences : [])
       return res
     } catch (e) {
       fastify.log.error({ e }, 'distribute')

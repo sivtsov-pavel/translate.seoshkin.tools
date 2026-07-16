@@ -662,12 +662,28 @@ export async function processLesson(lessonId, ownerId) {
 // Слова (из фото/тетради) классифицируются AI по 22 темам + нормализуются (артикли),
 // дедуплицируются внутри набора, докидываются переводы/картинки/упражнения.
 // Возвращает сводку: сколько добавлено, сколько дублей, по каким темам.
-export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de') {
+export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de', rawSentences = []) {
   const clean = (rawWords || []).filter(w => w && w.de).map(w => ({ de: String(w.de).trim(), tr: String(w.tr || '').trim() }))
   if (!clean.length) return { added: 0, duplicates: 0, themes: [] }
 
   const items = await classifyWordsToThemes(clean, targetLang)
   if (!items.length) return { added: 0, duplicates: 0, themes: [] }
+
+  const bare = s => String(s).toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '')
+
+  // Предложения из тетрадки/фото — реальные, идут в упражнения. Каждое несёт свои слова
+  // (words: [de]), по их теме и определяем, в какой набор сохранить предложение.
+  const sentences = (rawSentences || [])
+    .map(s => ({
+      text: String(s?.text || '').trim(),
+      translation_ru: s?.translation_ru || s?.translation || null,
+      words: (s?.words || []).map(w => bare(typeof w === 'string' ? w : (w?.de || ''))).filter(Boolean),
+    }))
+    .filter(s => s.text.length >= 4)
+
+  // Карта: нормализованное слово → тема (по классификации)
+  const themeByWord = {}
+  for (const it of items) themeByWord[bare(it.de)] = it.theme
 
   const byTheme = new Map()
   for (const it of items) {
@@ -676,8 +692,8 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
   }
 
   const affected = []
+  const setByTheme = {} // тема → id набора
   let added = 0, dup = 0
-  const bare = s => String(s).toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '')
 
   for (const [theme, its] of byTheme) {
     // найти или создать набор этой темы у владельца
@@ -707,15 +723,29 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
       added++
     }
     affected.push(setId)
+    setByTheme[theme] = setId
   }
 
-  // Дообогащаем затронутые наборы В ФОНЕ (переводы на локали + картинки банк-дедуп + упражнения),
-  // чтобы сразу вернуть сводку пользователю. Сами слова уже в верных наборах.
+  // Сохраняем реальные предложения тетрадки в наборы по ТЕМЕ их слов (надёжно для глаголов:
+  // не зависим от совпадения текста). Одно предложение может попасть в несколько наборов.
+  let savedSents = 0
+  for (const s of sentences) {
+    const themes = [...new Set(s.words.map(w => themeByWord[w]).filter(Boolean))]
+    // если тему слов не распознали — кладём в набор первой затронутой темы, чтобы не потерять
+    const targetThemes = themes.length ? themes : (affected.length ? [Object.keys(setByTheme)[0]] : [])
+    for (const th of targetThemes) {
+      const sid = setByTheme[th]
+      if (sid) { await saveSentences(sid, [{ text: s.text, translation_ru: s.translation_ru }], 'notebook'); savedSents++ }
+    }
+  }
+
+  // Дообогащаем затронутые наборы В ФОНЕ (переводы на локали + картинки банк-дедуп + упражнения
+  // ИЗ сохранённых предложений тетрадки), чтобы сразу вернуть сводку пользователю.
   ;(async () => {
     for (const id of affected) {
       try { await enrichLesson(id) } catch (e) { console.error('distribute enrich', id, e.message) }
       try { await regenerateExercisesFromDb(id) } catch (e) { console.error('distribute ex', id, e.message) }
     }
   })()
-  return { added, duplicates: dup, themes: [...byTheme.keys()], sets: affected.length }
+  return { added, duplicates: dup, themes: [...byTheme.keys()], sets: affected.length, sentences: savedSents }
 }

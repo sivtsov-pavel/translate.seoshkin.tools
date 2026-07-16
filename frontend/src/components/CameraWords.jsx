@@ -50,9 +50,17 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
     if (!chosen.length) { setDistMsg('Отметь слова галочками'); return }
     setDistBusy(true); setDistMsg('Раскладываю по темам…')
     try {
-      const res = await api.post('/reader/distribute', { words: chosen.map(w => ({ de: w.de, tr: w.tr })) })
+      // В режиме предложений — отправляем и сами предложения (с их словами), чтобы они
+      // сохранились в наборы и пошли в упражнения (fill_blank / «составь предложение»).
+      const payloadSentences = (sentences || []).map(s => ({
+        text: s.original, translation: s.translation, words: (s.words || []).map(w => w.de),
+      }))
+      const res = await api.post('/reader/distribute', {
+        words: chosen.map(w => ({ de: w.de, tr: w.tr })),
+        sentences: payloadSentences,
+      })
       const themes = (res.themes || []).join(', ')
-      setDistMsg(`✓ Разложено: +${res.added} слов${themes ? ' → ' + themes : ''}${res.duplicates ? `; дублей пропущено: ${res.duplicates}` : ''}. Картинки/упражнения дособерутся в фоне.`)
+      setDistMsg(`✓ Разложено: +${res.added} слов${themes ? ' → ' + themes : ''}${res.sentences ? `; предложений: ${res.sentences}` : ''}${res.duplicates ? `; дублей пропущено: ${res.duplicates}` : ''}. Картинки/упражнения дособерутся в фоне.`)
     } catch (e) { setDistMsg('Ошибка: ' + e.message) }
     finally { setDistBusy(false) }
   }
