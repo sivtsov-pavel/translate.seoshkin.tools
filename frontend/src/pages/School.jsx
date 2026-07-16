@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 
@@ -24,6 +25,26 @@ function CopyBtn({ text, label = 'Копировать', style }) {
       background: done ? 'var(--good, #16a34a)' : 'var(--surface-2)', color: done ? '#fff' : 'var(--ink)',
       fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', transition: 'background .15s', ...style,
     }}>{done ? '✓ Скопировано' : label}</button>
+  )
+}
+
+// QR-код ссылки-приглашения — генерируется полностью на клиенте (без внешних
+// сервисов/CDN), чтобы не нарушать CSP. Перегенерируется при смене ссылки.
+function InviteQr({ text }) {
+  const [dataUrl, setDataUrl] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    QRCode.toDataURL(text, { width: 180, margin: 1 })
+      .then(url => { if (!cancelled) setDataUrl(url) })
+      .catch(() => { if (!cancelled) setDataUrl(null) })
+    return () => { cancelled = true }
+  }, [text])
+
+  if (!dataUrl) return null
+  return (
+    <img src={dataUrl} alt="QR-код приглашения" width={180} height={180}
+      style={{ borderRadius: 12, border: '1px solid var(--line)', background: '#fff', padding: 8 }} />
   )
 }
 
@@ -161,6 +182,9 @@ export default function School() {
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>
                   Дай ученикам код или ссылку — они войдут в класс сами.
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <InviteQr text={joinLink(selected.invite_code)} />
                 </div>
               </div>
 
