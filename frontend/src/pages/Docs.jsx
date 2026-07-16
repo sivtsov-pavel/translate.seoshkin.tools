@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PublicHeader from '../components/PublicHeader.jsx'
 import { useI18nStore } from '../store/i18n.js'
 
@@ -358,23 +358,32 @@ function getSections(lang) {
   return lang === 'ru' ? SECTIONS_RU : SECTIONS_EN
 }
 
+// Группировка разделов — для структуры страницы и PDF-выгрузки
+const SECTION_GROUP = {
+  import: 'teacher', roles: 'teacher',
+  exercises: 'student', progress: 'student', justify: 'student', install: 'student', faq: 'student',
+  srs: 'how',
+}
+const GROUP_ORDER = ['teacher', 'student', 'how']
+
 const UI = {
-  ru: { title: 'Deutsch Lernen — Документация', subtitle: 'Как работает система обучения немецкому языку', search: 'Поиск по документации…', empty: 'Ничего не найдено', footer1: 'Deutsch Lernen — Платформа для изучения немецкого языка', footer2: 'Есть вопрос?', footer3: 'Войдите', footer4: 'и напишите учителю.' },
-  en: { title: 'Deutsch Lernen — Documentation', subtitle: 'How the German learning system works', search: 'Search documentation…', empty: 'Nothing found', footer1: 'Deutsch Lernen — German learning platform', footer2: 'Have a question?', footer3: 'Log in', footer4: 'and write to your teacher.' },
+  ru: { title: 'Deutsch Lernen — Документация', subtitle: 'Как работает система обучения немецкому языку', search: 'Поиск по документации…', empty: 'Ничего не найдено', footer1: 'Deutsch Lernen — Платформа для изучения немецкого языка', footer2: 'Есть вопрос?', footer3: 'Войдите', footer4: 'и напишите учителю.', pdf: 'Скачать PDF', groups: { teacher: '👩‍🏫 Для учителя', student: '🎓 Для ученика', how: '⚙️ Как работает' } },
+  en: { title: 'Deutsch Lernen — Documentation', subtitle: 'How the German learning system works', search: 'Search documentation…', empty: 'Nothing found', footer1: 'Deutsch Lernen — German learning platform', footer2: 'Have a question?', footer3: 'Log in', footer4: 'and write to your teacher.', pdf: 'Download PDF', groups: { teacher: '👩‍🏫 For the teacher', student: '🎓 For the student', how: '⚙️ How it works' } },
 }
 
-function DocSection({ section }) {
-  const [open, setOpen] = useState(false)
+function DocSection({ section, forceOpen }) {
+  const [openState, setOpenState] = useState(false)
+  const open = openState || forceOpen // при печати PDF все секции раскрыты
   return (
-    <div style={{ border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 10 }}>
-      <button onClick={() => setOpen(v => !v)} style={{
+    <div style={{ border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 10, breakInside: 'avoid' }}>
+      <button onClick={() => setOpenState(v => !v)} style={{
         width: '100%', textAlign: 'left', background: open ? 'var(--surface-2)' : 'var(--surface)',
         border: 'none', cursor: 'pointer', padding: '16px 20px',
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <span style={{ fontSize: 24, flexShrink: 0 }}>{section.icon}</span>
         <span style={{ fontWeight: 700, fontSize: 16, flex: 1, color: 'var(--ink)' }}>{section.title}</span>
-        <i className={`bi bi-chevron-${open ? 'up' : 'down'}`} style={{ color: 'var(--ink-soft)', fontSize: 13 }} />
+        <i className={`bi bi-chevron-${open ? 'up' : 'down'} no-print`} style={{ color: 'var(--ink-soft)', fontSize: 13 }} />
       </button>
       {open && (
         <div style={{
@@ -393,14 +402,32 @@ export default function Docs() {
   const ui = UI[lang] || UI.en
   const SECTIONS = getSections(lang)
   const [search, setSearch] = useState('')
+  const [printing, setPrinting] = useState(false)
   const q = search.trim().toLowerCase()
   const filtered = q
     ? SECTIONS.filter(s => s.title.toLowerCase().includes(q) || s.body.toLowerCase().includes(q))
     : SECTIONS
 
+  // «Скачать PDF» = браузерная печать в PDF: раскрываем все секции → window.print().
+  // Без внешних библиотек (CSP запрещает CDN), типографика — от браузера.
+  useEffect(() => {
+    if (!printing) return
+    const done = () => setPrinting(false)
+    window.addEventListener('afterprint', done)
+    const id = setTimeout(() => window.print(), 100) // дать секциям раскрыться
+    return () => { clearTimeout(id); window.removeEventListener('afterprint', done) }
+  }, [printing])
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
-      <PublicHeader />
+      <style>{`
+        @page { size: A4; margin: 14mm; }
+        @media print {
+          .no-print { display: none !important; }
+          body { background: #fff !important; }
+        }
+      `}</style>
+      <div className="no-print"><PublicHeader /></div>
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 16px 80px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>📚</div>
@@ -410,9 +437,13 @@ export default function Docs() {
           <p style={{ fontSize: 15, color: 'var(--ink-soft)', margin: 0 }}>
             {ui.subtitle}
           </p>
+          <button className="no-print" onClick={() => setPrinting(true)}
+            style={{ marginTop: 14, padding: '9px 20px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--accent)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            ⬇️ {ui.pdf}
+          </button>
         </div>
 
-        <div style={{ position: 'relative', marginBottom: 24 }}>
+        <div className="no-print" style={{ position: 'relative', marginBottom: 24 }}>
           <i className="bi bi-search" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)' }} />
           <input
             value={search}
@@ -426,7 +457,7 @@ export default function Docs() {
         </div>
 
         {!q && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+          <div className="no-print" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
             {SECTIONS.map(s => (
               <a key={s.id} href={`#${s.id}`} onClick={e => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' }) }}
                 style={{ padding: '6px 14px', borderRadius: 20, fontSize: 13, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', cursor: 'pointer', textDecoration: 'none' }}>
@@ -439,13 +470,25 @@ export default function Docs() {
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-soft)' }}>{ui.empty}</div>
         )}
-        {filtered.map(s => (
-          <div key={s.id} id={s.id}>
-            <DocSection section={s} />
-          </div>
-        ))}
+        {/* Разделы: Для учителя / Для ученика / Как работает */}
+        {GROUP_ORDER.map(g => {
+          const items = filtered.filter(s => (SECTION_GROUP[s.id] || 'how') === g)
+          if (items.length === 0) return null
+          return (
+            <div key={g}>
+              <h2 style={{ fontFamily: 'Georgia,serif', fontSize: 19, margin: '26px 0 12px', color: 'var(--ink)' }}>
+                {ui.groups[g]}
+              </h2>
+              {items.map(s => (
+                <div key={s.id} id={s.id}>
+                  <DocSection section={s} forceOpen={printing} />
+                </div>
+              ))}
+            </div>
+          )
+        })}
 
-        <div style={{ marginTop: 40, textAlign: 'center', fontSize: 13, color: 'var(--ink-soft)' }}>
+        <div className="no-print" style={{ marginTop: 40, textAlign: 'center', fontSize: 13, color: 'var(--ink-soft)' }}>
           <p>{ui.footer1}</p>
           <p>{ui.footer2} <a href="/login" style={{ color: 'var(--accent)' }}>{ui.footer3}</a> {ui.footer4}</p>
         </div>
