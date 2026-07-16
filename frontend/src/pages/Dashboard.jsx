@@ -10,10 +10,6 @@ import AdSlot from '../components/AdSlot.jsx'
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
 const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🃏', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️', speech: '🗣️', dictation: '🎙️' }
 
-// Номер урока-книги из названия ("Урок 14.1 — Тема" → 14) и признак тематического под-урока
-const bookNum = (title) => { const m = String(title || '').match(/Урок\s+(\d+)/i); return m ? parseInt(m[1]) : null }
-const isSubLesson = (title) => /Урок\s+\d+\.\d/i.test(title || '')
-
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
@@ -23,6 +19,8 @@ export default function Dashboard() {
   const [pinned, setPinned] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem('pinned_lessons') || '[]')) } catch { return new Set() }
   })
+  const [showLessons, setShowLessons] = useState(() => localStorage.getItem('hide_lessons') !== '1')
+  const toggleLessons = () => setShowLessons(v => { localStorage.setItem('hide_lessons', v ? '1' : '0'); return !v })
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
@@ -104,8 +102,6 @@ export default function Dashboard() {
           {t.dashboard.exercisesWaiting(total)}
         </p>
       </div>
-
-      {gameBanner}
 
       {/* 📊 Аналитика класса — для учителя (отчётность по ученикам) */}
       {user?.role === 'owner' && (
@@ -218,12 +214,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Секция уроков */}
-      <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 20 }}>
-        {t.dashboard.lessons}
-      </div>
-
-      {/* Поиск по урокам — когда их много, отобрать по теме */}
+      {/* Поиск — когда карточек много, отобрать по теме */}
       {lessons.length > 5 && (
         <div style={{ padding: '0 12px 10px' }}>
           <input value={lessonQuery} onChange={e => setLessonQuery(e.target.value)}
@@ -232,40 +223,55 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {(() => {
-          const q = lessonQuery.trim().toLowerCase()
-          const shown = q
-            ? lessons.filter(l => (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || l.lesson_title || '').toLowerCase().includes(q))
-            : lessons
-          if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 8px', fontSize: 14 }}>{t.dashboard.nothingFound}</div>
+      {(() => {
+        const q = lessonQuery.trim().toLowerCase()
+        const match = l => !q || (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || l.lesson_title || '').toLowerCase().includes(q)
+        const shown = lessons.filter(match)
+        // Закреплённые (⭐) сверху, затем новые (больший id) выше — без вложенности
+        const bySort = (a, b) => {
+          const pa = pinned.has(a.lesson_id), pb = pinned.has(b.lesson_id)
+          if (pa !== pb) return pa ? -1 : 1
+          return b.lesson_id - a.lesson_id
+        }
+        const sets  = shown.filter(l => l.is_set).sort(bySort)
+        const books = shown.filter(l => !l.is_set).sort(bySort)
+        if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 20px', fontSize: 14 }}>{t.dashboard.nothingFound}</div>
+        const Card = l => (
+          <LessonCard key={l.lesson_id} lesson={l} navigate={navigate} onReset={repeatLesson}
+            pinned={pinned.has(l.lesson_id)} onTogglePin={() => togglePin(l.lesson_id)} />
+        )
+        return (
+          <>
+            {/* 📚 Наборы по темам — глобальные, сверху */}
+            {sets.length > 0 && (
+              <>
+                <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 20 }}>
+                  📚 {t.nav.sets || 'Наборы по темам'}
+                </div>
+                <div style={{ padding: '0 12px 8px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {sets.map(Card)}
+                </div>
+              </>
+            )}
 
-          // Группируем по номеру урока-книги: под-уроки (14.1/14.2) вложены под родителя «Урок 14»
-          const map = new Map()
-          for (const l of shown) {
-            const num = bookNum(l.lesson_title)
-            const key = num != null ? `n${num}` : `id${l.lesson_id}`
-            if (!map.has(key)) map.set(key, { key, num: num ?? (10000 + l.lesson_id), lessons: [] })
-            map.get(key).lessons.push(l)
-          }
-          const groups = [...map.values()].map(g => {
-            const parent = g.lessons.find(l => !isSubLesson(l.lesson_title)) || g.lessons[0]
-            const children = g.lessons.filter(l => l !== parent)
-              .sort((a, b) => String(a.lesson_title || '').localeCompare(String(b.lesson_title || ''), undefined, { numeric: true }))
-            return { ...g, parent, ordered: [parent, ...children] }
-          })
-          // Закреплённые (⭐) сверху, затем новые (больший номер) выше — созданные наборы под рукой
-          groups.sort((a, b) => {
-            const pa = pinned.has(a.key), pb = pinned.has(b.key)
-            if (pa !== pb) return pa ? -1 : 1
-            return b.num - a.num
-          })
-          return groups.map(g => (
-            <LessonGroup key={g.key} group={g} pinned={pinned.has(g.key)} onTogglePin={togglePin}
-              navigate={navigate} lang={lang} onReset={repeatLesson} />
-          ))
-        })()}
-      </div>
+            {/* Уроки — плоско, новый сверху, со сворачиванием всей секции */}
+            <div onClick={toggleLessons} style={{ padding: '6px 20px 8px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600 }}>
+                {t.dashboard.lessons}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({books.length})</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>
+                {showLessons ? 'скрыть ▲' : 'показать ▼'}
+              </span>
+            </div>
+            {showLessons && (
+              <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {books.length ? books.map(Card) : <div style={{ color: 'var(--ink-soft)', padding: '4px 8px', fontSize: 14 }}>—</div>}
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {/* Круглая кнопка камеры — новый урок по фото. Стоит НАД «Повторить всё»
           в том же правом нижнем углу (не над «Повторить всё» по X, а выше по Y —
@@ -331,43 +337,12 @@ export default function Dashboard() {
   )
 }
 
-// Группа урока-книги: свёрнутый заголовок (⭐ · название · описание · N наборов),
-// клик → разворачивает вложенные под-уроки (тематические наборы). Лента остаётся короткой.
-function LessonGroup({ group, pinned, onTogglePin, navigate, lang, onReset }) {
-  const { t } = useI18nStore()
-  const [open, setOpen] = useState(false)
-  const parent = group.parent
-  const title = getLessonTitle(parent.lesson_title, parent.lesson_title_translations, lang) || parent.lesson_title
-  const desc = getLessonDesc(parent.lesson_description, parent.lesson_description_translations, lang)
-  const count = group.lessons.length
-  return (
-    <div style={{ border: `1px solid ${pinned ? 'var(--accent)' : 'var(--line)'}`, borderRadius: 14, background: 'var(--surface)', overflow: 'hidden' }}>
-      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', cursor: 'pointer' }}>
-        <button onClick={(e) => { e.stopPropagation(); onTogglePin(group.key) }} title="Закрепить наверху"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1, flexShrink: 0, color: pinned ? 'var(--accent)' : 'var(--ink-soft)' }}>
-          {pinned ? '⭐' : '☆'}
-        </button>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
-          {desc && <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{desc}</div>}
-          {count > 1 && <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>📚 {count} тематических наборов</div>}
-        </div>
-        <span style={{ color: 'var(--ink-soft)', fontSize: 13, flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
-      </div>
-      {open && (
-        <div style={{ padding: '0 10px 10px', display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--surface-2)' }}>
-          {group.ordered.map(l => <LessonCard key={l.lesson_id} lesson={l} navigate={navigate} onReset={onReset} />)}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function LessonCard({ lesson, navigate, onReset }) {
+function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const [words, setWords]         = useState(null)
   const [showWords, setShowWords] = useState(false)
+  const [showExercises, setShowExercises] = useState(false) // упражнения свёрнуты по умолчанию
   const [listening, setListening] = useState(false)
   const [gameBusy, setGameBusy]   = useState(false)
 
@@ -450,6 +425,12 @@ function LessonCard({ lesson, navigate, onReset }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+            {onTogglePin && (
+              <button onClick={onTogglePin} title="Закрепить наверху"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, lineHeight: 1, flexShrink: 0, padding: 0, color: pinned ? 'var(--accent)' : 'var(--ink-soft)' }}>
+                {pinned ? '⭐' : '☆'}
+              </button>
+            )}
             <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 18, fontWeight: 700 }}>
               {getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || `Урок #${lesson.lesson_id}`}
             </div>
@@ -479,7 +460,8 @@ function LessonCard({ lesson, navigate, onReset }) {
         </button>
       </div>
 
-      {/* Чипы типов упражнений */}
+      {/* Чипы типов упражнений — свёрнуты по умолчанию, раскрываются нижней полосой */}
+      {showExercises && (
       <div className="chips-grid" style={{ display: 'grid', gap: 8, marginTop: 14 }}>
         {chips.map(type => (
           <button key={type}
@@ -534,6 +516,7 @@ function LessonCard({ lesson, navigate, onReset }) {
           </button>
         )}
       </div>
+      )}
 
       {/* Слова урока — нижняя панель */}
       <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -570,6 +553,18 @@ function LessonCard({ lesson, navigate, onReset }) {
             🔄 Сбросить
           </button>
         )}
+
+        {/* Свернуть/раскрыть упражнения */}
+        <button onClick={() => setShowExercises(v => !v)} title="Показать/скрыть упражнения"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            background: showExercises ? 'var(--accent-soft)' : 'var(--surface-2)',
+            border: `1px solid ${showExercises ? 'var(--accent)' : 'var(--line)'}`,
+            color: showExercises ? 'var(--accent)' : 'var(--ink-soft)',
+            borderRadius: 10, padding: '7px 12px', fontSize: 12.5, cursor: 'pointer', fontWeight: 500, flexShrink: 0,
+          }}>
+          ✏️ {lesson.total} {showExercises ? '▲' : '▼'}
+        </button>
 
         {/* Раскрыть/скрыть слова */}
         <button onClick={toggleWords} style={{
