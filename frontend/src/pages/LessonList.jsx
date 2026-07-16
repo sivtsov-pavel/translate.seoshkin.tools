@@ -131,7 +131,7 @@ function EditForm({ lesson, onSave, onCancel }) {
           style={{ padding: '7px 10px', background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
           📷
         </button>
-        <input ref={fileRef} type="file" multiple accept="image/*,audio/*" style={{ display: 'none' }}
+        <input ref={fileRef} type="file" multiple accept="image/*,audio/*,application/pdf" style={{ display: 'none' }}
           onChange={e => uploadMedia([...e.target.files])} />
         {/* Отдельный инпут с capture — открывает камеру устройства напрямую, а не пикер файлов */}
         <input ref={camRef} type="file" accept="image/*" capture="environment" multiple style={{ display: 'none' }}

@@ -173,14 +173,14 @@ export default function NewLesson() {
         {/* 📘 Учебник (source=textbook) */}
         <div style={{ marginBottom: 8 }}>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{N.book}</label>
-          <DropZone onFiles={addPhotos} onDrop={e => handleDrop(e, 'photo')} accept="image/*" idKey="book" label={N.bookHint} disabled={isProcessing} />
+          <DropZone onFiles={addPhotos} onDrop={e => handleDrop(e, "photo")} accept="image/*,application/pdf" idKey="book" label={N.bookHint} disabled={isProcessing} />
         </div>
         <PhotoGrid items={photos} onRemove={removePhoto} disabled={isProcessing} label={N.selected(photos.length)} />
 
         {/* ✏️ Тетрадь / доска (source=extra) */}
         <div style={{ marginBottom: 8 }}>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{N.tetrad}</label>
-          <DropZone onFiles={addExtraPhotos} onDrop={e => handleDrop(e, 'extra')} accept="image/*" idKey="tetrad" label={N.tetradHint} disabled={isProcessing} />
+          <DropZone onFiles={addExtraPhotos} onDrop={e => handleDrop(e, "extra")} accept="image/*,application/pdf" idKey="tetrad" label={N.tetradHint} disabled={isProcessing} />
         </div>
         <PhotoGrid items={extraPhotos} onRemove={removeExtraPhoto} disabled={isProcessing} label={N.selected(extraPhotos.length)} />
 

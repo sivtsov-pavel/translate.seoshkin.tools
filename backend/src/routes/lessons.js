@@ -1,6 +1,7 @@
 import { db } from '../db/index.js'
 import { generateLetterFill } from '../services/claude.js'
 import { regenerateExercisesFromDb, processNewMedia, enrichLesson } from '../services/processor.js'
+import { pdfToImages } from '../services/pdf.js'
 
 export async function lessonsRoutes(fastify) {
   // Создание урока (опционально с привязкой к курсу)
@@ -314,8 +315,25 @@ export async function lessonsRoutes(fastify) {
       if (part.type !== 'file') continue
 
       const mimeType = part.mimetype || ''
-      const mediaType = mimeType.startsWith('audio') ? 'audio' : 'photo'
+      // PDF учебника → конвертируем в страницы-картинки, каждую как отдельное фото урока
+      const isPdf = mimeType === 'application/pdf' || (part.filename || '').toLowerCase().endsWith('.pdf')
+      if (isPdf) {
+        try {
+          const buf = await part.toBuffer()
+          const pages = await pdfToImages(buf)
+          for (const p of pages) {
+            const { rows } = await db.query(
+              "INSERT INTO lesson_media (lesson_id, type, file_path, source) VALUES ($1, 'photo', $2, $3) RETURNING id",
+              [lessonId, p.filename, source])
+            savedFiles.push({ mediaId: rows[0].id, filename: p.filename, type: 'photo' })
+          }
+        } catch (e) {
+          fastify.log.error({ lessonId, err: e }, 'Ошибка конвертации PDF')
+        }
+        continue
+      }
 
+      const mediaType = mimeType.startsWith('audio') ? 'audio' : 'photo'
       const { filename } = await fastify.saveUploadedFile(part)
 
       const { rows } = await db.query(
