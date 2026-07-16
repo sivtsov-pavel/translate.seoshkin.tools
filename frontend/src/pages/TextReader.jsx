@@ -347,7 +347,8 @@ export default function TextReader() {
   // Выбор предложений для копирования (только текст на изучаемом языке —
   // sentences[i] в «Читать», pair.original в «Двуязычном»; перевод НИКОГДА не копируем)
   const [readCopySelected, setReadCopySelected] = useState(new Set())
-  const [bilingualCopySelected, setBilingualCopySelected] = useState(new Set())
+  const [bilingualCopySelected, setBilingualCopySelected] = useState(new Set())     // выбранные оригиналы (изучаемый язык)
+  const [bilingualTransSelected, setBilingualTransSelected] = useState(new Set())   // выбранные переводы
   const [copyFeedback, setCopyFeedback] = useState(false)
 
   // Сохранённые наборы
@@ -455,6 +456,13 @@ export default function TextReader() {
       return next
     })
   }, [])
+  const toggleBilingualTrans = useCallback((i) => {
+    setBilingualTransSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i); else next.add(i)
+      return next
+    })
+  }, [])
 
   const flashCopied = () => { setCopyFeedback(true); setTimeout(() => setCopyFeedback(false), 1500) }
 
@@ -468,13 +476,20 @@ export default function TextReader() {
     flashCopied()
   }
 
-  // Копируем ТОЛЬКО pair.original (изучаемый язык), НИКОГДА pair.translation
+  // Копируем выбранное: оригинал и/или перевод. По каждому абзацу — что отмечено
+  // (можно оригинал, можно перевод, можно оба). Порядок — как в тексте.
   const copyBilingualSelection = async () => {
-    const ordered = [...bilingualCopySelected].sort((a, b) => a - b)
-    const textToCopy = ordered.map(i => bilingual[i].original).join('\n\n').trim()
+    const idx = [...new Set([...bilingualCopySelected, ...bilingualTransSelected])].sort((a, b) => a - b)
+    const parts = []
+    for (const i of idx) {
+      if (bilingualCopySelected.has(i) && bilingual[i]?.original) parts.push(bilingual[i].original)
+      if (bilingualTransSelected.has(i) && bilingual[i]?.translation) parts.push(bilingual[i].translation)
+    }
+    const textToCopy = parts.join('\n\n').trim()
     if (!textToCopy) return
     await navigator.clipboard.writeText(textToCopy)
     setBilingualCopySelected(new Set())
+    setBilingualTransSelected(new Set())
     flashCopied()
   }
 
@@ -511,7 +526,7 @@ export default function TextReader() {
   const handleTranslate = async () => {
     const paragraphs = splitParagraphs(text)
     if (!paragraphs.length) return
-    setTranslating(true); setTranslateError(''); setBilingual([]); setBilingualCopySelected(new Set())
+    setTranslating(true); setTranslateError(''); setBilingual([]); setBilingualCopySelected(new Set()); setBilingualTransSelected(new Set())
     try {
       const res = await api.post('/reader/translate', { paragraphs, sourceLang: biSrc, targetLang: biTgt, model: transModel })
       setBilingual(res.translations || [])
@@ -653,7 +668,8 @@ export default function TextReader() {
 
   const textHasContent = text.trim().length > 0
   const hasSelection = selectedWords.size > 0
-  const hasCopySelection = mode === 'read' ? readCopySelected.size > 0 : mode === 'bilingual' ? bilingualCopySelected.size > 0 : false
+  const biSelCount = bilingualCopySelected.size + bilingualTransSelected.size
+  const hasCopySelection = mode === 'read' ? readCopySelected.size > 0 : mode === 'bilingual' ? biSelCount > 0 : false
 
   const srcInfo = getLang(convSrcLang)
   const tgtInfo = getLang(convTgtLang)
@@ -670,7 +686,7 @@ export default function TextReader() {
             { key: 'bilingual',    label: '🌐 Двуязычный' },
             { key: 'conversation', label: '💬 Разговор' },
           ].map(tab => (
-            <button key={tab.key} onClick={() => { setMode(tab.key); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()) }} style={{
+            <button key={tab.key} onClick={() => { setMode(tab.key); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()); setBilingualTransSelected(new Set()) }} style={{
               padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600,
               cursor: 'pointer',
               background: mode === tab.key ? 'var(--accent)' : 'transparent',
@@ -1038,32 +1054,42 @@ export default function TextReader() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: (hasSelection || hasCopySelection) ? 180 : 20 }}>
                   {bilingual.map((pair, i) => {
                     const copySelected = bilingualCopySelected.has(i)
+                    const transSelected = bilingualTransSelected.has(i)
+                    const anySelected = copySelected || transSelected
+                    // Мини-чекбокс копирования (переиспользуем для оригинала и перевода)
+                    const CopyBox = ({ on, onToggle }) => (
+                      <span
+                        onClick={onToggle}
+                        title="Выбрать для копирования"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          width: 16, height: 16, verticalAlign: 'middle',
+                          borderRadius: 4, cursor: 'pointer', fontSize: 11, lineHeight: 1, flexShrink: 0,
+                          border: `1px solid ${on ? 'var(--accent)' : 'var(--line)'}`,
+                          background: on ? 'var(--accent)' : 'transparent',
+                          color: on ? 'var(--accent-ink)' : 'transparent',
+                        }}
+                      >✓</span>
+                    )
                     return (
                     <div key={i} style={{
-                      border: `1px solid ${copySelected ? 'var(--accent)' : 'var(--line)'}`,
+                      border: `1px solid ${anySelected ? 'var(--accent)' : 'var(--line)'}`,
                       borderRadius: 14, overflow: 'hidden', background: 'var(--surface)',
                     }}>
                       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                          {/* Чекбокс выбора абзаца для копирования — копируем только pair.original (изучаемый язык) */}
-                          <span
-                            onClick={() => toggleBilingualCopy(i)}
-                            title="Выбрать для копирования"
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                              width: 16, height: 16, verticalAlign: 'middle',
-                              borderRadius: 4, cursor: 'pointer', fontSize: 11, lineHeight: 1, flexShrink: 0,
-                              border: `1px solid ${copySelected ? 'var(--accent)' : 'var(--line)'}`,
-                              background: copySelected ? 'var(--accent)' : 'transparent',
-                              color: copySelected ? 'var(--accent-ink)' : 'transparent',
-                            }}
-                          >✓</span>
+                          {/* Чекбокс копирования оригинала (изучаемый язык) */}
+                          <CopyBox on={copySelected} onToggle={() => toggleBilingualCopy(i)} />
                           <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{getLang(biSrc).flag} {getLang(biSrc).label}</div>
                         </div>
                         <ClickableParagraph text={pair.original} selectedWords={selectedWords} onWordClick={handleWordClick} />
                       </div>
                       <div style={{ padding: '10px 16px', background: 'var(--surface-2)' }}>
-                        <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 4 }}>{getLang(biTgt).flag} {getLang(biTgt).label}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          {/* Чекбокс копирования перевода */}
+                          <CopyBox on={transSelected} onToggle={() => toggleBilingualTrans(i)} />
+                          <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{getLang(biTgt).flag} {getLang(biTgt).label}</div>
+                        </div>
                         <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.7, fontStyle: 'italic' }}>
                           {pair.translation}
                         </p>
@@ -1110,9 +1136,9 @@ export default function TextReader() {
       )}
       {mode === 'bilingual' && (
         <CopySelectionBar
-          count={bilingualCopySelected.size}
+          count={biSelCount}
           onCopy={copyBilingualSelection}
-          onCancel={() => setBilingualCopySelected(new Set())}
+          onCancel={() => { setBilingualCopySelected(new Set()); setBilingualTransSelected(new Set()) }}
           copied={copyFeedback}
           bottomOffset={hasSelection ? 'calc(55vh + 16px)' : 16}
         />
