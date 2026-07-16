@@ -62,6 +62,7 @@ export default function Vocabulary() {
   const [scanFilter, setScanFilter] = useState('') // media_id скана внутри урока
   const [letterFilter, setLetterFilter] = useState('') // первая буква слова
   const [grammarFilter, setGrammarFilter] = useState('')
+  const [noImageFilter, setNoImageFilter] = useState(false) // админ: только слова без картинки
   const [search, setSearch]     = useState('')
   const [loading, setLoading]   = useState(true)
   const [sending, setSending]   = useState(false)
@@ -157,6 +158,7 @@ export default function Vocabulary() {
   const visiblePos = grammarCats.filter(c => posCounts[c] > 0)
 
   const filtered = words.filter(w => {
+    if (noImageFilter && w.image_url) return false
     if (statusFilter  && w.status !== statusFilter) return false
     if (courseFilter  && w.course_title !== courseFilter) return false
     if (lessonFilter  && (w.lesson_title || t.vocabulary.noLesson) !== lessonFilter) return false
@@ -197,13 +199,16 @@ export default function Vocabulary() {
     } catch (e) { setCreatingSet(false); alert('Ошибка: ' + e.message) }
   }
 
+  // Админ: сколько слов вообще без картинки (для круглой кнопки-фильтра)
+  const noImageCount = words.filter(w => !w.image_url).length
+
   // Счётчик активных фильтров для бейджа
-  const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter, scanFilter, letterFilter].filter(Boolean).length
+  const activeFilters = [statusFilter, courseFilter, lessonFilter, grammarFilter, scanFilter, letterFilter, noImageFilter].filter(Boolean).length
   // «Продвинутые» фильтры (курс/урок/часть речи) — на мобиле прячутся за шестерёнку
   const advancedCount  = [courseFilter, lessonFilter, grammarFilter].filter(Boolean).length
   const advancedActive = advancedCount > 0
 
-  const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter(''); setScanFilter(''); setLetterFilter('') }
+  const resetFilters = () => { setStatusFilter(''); setCourseFilter(''); setLessonFilter(''); setGrammarFilter(''); setScanFilter(''); setLetterFilter(''); setNoImageFilter(false) }
 
   // Стиль чипа-фильтра («капелька»)
   const chipStyle = (active, color) => ({
@@ -258,6 +263,35 @@ export default function Vocabulary() {
             title="Собрать набор упражнений из отфильтрованных слов"
             style={{ padding: '7px 12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
             {creatingSet ? '⏳ Собираю...' : '✏️ Набор'}
+          </button>
+        )}
+        {/* Админ: круглая кнопка-тумблер «показать слова без картинки» + счётчик */}
+        {view === 'words' && user?.role === 'owner' && noImageCount > 0 && (
+          <button onClick={() => setNoImageFilter(v => !v)}
+            title={`Слова без картинки: ${noImageCount}`}
+            style={{
+              position: 'relative', width: 36, height: 36, borderRadius: '50%', flex: '0 0 auto',
+              border: `1.5px solid ${noImageFilter ? 'var(--accent)' : 'var(--line)'}`,
+              background: noImageFilter ? 'var(--accent-soft)' : 'var(--surface-2)',
+              color: noImageFilter ? 'var(--accent)' : 'var(--ink-soft)',
+              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            <i className="bi bi-image" style={{ fontSize: 15, lineHeight: 1 }} />
+            {/* Диагональная черта — «картинка перечёркнута» */}
+            <span style={{
+              position: 'absolute', left: 6, right: 6, top: '50%', height: 2, borderRadius: 2,
+              background: 'currentColor', transform: 'rotate(-45deg)', pointerEvents: 'none',
+            }} />
+            {/* Бейдж-счётчик слов без картинки */}
+            <span style={{
+              position: 'absolute', top: -6, right: -8, minWidth: 16, height: 16, padding: '0 4px',
+              borderRadius: 999, background: noImageFilter ? 'var(--accent)' : 'var(--ink-soft)',
+              color: 'var(--surface)', fontSize: 10, fontWeight: 700,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+              boxSizing: 'border-box',
+            }}>
+              {noImageCount}
+            </span>
           </button>
         )}
       </div>
