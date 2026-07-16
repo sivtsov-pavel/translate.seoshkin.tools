@@ -2,16 +2,20 @@ import { useState, useEffect, useRef } from 'react'
 import { useSettingsStore, applyVisual } from '../store/settings.js'
 import { useAuthStore } from '../store/auth.js'
 import { usePushNotifications } from '../hooks/usePushNotifications.jsx'
+import { api } from '../api/client.js'
 
 const VOICE_KEY = 'de_voice_name'
 
 // Тумблер «реакции тренера Pablo в упражнениях» (видео верно/неверно). Можно отключить — только текст.
-function TrainerReactionsRow() {
+// onSave — коллбек от родителя: досылает ПОЛНЫЙ visual-блок на сервер (PATCH заменяет колонку целиком,
+// частичный объект стёр бы соседние поля вроде zoom/fontFamily).
+function TrainerReactionsRow({ onSave }) {
   const [on, setOn] = useState(() => localStorage.getItem('trainer_reactions') !== 'false')
   const toggle = () => {
     const next = !on
     localStorage.setItem('trainer_reactions', next ? 'true' : 'false')
     setOn(next)
+    onSave?.({ trainerReactions: next })
   }
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderTop: '1px solid var(--line)', marginTop: 8 }}>
@@ -29,7 +33,8 @@ function TrainerReactionsRow() {
   )
 }
 
-function VoicePicker() {
+// onSave — тот же коллбек, что и у TrainerReactionsRow (см. выше) — досылает полный visual-блок.
+function VoicePicker({ onSave }) {
   const [voices, setVoices] = useState([])
   const [selected, setSelected] = useState(() => localStorage.getItem(VOICE_KEY) || '')
   const [preview, setPreview] = useState(null)
@@ -48,6 +53,7 @@ function VoicePicker() {
   const select = (name) => {
     localStorage.setItem(VOICE_KEY, name)
     setSelected(name)
+    onSave?.({ voiceName: name })
     setPreview(name)
     // Пример произношения выбранным голосом
     if (!synth) return
@@ -157,6 +163,9 @@ export default function Settings() {
   const [saved, setSaved] = useState(false)
   const [keyVisible, setKeyVisible]   = useState(false)
   const [smtpPassVisible, setSmtpPassVisible] = useState(false)
+  // Бампается, когда с сервера подъехали trainerReactions/voiceName — форсит ремонт
+  // TrainerReactionsRow/VoicePicker, чтобы их localStorage-инициализация перечиталась заново
+  const [visualVersion, setVisualVersion] = useState(0)
 
   const [draft, setDraft] = useState({
     daily_limit:  store.daily_limit,
@@ -200,8 +209,47 @@ export default function Settings() {
     })
   }, [store.loaded])
 
+  // store.fetchSettings() (запускается выше) уже кладёт ВСЁ содержимое серверного visual-блока
+  // в стор (включая trainerReactions/voiceName, если они там есть) — но эти два поля живут не в
+  // draft, а в localStorage у дочерних TrainerReactionsRow/VoicePicker. Как только сервер ответил —
+  // переносим их в нужные localStorage-ключи и форсим ремонт дочерних компонентов, чтобы подхватили.
+  useEffect(() => {
+    if (!store.loaded) return
+    let changed = false
+    if (store.trainerReactions != null) {
+      localStorage.setItem('trainer_reactions', store.trainerReactions ? 'true' : 'false')
+      changed = true
+    }
+    if (store.voiceName) {
+      localStorage.setItem(VOICE_KEY, store.voiceName)
+      changed = true
+    }
+    if (changed) setVisualVersion(v => v + 1)
+  }, [store.loaded, store.trainerReactions, store.voiceName])
+
   const VISUAL_KEYS = new Set(['zoom', 'fontFamily', 'headingFont', 'headingSize', 'accentColor', 'voiceRate', 'mobileLayout'])
   const LS_KEY = 'app_visual_settings'
+
+  // Полный visual-блок (все 9 полей). Нужен, потому что PATCH /settings/visual заменяет
+  // колонку visual целиком — частичный объект стёр бы соседние поля на сервере.
+  const buildFullVisual = (overrides = {}) => ({
+    zoom: draft.zoom,
+    fontFamily: draft.fontFamily,
+    headingFont: draft.headingFont,
+    headingSize: draft.headingSize,
+    accentColor: draft.accentColor,
+    voiceRate: draft.voiceRate,
+    mobileLayout: draft.mobileLayout,
+    trainerReactions: localStorage.getItem('trainer_reactions') !== 'false',
+    voiceName: localStorage.getItem(VOICE_KEY) || '',
+    ...overrides,
+  })
+
+  // Best-effort сохранение на сервер — не блокирует UI и не показывает ошибку при сбое сети,
+  // локальный кеш (localStorage) уже обновлён синхронно до вызова.
+  const saveFullVisual = (overrides) => {
+    api.patch('/settings/visual', { visual: buildFullVisual(overrides) }).catch(() => {})
+  }
 
   // Визуальные настройки применяются И сохраняются сразу — без нажатия «Сохранить»
   const update = (key, value) => setDraft(d => {
@@ -210,12 +258,22 @@ export default function Settings() {
       applyVisual(next)
       const toSave = { zoom: next.zoom, fontFamily: next.fontFamily, headingFont: next.headingFont, headingSize: next.headingSize, accentColor: next.accentColor, voiceRate: next.voiceRate, mobileLayout: next.mobileLayout }
       localStorage.setItem(LS_KEY, JSON.stringify(toSave))
+      api.patch('/settings/visual', {
+        visual: {
+          ...toSave,
+          trainerReactions: localStorage.getItem('trainer_reactions') !== 'false',
+          voiceName: localStorage.getItem(VOICE_KEY) || '',
+        },
+      }).catch(() => {})
     }
     return next
   })
 
   const handleSave = async () => {
     await store.saveSettings(draft)
+    // store.saveSettings() шлёт в /settings/visual только 7 базовых полей — досылаем полный
+    // блок следом, чтобы не потерять trainerReactions/voiceName (PATCH заменяет колонку целиком)
+    saveFullVisual()
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -426,8 +484,8 @@ export default function Settings() {
           </div>
         </Row>
 
-        <VoicePicker />
-        <TrainerReactionsRow />
+        <VoicePicker key={`voice-${visualVersion}`} onSave={saveFullVisual} />
+        <TrainerReactionsRow key={`reactions-${visualVersion}`} onSave={saveFullVisual} />
       </Section>
 
       {/* ── Видео-аватар (платная опция D-ID) ── */}
