@@ -47,7 +47,10 @@ export async function lessonsRoutes(fastify) {
     const { role } = request.user
     const target = request.headers['x-target-lang'] || 'de'
     // Мульти-таргет: показываем только уроки активного изучаемого языка
-    const filter = role === 'owner' ? 'WHERE l.target_lang = $1' : "WHERE l.status = 'done' AND l.target_lang = $1"
+    // Личные наборы ученика («мои сложные слова») в общий список не показываем никому,
+    // кроме их владельца — иначе они утекли бы всей школе.
+    const personalFilter = ` AND (NOT l.is_personal OR l.owner_id = ${parseInt(request.user.id)})`
+    const filter = (role === 'owner' ? 'WHERE l.target_lang = $1' : "WHERE l.status = 'done' AND l.target_lang = $1") + personalFilter
 
     const { rows } = await db.query(
       `SELECT l.*,
