@@ -193,8 +193,8 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                         <b dir="ltr" style={{ fontSize: 14 }}>{w.de}</b>
                         <SpeakButton text={w.de} size={14} />
                         {w.inDict
-                          ? <span style={{ fontSize: 10, color: 'var(--good, #16a34a)', fontWeight: 700 }}>✓</span>
-                          : <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700 }}>🆕</span>}
+                          ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>✓ в словаре</span>
+                          : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>🆕 новое</span>}
                         <span style={{ fontSize: 13, color: 'var(--ink-soft)', marginLeft: 'auto', textAlign: 'right' }}>{w.tr}</span>
                       </div>
                     ))}
@@ -214,8 +214,8 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                   <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }} dir="ltr">
                     {w.de} <SpeakButton text={w.de} size={16} />
                     {w.inDict
-                      ? <span style={{ fontSize: 10, color: 'var(--good, #16a34a)', fontWeight: 700 }}>✓ в словаре</span>
-                      : <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700 }}>🆕 новое</span>}
+                      ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px' }}>✓ в словаре</span>
+                      : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px' }}>🆕 новое</span>}
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{w.tr}</div>
                 </div>

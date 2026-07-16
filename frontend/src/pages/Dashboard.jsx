@@ -228,14 +228,11 @@ export default function Dashboard() {
         const q = lessonQuery.trim().toLowerCase()
         const match = l => !q || (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || l.lesson_title || '').toLowerCase().includes(q)
         const shown = lessons.filter(match)
-        // Закреплённые (⭐) сверху, затем новые (больший id) выше — без вложенности
-        const bySort = (a, b) => {
-          const pa = pinned.has(a.lesson_id), pb = pinned.has(b.lesson_id)
-          if (pa !== pb) return pa ? -1 : 1
-          return b.lesson_id - a.lesson_id
-        }
-        const sets  = shown.filter(l => l.is_set).sort(bySort)
-        const books = shown.filter(l => !l.is_set).sort(bySort)
+        const byNew = (a, b) => b.lesson_id - a.lesson_id
+        // Закреплённые (⭐) — в самый верх, ДО наборов; остальное без них
+        const pinnedItems = shown.filter(l => pinned.has(l.lesson_id)).sort(byNew)
+        const sets  = shown.filter(l => l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
+        const books = shown.filter(l => !l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
         if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 20px', fontSize: 14 }}>{t.dashboard.nothingFound}</div>
         const Card = l => (
           <LessonCard key={l.lesson_id} lesson={l} navigate={navigate} onReset={repeatLesson}
@@ -243,6 +240,18 @@ export default function Dashboard() {
         )
         return (
           <>
+            {/* ⭐ Закреплённые — в самом верху, перед наборами */}
+            {pinnedItems.length > 0 && (
+              <>
+                <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 700, paddingLeft: 20 }}>
+                  ⭐ Закреплённые
+                </div>
+                <div style={{ padding: '0 12px 8px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {pinnedItems.map(Card)}
+                </div>
+              </>
+            )}
+
             {/* 📚 Наборы по темам — глобальные, сверху */}
             {sets.length > 0 && (
               <>
