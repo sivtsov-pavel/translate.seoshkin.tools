@@ -3,9 +3,7 @@ import { sm2 } from '../services/srs.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { generateWordImage } from '../services/imageGen.js'
-import { writeFileSync, mkdirSync } from 'fs'
-import { join, extname } from 'path'
-import { config } from '../config.js'
+import { saveOptimizedImage } from '../services/imageOptimize.js'
 
 async function getUserDailyLimit(userId) {
   const { rows } = await db.query(
@@ -532,9 +530,11 @@ export async function exercisesRoutes(fastify) {
     const { word_de, translation_ru } = rows[0]
     // Кнопка «обновить фото» теперь ГЕНЕРИРУЕТ новую детскую картинку (gpt-image-1),
     // а не ищет фото в Unsplash. По просьбе Павла — единый детский стиль.
-    const imageUrl = await generateWordImage(word_de, translation_ru, wordId)
-    if (!imageUrl) return reply.status(502).send({ error: 'Не удалось сгенерировать картинку' })
+    const baseUrl = await generateWordImage(word_de, translation_ru, wordId)
+    if (!baseUrl) return reply.status(502).send({ error: 'Не удалось сгенерировать картинку' })
 
+    // ?v= — сброс кэша: файл word_<id>.webp перезаписан, а URL без бастера не изменился бы
+    const imageUrl = `${baseUrl}?v=${Date.now()}`
     await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [imageUrl, wordId])
     return { image_url: imageUrl }
   })
@@ -550,12 +550,16 @@ export async function exercisesRoutes(fastify) {
     if (!data) return reply.status(400).send({ error: 'Файл не передан' })
 
     const buf = await data.toBuffer()
-    const ext = extname(data.filename || '.jpg').toLowerCase() || '.jpg'
-    const dir = join(config.uploadDir, 'word-images')
-    mkdirSync(dir, { recursive: true })
-    const filename = `word_${wordId}${ext}`
-    writeFileSync(join(dir, filename), buf)
-    const imageUrl = `/uploads/word-images/${filename}`
+    // Пережимаем в webp (два размера) — как у сгенерированных картинок; иначе исходники
+    // с телефона по 5+ МБ грузятся вечно. ?v= — сброс кэша браузера: имя файла
+    // детерминировано (word_<id>.webp) и при замене картинки не меняется.
+    let baseUrl
+    try {
+      baseUrl = await saveOptimizedImage(buf, wordId)
+    } catch {
+      return reply.status(400).send({ error: 'Не удалось обработать файл — это точно картинка?' })
+    }
+    const imageUrl = `${baseUrl}?v=${Date.now()}`
 
     await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [imageUrl, wordId])
     return { image_url: imageUrl }

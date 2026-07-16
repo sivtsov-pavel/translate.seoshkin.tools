@@ -827,7 +827,9 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
       fd.append('file', file)
       const res = await uploadFiles(`/words/${word.id}/upload-image`, fd)
       setImageUrl(res.image_url)
-    } catch {}
+    } catch (err) {
+      alert(err?.message || 'Не удалось загрузить картинку')
+    }
     setUploading(false)
     e.target.value = ''
   }
@@ -863,7 +865,7 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
               {refreshing ? '⏳' : '🔄'}
             </button>
-            <button onClick={() => fileRef.current?.click()} disabled={uploading} title="Загрузить свою картинку"
+            <button onClick={() => fileRef.current?.click()} disabled={uploading} title="Заменить картинку своей (загрузить файл)"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
               {uploading ? '⏳' : '📷'}
             </button>
