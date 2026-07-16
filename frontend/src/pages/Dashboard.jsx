@@ -10,15 +10,29 @@ import AdSlot from '../components/AdSlot.jsx'
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
 const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🃏', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️', speech: '🗣️', dictation: '🎙️' }
 
+// Номер урока-книги из названия ("Урок 14.1 — Тема" → 14) и признак тематического под-урока
+const bookNum = (title) => { const m = String(title || '').match(/Урок\s+(\d+)/i); return m ? parseInt(m[1]) : null }
+const isSubLesson = (title) => /Урок\s+\d+\.\d/i.test(title || '')
+
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
   const [games, setGames] = useState([])
   const [completed, setCompleted] = useState([])
   const [lessonQuery, setLessonQuery] = useState('')
+  const [pinned, setPinned] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('pinned_lessons') || '[]')) } catch { return new Set() }
+  })
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
+
+  const togglePin = (key) => setPinned(prev => {
+    const next = new Set(prev)
+    next.has(key) ? next.delete(key) : next.add(key)
+    localStorage.setItem('pinned_lessons', JSON.stringify([...next]))
+    return next
+  })
 
   const reloadStats = () => {
     api.get('/exercises/stats').then(setStats).catch(console.error).finally(() => setLoading(false))
@@ -222,11 +236,33 @@ export default function Dashboard() {
         {(() => {
           const q = lessonQuery.trim().toLowerCase()
           const shown = q
-            ? lessons.filter(l => (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || '').toLowerCase().includes(q))
+            ? lessons.filter(l => (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || l.lesson_title || '').toLowerCase().includes(q))
             : lessons
           if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 8px', fontSize: 14 }}>{t.dashboard.nothingFound}</div>
-          return shown.map(lesson => (
-            <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} onReset={repeatLesson} />
+
+          // Группируем по номеру урока-книги: под-уроки (14.1/14.2) вложены под родителя «Урок 14»
+          const map = new Map()
+          for (const l of shown) {
+            const num = bookNum(l.lesson_title)
+            const key = num != null ? `n${num}` : `id${l.lesson_id}`
+            if (!map.has(key)) map.set(key, { key, num: num ?? (10000 + l.lesson_id), lessons: [] })
+            map.get(key).lessons.push(l)
+          }
+          const groups = [...map.values()].map(g => {
+            const parent = g.lessons.find(l => !isSubLesson(l.lesson_title)) || g.lessons[0]
+            const children = g.lessons.filter(l => l !== parent)
+              .sort((a, b) => String(a.lesson_title || '').localeCompare(String(b.lesson_title || ''), undefined, { numeric: true }))
+            return { ...g, parent, ordered: [parent, ...children] }
+          })
+          // Закреплённые (⭐) сверху, затем новые (больший номер) выше — созданные наборы под рукой
+          groups.sort((a, b) => {
+            const pa = pinned.has(a.key), pb = pinned.has(b.key)
+            if (pa !== pb) return pa ? -1 : 1
+            return b.num - a.num
+          })
+          return groups.map(g => (
+            <LessonGroup key={g.key} group={g} pinned={pinned.has(g.key)} onTogglePin={togglePin}
+              navigate={navigate} lang={lang} onReset={repeatLesson} />
           ))
         })()}
       </div>
@@ -273,6 +309,38 @@ export default function Dashboard() {
 
       {/* Реклама для бесплатных на планшете/десктопе (управляется супер-админкой) */}
       <AdSlot />
+    </div>
+  )
+}
+
+// Группа урока-книги: свёрнутый заголовок (⭐ · название · описание · N наборов),
+// клик → разворачивает вложенные под-уроки (тематические наборы). Лента остаётся короткой.
+function LessonGroup({ group, pinned, onTogglePin, navigate, lang, onReset }) {
+  const { t } = useI18nStore()
+  const [open, setOpen] = useState(false)
+  const parent = group.parent
+  const title = getLessonTitle(parent.lesson_title, parent.lesson_title_translations, lang) || parent.lesson_title
+  const desc = getLessonDesc(parent.lesson_description, parent.lesson_description_translations, lang)
+  const count = group.lessons.length
+  return (
+    <div style={{ border: `1px solid ${pinned ? 'var(--accent)' : 'var(--line)'}`, borderRadius: 14, background: 'var(--surface)', overflow: 'hidden' }}>
+      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', cursor: 'pointer' }}>
+        <button onClick={(e) => { e.stopPropagation(); onTogglePin(group.key) }} title="Закрепить наверху"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1, flexShrink: 0, color: pinned ? 'var(--accent)' : 'var(--ink-soft)' }}>
+          {pinned ? '⭐' : '☆'}
+        </button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
+          {desc && <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{desc}</div>}
+          {count > 1 && <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>📚 {count} тематических наборов</div>}
+        </div>
+        <span style={{ color: 'var(--ink-soft)', fontSize: 13, flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{ padding: '0 10px 10px', display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--surface-2)' }}>
+          {group.ordered.map(l => <LessonCard key={l.lesson_id} lesson={l} navigate={navigate} onReset={onReset} />)}
+        </div>
+      )}
     </div>
   )
 }
