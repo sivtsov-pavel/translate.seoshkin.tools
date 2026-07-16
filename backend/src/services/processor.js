@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme, classifyWordsToThemes } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
@@ -656,4 +656,66 @@ export async function processLesson(lessonId, ownerId) {
     )
     throw err
   }
+}
+
+// ── Авто-разбор слов по тематическим наборам (анти-свалка) ──
+// Слова (из фото/тетради) классифицируются AI по 22 темам + нормализуются (артикли),
+// дедуплицируются внутри набора, докидываются переводы/картинки/упражнения.
+// Возвращает сводку: сколько добавлено, сколько дублей, по каким темам.
+export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de') {
+  const clean = (rawWords || []).filter(w => w && w.de).map(w => ({ de: String(w.de).trim(), tr: String(w.tr || '').trim() }))
+  if (!clean.length) return { added: 0, duplicates: 0, themes: [] }
+
+  const items = await classifyWordsToThemes(clean, targetLang)
+  if (!items.length) return { added: 0, duplicates: 0, themes: [] }
+
+  const byTheme = new Map()
+  for (const it of items) {
+    if (!byTheme.has(it.theme)) byTheme.set(it.theme, [])
+    byTheme.get(it.theme).push(it)
+  }
+
+  const affected = []
+  let added = 0, dup = 0
+  const bare = s => String(s).toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '')
+
+  for (const [theme, its] of byTheme) {
+    // найти или создать набор этой темы у владельца
+    const { rows } = await db.query(
+      'SELECT id FROM lessons WHERE is_set AND set_theme = $1 AND owner_id = $2 ORDER BY id LIMIT 1',
+      [theme, ownerId])
+    let setId = rows[0]?.id
+    if (!setId) {
+      const ins = await db.query(
+        `INSERT INTO lessons (owner_id, title, target_lang, status, is_set, set_theme)
+         VALUES ($1, $2, $3, 'processing', true, $2) RETURNING id`,
+        [ownerId, theme, targetLang])
+      setId = ins.rows[0].id
+    }
+    for (const it of its) {
+      const norm = bare(it.de)
+      // дедуп внутри набора (по нормализованной форме без артикля)
+      const { rows: ex } = await db.query(
+        `SELECT 1 FROM words WHERE lesson_id = $1
+           AND regexp_replace(lower(word_de), '^(der|die|das|ein|eine)\\s+', '') = $2 LIMIT 1`,
+        [setId, norm])
+      if (ex.length) { dup++; continue }
+      await db.query(
+        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
+         VALUES ($1, $2, $3, $4, 'camera') ON CONFLICT (lesson_id, word_de) DO NOTHING`,
+        [setId, ownerId, it.de, it.tr])
+      added++
+    }
+    affected.push(setId)
+  }
+
+  // Дообогащаем затронутые наборы В ФОНЕ (переводы на локали + картинки банк-дедуп + упражнения),
+  // чтобы сразу вернуть сводку пользователю. Сами слова уже в верных наборах.
+  ;(async () => {
+    for (const id of affected) {
+      try { await enrichLesson(id) } catch (e) { console.error('distribute enrich', id, e.message) }
+      try { await regenerateExercisesFromDb(id) } catch (e) { console.error('distribute ex', id, e.message) }
+    }
+  })()
+  return { added, duplicates: dup, themes: [...byTheme.keys()], sets: affected.length }
 }

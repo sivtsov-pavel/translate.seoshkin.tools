@@ -22,6 +22,8 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
   const [lessons, setLessons] = useState([])
   const [target, setTarget] = useState('')     // '' = новый набор, иначе lesson_id
   const [lessonMsg, setLessonMsg] = useState('')
+  const [distMsg, setDistMsg] = useState('')
+  const [distBusy, setDistBusy] = useState(false)
 
   useEffect(() => {
     if (isOwner) api.get('/lessons').then(d => setLessons((Array.isArray(d) ? d : d.lessons || []).filter(l => l.status === 'done' || l.words_count > 0))).catch(() => {})
@@ -40,6 +42,19 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
       return out
     }
     return (words || []).filter(w => w._save)
+  }
+
+  // 🎯 Авто-разложить отмеченные слова по тематическим наборам (алгоритм сам разнесёт)
+  const distribute = async () => {
+    const chosen = collectChosen()
+    if (!chosen.length) { setDistMsg('Отметь слова галочками'); return }
+    setDistBusy(true); setDistMsg('Раскладываю по темам…')
+    try {
+      const res = await api.post('/reader/distribute', { words: chosen.map(w => ({ de: w.de, tr: w.tr })) })
+      const themes = (res.themes || []).join(', ')
+      setDistMsg(`✓ Разложено: +${res.added} слов${themes ? ' → ' + themes : ''}${res.duplicates ? `; дублей пропущено: ${res.duplicates}` : ''}. Картинки/упражнения дособерутся в фоне.`)
+    } catch (e) { setDistMsg('Ошибка: ' + e.message) }
+    finally { setDistBusy(false) }
   }
 
   const saveToLesson = async () => {
@@ -190,10 +205,16 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
               }}>＋ Сохранить отмеченные в разговорник</button>
             )}
 
-            {/* Учитель: сохранить отмеченные слова в УРОК (группу) — создаст упражнения */}
+            {/* Учитель: 🎯 авто-разложить по темам (алгоритм сам разнесёт по наборам, без свалки) */}
             {isOwner && ((words?.length || 0) > 0 || (sentences?.length || 0) > 0) && (
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
-                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>Или добавить в урок (группу):</div>
+                <button onClick={distribute} disabled={distBusy} style={{
+                  width: '100%', padding: '12px', borderRadius: 10, border: 'none', marginBottom: 6,
+                  background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15,
+                  cursor: distBusy ? 'default' : 'pointer', opacity: distBusy ? 0.6 : 1,
+                }}>🎯 {distBusy ? 'Раскладываю…' : 'Разложить по темам (авто)'}</button>
+                {distMsg && <div style={{ fontSize: 12.5, color: distMsg.startsWith('✓') ? 'var(--good, #16a34a)' : 'var(--ink-soft)', marginBottom: 10 }}>{distMsg}</div>}
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>Или вручную в конкретный урок (группу):</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <select value={target} onChange={e => setTarget(e.target.value)}
                     style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }}>

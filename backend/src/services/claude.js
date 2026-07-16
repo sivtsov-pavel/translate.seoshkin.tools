@@ -306,6 +306,32 @@ ${list}
   return (data.groups || []).filter(g => g && g.title && Array.isArray(g.word_ids) && g.word_ids.length)
 }
 
+// Канонические темы наборов (единый список — соответствует set_theme в БД)
+export const CANON_THEMES = [
+  'Школа и учёба', 'Языки', 'Семья и друзья', 'Глаголы', 'Числа', 'Время', 'Транспорт',
+  'Еда и напитки', 'Документы и данные', 'Города и страны', 'Места и направления', 'Грамматика',
+  'Эмоции', 'Дом и быт', 'Природа', 'Одежда', 'Покупки', 'Цвета', 'Тело и здоровье',
+  'Работа и профессии', 'Технологии', 'Люди', 'Общение', 'Разное',
+]
+
+// Классификация + НОРМАЛИЗАЦИЯ слов: существительные → с артиклем, глаголы → инфинитив,
+// каждое слово → РОВНО в одну канонической тему. Основа чистого банка без свалки.
+export async function classifyWordsToThemes(words, targetLang = 'de') {
+  if (!words.length) return []
+  const list = words.map((w, i) => `${i}: ${w.de}${w.tr ? ' — ' + w.tr : ''}`).join('\n')
+  const prompt = `Есть слова на ${TL(targetLang).name} языке. Для КАЖДОГО слова:
+1) Нормализуй форму "de": существительное — ОБЯЗАТЕЛЬНО с артиклем (der/die/das — определи род сам, ты знаешь язык), глагол — инфинитив с маленькой буквы, остальное — как есть. Если у существительного не было артикля — добавь правильный.
+2) Дай перевод "tr" на русский (если не задан или неточен — исправь).
+3) Отнеси РОВНО к одной теме из списка (строкой в точности как в списке): ${CANON_THEMES.join(', ')}. Если ничего не подходит — "Разное".
+Верни СТРОГО JSON без markdown: {"items":[{"i":0,"de":"...","tr":"...","theme":"..."}]}
+Слова:
+${list}`
+  const data = parseJson(await ask(prompt, { model: 'gpt-4o', max_tokens: 3000 }))
+  return (data.items || [])
+    .filter(it => it && it.de && it.theme)
+    .map(it => ({ de: String(it.de).trim(), tr: String(it.tr || '').trim(), theme: CANON_THEMES.includes(it.theme) ? it.theme : 'Разное' }))
+}
+
 export async function generateExercises(words, grammar_points, targetLang = 'de', sentences = []) {
   const allExercises = []
   // Реальные предложения урока — приоритетный источник для fill_blank/sentence_write

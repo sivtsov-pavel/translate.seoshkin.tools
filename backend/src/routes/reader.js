@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { translateParagraphs, translateSingle, extractWordsFromImage, extractSentencesFromImage } from '../services/claude.js'
-import { saveCameraWords } from '../services/processor.js'
+import { saveCameraWords, distributeWordsToSets } from '../services/processor.js'
 import { unlink } from 'fs/promises'
 
 const MODEL_MAP = { smart: 'gpt-4o', mini: 'gpt-4o-mini' }
@@ -84,6 +84,22 @@ export async function readerRoutes(fastify) {
     }
     saveCameraWords(lid, words).catch(e => fastify.log.error({ e }, 'saveCameraWords'))
     return { lesson_id: lid, started: true }
+  })
+
+  // 🎯 Авто-разложить слова по тематическим наборам (анти-свалка): AI относит каждое слово
+  // в верную из 22 тем, нормализует артикли, дедуплицирует. Слова оседают в нужных наборах.
+  fastify.post('/api/reader/distribute', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const { words } = request.body || {}
+    if (!Array.isArray(words) || !words.length) return reply.status(400).send({ error: 'Нет слов' })
+    const target = request.headers['x-target-lang'] || 'de'
+    try {
+      const res = await distributeWordsToSets(words, request.user.id, target)
+      return res
+    } catch (e) {
+      fastify.log.error({ e }, 'distribute')
+      return reply.status(500).send({ error: 'Не удалось разложить слова' })
+    }
   })
 
   // Перевод абзацев с выбором языковой пары
