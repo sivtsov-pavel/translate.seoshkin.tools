@@ -94,9 +94,9 @@ export async function redistributeLesson(lessonId) {
       n++
       await setProgress(lessonId, `Создаю набор ${n}/${groups.length}: ${g.title}...`)
       const { rows: nl } = await db.query(
-        `INSERT INTO lessons (owner_id, title, course_id, lesson_number, target_lang, status, progress)
-         VALUES ($1,$2,$3,$4,$5,'processing','Готовлю набор...') RETURNING id`,
-        [L.owner_id, `Урок ${base}.${n} — ${g.title}`, L.course_id, L.lesson_number, L.target_lang])
+        `INSERT INTO lessons (owner_id, title, course_id, lesson_number, target_lang, parent_lesson_id, status, progress)
+         VALUES ($1,$2,$3,$4,$5,$6,'processing','Готовлю набор...') RETURNING id`,
+        [L.owner_id, `Урок ${base}.${n} — ${g.title}`, L.course_id, L.lesson_number, L.target_lang, lessonId])
       const newId = nl[0].id
 
       // Копируем слова (картинки/переводы переносятся как есть — без затрат)
