@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.js'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -21,11 +22,16 @@ const PRESET_AVATARS = [
 export default function Profile() {
   const { user, login, token } = useAuthStore()
   const { t } = useI18nStore()
+  const navigate = useNavigate()
   const [form, setForm]   = useState({ full_name: '', phone: '', telegram: '', whatsapp: '', profession: '', avatar: '' })
   const [pwd, setPwd]     = useState({ current: '', next: '', confirm: '' })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg]     = useState(null)
   const [pwdMsg, setPwdMsg] = useState(null)
+  // Мои сложные слова + личный набор для тренировки
+  const [hard, setHard]   = useState(null)     // { words:[], set:{id,status} }
+  const [building, setBuilding] = useState(false)
+  const [buildMsg, setBuildMsg] = useState(null)
 
   useEffect(() => {
     api.get('/auth/me').then(data => {
@@ -40,7 +46,20 @@ export default function Profile() {
       // Обновляем user в store
       login(token, { ...user, ...data })
     })
+    api.get('/analytics/my-hard-words').then(setHard).catch(() => setHard({ words: [], set: null }))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Собрать набор упражнений из моих сложных слов
+  const buildHardSet = async () => {
+    setBuilding(true); setBuildMsg(null)
+    try {
+      const res = await api.post('/analytics/my-hard-words/make-set', {})
+      navigate(`/exercise-session?lesson_id=${res.lessonId}`)
+    } catch (e) {
+      setBuildMsg(e?.message || 'Не удалось собрать набор')
+      setBuilding(false)
+    }
+  }
 
   const save = async () => {
     setSaving(true)
@@ -147,6 +166,55 @@ export default function Profile() {
           style={{ marginTop: 16, padding: '12px 28px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
           {saving ? 'Сохранение...' : 'Сохранить'}
         </button>
+      </section>
+
+      {/* Мои сложные слова */}
+      <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 20 }}>
+        <h2 style={{ fontSize: 16, marginBottom: 6 }}>🔥 Мои сложные слова</h2>
+        <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 16 }}>
+          Слова, в которых ты чаще всего ошибаешься в упражнениях. Собери из них набор и выучи как следует.
+        </div>
+
+        {!hard && <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>}
+
+        {hard && hard.words.length === 0 && (
+          <div style={{ padding: '18px 16px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 12, border: '1px dashed var(--line)' }}>
+            Сложных слов пока нет — порешай побольше упражнений, и они появятся здесь.
+          </div>
+        )}
+
+        {hard && hard.words.length > 0 && (
+          <>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              {hard.words.map((w, i) => (
+                <div key={i} title={`${w.wrong} ошибок из ${w.attempts}`} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px',
+                  background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 999, fontSize: 13,
+                }}>
+                  <span style={{ fontWeight: 700 }}>{w.word_de}</span>
+                  <span style={{ color: 'var(--ink-soft)' }}>{w.translation_ru}</span>
+                  <span style={{ color: 'var(--red)', fontWeight: 700, fontSize: 11 }}>{w.wrong_pct}%</span>
+                </div>
+              ))}
+            </div>
+
+            {buildMsg && (
+              <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, fontSize: 14, fontWeight: 600, background: 'rgba(179,56,44,0.12)', color: 'var(--red)' }}>
+                {buildMsg}
+              </div>
+            )}
+
+            <button onClick={buildHardSet} disabled={building}
+              style={{ padding: '12px 28px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 15, opacity: building ? 0.6 : 1 }}>
+              {building ? 'Собираю набор…' : hard.set ? '🔄 Пересобрать и тренировать' : '✨ Собрать набор и тренировать'}
+            </button>
+            {building && (
+              <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-soft)' }}>
+                Генерирую упражнения из {hard.words.length} слов — это займёт до минуты…
+              </div>
+            )}
+          </>
+        )}
       </section>
 
       {/* Смена пароля */}
