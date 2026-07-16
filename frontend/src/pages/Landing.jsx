@@ -173,6 +173,7 @@ const L = {
       title: 'Работает как приложение',
       text: 'Установи на телефон через браузер — без App Store, без Google Play.',
       android: 'Android: Chrome → меню ⋮ → «Установить приложение»',
+      apk: 'Скачать APK для Android',
       ios: 'iPhone: Safari → поделиться → «На экран Домой»',
     },
     ai: {
@@ -209,6 +210,7 @@ const L = {
       title: 'Works as an app',
       text: 'Install on your phone via browser — no App Store, no Google Play.',
       android: 'Android: Chrome → menu ⋮ → "Install app"',
+      apk: 'Download APK for Android',
       ios: 'iPhone: Safari → share → "Add to Home Screen"',
     },
     ai: {
@@ -245,6 +247,7 @@ const L = {
       title: 'Funktioniert als App',
       text: 'Installiere auf dem Handy über den Browser — kein App Store, kein Google Play.',
       android: 'Android: Chrome → Menü ⋮ → „App installieren"',
+      apk: 'APK für Android herunterladen',
       ios: 'iPhone: Safari → Teilen → „Zum Startbildschirm"',
     },
     ai: {
@@ -281,6 +284,7 @@ const L = {
       title: 'Працює як додаток',
       text: 'Встанови на телефон через браузер — без App Store, без Google Play.',
       android: 'Android: Chrome → меню ⋮ → «Встановити додаток»',
+      apk: 'Завантажити APK для Android',
       ios: 'iPhone: Safari → поділитися → «На екран Домівки»',
     },
     ai: {
@@ -317,6 +321,7 @@ const L = {
       title: 'Работи като приложение',
       text: 'Инсталирай на телефона чрез браузър — без App Store, без Google Play.',
       android: 'Android: Chrome → меню ⋮ → „Инсталиране на приложението"',
+      apk: 'Изтегли APK за Android',
       ios: 'iPhone: Safari → споделяне → „Добавяне към начален екран"',
     },
     ai: {
@@ -353,6 +358,7 @@ const L = {
       title: 'Uygulama gibi çalışır',
       text: 'Tarayıcı üzerinden telefona yükle — App Store veya Google Play gerekmez.',
       android: 'Android: Chrome → menü ⋮ → "Uygulamayı yükle"',
+      apk: 'Android için APK indir',
       ios: 'iPhone: Safari → paylaş → "Ana Ekrana Ekle"',
     },
     ai: {
@@ -389,6 +395,7 @@ const L = {
       title: 'يعمل كتطبيق',
       text: 'ثبّته على هاتفك عبر المتصفح — بدون App Store أو Google Play.',
       android: 'أندرويد: Chrome → القائمة ⋮ → "تثبيت التطبيق"',
+      apk: 'تنزيل APK لأندرويد',
       ios: 'آيفون: Safari → مشاركة → "إضافة إلى الشاشة الرئيسية"',
     },
     ai: {
@@ -425,6 +432,7 @@ const L = {
       title: 'Funciona como una app',
       text: 'Instálala en tu móvil desde el navegador — sin App Store ni Google Play.',
       android: 'Android: Chrome → menú ⋮ → "Instalar aplicación"',
+      apk: 'Descargar APK para Android',
       ios: 'iPhone: Safari → compartir → "Añadir a pantalla de inicio"',
     },
     ai: {
@@ -461,6 +469,7 @@ const L = {
       title: 'Fonctionne comme une app',
       text: 'Installe sur ton téléphone via le navigateur — sans App Store ni Google Play.',
       android: 'Android: Chrome → menu ⋮ → «Installer l\'application»',
+      apk: 'Télécharger l\'APK pour Android',
       ios: 'iPhone: Safari → partager → «Sur l\'écran d\'accueil»',
     },
     ai: {
@@ -497,6 +506,7 @@ const L = {
       title: 'Funksionon si aplikacion',
       text: 'Instalo në telefon nëpërmjet shfletuesit — pa App Store apo Google Play.',
       android: 'Android: Chrome → menu ⋮ → "Instalo aplikacionin"',
+      apk: 'Shkarko APK për Android',
       ios: 'iPhone: Safari → ndaj → "Shto në ekranin kryesor"',
     },
     ai: {
@@ -785,6 +795,16 @@ export default function Landing() {
             <div style={installPill}>🤖 {c.install.android}</div>
             <div style={installPill}>🍎 {c.install.ios}</div>
           </div>
+          {/* Прямое скачивание Android-приложения (TWA APK) — без магазинов */}
+          <a href="/downloads/deutsch-lernen.apk" download
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 14,
+              padding: '11px 22px', borderRadius: 12, textDecoration: 'none',
+              background: 'var(--accent)', color: 'var(--accent-ink)',
+              fontWeight: 700, fontSize: 14,
+            }}>
+            📥 {c.install.apk}
+          </a>
         </div>
       </section>
 

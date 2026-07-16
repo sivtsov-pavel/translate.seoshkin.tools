@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "tools.seoshkin.translate",
+      "sha256_cert_fingerprints": [
+        "46:00:A3:6D:C2:A6:B2:90:D3:6B:6C:BF:C6:4D:25:7E:4E:DE:D7:C5:B8:8A:69:13:5D:9C:8A:BA:B1:F1:5E:61"
+      ]
+    }
+  }
+]

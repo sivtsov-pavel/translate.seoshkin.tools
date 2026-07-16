@@ -1,0 +1,5 @@
+# Генерируется bubblewrap update / build — в git только twa-manifest.json и README
+*
+!.gitignore
+!twa-manifest.json
+!README.md

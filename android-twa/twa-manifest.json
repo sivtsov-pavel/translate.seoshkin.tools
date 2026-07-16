@@ -1,0 +1,42 @@
+{
+  "packageId": "tools.seoshkin.translate",
+  "host": "translate.seoshkin.tools",
+  "name": "Deutsch Lernen",
+  "launcherName": "Deutsch",
+  "display": "standalone",
+  "themeColor": "#C9A54A",
+  "themeColorDark": "#111111",
+  "navigationColor": "#111111",
+  "navigationColorDark": "#111111",
+  "navigationDividerColor": "#111111",
+  "navigationDividerColorDark": "#111111",
+  "backgroundColor": "#111111",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://translate.seoshkin.tools/icons/icon-512.png",
+  "maskableIconUrl": "https://translate.seoshkin.tools/icons/icon-512-maskable.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/Users/pabloseoshkin/Klients/Projects/translate.seoshkin.tools-android-keys/android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://translate.seoshkin.tools/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://translate.seoshkin.tools/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}

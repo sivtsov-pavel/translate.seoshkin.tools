@@ -15,6 +15,9 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        // Скачивание APK и проверка assetlinks должны идти мимо SPA-фолбэка,
+        // иначе сервис-воркер отдаст index.html вместо файла
+        navigateFallbackDenylist: [/^\/downloads\//, /^\/\.well-known\//],
         // Импортируем push-обработчики в сгенерированный service worker
         importScripts: ['/push-sw.js'],
         runtimeCaching: [
