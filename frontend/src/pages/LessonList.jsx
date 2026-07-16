@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
+import { getLessonTitle, getLessonDesc } from '../utils/translation.js'
 import { useAuthStore } from '../store/auth.js'
 import { useAdminOpStore } from '../store/adminOp.js'
 
@@ -155,7 +156,7 @@ export default function LessonList() {
   const [regenId, setRegenId]         = useState(null)
   const [processing, setProcessing]   = useState(null)
   const [editingId, setEditingId]     = useState(null)
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const adminOp = useAdminOpStore()
   const navigate = useNavigate()
@@ -331,15 +332,15 @@ export default function LessonList() {
                 border: '1px solid var(--line)', borderRadius: 12,
                 padding: '14px 16px', background: 'var(--surface)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                  {/* Левая часть: название + мета */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {/* Заголовок → описание → мета (кнопки ниже) */}
+                  <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>
-                      {lesson.title || `${t.lessons.newLesson} #${lesson.id}`}
+                      {getLessonTitle(lesson.title, lesson.title_translations, lang) || `${t.lessons.newLesson} #${lesson.id}`}
                     </div>
                     {lesson.description && (
                       <div style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic', marginBottom: 4 }}>
-                        {lesson.description}
+                        {getLessonDesc(lesson.description, lesson.description_translations, lang)}
                       </div>
                     )}
                     <div style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -361,13 +362,13 @@ export default function LessonList() {
                     )}
                   </div>
 
-                  {/* Правая часть: статус + кнопки */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
+                  {/* Статус + кнопки — под описанием */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                     {/* Статус-бейдж */}
                     <StatusBadge status={status} />
 
                     {/* Действия */}
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
                       {user?.role !== 'owner' && status === 'done' && (
                         <button onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
                           style={actionBtn('var(--accent)', 'var(--accent-ink)')}>

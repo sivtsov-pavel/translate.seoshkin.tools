@@ -97,7 +97,7 @@ export default function Dashboard() {
       {user?.role === 'owner' && (
         <div style={{ padding: '4px 12px 8px' }}>
           <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
-            Новое для учителя
+            {t.dashboard.newForTeacher}
           </div>
           <div onClick={() => navigate('/analytics')} style={{
             cursor: 'pointer',
@@ -118,7 +118,7 @@ export default function Dashboard() {
       {/* AI-тренер — над играми: живой разговор с Pablo */}
       <div style={{ padding: '4px 12px 8px' }}>
         <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
-          Тренер
+          {t.dashboard.trainer}
         </div>
         <Link to="/ai-trainer" style={{ textDecoration: 'none' }}>
           <div style={{
@@ -157,7 +157,7 @@ export default function Dashboard() {
       {/* Игры */}
       <div style={{ padding: '4px 12px 8px' }}>
         <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
-          Игры
+          {t.dashboard.games}
         </div>
         <Link to="/game/match" style={{ textDecoration: 'none' }}>
           <div style={{
@@ -167,8 +167,8 @@ export default function Dashboard() {
           }}>
             <span style={{ fontSize: 32, lineHeight: 1 }}>🃏</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Словопара</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Найди пары слов — 8 пар, таймер, 4×4</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>{t.dashboard.matchTitle}</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.matchDesc}</div>
             </div>
             <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
           </div>
@@ -181,8 +181,8 @@ export default function Dashboard() {
           }}>
             <span style={{ fontSize: 32, lineHeight: 1 }}>🧩</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Кроссворд</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Впиши немецкие слова по переводам — с пересечениями</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>{t.dashboard.crossTitle}</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.crossDesc}</div>
             </div>
             <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
           </div>
@@ -195,9 +195,9 @@ export default function Dashboard() {
           }}>
           <span style={{ fontSize: 32, lineHeight: 1 }}>🎮</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Игра класса</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>{t.dashboard.classGameTitle}</div>
             <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
-              {games.length ? 'Готова — читаем фразы урока по очереди' : 'Учитель собирает набор фраз (кнопка «🎮» на уроке)'}
+              {games.length ? t.dashboard.classGameReady : t.dashboard.classGameNot}
             </div>
           </div>
           {games.length > 0 && <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>ГОТОВА</span>}
@@ -213,7 +213,7 @@ export default function Dashboard() {
       {lessons.length > 5 && (
         <div style={{ padding: '0 12px 10px' }}>
           <input value={lessonQuery} onChange={e => setLessonQuery(e.target.value)}
-            placeholder="🔍 Поиск урока по теме…"
+            placeholder={t.dashboard.searchLesson}
             style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }} />
         </div>
       )}
@@ -224,7 +224,7 @@ export default function Dashboard() {
           const shown = q
             ? lessons.filter(l => (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || '').toLowerCase().includes(q))
             : lessons
-          if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 8px', fontSize: 14 }}>Ничего не найдено</div>
+          if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 8px', fontSize: 14 }}>{t.dashboard.nothingFound}</div>
           return shown.map(lesson => (
             <LessonCard key={lesson.lesson_id} lesson={lesson} navigate={navigate} onReset={repeatLesson} />
           ))
@@ -256,7 +256,7 @@ export default function Dashboard() {
       {completed.length > 0 && (
         <div style={{ padding: '12px 12px 20px' }}>
           <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 8 }}>
-            🔄 Повторить пройденное
+            {t.dashboard.repeatDone}
           </div>
           {completed.map(l => (
             <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '10px 14px', marginBottom: 8 }}>
@@ -350,10 +350,10 @@ function LessonCard({ lesson, navigate, onReset }) {
   // Бейдж прогресса урока
   const pct = lesson.done_pct ?? 0
   const badge = pct >= 80
-    ? { label: `выучено ${pct}%`, bg: 'rgba(78,154,110,0.15)', color: 'var(--good)' }
+    ? { label: `${t.dashboard.learnedPct} ${pct}%`, bg: 'rgba(78,154,110,0.15)', color: 'var(--good)' }
     : pct > 0
-    ? { label: 'в процессе', bg: 'rgba(201,165,74,0.15)', color: 'var(--accent)' }
-    : { label: 'новое', bg: 'var(--surface-2)', color: 'var(--ink-soft)' }
+    ? { label: t.dashboard.statusProgress, bg: 'rgba(201,165,74,0.15)', color: 'var(--accent)' }
+    : { label: t.dashboard.statusNew, bg: 'var(--surface-2)', color: 'var(--ink-soft)' }
 
   return (
     <div style={{

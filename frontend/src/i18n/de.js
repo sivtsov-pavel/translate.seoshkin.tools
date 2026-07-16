@@ -1,6 +1,13 @@
 export const de = {
   // Navigation
   nav: {
+    translations: 'Übersetzungen',
+    report: 'Bericht',
+    school: 'Schule',
+    catalog: 'Katalog',
+    myClass: 'Meine Klasse',
+    myWords: 'Meine Wörter',
+    analytics: 'Klassen-Analytik',
     today: 'Heute',
     lessons: 'Lektionen',
     vocabulary: 'Wörterbuch',
@@ -36,6 +43,22 @@ export const de = {
   },
   // Dashboard
   dashboard: {
+    matchTitle: 'Wortpaar',
+    matchDesc: 'Finde Wortpaare — 8 Paare, Timer',
+    crossTitle: 'Kreuzworträtsel',
+    crossDesc: 'Wörter nach Übersetzung eintragen',
+    classGameTitle: 'Klassenspiel',
+    classGameReady: 'Bereit — Sätze abwechselnd lesen',
+    classGameNot: 'Lehrer stellt Sätze zusammen',
+    trainer: 'Trainer',
+    games: 'Spiele',
+    newForTeacher: 'Neu für Lehrer',
+    searchLesson: '🔍 Lektion nach Thema suchen…',
+    nothingFound: 'Nichts gefunden',
+    repeatDone: '🔄 Gelerntes wiederholen',
+    statusNew: 'neu',
+    statusProgress: 'in Arbeit',
+    learnedPct: 'gelernt',
     title: 'Für heute',
     allDone: 'Alles für heute gelernt!',
     comeBack: 'Komm morgen wieder zum Wiederholen.',

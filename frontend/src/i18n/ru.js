@@ -1,6 +1,13 @@
 export const ru = {
   // Навигация
   nav: {
+    translations: 'Переводы',
+    report: 'Отчёт',
+    school: 'Школа',
+    catalog: 'Каталог',
+    myClass: 'Мой класс',
+    myWords: 'Мой словарь',
+    analytics: 'Аналитика класса',
     today: 'Сегодня',
     lessons: 'Уроки',
     vocabulary: 'Словарь',
@@ -36,6 +43,22 @@ export const ru = {
   },
   // Дашборд
   dashboard: {
+    matchTitle: 'Словопара',
+    matchDesc: 'Найди пары слов — 8 пар, таймер',
+    crossTitle: 'Кроссворд',
+    crossDesc: 'Впиши слова по переводам',
+    classGameTitle: 'Игра класса',
+    classGameReady: 'Готова — читаем фразы урока по очереди',
+    classGameNot: 'Учитель собирает набор фраз',
+    trainer: 'Тренер',
+    games: 'Игры',
+    newForTeacher: 'Новое для учителя',
+    searchLesson: '🔍 Поиск урока по теме…',
+    nothingFound: 'Ничего не найдено',
+    repeatDone: '🔄 Повторить пройденное',
+    statusNew: 'новое',
+    statusProgress: 'в процессе',
+    learnedPct: 'выучено',
     title: 'На сегодня',
     allDone: 'Всё выучено на сегодня!',
     comeBack: 'Возвращайся завтра для повторения.',

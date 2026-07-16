@@ -162,15 +162,15 @@ export default function Layout({ children }) {
   ]
 
   const classItems = user?.role === 'owner' ? [
-    { to: '/school',       icon: 'bi-building-fill',    label: 'Школа' },
-    { to: '/catalog',      icon: 'bi-book-fill',        label: 'Каталог' },
+    { to: '/school',       icon: 'bi-building-fill',    label: t.nav.school },
+    { to: '/catalog',      icon: 'bi-book-fill',        label: t.nav.catalog },
     { to: '/courses',      icon: 'bi-mortarboard-fill', label: t.nav.courses },
     { to: '/students',     icon: 'bi-people-fill',      label: t.nav.students },
-    { to: '/translations', icon: 'bi-globe2',           label: 'Переводы' },
-    { to: '/report',       icon: 'bi-bar-chart-fill',   label: 'Отчёт' },
+    { to: '/translations', icon: 'bi-globe2',           label: t.nav.translations },
+    { to: '/report',       icon: 'bi-bar-chart-fill',   label: t.nav.report },
   ] : [
-    { to: '/join',         icon: 'bi-building-fill',        label: 'Мой класс' },
-    { to: '/my-words',     icon: 'bi-journal-bookmark-fill', label: 'Мой словарь' },
+    { to: '/join',         icon: 'bi-building-fill',        label: t.nav.myClass },
+    { to: '/my-words',     icon: 'bi-journal-bookmark-fill', label: t.nav.myWords },
   ]
 
   const adminLinks = user?.role === 'owner' ? [
