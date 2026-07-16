@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation, getLessonTitle, getLessonDesc } from '../utils/translation.js'
 import AdSlot from '../components/AdSlot.jsx'
+import CameraWords from '../components/CameraWords.jsx'
 
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
 const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🃏', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️', speech: '🗣️', dictation: '🎙️' }
@@ -273,23 +274,25 @@ export default function Dashboard() {
         )
       })()}
 
-      {/* Круглая кнопка камеры — новый урок по фото. Стоит НАД «Повторить всё»
-          в том же правом нижнем углу (не над «Повторить всё» по X, а выше по Y —
-          та кнопка условна по total > 0, эта — всегда видна). */}
-      <button
-        onClick={() => navigate('/lessons/new')}
-        title="Новый урок по фото"
-        style={{
-          position: 'fixed', zIndex: 50,
-          right: 16, bottom: `calc(var(--bottom-nav-h, 0px) + ${total > 0 ? 78 : 16}px)`,
-          width: 52, height: 52, borderRadius: '50%',
-          background: 'var(--surface)', color: 'var(--ink)',
-          border: '1px solid var(--line)', cursor: 'pointer', fontSize: 22,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-        }}>
-        📷
-      </button>
+      {/* Круглая кнопка камеры — сразу открывает фотоаппарат (capture), разбирает слова
+          с фото и предлагает добавить их в урок / набор / новый урок. Над «Повторить всё». */}
+      <CameraWords renderTrigger={(pick, busy) => (
+        <button
+          onClick={pick}
+          disabled={busy}
+          title="Сфотографировать — разбор слов"
+          style={{
+            position: 'fixed', zIndex: 50,
+            right: 16, bottom: `calc(var(--bottom-nav-h, 0px) + ${total > 0 ? 78 : 16}px)`,
+            width: 52, height: 52, borderRadius: '50%',
+            background: busy ? 'var(--accent)' : 'var(--surface)', color: busy ? 'var(--accent-ink)' : 'var(--ink)',
+            border: '1px solid var(--line)', cursor: busy ? 'default' : 'pointer', fontSize: 22,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+          }}>
+          {busy ? '…' : '📷'}
+        </button>
+      )} />
 
       {/* Круглая кнопка «Повторить всё» в правом нижнем углу — не перекрывает
           левое меню и контент (была на всю ширину по центру → налезала на сайдбар) */}

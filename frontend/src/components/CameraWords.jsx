@@ -6,7 +6,9 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 
 // Камера в читалке: сфоткал текст → gpt-4o vision разбирает немецкие слова →
 // показывает какие уже в словаре (✓), какие новые (🆕) → сохранить выбранные в разговорник.
-export default function CameraWords() {
+// renderTrigger(pick, busy) — необязательная кастомная кнопка запуска (для плавающей
+// кнопки на дашборде). Если не передана — рисуется стандартная кнопка «📷 Слова с фото».
+export default function CameraWords({ renderTrigger }) {
   const { lang } = useI18nStore()
   const { user } = useAuthStore()
   const isOwner = user?.role === 'owner'
@@ -71,11 +73,13 @@ export default function CameraWords() {
   return (
     <>
       <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onFile} style={{ display: 'none' }} />
-      <button onClick={pick} disabled={busy} style={{
-        display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 10,
-        border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)',
-        fontWeight: 700, fontSize: 14, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
-      }}>📷 {busy ? 'Разбираю фото…' : 'Слова с фото'}</button>
+      {renderTrigger ? renderTrigger(pick, busy) : (
+        <button onClick={pick} disabled={busy} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 10,
+          border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)',
+          fontWeight: 700, fontSize: 14, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
+        }}>📷 {busy ? 'Разбираю фото…' : 'Слова с фото'}</button>
+      )}
 
       {err && <div style={{ color: 'var(--red)', marginTop: 8, fontSize: 13 }}>{err}</div>}
 
