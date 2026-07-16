@@ -151,6 +151,7 @@ export default function Layout({ children }) {
   // Группы пунктов навигации
   const learningItems = [
     { to: '/lessons',                     icon: 'bi-book-fill',                 label: t.nav.lessons },
+    { to: '/sets',                        icon: 'bi-collection-fill',           label: t.nav.sets },
     { to: '/vocabulary',                  icon: 'bi-card-list',                 label: t.nav.vocabulary },
     { to: '/ai-trainer',                  icon: 'bi-person-video3',             label: 'AI тренер' },
     { to: '/vocabulary?status=learning',  icon: 'bi-journal-bookmark-fill',     label: t.nav.learningWords },

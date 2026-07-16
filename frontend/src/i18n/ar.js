@@ -11,6 +11,7 @@ export const ar = {
     analytics: 'تحليلات الصف',
     today: 'اليوم',
     lessons: 'الدروس',
+    sets: 'المجموعات',
     vocabulary: 'المفردات',
     courses: 'الدورات',
     students: 'الطلاب',

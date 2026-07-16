@@ -162,7 +162,7 @@ export default function LessonList() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/lessons').then(setLessons).finally(() => setLoading(false))
+    api.get('/lessons').then(rows => setLessons((rows || []).filter(l => !l.is_set))).finally(() => setLoading(false))
   }, [])
 
   const handleProcess = async (id) => {

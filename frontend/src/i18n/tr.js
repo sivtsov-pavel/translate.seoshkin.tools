@@ -9,6 +9,7 @@ export const tr = {
     analytics: 'Sınıf analizi',
     today: 'Bugün',
     lessons: 'Dersler',
+    sets: 'Setler',
     vocabulary: 'Kelimeler',
     courses: 'Kurslar',
     students: 'Öğrenciler',

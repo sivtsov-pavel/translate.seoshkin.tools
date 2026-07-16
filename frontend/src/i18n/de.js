@@ -10,6 +10,7 @@ export const de = {
     analytics: 'Klassen-Analytik',
     today: 'Heute',
     lessons: 'Lektionen',
+    sets: 'Themen',
     vocabulary: 'Wörterbuch',
     courses: 'Kurse',
     students: 'Schüler',

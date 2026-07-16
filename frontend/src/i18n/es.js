@@ -9,6 +9,7 @@ export const es = {
     analytics: 'Analítica de clase',
     today: 'Hoy',
     lessons: 'Lecciones',
+    sets: 'Colecciones',
     vocabulary: 'Vocabulario',
     courses: 'Cursos',
     students: 'Estudiantes',

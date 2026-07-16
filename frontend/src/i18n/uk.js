@@ -9,6 +9,7 @@ export const uk = {
     analytics: 'Аналітика класу',
     today: 'Сьогодні',
     lessons: 'Уроки',
+    sets: 'Набори',
     vocabulary: 'Словник',
     courses: 'Курси',
     students: 'Учні',

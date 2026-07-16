@@ -9,6 +9,7 @@ export const bg = {
     analytics: 'Анализ на класа',
     today: 'Днес',
     lessons: 'Уроци',
+    sets: 'Комплекти',
     vocabulary: 'Речник',
     courses: 'Курсове',
     students: 'Ученици',

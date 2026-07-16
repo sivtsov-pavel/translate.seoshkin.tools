@@ -13,6 +13,7 @@ import School from './pages/School.jsx'
 import JoinClass from './pages/JoinClass.jsx'
 import Catalog from './pages/Catalog.jsx'
 import PersonalVocab from './pages/PersonalVocab.jsx'
+import Sets from './pages/Sets.jsx'
 import NewLesson from './pages/NewLesson.jsx'
 import ExerciseSession from './pages/ExerciseSession.jsx'
 import Vocabulary from './pages/Vocabulary.jsx'
@@ -88,6 +89,7 @@ export default function App() {
         <Route path="/school"     element={<ProtectedRoute><Layout><School /></Layout></ProtectedRoute>} />
         <Route path="/catalog"    element={<ProtectedRoute><Layout><Catalog /></Layout></ProtectedRoute>} />
         <Route path="/my-words"   element={<ProtectedRoute><Layout><PersonalVocab /></Layout></ProtectedRoute>} />
+        <Route path="/sets"       element={<ProtectedRoute><Layout><Sets /></Layout></ProtectedRoute>} />
         <Route path="/join"       element={<ProtectedRoute><Layout><JoinClass /></Layout></ProtectedRoute>} />
         <Route path="/join/:code" element={<ProtectedRoute><Layout><JoinClass /></Layout></ProtectedRoute>} />
         <Route path="/docs"    element={<Docs />} />

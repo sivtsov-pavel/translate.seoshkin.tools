@@ -9,6 +9,7 @@ export const sq = {
     analytics: 'Analitika e klasës',
     today: 'Sot',
     lessons: 'Mësimet',
+    sets: 'Grupet',
     vocabulary: 'Fjalori',
     courses: 'Kurset',
     students: 'Nxënësit',

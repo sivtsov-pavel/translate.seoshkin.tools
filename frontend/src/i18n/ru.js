@@ -10,6 +10,7 @@ export const ru = {
     analytics: 'Аналитика класса',
     today: 'Сегодня',
     lessons: 'Уроки',
+    sets: 'Наборы',
     vocabulary: 'Словарь',
     courses: 'Курсы',
     students: 'Ученики',
