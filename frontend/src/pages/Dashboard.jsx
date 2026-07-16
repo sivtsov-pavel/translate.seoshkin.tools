@@ -424,45 +424,44 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
       background: 'var(--surface)', border: '1px solid var(--line)',
       borderRadius: 'var(--radius)', padding: 16,
     }}>
-      {/* Шапка — клик по заголовку раскрывает/сворачивает список упражнений (как аккордеон) */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-        <div style={{ minWidth: 0, cursor: 'pointer', flex: 1 }} onClick={() => setShowExercises(v => !v)}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-            {onTogglePin && (
-              <button onClick={(e) => { e.stopPropagation(); onTogglePin() }} title="Закрепить наверху"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, lineHeight: 1, flexShrink: 0, padding: 0, color: pinned ? 'var(--accent)' : 'var(--ink-soft)' }}>
-                {pinned ? '⭐' : '☆'}
-              </button>
-            )}
-            <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 18, fontWeight: 700 }}>
-              {getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || `Урок #${lesson.lesson_id}`}
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: badge.bg, color: badge.color, flexShrink: 0 }}>
-              {badge.label}
-            </span>
-          </div>
-          {lesson.lesson_description && (
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', fontStyle: 'italic' }}>
-              {getLessonDesc(lesson.lesson_description, lesson.lesson_description_translations, lang)}
-            </div>
+      {/* Шапка на всю ширину — клик по ней раскрывает/сворачивает список упражнений */}
+      <div style={{ cursor: 'pointer' }} onClick={() => setShowExercises(v => !v)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+          {onTogglePin && (
+            <button onClick={(e) => { e.stopPropagation(); onTogglePin() }} title="Закрепить наверху"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, lineHeight: 1, flexShrink: 0, padding: 0, color: pinned ? 'var(--accent)' : 'var(--ink-soft)' }}>
+              {pinned ? '⭐' : '☆'}
+            </button>
           )}
-          <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-            {t.dashboard.exercisesWaiting(lesson.total)}
-            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{showExercises ? '▲' : '▼ упражнения'}</span>
+          <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 18, fontWeight: 700, flex: 1, minWidth: 0 }}>
+            {getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || `Урок #${lesson.lesson_id}`}
           </div>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: badge.bg, color: badge.color, flexShrink: 0 }}>
+            {badge.label}
+          </span>
         </div>
-        <button
-          onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}`)}
-          style={{
-            background: 'var(--accent)', color: 'var(--accent-ink)',
-            border: 'none', borderRadius: 12, padding: '10px 16px',
-            fontSize: 14, fontWeight: 700, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
-            flexShrink: 0,
-          }}>
-          ▶ {t.dashboard.start}
-        </button>
+        {lesson.lesson_description && (
+          <div style={{ fontSize: 12, color: 'var(--ink-soft)', fontStyle: 'italic' }}>
+            {getLessonDesc(lesson.lesson_description, lesson.lesson_description_translations, lang)}
+          </div>
+        )}
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {t.dashboard.exercisesWaiting(lesson.total)}
+          <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{showExercises ? '▲ свернуть' : '▼ упражнения'}</span>
+        </div>
       </div>
+      {/* Кнопка «Начать» — на всю ширину блока */}
+      <button
+        onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}`)}
+        style={{
+          width: '100%', marginTop: 12, boxSizing: 'border-box',
+          background: 'var(--accent)', color: 'var(--accent-ink)',
+          border: 'none', borderRadius: 12, padding: '11px 16px',
+          fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        }}>
+        ▶ {t.dashboard.start}
+      </button>
 
       {/* Чипы типов упражнений — свёрнуты по умолчанию, раскрываются нижней полосой */}
       {showExercises && (
@@ -522,8 +521,8 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
       </div>
       )}
 
-      {/* Слова урока — нижняя панель */}
-      <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* Слова урока — нижняя панель (с переносом, чтобы иконки не вылезали за экран) */}
+      <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         {/* Кнопка Прослушать */}
         {wordsCount > 0 && (
           <button
