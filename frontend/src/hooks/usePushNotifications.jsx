@@ -28,10 +28,27 @@ export function usePushNotifications() {
     setSupported(ok)
     if (ok) setPermission(Notification.permission)
 
-    // Проверить есть ли уже подписка
+    // Проверить есть ли уже подписка; если её нет, но разрешение есть и пользователь
+    // ранее включал напоминания (флаг переживает чистку кэша) — молча переподписываемся.
+    // Так «Напоминания» не слетают после каждой жёсткой чистки PWA.
     if (ok) {
       navigator.serviceWorker.ready.then(reg =>
-        reg.pushManager.getSubscription().then(sub => setSubscribed(!!sub))
+        reg.pushManager.getSubscription().then(async sub => {
+          if (sub) { setSubscribed(true); return }
+          if (Notification.permission === 'granted' && localStorage.getItem('reminders_enabled') === '1') {
+            try {
+              const { key } = await api.get('/push/vapid-key')
+              if (!key) return
+              const r = await registerSW() || reg
+              const subscription = await r.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(key),
+              })
+              await api.post('/push/subscribe', { subscription })
+              setSubscribed(true)
+            } catch (e) { console.error('Push авто-переподписка:', e) }
+          }
+        })
       )
     }
   }, [])
@@ -58,6 +75,7 @@ export function usePushNotifications() {
       })
 
       await api.post('/push/subscribe', { subscription })
+      localStorage.setItem('reminders_enabled', '1')  // помним выбор для авто-переподписки после чистки кэша
       setSubscribed(true)
       return true
     } catch (err) {
@@ -77,6 +95,7 @@ export function usePushNotifications() {
         await api.post('/push/unsubscribe', { endpoint: sub.endpoint })
         await sub.unsubscribe()
       }
+      localStorage.setItem('reminders_enabled', '0')  // осознанная отписка — не переподписываемся авто
       setSubscribed(false)
     } catch (err) {
       console.error('Push unsubscribe error:', err)

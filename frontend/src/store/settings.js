@@ -97,6 +97,15 @@ export const useSettingsStore = create((set, get) => ({
         Object.assign(patch, visual)
         applyVisual(visual)
         localStorage.setItem(LS_KEY, JSON.stringify(visual))
+        // Отдельные ключи, которые читают компоненты напрямую (реакции тренера, голос) —
+        // тоже восстанавливаем ГЛОБАЛЬНО при загрузке, а не только на странице настроек,
+        // иначе после жёсткой чистки кеша тумблеры слетают до открытия «Настроек».
+        if (typeof visual.trainerReactions === 'boolean') {
+          localStorage.setItem('trainer_reactions', visual.trainerReactions ? 'true' : 'false')
+        }
+        if (typeof visual.voiceName === 'string' && visual.voiceName) {
+          localStorage.setItem('de_voice_name', visual.voiceName)
+        }
       }
       set(patch)
     } catch {
