@@ -7,10 +7,12 @@ import { useI18nStore } from '../store/i18n.js'
 // 📚 Наборы по темам: глобальные тематические комплекты слов (Глаголы, Числа, Школа…),
 // собранные из всех уроков без дублей. Пополняются из тетради/доски/фото. Учишься по темам.
 const THEME_ICON = {
-  'Глаголы': '🏃', 'Числа': '🔢', 'Цифры': '🔢', 'Время': '⏰', 'Школа': '🏫', 'Семья': '👨‍👩‍👧',
-  'Еда': '🍎', 'Транспорт': '🚌', 'Языки': '🌍', 'Документы': '📄', 'Общение': '💬', 'Эмоции': '😊',
-  'Дом и мебель': '🏠', 'Природа': '🌳', 'Любовь': '❤️', 'Учебные материалы': '📚', 'Одежда': '👕',
-  'Животные': '🐾', 'Цвета': '🎨', 'Тело': '🧍', 'Профессии': '👷',
+  'Школа и учёба': '🏫', 'Языки': '🌍', 'Семья и друзья': '👨‍👩‍👧', 'Глаголы': '🏃', 'Числа': '🔢',
+  'Время': '⏰', 'Транспорт': '🚌', 'Еда и напитки': '🍎', 'Документы и данные': '📄',
+  'Города и страны': '🗺️', 'Места и направления': '🧭', 'Грамматика': '📐', 'Эмоции': '😊',
+  'Дом и быт': '🏠', 'Природа': '🌳', 'Одежда': '👕', 'Покупки': '🛒', 'Цвета': '🎨',
+  'Тело и здоровье': '🧍', 'Работа и профессии': '👷', 'Технологии': '💻', 'Люди': '🧑‍🤝‍🧑',
+  'Общение': '💬', 'Разное': '📦',
 }
 const iconFor = (theme) => THEME_ICON[theme] || '📦'
 
@@ -43,7 +45,9 @@ export default function Sets() {
       )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
         {sets?.map(s => {
-          const theme = s.set_theme || getLessonTitle(s.title, s.title_translations, lang) || s.title
+          // Иконку берём по русскому ключу темы, а подпись — локализованную
+          const icon = iconFor(s.set_theme)
+          const theme = getLessonTitle(s.title, s.title_translations, lang) || s.set_theme || s.title
           return (
             <div key={s.id} onClick={() => navigate(`/exercise-session?lesson_id=${s.id}`)} style={{
               cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16,
@@ -52,7 +56,7 @@ export default function Sets() {
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}>
-              <div style={{ fontSize: 40, lineHeight: 1 }}>{iconFor(theme)}</div>
+              <div style={{ fontSize: 40, lineHeight: 1 }}>{icon}</div>
               <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{theme}</div>
               <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{s.words_total || 0} слов</div>
             </div>
