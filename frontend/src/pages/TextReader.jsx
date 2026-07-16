@@ -125,6 +125,25 @@ function CopySelectionBar({ count, onCopy, onCancel, copied, bottomOffset }) {
   )
 }
 
+// Мини-чекбокс копирования (используется в режиме «Разговор»; в «Двуязычном»
+// определён свой локальный аналог внутри bilingual.map — не трогаем его)
+function CopyBox({ on, onToggle }) {
+  return (
+    <span
+      onClick={onToggle}
+      title="Выбрать для копирования"
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 16, height: 16, verticalAlign: 'middle',
+        borderRadius: 4, cursor: 'pointer', fontSize: 11, lineHeight: 1, flexShrink: 0,
+        border: `1px solid ${on ? 'var(--accent)' : 'var(--line)'}`,
+        background: on ? 'var(--accent)' : 'transparent',
+        color: on ? 'var(--accent-ink)' : 'transparent',
+      }}
+    >✓</span>
+  )
+}
+
 // ───────── панель выбранных слов ─────────
 
 function WordPanel({ words, onRemove, onClear }) {
@@ -349,6 +368,8 @@ export default function TextReader() {
   const [readCopySelected, setReadCopySelected] = useState(new Set())
   const [bilingualCopySelected, setBilingualCopySelected] = useState(new Set())     // выбранные оригиналы (изучаемый язык)
   const [bilingualTransSelected, setBilingualTransSelected] = useState(new Set())   // выбранные переводы
+  const [convCopySelected, setConvCopySelected]   = useState(new Set())  // выбранные оригиналы реплик (по msg.id)
+  const [convTransSelected, setConvTransSelected] = useState(new Set())  // выбранные переводы реплик (по msg.id)
   const [copyFeedback, setCopyFeedback] = useState(false)
 
   // Сохранённые наборы
@@ -464,6 +485,23 @@ export default function TextReader() {
     })
   }, [])
 
+  // convMessages идентифицируются по msg.id (не по индексу массива, как bilingual) —
+  // Set хранит msg.id
+  const toggleConvCopy = useCallback((id) => {
+    setConvCopySelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }, [])
+  const toggleConvTrans = useCallback((id) => {
+    setConvTransSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }, [])
+
   const flashCopied = () => { setCopyFeedback(true); setTimeout(() => setCopyFeedback(false), 1500) }
 
   // Копируем ТОЛЬКО текст на изучаемом языке — sentences[i], в порядке следования
@@ -490,6 +528,22 @@ export default function TextReader() {
     await navigator.clipboard.writeText(textToCopy)
     setBilingualCopySelected(new Set())
     setBilingualTransSelected(new Set())
+    flashCopied()
+  }
+
+  // Копируем выбранное из разговора: оригинал реплики и/или её перевод, что отмечено.
+  // Порядок — как в истории разговора (по порядку convMessages, не по порядку клика).
+  const copyConvSelection = async () => {
+    const parts = []
+    for (const msg of convMessages) {
+      if (convCopySelected.has(msg.id) && msg.original) parts.push(msg.original)
+      if (convTransSelected.has(msg.id) && msg.translation && msg.translation !== '…' && msg.translation !== '❌') parts.push(msg.translation)
+    }
+    const textToCopy = parts.join('\n\n').trim()
+    if (!textToCopy) return
+    await navigator.clipboard.writeText(textToCopy)
+    setConvCopySelected(new Set())
+    setConvTransSelected(new Set())
     flashCopied()
   }
 
@@ -686,7 +740,7 @@ export default function TextReader() {
             { key: 'bilingual',    label: '🌐 Двуязычный' },
             { key: 'conversation', label: '💬 Разговор' },
           ].map(tab => (
-            <button key={tab.key} onClick={() => { setMode(tab.key); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()); setBilingualTransSelected(new Set()) }} style={{
+            <button key={tab.key} onClick={() => { setMode(tab.key); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()); setBilingualTransSelected(new Set()); setConvCopySelected(new Set()); setConvTransSelected(new Set()) }} style={{
               padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600,
               cursor: 'pointer',
               background: mode === tab.key ? 'var(--accent)' : 'transparent',
@@ -767,23 +821,29 @@ export default function TextReader() {
                 const isSrc = msg.side === 'src'
                 const fromLang = getLang(isSrc ? convSrcLang : convTgtLang)
                 const toLang   = getLang(isSrc ? convTgtLang : convSrcLang)
+                const copySelected  = convCopySelected.has(msg.id)
+                const transSelected = convTransSelected.has(msg.id)
                 return (
                   <div key={msg.id} style={{
                     alignSelf: isSrc ? 'flex-start' : 'flex-end',
                     maxWidth: '85%',
                     background: isSrc ? 'var(--accent-soft)' : 'var(--surface-2)',
-                    border: `1px solid ${isSrc ? 'var(--accent)' : 'var(--line)'}`,
+                    // выбор для копирования важнее рамки «своей» реплики (isSrc) —
+                    // так пользователь сразу видит, что отмечено
+                    border: `1px solid ${(copySelected || transSelected) ? 'var(--accent)' : isSrc ? 'var(--accent)' : 'var(--line)'}`,
                     borderRadius: isSrc ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
                     padding: '10px 14px',
                   }}>
-                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 4 }}>
-                      {fromLang.flag} {fromLang.label}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <CopyBox on={copySelected} onToggle={() => toggleConvCopy(msg.id)} />
+                      <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{fromLang.flag} {fromLang.label}</div>
                     </div>
                     <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>
                       {msg.original}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginBottom: 3 }}>
-                      → {toLang.flag} {toLang.label}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                      <CopyBox on={transSelected} onToggle={() => toggleConvTrans(msg.id)} />
+                      <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>→ {toLang.flag} {toLang.label}</div>
                     </div>
                     <div style={{ fontSize: 14, color: msg.translation === '…' ? 'var(--ink-soft)' : 'var(--accent)', fontStyle: msg.translation === '…' ? 'italic' : 'normal' }}>
                       {msg.translation}
@@ -837,7 +897,7 @@ export default function TextReader() {
           </div>
 
           {convMessages.length > 0 && (
-            <button onClick={() => setConvMessages([])}
+            <button onClick={() => { setConvMessages([]); setConvCopySelected(new Set()); setConvTransSelected(new Set()) }}
               style={{ marginTop: 10, width: '100%', padding: '8px', border: '1px solid var(--line)', background: 'none', borderRadius: 10, cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 13 }}>
               Очистить историю
             </button>
@@ -1139,6 +1199,15 @@ export default function TextReader() {
           count={biSelCount}
           onCopy={copyBilingualSelection}
           onCancel={() => { setBilingualCopySelected(new Set()); setBilingualTransSelected(new Set()) }}
+          copied={copyFeedback}
+          bottomOffset={hasSelection ? 'calc(55vh + 16px)' : 16}
+        />
+      )}
+      {mode === 'conversation' && (
+        <CopySelectionBar
+          count={convCopySelected.size + convTransSelected.size}
+          onCopy={copyConvSelection}
+          onCancel={() => { setConvCopySelected(new Set()); setConvTransSelected(new Set()) }}
           copied={copyFeedback}
           bottomOffset={hasSelection ? 'calc(55vh + 16px)' : 16}
         />
