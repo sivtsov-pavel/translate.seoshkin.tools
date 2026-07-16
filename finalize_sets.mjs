@@ -59,13 +59,13 @@ let merged = 0
 for (const [canon, group] of byCanon) {
   if (group.length === 1) {
     // просто приводим название к канону
-    await db.query('UPDATE lessons SET set_theme=$1, title=$1 WHERE id=$2', [canon, group[0].id])
+    await db.query('UPDATE lessons SET set_theme=$1, title=$2 WHERE id=$3', [canon, canon, group[0].id])
     continue
   }
   // сливаем в первый набор группы
   const keep = group[0]
   const others = group.slice(1).map(g => g.id)
-  await db.query('UPDATE lessons SET set_theme=$1, title=$1 WHERE id=$2', [canon, keep.id])
+  await db.query('UPDATE lessons SET set_theme=$1, title=$2 WHERE id=$3', [canon, canon, keep.id])
   // переносим уникальные слова из остальных в keep
   const { rows: words } = await db.query(
     `SELECT DISTINCT ON (regexp_replace(lower(word_de),'^(der|die|das|ein|eine)\\s+',''))
