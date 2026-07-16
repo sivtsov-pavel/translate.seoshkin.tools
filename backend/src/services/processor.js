@@ -710,11 +710,15 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
     }
     for (const it of its) {
       const norm = bare(it.de)
-      // дедуп внутри набора (по нормализованной форме без артикля)
+      // Дедуп по ВСЕМ наборам владельца (не только текущему): слово живёт максимум
+      // в одном наборе, иначе при повторных фото тетради копится по темам-соседям.
+      // Уроки учебника не учитываем — набор должен быть тематически полным,
+      // а Словарь дедупит отображение сам (DISTINCT ON word_de).
       const { rows: ex } = await db.query(
-        `SELECT 1 FROM words WHERE lesson_id = $1
-           AND regexp_replace(lower(word_de), '^(der|die|das|ein|eine)\\s+', '') = $2 LIMIT 1`,
-        [setId, norm])
+        `SELECT 1 FROM words w JOIN lessons l ON l.id = w.lesson_id
+         WHERE l.is_set AND l.owner_id = $1
+           AND regexp_replace(lower(w.word_de), '^(der|die|das|ein|eine)\\s+', '') = $2 LIMIT 1`,
+        [ownerId, norm])
       if (ex.length) { dup++; continue }
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
