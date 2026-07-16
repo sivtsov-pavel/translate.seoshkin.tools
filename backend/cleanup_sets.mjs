@@ -18,6 +18,9 @@ const LESSON_3 = 30
 const TARGET = 'de'
 
 const bare = s => String(s).toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '').trim()
+// Ключ сопоставления слов — ТОЧНАЯ форма, не bare: «leben» (жить) и «das Leben» (жизнь)
+// — разные слова с одной bare-формой, склеивать их нельзя
+const exact = s => String(s).toLowerCase().trim()
 const log = (...a) => console.log(...a)
 
 const { rows: own } = await db.query('SELECT owner_id FROM lessons WHERE id=$1', [SUB_LESSONS[0]])
@@ -64,10 +67,10 @@ async function classifyAll(words) {
     const batch = words.slice(i, i + 60)
     const items = await classifyWordsToThemes(batch.map(w => ({ de: w.word_de, tr: w.translation_ru })), TARGET)
     if (items.length === batch.length) {
-      items.forEach((it, j) => { map[bare(batch[j].word_de)] = it })
+      items.forEach((it, j) => { map[exact(batch[j].word_de)] = it })
     } else {
-      // модель что-то отфильтровала — фолбэк: совпадение по bare-форме выхода
-      for (const it of items) { const k = bare(it.de); if (!map[k]) map[k] = it }
+      // модель что-то отфильтровала — фолбэк: совпадение по точной форме выхода
+      for (const it of items) { const k = exact(it.de); if (!map[k]) map[k] = it }
     }
     log(`  классифицировано ${Math.min(i + 60, words.length)}/${words.length}`)
   }
@@ -90,7 +93,7 @@ const affectedSets = new Set()
 if (missing.length) {
   const cls = await classifyAll(missing)
   for (const w of missing) {
-    const it = cls[bare(w.word_de)]
+    const it = cls[exact(w.word_de)]
     const theme = it?.theme || 'Разное'
     const de = it?.de || w.word_de
     const tr = it?.tr || w.translation_ru
@@ -116,8 +119,9 @@ const { rows: setWords } = await db.query(
    ORDER BY w.id`, [ownerId])
 log(`  всего слов в наборах: ${setWords.length}`)
 
-// Уникальные bare-формы классифицируем один раз — копии одного слова получат одну тему
-const uniq = [...new Map(setWords.map(w => [bare(w.word_de), w])).values()]
+// Уникальные ТОЧНЫЕ формы классифицируем один раз — копии одного слова получат одну тему,
+// а «leben»/«das Leben» останутся разными словами
+const uniq = [...new Map(setWords.map(w => [exact(w.word_de), w])).values()]
 const cls2 = await classifyAll(uniq)
 
 let moved = 0, renamed = 0, merged = 0, kept = 0
@@ -125,7 +129,7 @@ for (const w of setWords) {
   // свежие данные (слово могло быть слито ранее в цикле)
   const { rows: cur } = await db.query('SELECT id, word_de, lesson_id FROM words WHERE id=$1', [w.id])
   if (!cur.length && !DRY) continue
-  const it = cls2[bare(w.word_de)]
+  const it = cls2[exact(w.word_de)]
   if (!it) { kept++; continue }
   const theme = CANON_THEMES.includes(it.theme) ? it.theme : 'Разное'
   const targetId = await ensureSet(theme)
@@ -134,13 +138,13 @@ for (const w of setWords) {
 
   if (sameSet && normDe === w.word_de) { kept++; continue }
 
-  // есть ли в целевом наборе другое слово с той же bare-формой?
+  // есть ли в целевом наборе другое слово с той же ТОЧНОЙ формой (после нормализации)?
   const { rows: dup } = await db.query(
     `SELECT w2.id, (w2.image_url IS NOT NULL)::int*2 + (w2.translations IS NOT NULL AND w2.translations != '{}')::int
               + (w2.example_sentence IS NOT NULL)::int AS score
      FROM words w2 WHERE w2.lesson_id=$1 AND w2.id != $2
-       AND regexp_replace(lower(w2.word_de), '^(der|die|das|ein|eine)\\s+', '') = $3 LIMIT 1`,
-    [typeof targetId === 'number' ? targetId : -1, w.id, bare(normDe)])
+       AND lower(w2.word_de) = $3 LIMIT 1`,
+    [typeof targetId === 'number' ? targetId : -1, w.id, exact(normDe)])
 
   if (dup.length) {
     // дубль: выживает более «богатое» слово
