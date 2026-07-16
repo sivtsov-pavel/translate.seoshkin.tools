@@ -43,6 +43,14 @@ export const de = {
   },
   // Dashboard
   dashboard: {
+    analyticsDesc: 'Fortschritt, Genauigkeit, schwierige Wörter',
+    trainerDesc: 'Sprechen wir — per Stimme oder Text',
+    loveTitle: 'Liebe für Kinder',
+    loveDesc: 'Warme Sätze für Kinder — mit Liebe',
+    gameReadyTitle: 'Klassenspiel ist bereit!',
+    gameReadyDesc: 'Sätze abwechselnd lesen',
+    open: 'Öffnen',
+    yourPhrases: 'deine Sätze',
     matchTitle: 'Wortpaar',
     matchDesc: 'Finde Wortpaare — 8 Paare, Timer',
     crossTitle: 'Kreuzworträtsel',

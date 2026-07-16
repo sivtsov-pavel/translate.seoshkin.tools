@@ -43,6 +43,14 @@ export const ru = {
   },
   // Дашборд
   dashboard: {
+    analyticsDesc: 'Прогресс учеников, точность, трудные слова',
+    trainerDesc: 'Поговорим — голосом или текстом',
+    loveTitle: 'Любовь к детям',
+    loveDesc: 'Тёплые фразы для детей — с любовью',
+    gameReadyTitle: 'Игра класса готова!',
+    gameReadyDesc: 'Читаем фразы по очереди',
+    open: 'Открыть',
+    yourPhrases: 'твоих фраз',
     matchTitle: 'Словопара',
     matchDesc: 'Найди пары слов — 8 пар, таймер',
     crossTitle: 'Кроссворд',

@@ -43,12 +43,12 @@ export default function Dashboard() {
       }}>
         <div style={{ fontSize: 30 }}>🎮</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 15 }}>Игра класса готова!</div>
+          <div style={{ fontWeight: 800, fontSize: 15 }}>{t.dashboard.gameReadyTitle}</div>
           <div style={{ fontSize: 13, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {games[0].title || 'Читаем фразы по очереди'}{games[0].my_lines ? ` · твоих фраз: ${games[0].my_lines}` : ''}
+            {games[0].title || t.dashboard.gameReadyDesc}{games[0].my_lines ? ` · : my_lines` : ''}
           </div>
         </div>
-        <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>Открыть →</span>
+        <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>{t.dashboard.open} →</span>
       </div>
     </div>
   )
@@ -107,8 +107,8 @@ export default function Dashboard() {
           }}>
             <span style={{ fontSize: 30, lineHeight: 1 }}>📊</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Аналитика класса</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Прогресс учеников, точность ответов, трудные слова — кто где буксует</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>{t.nav.analytics}</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.analyticsDesc}</div>
             </div>
             <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
           </div>
@@ -129,7 +129,7 @@ export default function Dashboard() {
             <div style={{ width: 46, height: 46, borderRadius: '50%', flexShrink: 0, border: '2px solid var(--accent)', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>🤓</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>✨ Hallo! Ich bin Pablo 👋</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Давай поговорим по-немецки — голосом или текстом</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.trainerDesc}</div>
             </div>
             <span style={{ fontSize: 22, flexShrink: 0 }}>🗣️</span>
           </div>
@@ -146,8 +146,8 @@ export default function Dashboard() {
           }}>
             <span style={{ fontSize: 32, lineHeight: 1 }}>❤️</span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>Любовь к детям</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Тёплые немецкие фразы для дочки и сына — с любовью</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>{t.dashboard.loveTitle}</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.loveDesc}</div>
             </div>
             <span style={{ fontSize: 18, flexShrink: 0 }}>→</span>
           </div>
