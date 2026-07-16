@@ -267,6 +267,24 @@ export default function Dashboard() {
         })()}
       </div>
 
+      {/* Круглая кнопка камеры — новый урок по фото. Стоит НАД «Повторить всё»
+          в том же правом нижнем углу (не над «Повторить всё» по X, а выше по Y —
+          та кнопка условна по total > 0, эта — всегда видна). */}
+      <button
+        onClick={() => navigate('/lessons/new')}
+        title="Новый урок по фото"
+        style={{
+          position: 'fixed', zIndex: 50,
+          right: 16, bottom: `calc(var(--bottom-nav-h, 0px) + ${total > 0 ? 78 : 16}px)`,
+          width: 52, height: 52, borderRadius: '50%',
+          background: 'var(--surface)', color: 'var(--ink)',
+          border: '1px solid var(--line)', cursor: 'pointer', fontSize: 22,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+        }}>
+        📷
+      </button>
+
       {/* Круглая кнопка «Повторить всё» в правом нижнем углу — не перекрывает
           левое меню и контент (была на всю ширину по центру → налезала на сайдбар) */}
       {total > 0 && (
