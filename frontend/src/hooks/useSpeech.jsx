@@ -47,12 +47,23 @@ function getSavedRate() {
   return isNaN(v) ? 0.9 : Math.max(0.5, Math.min(1.5, v))
 }
 
+// Чистка текста для озвучки (на экране текст остаётся полным):
+// «шесть (6)» и «умер (причастие от sterben)» — пояснение в скобках TTS читает как
+// повтор/мусор; «станция / отделение» — слэш читается словом. Скобки убираем,
+// слэш превращаем в паузу-запятую.
+function speakable(text) {
+  return String(text ?? '')
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/\s*\/\s*/g, ', ')
+    .trim()
+}
+
 export function speak(text, lang = targetLocale(), rate = null) {
   if (!synth) return
   synth.cancel()
   // Chrome bug: cancel() и speak() в одном тике → utterance молча сбрасывается
   setTimeout(() => {
-    const utt = new SpeechSynthesisUtterance(text)
+    const utt = new SpeechSynthesisUtterance(speakable(text))
     utt.lang = lang
     utt.rate = rate ?? getSavedRate()
     const v = pickVoice()
@@ -71,7 +82,7 @@ export function speakWithEvents(text, lang = targetLocale(), { onStart, onEnd } 
   if (!synth || !text) { onEnd?.(); return }
   synth.cancel()
   setTimeout(() => {
-    const utt = new SpeechSynthesisUtterance(text)
+    const utt = new SpeechSynthesisUtterance(speakable(text))
     utt.lang = lang
     utt.rate = getSavedRate()
     const v = pickVoice()
@@ -90,7 +101,7 @@ export function cancel() {
 // Добавить в очередь синтеза без отмены текущего — для произношения перевода после немецкого слова
 export function speakAppend(text, lang = 'ru-RU') {
   if (!synth || !isSpeakTranslationEnabled() || !text) return
-  const utt = new SpeechSynthesisUtterance(text)
+  const utt = new SpeechSynthesisUtterance(speakable(text))
   utt.lang = lang
   utt.rate = 1.0
   synth.speak(utt)
