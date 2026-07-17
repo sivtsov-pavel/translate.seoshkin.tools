@@ -147,6 +147,7 @@ const L = {
     tagline: 'Немецкий для эмигрантов',
     subtitle: 'Учи немецкий с умным повторением, диктантами и ИИ-объяснениями. Бесплатно.',
     cta: 'Начать бесплатно',
+    charity: '💛 Сейчас приложение бесплатно для всех — это наш вклад в помощь украинцам и иммигрантам в изучении языка.',
     ctaLogin: 'Уже есть аккаунт',
     docsLink: 'Документация',
     modules: [
@@ -591,6 +592,16 @@ export default function Landing() {
               border: '1px solid var(--line)',
             }}>{l}</span>
           ))}
+        </div>
+
+        {/* Благотворительный баннер: приложение бесплатно для всех (D6, Павел) */}
+        <div style={{
+          marginTop: 28, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto',
+          padding: '14px 20px', borderRadius: 14,
+          background: 'linear-gradient(135deg, rgba(255,213,0,0.12), rgba(0,87,183,0.10))',
+          border: '1px solid var(--line)', color: 'var(--ink)', fontSize: 15, lineHeight: 1.5, fontWeight: 500,
+        }}>
+          {c.charity || '💛 Сейчас приложение бесплатно для всех — это наш вклад в помощь украинцам и иммигрантам в изучении языка.'}
         </div>
       </section>
 
