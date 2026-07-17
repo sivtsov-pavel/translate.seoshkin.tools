@@ -199,9 +199,10 @@ function AiTrainerInner() {
   // Тумблер «перевод»: показывать перевод реплики тренера на язык ученика (persist)
   const [bilingual, setBilingual] = useState(() => localStorage.getItem('trainer_bilingual') === '1')
   const toggleBilingual = () => setBilingual(v => { localStorage.setItem('trainer_bilingual', v ? '0' : '1'); return !v })
-  // Тумблер «озвучка»: проговаривать ли реплики тренера голосом (чат + голосовой режим). Дефолт вкл.
-  const [speakOn, setSpeakOn] = useState(() => localStorage.getItem('trainer_speak') !== 'false')
-  const speakOnRef = useRef(true)
+  // Тумблер «озвучка»: проговаривать ли реплики тренера голосом (чат + голосовой режим).
+  // Дефолт ВЫКЛ (Павел): тренер не проговаривает свою речь → не зацикливается, чище настраивается.
+  const [speakOn, setSpeakOn] = useState(() => localStorage.getItem('trainer_speak') === 'true')
+  const speakOnRef = useRef(localStorage.getItem('trainer_speak') === 'true')
   useEffect(() => { speakOnRef.current = speakOn }, [speakOn])
   const toggleSpeak = () => setSpeakOn(v => { localStorage.setItem('trainer_speak', v ? 'false' : 'true'); return !v })
   const [lessonLoadFailed, setLessonLoadFailed] = useState(false) // слова урока не загрузились — фолбэк на обычный экран
