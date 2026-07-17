@@ -537,6 +537,22 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
             </span>
           </button>
         )}
+
+        {/* Учитель: отчёт по уроку — где буксует группа + как идут ученики */}
+        {user?.role === 'owner' && wordsCount > 0 && (
+          <button onClick={() => navigate(`/lesson-report/${lesson.lesson_id}`)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--accent)', borderRadius: 12, padding: '10px', fontSize: 13,
+              color: 'var(--ink)', cursor: 'pointer', textAlign: 'left', minWidth: 0, overflow: 'hidden',
+            }}>
+            <span style={{ flexShrink: 0, fontSize: 15 }}>📊</span>
+            <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+              Отчёт по уроку
+            </span>
+          </button>
+        )}
       </div>
       )}
 

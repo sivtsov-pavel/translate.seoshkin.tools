@@ -24,6 +24,13 @@ export default function TeacherAnalytics() {
 
   useEffect(() => { api.get('/analytics/overview').then(setData).catch(e => setErr(e.message)) }, [])
 
+  const [lessons, setLessons] = useState([])
+  useEffect(() => {
+    api.get('/lessons')
+      .then(d => setLessons(Array.isArray(d) ? d : (d.lessons || [])))
+      .catch(() => {})
+  }, [])
+
   if (user?.role !== 'owner') return (
     <div style={{ maxWidth: 480, margin: '60px auto', textAlign: 'center' }}>
       <div style={{ fontSize: 44 }}>🔒</div><h2>Только для учителя</h2>
@@ -42,6 +49,17 @@ export default function TeacherAnalytics() {
       <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginTop: 0, marginBottom: 18 }}>
         Прогресс учеников по твоим урокам: активность, точность, трудные слова.
       </p>
+
+      {lessons.length > 0 && (
+        <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>📊 Отчёт по уроку:</span>
+          <select defaultValue="" onChange={(e) => e.target.value && navigate(`/lesson-report/${e.target.value}`)}
+            style={{ padding: '7px 10px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 13, maxWidth: '100%' }}>
+            <option value="" disabled>— выбери урок —</option>
+            {lessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+          </select>
+        </div>
+      )}
 
       {empty && (
         <div style={{ ...card, textAlign: 'center', color: 'var(--ink-soft)' }}>

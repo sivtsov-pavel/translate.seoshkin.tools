@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import LessonList from './pages/LessonList.jsx'
 import ShareCard from './pages/ShareCard.jsx'
 import TeacherAnalytics from './pages/TeacherAnalytics.jsx'
+import LessonReport from './pages/LessonReport.jsx'
 import School from './pages/School.jsx'
 import JoinClass from './pages/JoinClass.jsx'
 import Catalog from './pages/Catalog.jsx'
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="/class-game/:id" element={<ProtectedRoute><Layout><ClassGame /></Layout></ProtectedRoute>} />
         <Route path="/w/:id" element={<ProtectedRoute><Layout><ShareCard /></Layout></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><Layout><TeacherAnalytics /></Layout></ProtectedRoute>} />
+        <Route path="/lesson-report/:id" element={<ProtectedRoute><Layout><LessonReport /></Layout></ProtectedRoute>} />
         <Route path="/school"     element={<ProtectedRoute><Layout><School /></Layout></ProtectedRoute>} />
         <Route path="/catalog"    element={<ProtectedRoute><Layout><Catalog /></Layout></ProtectedRoute>} />
         <Route path="/my-words"   element={<ProtectedRoute><Layout><PersonalVocab /></Layout></ProtectedRoute>} />
