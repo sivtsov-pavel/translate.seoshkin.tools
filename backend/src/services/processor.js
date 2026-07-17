@@ -702,10 +702,12 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
       [theme, ownerId])
     let setId = rows[0]?.id
     if (!setId) {
+      // тема двумя параметрами: один $2 в колонках разных типов (varchar/text) валит
+      // Postgres «inconsistent types deduced for parameter» при создании НОВОЙ темы
       const ins = await db.query(
         `INSERT INTO lessons (owner_id, title, target_lang, status, is_set, set_theme)
-         VALUES ($1, $2, $3, 'processing', true, $2) RETURNING id`,
-        [ownerId, theme, targetLang])
+         VALUES ($1, $2, $3, 'processing', true, $4) RETURNING id`,
+        [ownerId, theme, targetLang, theme])
       setId = ins.rows[0].id
     }
     for (const it of its) {

@@ -36,9 +36,11 @@ async function ensureSet(theme) {
     'SELECT id FROM lessons WHERE is_set AND set_theme=$1 AND owner_id=$2 ORDER BY id LIMIT 1', [theme, ownerId])
   let id = rows[0]?.id
   if (!id && !DRY) {
+    // тема двумя параметрами: один $2 в колонках разных типов (varchar/text) валит
+    // Postgres «inconsistent types deduced for parameter»
     const ins = await db.query(
       `INSERT INTO lessons (owner_id, title, target_lang, status, is_set, set_theme)
-       VALUES ($1, $2, $3, 'done', true, $2) RETURNING id`, [ownerId, theme, TARGET])
+       VALUES ($1, $2, $3, 'done', true, $4) RETURNING id`, [ownerId, theme, TARGET, theme])
     id = ins.rows[0].id
     log(`  + создан набор «${theme}» (#${id})`)
   }
