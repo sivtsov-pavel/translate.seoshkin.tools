@@ -370,7 +370,8 @@ Reply ONLY with JSON (no markdown), feedback in ${langName}:
   "correct": true/false,
   "quality": 0-5,
   "feedback_ru": "Brief comment in ${langName} (1-2 sentences). If error — explain what exactly.",
-  "corrected": "Corrected version if there are errors, otherwise null"
+  "corrected": "Corrected version if there are errors, otherwise null",
+  "corrected_translation": "Translation of the corrected version into ${langName}; if corrected is null, translate the student's own sentence into ${langName}"
 }
 
 Шкала quality: 5=отлично, 4=хорошо, 3=приемлемо с мелкими ошибками, 2=понятно но с ошибками, 1=слово есть но много ошибок, 0=слово не использовано или непонятно`

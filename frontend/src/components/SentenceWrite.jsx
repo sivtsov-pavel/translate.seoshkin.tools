@@ -105,11 +105,22 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
             {result.feedback_ru}
           </p>
 
-          {result.corrected && (
+          {result.corrected ? (
             <div style={{ background: 'rgba(78,154,110,0.12)', borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
               <div style={{ fontSize: 13, color: 'var(--good)', marginBottom: 4 }}>{t.exercise.correctedVersion}:</div>
               <div style={{ fontSize: 16, color: 'var(--good)', fontWeight: 500 }}>{result.corrected}</div>
+              {/* Перевод исправленного предложения — чтобы понимать смысл (A2) */}
+              {result.corrected_translation && (
+                <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 4 }}>{result.corrected_translation}</div>
+              )}
             </div>
+          ) : (
+            /* Ошибок нет — показываем перевод собственного предложения ученика (A2) */
+            result.corrected_translation && (
+              <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginBottom: 16 }}>
+                {result.corrected_translation}
+              </div>
+            )
           )}
 
           <button
