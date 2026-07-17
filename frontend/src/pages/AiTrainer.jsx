@@ -199,6 +199,11 @@ function AiTrainerInner() {
   // Тумблер «перевод»: показывать перевод реплики тренера на язык ученика (persist)
   const [bilingual, setBilingual] = useState(() => localStorage.getItem('trainer_bilingual') === '1')
   const toggleBilingual = () => setBilingual(v => { localStorage.setItem('trainer_bilingual', v ? '0' : '1'); return !v })
+  // Тумблер «озвучка»: проговаривать ли реплики тренера голосом (чат + голосовой режим). Дефолт вкл.
+  const [speakOn, setSpeakOn] = useState(() => localStorage.getItem('trainer_speak') !== 'false')
+  const speakOnRef = useRef(true)
+  useEffect(() => { speakOnRef.current = speakOn }, [speakOn])
+  const toggleSpeak = () => setSpeakOn(v => { localStorage.setItem('trainer_speak', v ? 'false' : 'true'); return !v })
   const [lessonLoadFailed, setLessonLoadFailed] = useState(false) // слова урока не загрузились — фолбэк на обычный экран
   const [searchParams] = useSearchParams()
   const [avatarAvailable, setAvatarAvailable] = useState(false)
@@ -397,11 +402,11 @@ function AiTrainerInner() {
       if (res.memory?.summary_text) setMemoryHint(res.memory.summary_text)
       const opening = res.opening || fallback
       setMessages([{ role: 'ai', reply: opening, translation: res.opening_translation || null, correction: null, character: ch }])
-      if (opening) speak(opening, 'de-DE')
+      if (opening && speakOnRef.current) speak(opening, 'de-DE')
     } catch {
       setSessionId(null)
       setMessages([{ role: 'ai', reply: fallback, translation: null, correction: null, character: ch }])
-      if (fallback) speak(fallback, 'de-DE')
+      if (fallback && speakOnRef.current) speak(fallback, 'de-DE')
     } finally {
       setLoading(false)
       setTimeout(() => inputRef.current?.focus(), 100)
@@ -463,20 +468,25 @@ function AiTrainerInner() {
           // Флоу: студент ответил → Pablo оживает клипом реакции (верно/неверно) →
           // затем говорит саму реплику → (если ошибка) договаривает правильный вариант → ждёт.
           setReaction(corr ? 'wrong' : 'correct')
-          playClip(corr ? CLIPS.wrong : CLIPS.correct, () => {
-            speakWithEvents(result.reply, 'de-DE', {
-              onStart: () => setSpeaking(true),
-              onEnd:   () => {
-                if (voiceModeRef.current && corr) {
-                  speakWithEvents(corr, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => { setReaction(null); setSpeaking(false) } })
-                } else {
-                  setReaction(null); setSpeaking(false)
-                }
-              },
+          if (!speakOnRef.current) {
+            // Озвучка выключена — без голоса аватара; короткая пауза и снова слушаем (hands-free)
+            setTimeout(() => { setReaction(null); setSpeaking(false) }, 700)
+          } else {
+            playClip(corr ? CLIPS.wrong : CLIPS.correct, () => {
+              speakWithEvents(result.reply, 'de-DE', {
+                onStart: () => setSpeaking(true),
+                onEnd:   () => {
+                  if (voiceModeRef.current && corr) {
+                    speakWithEvents(corr, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => { setReaction(null); setSpeaking(false) } })
+                  } else {
+                    setReaction(null); setSpeaking(false)
+                  }
+                },
+              })
             })
-          })
+          }
         } else {
-          speak(result.reply, 'de-DE')
+          if (speakOnRef.current) speak(result.reply, 'de-DE')
         }
       }
     } catch (e) {
@@ -784,6 +794,16 @@ function AiTrainerInner() {
         }}>
           🌐
         </button>
+        {/* Тумблер «озвучка» — проговаривать реплики голосом (чат и голосовой режим) */}
+        <button onClick={toggleSpeak} title={speakOn ? 'Тренер озвучивает — выключить голос' : 'Голос выключен — включить озвучку'} style={{
+          width: 38, height: 38, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', fontSize: 17,
+          border: `1px solid ${speakOn ? 'var(--accent)' : 'var(--line)'}`,
+          background: speakOn ? 'var(--accent-soft)' : 'var(--surface-2)',
+          opacity: speakOn ? 1 : 0.55,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {speakOn ? '🔊' : '🔇'}
+        </button>
         <button onClick={finishSession} disabled={loading} style={{
           padding: '6px 12px', borderRadius: 8, border: '1px solid var(--accent)',
           background: 'var(--accent-soft)', cursor: 'pointer', fontSize: 13, color: 'var(--accent)', fontWeight: 600,
@@ -944,6 +964,10 @@ function AiTrainerInner() {
                   {avatarBusy === lastAiIdx ? '⏳' : '🎥'} {V.animate}
                 </button>
               )}
+              <button onClick={toggleSpeak} title={speakOn ? 'Выключить голос тренера' : 'Включить голос тренера'}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 15, fontWeight: 600, opacity: speakOn ? 1 : 0.55 }}>
+                {speakOn ? '🔊' : '🔇'}
+              </button>
               <button onClick={exitVoice} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
                 💬 {V.text}
               </button>
