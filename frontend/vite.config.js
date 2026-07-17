@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Метка сборки — видна в сайдбаре: позволяет глазами проверить,
+  // что на устройстве обновилась версия (кэш SW у PWA/TWA бывает липкий)
+  define: {
+    __BUILD_TS__: JSON.stringify(new Date().toISOString().slice(5, 16).replace('T', ' ')),
+  },
   plugins: [
     react(),
     VitePWA({

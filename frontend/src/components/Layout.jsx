@@ -224,7 +224,11 @@ export default function Layout({ children }) {
         {/* Шапка */}
         <div style={{ padding: '16px 16px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', flexShrink: 0 }}>
           <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span>🇩🇪 {t.nav.appName}</span>
+            <span>
+              🇩🇪 {t.nav.appName}
+              {/* Метка сборки: видно, обновилось ли приложение (кэш SW липкий) */}
+              <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.6, marginLeft: 6 }}>{typeof __BUILD_TS__ !== 'undefined' ? __BUILD_TS__ : ''}</span>
+            </span>
             {inDrawer && (
               <button onClick={() => setOpen(false)} style={{
                 background: 'rgba(0,0,0,0.18)', border: 'none', borderRadius: 10, width: 32, height: 32,
