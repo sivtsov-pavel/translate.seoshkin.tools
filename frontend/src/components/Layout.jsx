@@ -45,6 +45,9 @@ export default function Layout({ children }) {
     window.addEventListener('offline', down)
     return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
   }, [])
+  // Класс на <html>: в офлайне контент сдвигается вниз (CSS), чтобы плашка
+  // не перекрывала заголовок страницы
+  useEffect(() => { document.documentElement.classList.toggle('offline-mode', !online) }, [online])
 
   // Бейдж непрочитанных сообщений — опрос каждые 30 сек
   useEffect(() => {
@@ -532,7 +535,7 @@ export default function Layout({ children }) {
       {/* Офлайн-плашка: аккуратно ВВЕРХУ, сразу под топбаром-хедером */}
       {!online && (
         <div style={{
-          position: 'fixed', top: 'var(--topbar-h, 56px)', left: 0, right: 0, zIndex: 90,
+          position: 'fixed', top: 'calc(var(--topbar-h, 56px) - 7px)', left: 0, right: 0, zIndex: 90,
           background: '#8a6d1a', color: '#fff', textAlign: 'center',
           padding: '5px 12px', fontSize: 12, fontWeight: 600,
         }}>

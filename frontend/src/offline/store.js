@@ -5,7 +5,7 @@ import { api } from '../api/client.js'
 import { idbGetAll, idbPut, idbPutAll, idbClear, idbDelete, idbGet, idbCount } from './db.js'
 
 const SYNC_INTERVAL_MS = 30 * 60 * 1000 // фоновая пересинхронизация не чаще раза в 30 минут
-const BUNDLE_FORMAT = 2 // поднять при изменении структуры bundle → клиенты форс-пересинкуются
+const BUNDLE_FORMAT = 3 // поднять при изменении структуры bundle → клиенты форс-пересинкуются
 const IMAGE_PREFETCH_LIMIT = 800        // сколько мелких картинок прогреть в кэш SW
 
 export const isOnline = () => navigator.onLine !== false
@@ -22,6 +22,7 @@ export async function syncDown(force = false) {
     const bundle = await api.get('/offline/bundle')
     await idbClear('words');     await idbPutAll('words', bundle.words || [])
     await idbClear('exercises'); await idbPutAll('exercises', bundle.exercises || [])
+    await idbClear('phrasebook'); await idbPutAll('phrasebook', bundle.phrases || [])
     await idbPut('meta', { key: 'lastSync', value: Date.now(), format: BUNDLE_FORMAT })
     prefetchImages(bundle.words || []) // не ждём — SW сложит в кэш фоном
     return true
@@ -123,6 +124,7 @@ export async function answerOffline(exercise, quality, userAnswer = '') {
 }
 
 export const getOfflineWords = () => idbGetAll('words')
+export const getOfflinePhrases = () => idbGetAll('phrasebook')
 
 // Статистика для «Сегодня» офлайн — тот же формат, что /api/exercises/stats:
 // { total, lessons: [{lesson_id, lesson_title, …, is_set, total, byType, words_count}] }

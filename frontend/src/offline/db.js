@@ -3,7 +3,7 @@
 // queue (очередь ответов, накопленных офлайн), meta (служебное: время синка).
 
 const DB_NAME = 'deutsch-offline'
-const DB_VERSION = 1
+const DB_VERSION = 2 // v2: + store phrasebook (Разговорник офлайн)
 let dbPromise = null
 
 function openDb() {
@@ -16,6 +16,7 @@ function openDb() {
       if (!db.objectStoreNames.contains('exercises')) db.createObjectStore('exercises', { keyPath: 'id' })
       if (!db.objectStoreNames.contains('queue'))     db.createObjectStore('queue', { keyPath: 'key' })
       if (!db.objectStoreNames.contains('meta'))      db.createObjectStore('meta', { keyPath: 'key' })
+      if (!db.objectStoreNames.contains('phrasebook')) db.createObjectStore('phrasebook', { keyPath: 'id' })
     }
     req.onsuccess = () => resolve(req.result)
     req.onerror   = () => reject(req.error)

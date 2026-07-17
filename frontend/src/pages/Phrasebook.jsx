@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../api/client.js'
-import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
+import { useOnline } from '../components/OfflineGuard.jsx'
+import { getOfflinePhrases, isOnline } from '../offline/store.js'
+import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition, speechSimilarity, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
 
@@ -9,15 +11,16 @@ const CATEGORIES = [
   'Покупки', 'Транспорт', 'Семья', 'Еда', 'Разное',
 ]
 
-// Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
-// return не менял список хуков основного компонента (Rules of Hooks)
+// Разговорник работает и офлайн: фразы из локальной базы (bundle), озвучка локальная.
+// Серверные действия (добавить/выучил/удалить/автоперевод) в офлайне — «Нужен интернет».
 export default function Phrasebook() {
-  const online = useOnline()
-  if (!online) return <OfflineNotice />
   return <PhrasebookInner />
 }
 
 function PhrasebookInner() {
+  const online = useOnline()
+  const { t: TT } = useI18nStore()
+  const needNet = () => alert(TT?.offlineMode?.sectionTitle || 'Нужен интернет')
   const [phrases, setPhrases]     = useState([])
   const [loading, setLoading]     = useState(true)
   const [filter, setFilter]       = useState('all')
@@ -33,7 +36,9 @@ function PhrasebookInner() {
   const [translating, setTranslating] = useState(false)
 
   useEffect(() => {
-    api.get('/phrasebook').then(data => { setPhrases(data); setLoading(false) }).catch(() => setLoading(false))
+    // Офлайн — фразы из локальной базы (bundle), онлайн — с сервера с фолбэком
+    const load = isOnline() ? api.get('/phrasebook').catch(() => getOfflinePhrases()) : getOfflinePhrases()
+    load.then(data => { setPhrases(data || []); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   // Автоперевод DE→RU при blur из поля немецкого текста
@@ -49,11 +54,13 @@ function PhrasebookInner() {
   }
 
   const toggleLearned = async (id) => {
+    if (!online) return needNet()
     const res = await api.patch(`/phrasebook/${id}/learned`, {})
     setPhrases(prev => prev.map(p => p.id === id ? { ...p, learned: res.learned } : p))
   }
 
   const deletePhrase = async (id) => {
+    if (!online) return needNet()
     await api.delete(`/phrasebook/${id}`)
     setPhrases(prev => prev.filter(p => p.id !== id))
   }
@@ -63,6 +70,7 @@ function PhrasebookInner() {
   }
 
   const addPhrase = async () => {
+    if (!online) return needNet()
     if (!newDe.trim() || !newRu.trim()) return
     setAdding(true)
     try {

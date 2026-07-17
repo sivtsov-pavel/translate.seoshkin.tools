@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
+import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { useAdminOpStore } from '../store/adminOp.js'
 
 function Bar({ done, total, color = 'var(--accent)' }) {
@@ -40,7 +41,14 @@ function Row({ label, done, total, color }) {
   )
 }
 
+// Отчёты строятся сервером из попыток всех учеников — офлайн невозможны
 export default function Report() {
+  const online = useOnline()
+  if (!online) return <OfflineNotice />
+  return <ReportInner />
+}
+
+function ReportInner() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const adminOp = useAdminOpStore()

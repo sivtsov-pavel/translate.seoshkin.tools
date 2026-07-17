@@ -74,7 +74,13 @@ export async function offlineRoutes(fastify) {
        LIMIT 5000`,
       [...params, OFFLINE_TYPES])
 
-    return { words, exercises, synced_at: new Date().toISOString() }
+    // Разговорник — личные фразы пользователя (просмотр и озвучка работают офлайн)
+    const { rows: phrases } = await db.query(
+      `SELECT id, de, ru, category, source, exercise_id, learned, created_at
+       FROM phrasebook WHERE user_id = $1 ORDER BY category NULLS LAST, created_at DESC`,
+      [userId])
+
+    return { words, exercises, phrases, synced_at: new Date().toISOString() }
   })
 
   fastify.post('/api/offline/sync', {

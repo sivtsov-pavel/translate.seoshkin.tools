@@ -212,6 +212,12 @@ a { color: var(--accent); text-decoration: none; }
 .word-image-bleed.has-photo { background: radial-gradient(120% 120% at 50% 12%, #222834 0%, #14171d 82%); }
 .word-photo { max-width: 92%; max-height: 90%; object-fit: contain; border-radius: 10px; display: block; }
 
+/* Офлайн: плашка занимает своё место — контент ниже, заголовок страницы не перекрыт */
+html.offline-mode .main-content { padding-top: 80px; }
+@media (min-width: 1024px) {
+  html.offline-mode .main-content { padding-top: 88px; }
+}
+
 /* Светлая тема: медиа-область светлая (тёмный градиент выглядел чёрным квадратом) */
 [data-theme="light"] .word-image-bleed { background: radial-gradient(120% 120% at 50% 12%, #F3F0E7 0%, #E7E2D4 82%); }
 [data-theme="light"] .word-image-bleed.has-photo { background: radial-gradient(120% 120% at 50% 12%, #F8F6EF 0%, #ECE7DA 82%); }
