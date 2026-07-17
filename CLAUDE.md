@@ -15,6 +15,10 @@
 ## Деплой
 Git flow → сервер. Коммит/пуш → `ssh gcloud-seosite` → `cd /home/seosite/translate && git pull` → `docker compose -f docker-compose.prod.yml build frontend backend && up -d`. Claude деплоит сам.
 
+## Домены / nginx
+- Домены приложения: **deutschlernen.ai** (основной) + **translate.seoshkin.tools** (доп.). Оба → одно приложение.
+- Конфиги доменов — в **`nginx/`** (git = источник истины), монтируются в общий шлюз `seoshkin_nginx`. Правила, топология, как добавить домен и как восстановить после перетирания — в **`nginx/README.md`**. НЕ править конфиги на сервере вручную.
+
 ## Правила
 - Общение и комментарии в коде — русский. Имена в коде — английский.
 - Ключи API (D_ID_API_KEY, REPLICATE_API_TOKEN и т.д.) — только на сервере в `.env`, в локальный `.env`/git не писать.
