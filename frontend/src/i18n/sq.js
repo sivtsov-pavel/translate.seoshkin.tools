@@ -245,4 +245,8 @@ export const sq = {
     lessonWords: 'Fjalët e mësimit',
     print: 'Printo',
   },
+
+  offlineMode: {
+    badge: 'Offline — fjalori dhe ushtrimet punojnë, progresi do të dërgohet kur të kthehet interneti',
+  },
 }

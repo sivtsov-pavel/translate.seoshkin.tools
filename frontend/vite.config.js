@@ -26,6 +26,17 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: { cacheName: 'api-cache', networkTimeoutSeconds: 10 },
           },
+          // Офлайн-ядро: картинки слов — из кэша (webp неизменяемы, ?v= меняет URL при замене).
+          // Прогреваются предзагрузкой после логина (offline/store.js prefetchImages)
+          {
+            urlPattern: /\/uploads\/word-images\/.*\.webp/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'word-images',
+              expiration: { maxEntries: 2000, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
       manifest: {

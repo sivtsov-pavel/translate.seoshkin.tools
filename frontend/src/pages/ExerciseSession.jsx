@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client.js'
+import { isOnline, getOfflineExercises, answerOffline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
 import { getLessonTitle } from '../utils/translation.js'
 import Flashcard from '../components/Flashcard.jsx'
@@ -47,7 +48,11 @@ export default function ExerciseSession() {
     if (lesson_id) qs.set('lesson_id', lesson_id)
     const url = `/exercises/today${qs.toString() ? '?' + qs : ''}`
 
-    api.get(url)
+    // Без сети (или сервер недоступен) — упражнения из локальной базы (офлайн-ядро)
+    const loadOffline = () => getOfflineExercises({ lessonId: lesson_id, type })
+    const load = isOnline() ? api.get(url).catch(loadOffline) : loadOffline()
+
+    load
       .then(exs => {
         // Диктант всегда последним
         const dictation = exs.filter(e => e.type === 'dictation')
@@ -62,9 +67,12 @@ export default function ExerciseSession() {
     const ex = exercises[current]
     if (ex.type !== 'sentence_write') {
       try {
+        if (!isOnline()) throw new Error('offline')
         await api.post(`/exercises/${ex.id}/attempt`, { userAnswer: String(userAnswer), quality, lang })
       } catch (e) {
-        console.error('Ошибка сохранения попытки:', e)
+        // Нет сети — ответ в локальную очередь + SM-2 локально, отправится при появлении сети
+        try { await answerOffline(ex, quality, String(userAnswer)) }
+        catch (e2) { console.error('Ошибка сохранения попытки:', e2) }
       }
     }
 

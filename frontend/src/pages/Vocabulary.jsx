@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
+import { isOnline, getOfflineWords } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
@@ -81,7 +82,9 @@ export default function Vocabulary() {
 
   useEffect(() => {
     setLoading(true)
-    api.get('/words').then(setWords).finally(() => setLoading(false))
+    // Без сети — словарь из локальной базы (офлайн-ядро)
+    const load = isOnline() ? api.get('/words').catch(() => getOfflineWords()) : getOfflineWords()
+    load.then(ws => setWords(ws || [])).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   const updateStatus = async (wordId, status) => {

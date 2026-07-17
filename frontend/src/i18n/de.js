@@ -253,4 +253,8 @@ export const de = {
     lessonWords: 'Wörter der Lektion',
     print: 'Drucken',
   },
+
+  offlineMode: {
+    badge: 'Offline — Wortschatz und Übungen funktionieren, Fortschritt wird bei Verbindung synchronisiert',
+  },
 }

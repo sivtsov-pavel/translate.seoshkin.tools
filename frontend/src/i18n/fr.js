@@ -235,4 +235,8 @@ export const fr = {
     lessonWords: 'Mots de la leçon',
     print: 'Imprimer',
   },
+
+  offlineMode: {
+    badge: 'Hors ligne — le vocabulaire et les exercices fonctionnent, la progression sera envoyée à la reconnexion',
+  },
 }

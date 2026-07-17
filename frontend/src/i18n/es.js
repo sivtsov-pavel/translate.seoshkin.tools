@@ -235,4 +235,8 @@ export const es = {
     lessonWords: 'Palabras de la lección',
     print: 'Imprimir',
   },
+
+  offlineMode: {
+    badge: 'Sin conexión — el vocabulario y los ejercicios funcionan, el progreso se enviará al reconectar',
+  },
 }

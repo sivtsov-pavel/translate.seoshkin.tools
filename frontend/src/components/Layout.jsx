@@ -10,6 +10,7 @@ import { api } from '../api/client.js'
 import LangSwitcher from './LangSwitcher.jsx'
 import TargetSwitcher from './TargetSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
+import { initOffline, isOnline } from '../offline/store.js'
 
 const SIDEBAR_W = 220
 
@@ -33,6 +34,17 @@ export default function Layout({ children }) {
 
   // Загружаем серверные настройки и обновляем профиль один раз при старте
   useEffect(() => { fetchSettings(); refreshUser() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Офлайн-ядро: предзагрузка словаря/упражнений в IndexedDB + синк очереди ответов
+  const [online, setOnline] = useState(isOnline())
+  useEffect(() => {
+    initOffline()
+    const up = () => setOnline(true)
+    const down = () => setOnline(false)
+    window.addEventListener('online', up)
+    window.addEventListener('offline', down)
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
+  }, [])
 
   // Бейдж непрочитанных сообщений — опрос каждые 30 сек
   useEffect(() => {
@@ -510,6 +522,17 @@ export default function Layout({ children }) {
           <div style={{ width: 40 }} />
         )}
       </header>
+
+      {/* Офлайн-плашка: словарь и упражнения работают, ответы уйдут при появлении сети */}
+      {!online && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
+          background: '#8a6d1a', color: '#fff', textAlign: 'center',
+          padding: '6px 12px', fontSize: 12.5, fontWeight: 600,
+        }}>
+          📴 {t.offlineMode?.badge || 'Офлайн — словарь и упражнения работают, прогресс отправится при появлении сети'}
+        </div>
+      )}
 
       {/* Затемнение-фон под шторкой — тап закрывает меню (скрыт на ≥1024px через CSS) */}
       {open && (

@@ -247,4 +247,8 @@ export const en = {
     lessonWords: 'Lesson words',
     print: 'Print',
   },
+
+  offlineMode: {
+    badge: 'Offline — vocabulary and exercises work, progress will sync when back online',
+  },
 }

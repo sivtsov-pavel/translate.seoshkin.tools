@@ -235,4 +235,8 @@ export const tr = {
     lessonWords: 'Ders kelimeleri',
     print: 'Yazdır',
   },
+
+  offlineMode: {
+    badge: 'Çevrimdışı — sözlük ve alıştırmalar çalışıyor, ilerleme bağlantı gelince gönderilecek',
+  },
 }
