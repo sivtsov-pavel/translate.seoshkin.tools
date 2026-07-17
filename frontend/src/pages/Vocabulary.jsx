@@ -349,21 +349,21 @@ export default function Vocabulary() {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
           <span style={FILTER_LABEL}>Статус</span>
           <button style={chipStyle(statusFilter === '')} onClick={() => setStatusFilter('')}>
-            {t.vocabulary.all}
+            {t.vocabulary.all} <span style={{ opacity: 0.6 }}>({words.length})</span>
           </button>
           {statusCounts.new > 0 && (
             <button style={chipStyle(statusFilter === 'new', STATUS_COLORS.new)} onClick={() => setStatusFilter(statusFilter === 'new' ? '' : 'new')}>
-              {t.vocabulary.new}
+              {t.vocabulary.new} <span style={{ opacity: 0.6 }}>({statusCounts.new})</span>
             </button>
           )}
           {statusCounts.learning > 0 && (
             <button style={chipStyle(statusFilter === 'learning', STATUS_COLORS.learning)} onClick={() => setStatusFilter(statusFilter === 'learning' ? '' : 'learning')}>
-              {t.vocabulary.learning}
+              {t.vocabulary.learning} <span style={{ opacity: 0.6 }}>({statusCounts.learning})</span>
             </button>
           )}
           {statusCounts.known > 0 && (
             <button style={chipStyle(statusFilter === 'known', STATUS_COLORS.known)} onClick={() => setStatusFilter(statusFilter === 'known' ? '' : 'known')}>
-              {t.vocabulary.known}
+              {t.vocabulary.known} <span style={{ opacity: 0.6 }}>({statusCounts.known})</span>
             </button>
           )}
         </div>

@@ -196,6 +196,9 @@ function AiTrainerInner() {
   const [sessions, setSessions] = useState([])
   const [history, setHistory] = useState(null) // { session, messages } — просмотр прошлого диалога
   const [lessonMode, setLessonMode] = useState(null) // { title, words } — тренировка по словам урока
+  // Тумблер «перевод»: показывать перевод реплики тренера на язык ученика (persist)
+  const [bilingual, setBilingual] = useState(() => localStorage.getItem('trainer_bilingual') === '1')
+  const toggleBilingual = () => setBilingual(v => { localStorage.setItem('trainer_bilingual', v ? '0' : '1'); return !v })
   const [lessonLoadFailed, setLessonLoadFailed] = useState(false) // слова урока не загрузились — фолбэк на обычный экран
   const [searchParams] = useSearchParams()
   const [avatarAvailable, setAvatarAvailable] = useState(false)
@@ -389,7 +392,7 @@ function AiTrainerInner() {
     setLoading(true)  // «печатает…» пока ИИ генерит первую реплику с учётом памяти
     const userLang = localStorage.getItem('lang') || 'uk'
     try {
-      const res = await api.post('/ai-trainer/sessions', { character: ch, scenario: sc, userLang, starter: fallback, targetWords: words })
+      const res = await api.post('/ai-trainer/sessions', { character: ch, scenario: sc, userLang, starter: fallback, targetWords: words, bilingual })
       setSessionId(res.session_id)
       if (res.memory?.summary_text) setMemoryHint(res.memory.summary_text)
       const opening = res.opening || fallback
@@ -443,8 +446,8 @@ function AiTrainerInner() {
     try {
       // С сессией сервер сам держит историю и память; иначе — stateless-фолбэк
       const result = sessionId
-        ? await api.post(`/ai-trainer/sessions/${sessionId}/message`, { text, userLang })
-        : await api.post('/ai-trainer/chat', { messages: history, character, scenario, userLang })
+        ? await api.post(`/ai-trainer/sessions/${sessionId}/message`, { text, userLang, bilingual })
+        : await api.post('/ai-trainer/chat', { messages: history, character, scenario, userLang, bilingual })
       setMessages(prev => [...prev, {
         role: 'ai',
         reply: result.reply,
@@ -771,6 +774,16 @@ function AiTrainerInner() {
             🎙️
           </button>
         )}
+        {/* Тумблер «перевод» — под немецкой репликой показывать перевод на язык ученика */}
+        <button onClick={toggleBilingual} title={bilingual ? 'Перевод реплик: включён' : 'Перевод реплик: выключен'} style={{
+          width: 38, height: 38, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', fontSize: 17,
+          border: `1px solid ${bilingual ? 'var(--accent)' : 'var(--line)'}`,
+          background: bilingual ? 'var(--accent-soft)' : 'var(--surface-2)',
+          opacity: bilingual ? 1 : 0.55,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          🌐
+        </button>
         <button onClick={finishSession} disabled={loading} style={{
           padding: '6px 12px', borderRadius: 8, border: '1px solid var(--accent)',
           background: 'var(--accent-soft)', cursor: 'pointer', fontSize: 13, color: 'var(--accent)', fontWeight: 600,

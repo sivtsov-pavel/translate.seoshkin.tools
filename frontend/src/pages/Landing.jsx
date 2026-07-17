@@ -174,6 +174,7 @@ const L = {
       text: 'Установи на телефон через браузер — без App Store, без Google Play.',
       android: 'Android: Chrome → меню ⋮ → «Установить приложение»',
       apk: 'Скачать APK для Android',
+      apkOffline: 'Установите APK — и все упражнения работают офлайн, без интернета.',
       ios: 'iPhone: Safari → поделиться → «На экран Домой»',
     },
     ai: {
@@ -805,6 +806,9 @@ export default function Landing() {
             }}>
             📥 {c.install.apk}
           </a>
+          <p style={{ marginTop: 8, fontSize: 13, color: 'var(--ink-soft)', maxWidth: 440 }}>
+            📴 {c.install.apkOffline || 'Установите APK — и все упражнения работают офлайн, без интернета.'}
+          </p>
         </div>
       </section>
 
