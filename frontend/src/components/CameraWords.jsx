@@ -171,37 +171,54 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
               <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
             </div>
 
-            {/* Режим предложений: абзац → перевод → полный список слов (с галочками, он же сохраняется) */}
-            {sentences && sentences.length > 0 && sentences.map((s, si) => (
-              <div key={si} style={{ border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px', marginBottom: 10, background: 'var(--surface-2)' }}>
-                <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'flex-start', gap: 6 }} dir="ltr">
-                  <span style={{ flex: 1 }}>{s.original}</span>
-                  <SpeakButton text={s.original} size={16} />
-                  {/* Сохранить всё предложение в разговорник */}
-                  <button onClick={() => saveSentenceToPhrasebook(s, si)} disabled={savedSentIdx.has(si)}
-                    title="Сохранить предложение в разговорник"
-                    style={{ background: 'none', border: 'none', cursor: savedSentIdx.has(si) ? 'default' : 'pointer', fontSize: 15, flexShrink: 0, color: savedSentIdx.has(si) ? 'var(--good, #16a34a)' : 'var(--accent)', padding: 0 }}>
-                    {savedSentIdx.has(si) ? '✓' : '➕💬'}
-                  </button>
-                </div>
-                {s.translation && <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 4 }}>{s.translation}</div>}
-                {s.words && s.words.length > 0 && (
-                  <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column' }}>
-                    {s.words.map((w, wi) => (
-                      <div key={wi} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 2px', borderTop: '1px solid var(--line)' }}>
-                        <input type="checkbox" checked={!!w._save} disabled={w.inDict} onChange={() => toggleSentWord(si, wi)} style={{ width: 17, height: 17, flexShrink: 0 }} />
-                        <b dir="ltr" style={{ fontSize: 14 }}>{w.de}</b>
-                        <SpeakButton text={w.de} size={14} />
-                        {w.inDict
-                          ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>✓ в словаре</span>
-                          : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>🆕 новое</span>}
-                        <span style={{ fontSize: 13, color: 'var(--ink-soft)', marginLeft: 'auto', textAlign: 'right' }}>{w.tr}</span>
+            {/* Режим предложений: СНАЧАЛА все предложения с переводами (не разрывая), ПОТОМ пачка слов внизу */}
+            {sentences && sentences.length > 0 && (
+              <>
+                <div style={{ marginBottom: 14 }}>
+                  {sentences.map((s, si) => (
+                    <div key={si} style={{ border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px', marginBottom: 8, background: 'var(--surface-2)' }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'flex-start', gap: 6 }} dir="ltr">
+                        <span style={{ flex: 1 }}>{s.original}</span>
+                        <SpeakButton text={s.original} size={16} />
+                        {/* Сохранить всё предложение в разговорник */}
+                        <button onClick={() => saveSentenceToPhrasebook(s, si)} disabled={savedSentIdx.has(si)}
+                          title="Сохранить предложение в разговорник"
+                          style={{ background: 'none', border: 'none', cursor: savedSentIdx.has(si) ? 'default' : 'pointer', fontSize: 15, flexShrink: 0, color: savedSentIdx.has(si) ? 'var(--good, #16a34a)' : 'var(--accent)', padding: 0 }}>
+                          {savedSentIdx.has(si) ? '✓' : '➕💬'}
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                      {s.translation && <div style={{ fontSize: 14, color: 'var(--ink-soft)', fontStyle: 'italic', marginTop: 4 }}>{s.translation}</div>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Пачка всех слов из предложений — единым списком (дедуп по de) */}
+                {(() => {
+                  const seen = new Set(); const flat = []
+                  sentences.forEach((s, si) => (s.words || []).forEach((w, wi) => {
+                    const k = String(w.de).toLowerCase()
+                    if (seen.has(k)) return; seen.add(k); flat.push({ w, si, wi })
+                  }))
+                  if (!flat.length) return null
+                  return (
+                    <div style={{ marginBottom: 4 }}>
+                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', fontWeight: 600, marginBottom: 4 }}>📚 Слова из текста ({flat.length})</div>
+                      {flat.map(({ w, si, wi }) => (
+                        <div key={`${si}-${wi}`} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 2px', borderTop: '1px solid var(--line)' }}>
+                          <input type="checkbox" checked={!!w._save} disabled={w.inDict} onChange={() => toggleSentWord(si, wi)} style={{ width: 17, height: 17, flexShrink: 0 }} />
+                          <b dir="ltr" style={{ fontSize: 14 }}>{w.de}</b>
+                          <SpeakButton text={w.de} size={14} />
+                          {w.inDict
+                            ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>✓ в словаре</span>
+                            : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>🆕 новое</span>}
+                          <span style={{ fontSize: 13, color: 'var(--ink-soft)', marginLeft: 'auto', textAlign: 'right' }}>{w.tr}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </>
+            )}
             {sentences && sentences.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>Предложений не распознано. Попробуй чётче фото.</p>}
 
             {/* Режим слов: плоский список */}
