@@ -256,5 +256,7 @@ export const de = {
 
   offlineMode: {
     badge: 'Offline — Wortschatz und Übungen funktionieren, Fortschritt wird bei Verbindung synchronisiert',
+    sectionTitle: 'Internet erforderlich',
+    sectionText: 'Dieser Bereich nutzt KI auf dem Server — offline ist er technisch nicht möglich. Wortschatz und Übungen funktionieren offline!',
   },
 }

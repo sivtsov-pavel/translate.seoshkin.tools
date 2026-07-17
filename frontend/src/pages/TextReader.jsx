@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { speak, cancel, SpeakButton } from '../hooks/useSpeech.jsx'
 import { api } from '../api/client.js'
+import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import CameraWords from '../components/CameraWords.jsx'
 
 // ───────── helpers ─────────
@@ -323,6 +324,9 @@ function ClickableParagraph({ text, selectedWords, onWordClick }) {
 // ───────── основной компонент ─────────
 
 export default function TextReader() {
+  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
+  const online = useOnline()
+  if (!online) return <OfflineNotice />
   const [mode, setMode]     = useState('read')   // 'read' | 'bilingual' | 'conversation'
   const [text, setText]     = useState('')
 

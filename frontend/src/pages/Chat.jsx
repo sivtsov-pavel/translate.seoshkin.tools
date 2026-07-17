@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
+import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { useI18nStore } from '../store/i18n.js'
 
 const POLL_INTERVAL = 15_000
@@ -11,6 +12,9 @@ const TYPE_META = {
 }
 
 export default function Chat() {
+  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
+  const online = useOnline()
+  if (!online) return <OfflineNotice />
   const { user } = useAuthStore()
   const { lang } = useI18nStore()
   const isOwner = user?.role === 'owner'

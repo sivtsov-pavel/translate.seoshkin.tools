@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../api/client.js'
+import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition, speechSimilarity, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
 
@@ -9,6 +10,9 @@ const CATEGORIES = [
 ]
 
 export default function Phrasebook() {
+  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
+  const online = useOnline()
+  if (!online) return <OfflineNotice />
   const [phrases, setPhrases]     = useState([])
   const [loading, setLoading]     = useState(true)
   const [filter, setFilter]       = useState('all')

@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { api } from '../api/client.js'
+import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { useAuthStore } from '../store/auth.js'
 import { ru } from '../i18n/ru.js'
@@ -82,6 +83,9 @@ function hl(text, q) {
 }
 
 export default function Translations() {
+  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
+  const online = useOnline()
+  if (!online) return <OfflineNotice />
   const { user } = useAuthStore()
   const [words, setWords]         = useState([])
   const [lessons, setLessons]     = useState([])

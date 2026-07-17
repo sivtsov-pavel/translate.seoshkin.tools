@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { speak, speakWithEvents, cancel as cancelSpeak } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition.jsx'
+import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 
@@ -173,6 +174,9 @@ function BubbleUser({ text }) {
 }
 
 export default function AiTrainer() {
+  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
+  const online = useOnline()
+  if (!online) return <OfflineNotice />
   const [step, setStep] = useState('select') // 'select' | 'chat'
   const [character, setCharacter] = useState('pablo')
   const [scenario, setScenario] = useState('intro')

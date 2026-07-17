@@ -248,5 +248,7 @@ export const sq = {
 
   offlineMode: {
     badge: 'Offline — fjalori dhe ushtrimet punojnë, progresi do të dërgohet kur të kthehet interneti',
+    sectionTitle: 'Kërkohet internet',
+    sectionText: 'Ky seksion punon me IA në server — pa internet është teknikisht i pamundur. Fjalori dhe ushtrimet punojnë offline!',
   },
 }

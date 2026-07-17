@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
+import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { useI18nStore } from '../store/i18n.js'
 
 // Локальные строки новых полей (10 языков) — чтобы не трогать общий i18n
@@ -18,6 +19,9 @@ const NSTR = {
 }
 
 export default function NewLesson() {
+  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
+  const online = useOnline()
+  if (!online) return <OfflineNotice />
   const [title, setTitle]   = useState('')
   const [description, setDescription] = useState('')
   const [photos, setPhotos] = useState([])       // фото учебника (textbook)

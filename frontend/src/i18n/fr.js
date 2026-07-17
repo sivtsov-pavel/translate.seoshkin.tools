@@ -238,5 +238,7 @@ export const fr = {
 
   offlineMode: {
     badge: 'Hors ligne — le vocabulaire et les exercices fonctionnent, la progression sera envoyée à la reconnexion',
+    sectionTitle: 'Internet requis',
+    sectionText: 'Cette section fonctionne via l’IA sur le serveur — techniquement impossible hors ligne. Le vocabulaire et les exercices fonctionnent hors ligne !',
   },
 }

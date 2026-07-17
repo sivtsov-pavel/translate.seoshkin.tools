@@ -250,5 +250,7 @@ export const en = {
 
   offlineMode: {
     badge: 'Offline — vocabulary and exercises work, progress will sync when back online',
+    sectionTitle: 'Internet required',
+    sectionText: 'This section runs on server AI — it is technically impossible offline. Vocabulary and exercises do work offline!',
   },
 }

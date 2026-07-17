@@ -238,5 +238,7 @@ export const tr = {
 
   offlineMode: {
     badge: 'Çevrimdışı — sözlük ve alıştırmalar çalışıyor, ilerleme bağlantı gelince gönderilecek',
+    sectionTitle: 'İnternet gerekli',
+    sectionText: 'Bu bölüm sunucudaki yapay zekâ ile çalışır — internetsiz teknik olarak mümkün değil. Sözlük ve alıştırmalar çevrimdışı çalışır!',
   },
 }

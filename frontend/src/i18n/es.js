@@ -238,5 +238,7 @@ export const es = {
 
   offlineMode: {
     badge: 'Sin conexión — el vocabulario y los ejercicios funcionan, el progreso se enviará al reconectar',
+    sectionTitle: 'Se necesita internet',
+    sectionText: 'Esta sección funciona con IA en el servidor: sin internet es técnicamente imposible. ¡El vocabulario y los ejercicios sí funcionan sin conexión!',
   },
 }
