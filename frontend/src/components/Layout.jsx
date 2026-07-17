@@ -96,7 +96,9 @@ export default function Layout({ children }) {
     { name: 'regenerate-all',            icon: 'bi-arrow-counterclockwise',  label: 'Пересоздать всё',    hint: '⚠️ Удаляет прогресс и пересоздаёт упражнения для ВСЕХ уроков', endpoint: '/admin/regenerate-all' },
   ] : []
 
-  useEffect(() => { setOpen(false) }, [location.pathname])
+  // Смена страницы: закрыть шторку И проскроллить вверх — иначе новая страница
+  // открывается с прежним скроллом и её шапка (например табы Читалки) «срезана»
+  useEffect(() => { setOpen(false); window.scrollTo(0, 0) }, [location.pathname])
 
   // Измеряем высоту топбара и нижней панели — выставляем CSS-переменные для full-page-layout
   useEffect(() => {
@@ -523,10 +525,10 @@ export default function Layout({ children }) {
         )}
       </header>
 
-      {/* Офлайн-плашка: словарь и упражнения работают, ответы уйдут при появлении сети */}
+      {/* Офлайн-плашка: НАД нижним меню (--bottom-nav-h), не перекрывая его */}
       {!online && (
         <div style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
+          position: 'fixed', bottom: 'var(--bottom-nav-h, 0px)', left: 0, right: 0, zIndex: 130,
           background: '#8a6d1a', color: '#fff', textAlign: 'center',
           padding: '6px 12px', fontSize: 12.5, fontWeight: 600,
         }}>

@@ -11,10 +11,15 @@ const TYPE_META = {
   teacher: { icon: '👨‍🏫', label: 'Учителю', labelEn: 'Teacher' },
 }
 
+// Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
+// return не менял список хуков основного компонента (Rules of Hooks)
 export default function Chat() {
-  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
   const online = useOnline()
   if (!online) return <OfflineNotice />
+  return <ChatInner />
+}
+
+function ChatInner() {
   const { user } = useAuthStore()
   const { lang } = useI18nStore()
   const isOwner = user?.role === 'owner'

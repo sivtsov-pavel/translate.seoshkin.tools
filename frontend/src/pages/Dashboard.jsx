@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api/client.js'
+import { getOfflineLessonWords } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
@@ -388,7 +389,10 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
 
   const loadWords = async () => {
     if (words === null) {
-      const data = await api.get(`/lessons/${lesson.lesson_id}/words`)
+      // Офлайн — слова урока из локальной базы (собираются из упражнений)
+      const data = await (navigator.onLine === false
+        ? getOfflineLessonWords(lesson.lesson_id)
+        : api.get(`/lessons/${lesson.lesson_id}/words`).catch(() => getOfflineLessonWords(lesson.lesson_id)))
       setWords(data)
       return data
     }

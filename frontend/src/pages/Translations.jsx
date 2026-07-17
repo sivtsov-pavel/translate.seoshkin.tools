@@ -82,10 +82,15 @@ function hl(text, q) {
   )
 }
 
+// Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
+// return не менял список хуков основного компонента (Rules of Hooks)
 export default function Translations() {
-  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
   const online = useOnline()
   if (!online) return <OfflineNotice />
+  return <TranslationsInner />
+}
+
+function TranslationsInner() {
   const { user } = useAuthStore()
   const [words, setWords]         = useState([])
   const [lessons, setLessons]     = useState([])

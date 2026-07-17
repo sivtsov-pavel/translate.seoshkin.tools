@@ -18,10 +18,15 @@ const NSTR = {
   sq: { word: 'Mësimi', descLabel: 'Përshkrimi (opsional)', descHint: 'Shkurt: për çfarë është mësimi…', book: '📘 Libri', bookHint: 'Foto të faqeve të librit', tetrad: '✏️ Fletore / dërrasë', tetradHint: 'Fjalët e tua nga dërrasa ose fletorja', selected: (n) => `Zgjedhur: ${n}` },
 }
 
+// Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
+// return не менял список хуков основного компонента (Rules of Hooks)
 export default function NewLesson() {
-  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
   const online = useOnline()
   if (!online) return <OfflineNotice />
+  return <NewLessonInner />
+}
+
+function NewLessonInner() {
   const [title, setTitle]   = useState('')
   const [description, setDescription] = useState('')
   const [photos, setPhotos] = useState([])       // фото учебника (textbook)

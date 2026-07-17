@@ -323,10 +323,15 @@ function ClickableParagraph({ text, selectedWords, onWordClick }) {
 
 // ───────── основной компонент ─────────
 
+// Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
+// return не менял список хуков основного компонента (Rules of Hooks)
 export default function TextReader() {
-  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
   const online = useOnline()
   if (!online) return <OfflineNotice />
+  return <TextReaderInner />
+}
+
+function TextReaderInner() {
   const [mode, setMode]     = useState('read')   // 'read' | 'bilingual' | 'conversation'
   const [text, setText]     = useState('')
 

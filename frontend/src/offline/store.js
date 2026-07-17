@@ -122,6 +122,21 @@ export async function answerOffline(exercise, quality, userAnswer = '') {
 
 export const getOfflineWords = () => idbGetAll('words')
 
+// Слова конкретного урока офлайн — собираем из упражнений (у них есть lesson_id
+// и данные слова), дедуп по word_id. Для «Раскрыть слова» на карточке урока.
+export async function getOfflineLessonWords(lessonId) {
+  const all = await idbGetAll('exercises').catch(() => [])
+  const seen = new Map()
+  for (const e of all) {
+    if (String(e.lesson_id) !== String(lessonId) || !e.word_id || seen.has(e.word_id)) continue
+    seen.set(e.word_id, {
+      id: e.word_id, word_de: e.word_de, translation_ru: e.translation_ru,
+      translations: e.translations || {}, image_url: e.image_url,
+    })
+  }
+  return [...seen.values()].sort((a, b) => a.id - b.id)
+}
+
 // ── Инициализация: слушатели сети + первичная синхронизация ──────────────────
 let inited = false
 export function initOffline() {

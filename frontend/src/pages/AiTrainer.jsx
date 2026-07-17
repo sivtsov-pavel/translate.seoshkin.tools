@@ -173,10 +173,15 @@ function BubbleUser({ text }) {
   )
 }
 
+// Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
+// return не менял список хуков основного компонента (Rules of Hooks)
 export default function AiTrainer() {
-  // Раздел требует сервер/ИИ — в офлайне показываем понятную заглушку
   const online = useOnline()
   if (!online) return <OfflineNotice />
+  return <AiTrainerInner />
+}
+
+function AiTrainerInner() {
   const [step, setStep] = useState('select') // 'select' | 'chat'
   const [character, setCharacter] = useState('pablo')
   const [scenario, setScenario] = useState('intro')
