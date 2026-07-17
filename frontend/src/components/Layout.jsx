@@ -529,12 +529,12 @@ export default function Layout({ children }) {
         )}
       </header>
 
-      {/* Офлайн-плашка: НАД нижним меню (--bottom-nav-h), не перекрывая его */}
+      {/* Офлайн-плашка: аккуратно ВВЕРХУ, сразу под топбаром-хедером */}
       {!online && (
         <div style={{
-          position: 'fixed', bottom: 'var(--bottom-nav-h, 0px)', left: 0, right: 0, zIndex: 130,
+          position: 'fixed', top: 'var(--topbar-h, 56px)', left: 0, right: 0, zIndex: 90,
           background: '#8a6d1a', color: '#fff', textAlign: 'center',
-          padding: '6px 12px', fontSize: 12.5, fontWeight: 600,
+          padding: '5px 12px', fontSize: 12, fontWeight: 600,
         }}>
           📴 {t.offlineMode?.badge || 'Офлайн — словарь и упражнения работают, прогресс отправится при появлении сети'}
         </div>

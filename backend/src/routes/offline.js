@@ -54,7 +54,11 @@ export async function offlineRoutes(fastify) {
       `SELECT e.id, e.lesson_id, e.word_id, e.type, e.payload,
               COALESCE(e.payload_translations, '{}') AS payload_translations,
               w.word_de, w.translation_ru, COALESCE(w.translations, '{}') AS translations,
-              COALESCE(w.image_url, e.image_url) AS image_url,
+              COALESCE(
+                (SELECT w2.image_url FROM words w2
+                  WHERE lower(w2.word_de) = lower(w.word_de) AND w2.image_url IS NOT NULL
+                  ORDER BY w2.created_at DESC LIMIT 1),
+                w.image_url, e.image_url) AS image_url,
               l.title AS lesson_title,
               COALESCE(l.title_translations, '{}') AS lesson_title_translations,
               COALESCE(uep.easiness_factor, 2.5)          AS easiness_factor,
