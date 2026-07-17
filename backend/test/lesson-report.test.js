@@ -99,4 +99,83 @@ describe('GET /api/analytics/lesson/:lessonId', () => {
     })
     expect(res.statusCode).toBe(404)
   })
+
+  it('урок ДРУГОГО владельца (не 999999, реально существующий) — 404, не утечка между арендаторами', async () => {
+    const otherOwner = await registerAndLogin(app, 'owner')
+    const { rows: otherSch } = await db.query(
+      `INSERT INTO schools (name) VALUES ('Other School') RETURNING id`)
+    const otherSchoolId = otherSch[0].id
+    await db.query('UPDATE users SET school_id = $1 WHERE id = $2', [otherSchoolId, otherOwner.user.id])
+    const { rows: otherLes } = await db.query(
+      `INSERT INTO lessons (owner_id, school_id, title, status, target_lang)
+       VALUES ($1, $2, 'Чужой урок', 'done', 'de') RETURNING id`, [otherOwner.user.id, otherSchoolId])
+    const otherLessonId = otherLes[0].id
+
+    // Первый owner запрашивает урок второго owner-а своим токеном
+    const res = await app.inject({
+      method: 'GET', url: `/api/analytics/lesson/${otherLessonId}`,
+      headers: { authorization: `Bearer ${ownerToken}` },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('граница формулы «завис»: attempts<3 не считается, ровно 0.5 считается, чуть ниже 0.5 — нет', async () => {
+    // Три доп. слова + три доп. ученика, каждый со своим граничным случаем
+    const belowThreshold = await registerAndLogin(app, 'student') // 2 попытки, 2 неверных -> att<3 -> НЕ завис
+    const almostStuck = await registerAndLogin(app, 'student')    // 5 попыток, 2 неверных (0.4) -> НЕ завис
+    const exactlyStuck = await registerAndLogin(app, 'student')   // 4 попытки, 2 неверных (0.5) -> ЗАВИС (граница)
+
+    async function makeWordWithAttempts(wordDe, userId, results) {
+      const { rows: w } = await db.query(
+        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru)
+         VALUES ($1, $2, $3, 'тест') RETURNING id`, [lessonId, ownerId, wordDe])
+      const { rows: e } = await db.query(
+        `INSERT INTO exercises (lesson_id, word_id, type, payload)
+         VALUES ($1, $2, 'flashcard', '{}'::jsonb) RETURNING id`, [lessonId, w[0].id])
+      for (const ok of results) {
+        await db.query(
+          `INSERT INTO exercise_attempts (exercise_id, user_id, is_correct) VALUES ($1, $2, $3)`,
+          [e[0].id, userId, ok])
+      }
+    }
+
+    await makeWordWithAttempts('das Buch', belowThreshold.user.id, [false, false])
+    await makeWordWithAttempts('die Katze', almostStuck.user.id, [false, false, true, true, true])
+    await makeWordWithAttempts('der Hund', exactlyStuck.user.id, [false, false, true, true])
+
+    const res = await app.inject({
+      method: 'GET', url: `/api/analytics/lesson/${lessonId}`,
+      headers: { authorization: `Bearer ${ownerToken}` },
+    })
+    expect(res.statusCode).toBe(200)
+    const r = JSON.parse(res.body)
+
+    // Ученик с attempts < 3 — не завис, несмотря на 100% ошибок
+    const sBelow = r.students.find(s => s.id === belowThreshold.user.id)
+    expect(sBelow.attempts).toBe(2)
+    expect(sBelow.stuck_words).toBe(0)
+    expect(sBelow.stuck_list.map(w => w.word_de)).not.toContain('das Buch')
+
+    // Ученик с wrong/attempts чуть ниже 0.5 (0.4) — не завис
+    const sAlmost = r.students.find(s => s.id === almostStuck.user.id)
+    expect(sAlmost.attempts).toBe(5)
+    expect(sAlmost.stuck_words).toBe(0)
+    expect(sAlmost.stuck_list.map(w => w.word_de)).not.toContain('die Katze')
+
+    // Ученик с wrong/attempts ровно 0.5 — завис (граница >= включительно)
+    const sExact = r.students.find(s => s.id === exactlyStuck.user.id)
+    expect(sExact.attempts).toBe(4)
+    expect(sExact.stuck_words).toBe(1)
+    expect(sExact.stuck_list.map(w => w.word_de)).toContain('der Hund')
+
+    // На уровне группы: у слова 'der Hund' students_stuck должен учесть завязшего ученика
+    const hwHund = r.group.hardWords.find(w => w.word_de === 'der Hund')
+    expect(hwHund).toBeTruthy()
+    expect(hwHund.students_stuck).toBe(1)
+
+    // У слова 'die Katze' (0.4 < 0.5) никто не завис
+    const hwKatze = r.group.hardWords.find(w => w.word_de === 'die Katze')
+    expect(hwKatze).toBeTruthy()
+    expect(hwKatze.students_stuck).toBe(0)
+  })
 })

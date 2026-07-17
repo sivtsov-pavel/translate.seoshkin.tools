@@ -203,10 +203,14 @@ export async function analyticsRoutes(fastify) {
       }
     }
 
+    // Totals по попыткам считаем до маппинга — поле correct наружу не отдаём (не в контракте)
+    const totalAttempts = agg.reduce((a, s) => a + s.attempts, 0)
+    const totalCorrect = agg.reduce((a, s) => a + s.correct, 0)
+
     const students = agg.map(s => {
       const stuck = stuckByUser[s.id] || []
       return {
-        id: s.id, name: s.name, attempts: s.attempts, correct: s.correct,
+        id: s.id, name: s.name, attempts: s.attempts,
         accuracy: s.attempts ? Math.round(s.correct / s.attempts * 100) : 0,
         known: wsMap[s.id]?.known || 0, learning: wsMap[s.id]?.learning || 0,
         stuck_words: stuck.length, stuck_list: stuck, last_active: s.last_active,
@@ -223,9 +227,6 @@ export async function analyticsRoutes(fastify) {
           JOIN exercises e ON e.id = ea.exercise_id WHERE e.lesson_id = $1
         )
       ORDER BY name`, [lessonId, lesson.school_id])
-
-    const totalAttempts = students.reduce((a, s) => a + s.attempts, 0)
-    const totalCorrect = students.reduce((a, s) => a + s.correct, 0)
 
     return {
       lesson: { id: lesson.id, title: lesson.title },
