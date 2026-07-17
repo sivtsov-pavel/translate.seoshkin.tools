@@ -5,6 +5,7 @@ import { api } from '../api/client.js'
 import { idbGetAll, idbPut, idbPutAll, idbClear, idbDelete, idbGet, idbCount } from './db.js'
 
 const SYNC_INTERVAL_MS = 30 * 60 * 1000 // фоновая пересинхронизация не чаще раза в 30 минут
+const BUNDLE_FORMAT = 2 // поднять при изменении структуры bundle → клиенты форс-пересинкуются
 const IMAGE_PREFETCH_LIMIT = 800        // сколько мелких картинок прогреть в кэш SW
 
 export const isOnline = () => navigator.onLine !== false
@@ -14,13 +15,14 @@ let syncing = false
 export async function syncDown(force = false) {
   if (syncing || !isOnline()) return false
   const meta = await idbGet('meta', 'lastSync').catch(() => null)
-  if (!force && meta && Date.now() - meta.value < SYNC_INTERVAL_MS) return false
+  const freshFormat = meta?.format === BUNDLE_FORMAT
+  if (!force && freshFormat && meta && Date.now() - meta.value < SYNC_INTERVAL_MS) return false
   syncing = true
   try {
     const bundle = await api.get('/offline/bundle')
     await idbClear('words');     await idbPutAll('words', bundle.words || [])
     await idbClear('exercises'); await idbPutAll('exercises', bundle.exercises || [])
-    await idbPut('meta', { key: 'lastSync', value: Date.now() })
+    await idbPut('meta', { key: 'lastSync', value: Date.now(), format: BUNDLE_FORMAT })
     prefetchImages(bundle.words || []) // не ждём — SW сложит в кэш фоном
     return true
   } catch (e) {
@@ -121,6 +123,33 @@ export async function answerOffline(exercise, quality, userAnswer = '') {
 }
 
 export const getOfflineWords = () => idbGetAll('words')
+
+// Статистика для «Сегодня» офлайн — тот же формат, что /api/exercises/stats:
+// { total, lessons: [{lesson_id, lesson_title, …, is_set, total, byType, words_count}] }
+export async function getOfflineStats() {
+  const all = await idbGetAll('exercises').catch(() => [])
+  const t = today()
+  const map = {}
+  const wordsByLesson = {}
+  for (const e of all) {
+    if (!wordsByLesson[e.lesson_id]) wordsByLesson[e.lesson_id] = new Set()
+    if (e.word_id) wordsByLesson[e.lesson_id].add(e.word_id)
+    if ((e.next_review_date || t) > t) continue // не «на сегодня»
+    if (!map[e.lesson_id]) {
+      map[e.lesson_id] = {
+        lesson_id: e.lesson_id, lesson_title: e.lesson_title,
+        lesson_title_translations: e.lesson_title_translations || {},
+        lesson_description: null, lesson_date: e.lesson_date || null,
+        is_set: !!e.is_set, total: 0, byType: {}, words_count: 0,
+      }
+    }
+    map[e.lesson_id].total++
+    map[e.lesson_id].byType[e.type] = (map[e.lesson_id].byType[e.type] || 0) + 1
+  }
+  const lessons = Object.values(map)
+  for (const l of lessons) l.words_count = wordsByLesson[l.lesson_id]?.size || 0
+  return { total: lessons.reduce((s, l) => s + l.total, 0), lessons }
+}
 
 // Слова конкретного урока офлайн — собираем из упражнений (у них есть lesson_id
 // и данные слова), дедуп по word_id. Для «Раскрыть слова» на карточке урока.

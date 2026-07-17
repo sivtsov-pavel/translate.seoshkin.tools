@@ -59,7 +59,7 @@ export async function offlineRoutes(fastify) {
                   WHERE lower(w2.word_de) = lower(w.word_de) AND w2.image_url IS NOT NULL
                   ORDER BY w2.created_at DESC LIMIT 1),
                 w.image_url, e.image_url) AS image_url,
-              l.title AS lesson_title,
+              l.title AS lesson_title, l.is_set, l.date::text AS lesson_date,
               COALESCE(l.title_translations, '{}') AS lesson_title_translations,
               COALESCE(uep.easiness_factor, 2.5)          AS easiness_factor,
               COALESCE(uep.interval_days, 0)              AS interval_days,

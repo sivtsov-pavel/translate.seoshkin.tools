@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../api/client.js'
-import { getOfflineLessonWords } from '../offline/store.js'
+import { getOfflineLessonWords, getOfflineStats, isOnline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
@@ -35,7 +35,11 @@ export default function Dashboard() {
   })
 
   const reloadStats = () => {
-    api.get('/exercises/stats').then(setStats).catch(console.error).finally(() => setLoading(false))
+    // Офлайн (или сервер недоступен) — статистика «Сегодня» из локальной базы
+    const load = isOnline()
+      ? api.get('/exercises/stats').catch(() => getOfflineStats())
+      : getOfflineStats()
+    load.then(setStats).catch(console.error).finally(() => setLoading(false))
     api.get('/exercises/completed-lessons').then(setCompleted).catch(() => {})
   }
   useEffect(() => {
@@ -362,6 +366,8 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
   // Сбросить прогресс урока и начать заново — доступно для любого урока,
   // не только для уже пройденных (см. блок «Повторить пройденное» выше)
   const handleReset = () => {
+    // Сброс прогресса — серверная операция, офлайн недоступна
+    if (navigator.onLine === false) { alert(t.offlineMode?.sectionTitle || 'Нужен интернет'); return }
     if (!window.confirm('Точно сбросить прогресс урока и пройти заново?')) return
     onReset(lesson.lesson_id)
   }
