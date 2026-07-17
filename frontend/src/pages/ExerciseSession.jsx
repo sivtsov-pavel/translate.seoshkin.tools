@@ -26,6 +26,10 @@ export default function ExerciseSession() {
   }, [current])
   const [loading, setLoading]     = useState(true)
   const [starred, setStarred]     = useState(() => new Set()) // слова, помеченные «в изучение»
+  // Быстрый тумблер озвучки/видео-реакции тренера (тот же флаг, что в Настройках).
+  // Выкл — чтобы аватар не проговаривал «Sehr gut» (в т.ч. чтобы микрофон не ловил свою же речь).
+  const [reactionsOn, setReactionsOn] = useState(() => localStorage.getItem('trainer_reactions') !== 'false')
+  const toggleReactions = () => setReactionsOn(v => { localStorage.setItem('trainer_reactions', v ? 'false' : 'true'); return !v })
   const navigate                  = useNavigate()
   const [searchParams]            = useSearchParams()
   const { t, lang }               = useI18nStore()
@@ -98,6 +102,15 @@ export default function ExerciseSession() {
       <div className="exercise-session-type">
         <span>{typeLabel}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Быстрый тумблер озвучки тренера — выкл заменяет голос аватара короткими звуками */}
+          <button onClick={toggleReactions}
+            title={reactionsOn ? 'Тренер озвучивает — нажми, чтобы выключить (останутся короткие звуки верно/неверно)' : 'Озвучка выключена — нажми, чтобы включить голос тренера'}
+            style={{ padding: '3px 9px', borderRadius: 8, cursor: 'pointer', fontSize: 14, lineHeight: 1,
+              border: `1px solid ${reactionsOn ? 'var(--accent)' : 'var(--line)'}`,
+              background: reactionsOn ? 'var(--accent-soft)' : 'var(--surface-2)',
+              color: reactionsOn ? 'var(--accent)' : 'var(--ink-soft)' }}>
+            {reactionsOn ? '🔊' : '🔇'}
+          </button>
           {ex.word_id && (
             <button onClick={() => markLearning(ex.word_id)} disabled={starred.has(ex.word_id)}
               title="Добавить слово в изучение (учить/повторять)"
