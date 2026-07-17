@@ -97,7 +97,7 @@ export const ru = {
     hard: 'С трудом',
     remembered: 'Помню!',
     checkAnswer: 'Проверить',
-    sentenceChecking: 'Claude проверяет...',
+    sentenceChecking: 'ИИ проверяет...',
     next: 'Далее →',
     correct: 'Верно! ✓',
     wrong: 'Неверно. Правильно:',
@@ -132,7 +132,7 @@ export const ru = {
     processing: {
       creating: 'Создаём урок...',
       uploading: 'Загружаем файлы...',
-      processing: 'Claude обрабатывает урок... (1-2 минуты)',
+      processing: 'ИИ обрабатывает урок... (1-2 минуты)',
       done: 'Готово! Упражнения созданы.',
     },
     mediaCount: (n) => `${n} файлов`,

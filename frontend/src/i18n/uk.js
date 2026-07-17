@@ -92,7 +92,7 @@ export const uk = {
     hard: 'Важко',
     remembered: 'Памʼятаю!',
     checkAnswer: 'Перевірити',
-    sentenceChecking: 'Claude перевіряє...',
+    sentenceChecking: 'ШІ перевіряє...',
     next: 'Далі →',
     correct: 'Правильно! ✓',
     wrong: 'Неправильно. Правильна відповідь:',
@@ -126,7 +126,7 @@ export const uk = {
     processing: {
       creating: 'Створюємо урок...',
       uploading: 'Завантажуємо файли...',
-      processing: 'Claude обробляє урок... (1–2 хвилини)',
+      processing: 'ШІ обробляє урок... (1–2 хвилини)',
       done: 'Готово! Вправи створено.',
     },
     mediaCount: (n) => `${n} файлів`,

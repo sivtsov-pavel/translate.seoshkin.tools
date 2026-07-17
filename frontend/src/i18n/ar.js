@@ -94,7 +94,7 @@ export const ar = {
     hard: 'صعب',
     remembered: 'تذكرت!',
     checkAnswer: 'تحقق',
-    sentenceChecking: 'كلود يتحقق...',
+    sentenceChecking: 'الذكاء الاصطناعي يتحقق...',
     next: 'التالي →',
     correct: 'صحيح! ✓',
     wrong: 'خطأ. الصحيح:',
@@ -128,7 +128,7 @@ export const ar = {
     processing: {
       creating: 'جاري الإنشاء...',
       uploading: 'جاري الرفع...',
-      processing: 'كلود يعالج... (١-٢ دقيقة)',
+      processing: 'الذكاء الاصطناعي يعالج... (١-٢ دقيقة)',
       done: 'تم! التمارين جاهزة.',
     },
     mediaCount: (n) => `${n} ملفات`,

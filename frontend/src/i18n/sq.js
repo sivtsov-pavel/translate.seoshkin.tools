@@ -91,7 +91,7 @@ export const sq = {
     hard: 'Me vështirësi',
     remembered: 'Mbaj mend!',
     checkAnswer: 'Kontrollo',
-    sentenceChecking: 'Claude kontrollon...',
+    sentenceChecking: 'IA kontrollon...',
     next: 'Tjetër →',
     correct: 'Saktë! ✓',
     wrong: 'Gabim. Saktë:',
@@ -125,7 +125,7 @@ export const sq = {
     processing: {
       creating: 'Duke krijuar mësimin...',
       uploading: 'Duke ngarkuar skedarët...',
-      processing: 'Claude përpunon mësimin... (1-2 minuta)',
+      processing: 'IA përpunon mësimin... (1-2 minuta)',
       done: 'Gati! Ushtrimet janë krijuar.',
     },
     mediaCount: (n) => `${n} skedarë`,

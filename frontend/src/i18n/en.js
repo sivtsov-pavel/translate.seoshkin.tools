@@ -92,7 +92,7 @@ export const en = {
     hard: 'Hard',
     remembered: 'Got it!',
     checkAnswer: 'Check',
-    sentenceChecking: 'Claude is checking...',
+    sentenceChecking: 'AI is checking...',
     next: 'Next →',
     correct: 'Correct! ✓',
     wrong: 'Wrong. Correct answer:',
@@ -126,7 +126,7 @@ export const en = {
     processing: {
       creating: 'Creating lesson...',
       uploading: 'Uploading files...',
-      processing: 'Claude is processing the lesson… (1–2 minutes)',
+      processing: 'AI is processing the lesson… (1–2 minutes)',
       done: 'Done! Exercises created.',
     },
     mediaCount: (n) => `${n} file${n === 1 ? '' : 's'}`,

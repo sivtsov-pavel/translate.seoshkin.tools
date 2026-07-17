@@ -92,7 +92,7 @@ export const bg = {
     hard: 'Трудно',
     remembered: 'Помня!',
     checkAnswer: 'Провери',
-    sentenceChecking: 'Claude проверява...',
+    sentenceChecking: 'ИИ проверява...',
     next: 'Напред →',
     correct: 'Вярно! ✓',
     wrong: 'Грешно. Правилно:',
@@ -126,7 +126,7 @@ export const bg = {
     processing: {
       creating: 'Създаване...',
       uploading: 'Качване...',
-      processing: 'Claude обработва... (1-2 мин)',
+      processing: 'ИИ обработва... (1-2 мин)',
       done: 'Готово! Упражненията са създадени.',
     },
     mediaCount: (n) => `${n} файла`,

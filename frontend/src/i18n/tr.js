@@ -92,7 +92,7 @@ export const tr = {
     hard: 'Zor',
     remembered: 'Hatırladım!',
     checkAnswer: 'Kontrol et',
-    sentenceChecking: 'Claude kontrol ediyor...',
+    sentenceChecking: 'YZ kontrol ediyor...',
     next: 'İleri →',
     correct: 'Doğru! ✓',
     wrong: 'Yanlış. Doğrusu:',
@@ -126,7 +126,7 @@ export const tr = {
     processing: {
       creating: 'Oluşturuluyor...',
       uploading: 'Yükleniyor...',
-      processing: 'Claude işliyor... (1-2 dk)',
+      processing: 'YZ işliyor... (1-2 dk)',
       done: 'Hazır! Alıştırmalar oluşturuldu.',
     },
     mediaCount: (n) => `${n} dosya`,

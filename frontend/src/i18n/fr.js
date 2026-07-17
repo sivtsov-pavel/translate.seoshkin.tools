@@ -92,7 +92,7 @@ export const fr = {
     hard: 'Difficile',
     remembered: 'Je me souviens !',
     checkAnswer: 'Vérifier',
-    sentenceChecking: 'Claude vérifie...',
+    sentenceChecking: 'L’IA vérifie...',
     next: 'Suivant →',
     correct: 'Correct ! ✓',
     wrong: 'Incorrect. Correct :',
@@ -126,7 +126,7 @@ export const fr = {
     processing: {
       creating: 'Création...',
       uploading: 'Upload...',
-      processing: 'Claude traite... (1-2 min)',
+      processing: 'L’IA traite... (1-2 min)',
       done: 'Prêt ! Exercices créés.',
     },
     mediaCount: (n) => `${n} fichiers`,

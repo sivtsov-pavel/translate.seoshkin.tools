@@ -96,7 +96,7 @@ export const de = {
     hard: 'Schwierig',
     remembered: 'Gewusst!',
     checkAnswer: 'Prüfen',
-    sentenceChecking: 'Claude prüft...',
+    sentenceChecking: 'KI prüft...',
     next: 'Weiter →',
     correct: 'Richtig! ✓',
     wrong: 'Falsch. Richtige Antwort:',
@@ -131,7 +131,7 @@ export const de = {
     processing: {
       creating: 'Lektion erstellen...',
       uploading: 'Dateien hochladen...',
-      processing: 'Claude verarbeitet die Lektion... (1-2 Minuten)',
+      processing: 'KI verarbeitet die Lektion... (1-2 Minuten)',
       done: 'Fertig! Übungen wurden erstellt.',
     },
     mediaCount: (n) => `${n} Dateien`,
