@@ -42,7 +42,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
     if (selected !== null) return
     setSelected(idx)
     setReaction(idx === correctIdx ? 'correct' : 'wrong')  // Pablo оживает и реагирует
-    if (idx === correctIdx) playCorrect(); else playWrong()
+    // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)
     // Скролл к результату — ТОЛЬКО после того как Pablo договорил (onReactionEnd)
   }
 

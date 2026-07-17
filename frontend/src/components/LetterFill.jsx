@@ -25,7 +25,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
     setCorrect(isCorrect)
     setSubmitted(true)
     setReaction(isCorrect ? 'correct' : 'wrong')  // Pablo реагирует клипом
-    if (isCorrect) playCorrect(); else playWrong()
+    // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)
     // Листаем ТОЛЬКО после того как Pablo договорил (onReactionEnd) — см. AvatarReaction
   }
 

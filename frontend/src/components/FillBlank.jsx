@@ -39,7 +39,7 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
     const correct = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
     setSubmitted(true)
     setReaction(correct ? 'correct' : 'wrong')  // Pablo реагирует
-    if (correct) playCorrect(); else playWrong()
+    // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)
     // Озвучку предложения НЕ запускаем здесь — иначе наложится на клип аватара.
     // speak(fullSentence) вызовется ПОСЛЕ того как Pablo договорит (onReactionEnd).
   }

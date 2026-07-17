@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import WordImage, { PabloCircle } from './WordImage.jsx'
+import { playCorrect, playWrong } from '../utils/sound.js'
 
 // Показывает медиа-область слова; при reaction ('correct'|'wrong') Pablo оживает
 // видео-клипом В КРУЖКЕ (рамка красится по реакции), договаривает «Sehr gut»/«Nicht ganz»,
@@ -12,6 +13,8 @@ export default function AvatarReaction({ imageUrl, wordDe, reaction, onReactionE
     if (reaction !== 'correct' && reaction !== 'wrong') return
     endedRef.current = false
     if (localStorage.getItem('trainer_reactions') === 'false') {
+      // Озвучка выключена — вместо голоса аватара короткий звук: приятный «верно» / грубый «неверно»
+      if (reaction === 'correct') playCorrect(); else playWrong()
       const t = setTimeout(() => end(), 700)
       return () => clearTimeout(t)
     }

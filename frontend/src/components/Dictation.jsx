@@ -28,7 +28,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
     const isCorrect = input.trim().toLowerCase() === word_de.trim().toLowerCase()
     setCorrect(isCorrect)
     setChecked(true)
-    if (isCorrect) playCorrect(); else playWrong()
+    // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)
   }
 
   const handleKeyDown = (e) => {
