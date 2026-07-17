@@ -42,13 +42,27 @@
   ],
   "shortcuts": [
     {
-      "name": "Начать повторение",
+      "name": "Сегодня",
+      "short_name": "Сегодня",
       "url": "/",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Словарь",
+      "short_name": "Словарь",
       "url": "/vocabulary",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Отчёт",
+      "short_name": "Отчёт",
+      "url": "/analytics",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Настройки",
+      "short_name": "Настройки",
+      "url": "/settings",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
