@@ -81,9 +81,23 @@ export default function Grammar() {
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px 40px' }}>
       <h1 style={{ fontSize: 22, margin: '4px 0 6px' }}>📐 {E.grammarTitle}</h1>
-      <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 20 }}>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 14 }}>
         {E.grammarSub}
       </p>
+
+      {/* Ссылка на интерактивные шпаргалки (глаголы + местоимения) */}
+      <a href="/cheatsheet" style={{
+        display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', marginBottom: 20,
+        padding: '14px 16px', borderRadius: 16, border: '1px solid var(--accent)',
+        background: 'linear-gradient(135deg, rgba(201,165,74,0.14), rgba(124,92,255,0.10))', color: 'var(--ink)',
+      }}>
+        <span style={{ fontSize: 26 }}>🔖</span>
+        <span style={{ flex: 1 }}>
+          <span style={{ fontWeight: 800, display: 'block' }}>Шпаргалки</span>
+          <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Неправильные глаголы (3 формы) и местоимения — с озвучкой и тренажёром</span>
+        </span>
+        <span style={{ color: 'var(--accent)', fontWeight: 700 }}>→</span>
+      </a>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {grammarData.map((c, i) => {

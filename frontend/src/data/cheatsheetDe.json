@@ -1,0 +1,72 @@
+{
+  "pronouns": {
+    "title": "Личные местоимения",
+    "columns": ["Nominativ", "Akkusativ", "Dativ"],
+    "rows": [
+      { "ru": "я",   "nom": "ich", "akk": "mich", "dat": "mir" },
+      { "ru": "ты",  "nom": "du",  "akk": "dich", "dat": "dir" },
+      { "ru": "он",  "nom": "er",  "akk": "ihn",  "dat": "ihm", "gender": "der" },
+      { "ru": "она", "nom": "sie", "akk": "sie",  "dat": "ihr", "gender": "die" },
+      { "ru": "оно", "nom": "es",  "akk": "es",   "dat": "ihm", "gender": "das" },
+      { "ru": "мы",  "nom": "wir", "akk": "uns",  "dat": "uns" },
+      { "ru": "вы",  "nom": "ihr", "akk": "euch", "dat": "euch" },
+      { "ru": "они", "nom": "sie", "akk": "sie",  "dat": "ihnen" },
+      { "ru": "Вы (вежл.)", "nom": "Sie", "akk": "Sie", "dat": "Ihnen" }
+    ]
+  },
+  "verbs": [
+    { "inf": "sein", "prat": "war", "part": "gewesen", "ru": "быть", "group": "Вспомогательные" },
+    { "inf": "haben", "prat": "hatte", "part": "gehabt", "ru": "иметь", "group": "Вспомогательные" },
+    { "inf": "werden", "prat": "wurde", "part": "geworden", "ru": "становиться", "group": "Вспомогательные" },
+
+    { "inf": "können", "prat": "konnte", "part": "gekonnt", "ru": "мочь, уметь", "group": "Модальные" },
+    { "inf": "müssen", "prat": "musste", "part": "gemusst", "ru": "быть должным", "group": "Модальные" },
+    { "inf": "dürfen", "prat": "durfte", "part": "gedurft", "ru": "иметь разрешение", "group": "Модальные" },
+    { "inf": "sollen", "prat": "sollte", "part": "gesollt", "ru": "быть обязанным", "group": "Модальные" },
+    { "inf": "wollen", "prat": "wollte", "part": "gewollt", "ru": "хотеть", "group": "Модальные" },
+    { "inf": "mögen", "prat": "mochte", "part": "gemocht", "ru": "любить, нравиться", "group": "Модальные" },
+
+    { "inf": "gehen", "prat": "ging", "part": "gegangen", "ru": "идти", "group": "Движение" },
+    { "inf": "kommen", "prat": "kam", "part": "gekommen", "ru": "приходить", "group": "Движение" },
+    { "inf": "fahren", "prat": "fuhr", "part": "gefahren", "ru": "ехать", "group": "Движение" },
+    { "inf": "laufen", "prat": "lief", "part": "gelaufen", "ru": "бежать", "group": "Движение" },
+    { "inf": "fliegen", "prat": "flog", "part": "geflogen", "ru": "летать", "group": "Движение" },
+    { "inf": "fallen", "prat": "fiel", "part": "gefallen", "ru": "падать", "group": "Движение" },
+    { "inf": "tragen", "prat": "trug", "part": "getragen", "ru": "нести", "group": "Движение" },
+
+    { "inf": "essen", "prat": "aß", "part": "gegessen", "ru": "есть", "group": "Повседневные" },
+    { "inf": "trinken", "prat": "trank", "part": "getrunken", "ru": "пить", "group": "Повседневные" },
+    { "inf": "schlafen", "prat": "schlief", "part": "geschlafen", "ru": "спать", "group": "Повседневные" },
+    { "inf": "sehen", "prat": "sah", "part": "gesehen", "ru": "видеть", "group": "Повседневные" },
+    { "inf": "lesen", "prat": "las", "part": "gelesen", "ru": "читать", "group": "Повседневные" },
+    { "inf": "schreiben", "prat": "schrieb", "part": "geschrieben", "ru": "писать", "group": "Повседневные" },
+    { "inf": "sprechen", "prat": "sprach", "part": "gesprochen", "ru": "говорить", "group": "Повседневные" },
+    { "inf": "nehmen", "prat": "nahm", "part": "genommen", "ru": "брать", "group": "Повседневные" },
+    { "inf": "geben", "prat": "gab", "part": "gegeben", "ru": "давать", "group": "Повседневные" },
+    { "inf": "finden", "prat": "fand", "part": "gefunden", "ru": "находить", "group": "Повседневные" },
+    { "inf": "helfen", "prat": "half", "part": "geholfen", "ru": "помогать", "group": "Повседневные" },
+    { "inf": "treffen", "prat": "traf", "part": "getroffen", "ru": "встречать", "group": "Повседневные" },
+    { "inf": "waschen", "prat": "wusch", "part": "gewaschen", "ru": "мыть", "group": "Повседневные" },
+
+    { "inf": "stehen", "prat": "stand", "part": "gestanden", "ru": "стоять", "group": "Состояние" },
+    { "inf": "sitzen", "prat": "saß", "part": "gesessen", "ru": "сидеть", "group": "Состояние" },
+    { "inf": "liegen", "prat": "lag", "part": "gelegen", "ru": "лежать", "group": "Состояние" },
+    { "inf": "bleiben", "prat": "blieb", "part": "geblieben", "ru": "оставаться", "group": "Состояние" },
+    { "inf": "heißen", "prat": "hieß", "part": "geheißen", "ru": "называться", "group": "Состояние" },
+
+    { "inf": "denken", "prat": "dachte", "part": "gedacht", "ru": "думать", "group": "Смешанные" },
+    { "inf": "bringen", "prat": "brachte", "part": "gebracht", "ru": "приносить", "group": "Смешанные" },
+    { "inf": "kennen", "prat": "kannte", "part": "gekannt", "ru": "знать (быть знакомым)", "group": "Смешанные" },
+    { "inf": "wissen", "prat": "wusste", "part": "gewusst", "ru": "знать (факт)", "group": "Смешанные" },
+    { "inf": "nennen", "prat": "nannte", "part": "genannt", "ru": "называть", "group": "Смешанные" },
+
+    { "inf": "beginnen", "prat": "begann", "part": "begonnen", "ru": "начинать", "group": "Действия" },
+    { "inf": "gewinnen", "prat": "gewann", "part": "gewonnen", "ru": "выигрывать", "group": "Действия" },
+    { "inf": "verlieren", "prat": "verlor", "part": "verloren", "ru": "терять", "group": "Действия" },
+    { "inf": "schließen", "prat": "schloss", "part": "geschlossen", "ru": "закрывать", "group": "Действия" },
+    { "inf": "verstehen", "prat": "verstand", "part": "verstanden", "ru": "понимать", "group": "Действия" },
+    { "inf": "vergessen", "prat": "vergaß", "part": "vergessen", "ru": "забывать", "group": "Действия" },
+    { "inf": "empfehlen", "prat": "empfahl", "part": "empfohlen", "ru": "рекомендовать", "group": "Действия" },
+    { "inf": "waschen", "prat": "wusch", "part": "gewaschen", "ru": "мыть", "group": "Действия" }
+  ]
+}
