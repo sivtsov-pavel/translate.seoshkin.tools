@@ -8,10 +8,12 @@ export async function coursesRoutes(fastify) {
   // Список курсов: все owner видят общий пул; student видит курсы с готовыми уроками
   fastify.get('/api/courses', { preHandler: [fastify.authenticate] }, async (request) => {
     const { role } = request.user
+    // Разделение по изучаемому языку: показываем курсы активного target_lang (напр. de/en)
+    const target = request.headers['x-target-lang'] || 'de'
+    // owner видит общий пул своего языка; student — только курсы с готовыми уроками того же языка
     const filter = role === 'owner'
-      ? ''
-      : 'WHERE EXISTS (SELECT 1 FROM lessons l WHERE l.course_id = c.id AND l.status = \'done\')'
-    const params = []
+      ? 'WHERE c.target_lang = $1'
+      : 'WHERE c.target_lang = $1 AND EXISTS (SELECT 1 FROM lessons l WHERE l.course_id = c.id AND l.status = \'done\')'
 
     const { rows } = await db.query(`
       SELECT
@@ -24,7 +26,7 @@ export async function coursesRoutes(fastify) {
       ${filter}
       GROUP BY c.id
       ORDER BY c.sort_order, c.created_at
-    `, params)
+    `, [target])
     return rows
   })
 
@@ -50,13 +52,14 @@ export async function coursesRoutes(fastify) {
     const { title, description = '' } = request.body
     if (!title?.trim()) return reply.status(400).send({ error: 'Название обязательно' })
 
+    const target = request.headers['x-target-lang'] || 'de'
     const { rows: maxOrder } = await db.query(
       'SELECT COALESCE(MAX(sort_order), 0) AS mo FROM courses WHERE owner_id = $1',
       [request.user.id]
     )
     const { rows } = await db.query(
-      'INSERT INTO courses (owner_id, title, description, sort_order) VALUES ($1, $2, $3, $4) RETURNING *',
-      [request.user.id, title.trim(), description.trim(), maxOrder[0].mo + 1]
+      'INSERT INTO courses (owner_id, title, description, sort_order, target_lang) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [request.user.id, title.trim(), description.trim(), maxOrder[0].mo + 1, target]
     )
     return reply.status(201).send(rows[0])
   })
