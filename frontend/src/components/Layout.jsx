@@ -240,7 +240,7 @@ export default function Layout({ children }) {
         <div style={{ padding: '16px 16px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', flexShrink: 0 }}>
           <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <span>
-              {tgt.flag} {t.nav.appName}
+              {tgt.flag} {tgt.name}
               {/* Метка сборки: видно, обновилось ли приложение (кэш SW липкий) */}
               <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.6, marginLeft: 6 }}>{typeof __BUILD_TS__ !== 'undefined' ? __BUILD_TS__ : ''}</span>
             </span>
