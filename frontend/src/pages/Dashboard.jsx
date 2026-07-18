@@ -121,20 +121,6 @@ export default function Dashboard() {
 
       {courseSelector}
 
-      {/* Быстрая тренировка по типу — все карточки / все «выбери ответ» по ВСЕМ урокам */}
-      {total > 0 && (
-        <div style={{ padding: '4px 12px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/exercise-session?type=flashcard')}
-            style={{ flex: 1, minWidth: 140, padding: '10px 14px', borderRadius: 12, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-            🃏 Все карточки
-          </button>
-          <button onClick={() => navigate('/exercise-session?type=multiple_choice')}
-            style={{ flex: 1, minWidth: 140, padding: '10px 14px', borderRadius: 12, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-            ✅ Выбери ответ
-          </button>
-        </div>
-      )}
-
       {/* Hero — просто заголовок и счёт */}
       <div style={{ padding: '20px 20px 14px' }}>
         <h1 style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 22, margin: '0 0 6px', lineHeight: 1.2 }}>
@@ -211,6 +197,27 @@ export default function Dashboard() {
         <div style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 4, marginBottom: 10 }}>
           {t.dashboard.games}
         </div>
+        {/* Быстрая тренировка по типу — по ВСЕМ урокам сразу */}
+        {total > 0 && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+            <button onClick={() => navigate('/exercise-session?type=flashcard')}
+              style={{ flex: 1, minWidth: 150, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: 30, lineHeight: 1 }}>🃏</span>
+              <span style={{ flex: 1 }}>
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>Все карточки</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Флеш-карты по всем урокам</span>
+              </span>
+            </button>
+            <button onClick={() => navigate('/exercise-session?type=multiple_choice')}
+              style={{ flex: 1, minWidth: 150, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: 30, lineHeight: 1 }}>✅</span>
+              <span style={{ flex: 1 }}>
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>Выбери ответ</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Тест по всем словам</span>
+              </span>
+            </button>
+          </div>
+        )}
         <Link to="/game/match" style={{ textDecoration: 'none' }}>
           <div style={{
             background: 'var(--surface)', border: '2px solid var(--accent)',

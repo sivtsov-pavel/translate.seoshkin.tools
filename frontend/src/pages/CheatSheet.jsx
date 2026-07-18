@@ -7,8 +7,14 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 // Данные — языковые факты (JSON), офлайн, с поиском, озвучкой и тренажёром.
 const GENDER_COLOR = { der: '#3b7ac0', die: '#c0453b', das: '#3b9e57' }
 
-const cell = { padding: '8px 10px', fontSize: 14, borderTop: '1px solid var(--line)' }
-const th = { padding: '8px 10px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.04em' }
+const cell = { padding: '8px 10px', fontSize: 14, borderTop: '1px solid var(--line)', verticalAlign: 'top' }
+const th = { padding: '8px 10px', textAlign: 'left', fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }
+const thSub = { fontSize: 10.5, fontWeight: 500, color: 'var(--ink-soft)', textTransform: 'none', letterSpacing: 0, display: 'block', marginTop: 1 }
+
+// Заголовок колонки с переводом-подписью снизу
+function ColHead({ title, sub }) {
+  return <th style={th}>{title}<span style={thSub}>{sub}</span></th>
+}
 
 export default function CheatSheet() {
   const navigate = useNavigate()
@@ -59,28 +65,34 @@ export default function CheatSheet() {
             <div key={group} style={{ marginBottom: 18 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{group}</div>
               <div style={{ overflowX: 'auto', border: '1px solid var(--line)', borderRadius: 12 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 460, tableLayout: 'fixed' }}>
+                  <colgroup>
+                    <col style={{ width: '28%' }} />
+                    <col style={{ width: '24%' }} />
+                    <col style={{ width: '24%' }} />
+                    <col style={{ width: '24%' }} />
+                  </colgroup>
                   <thead>
-                    <tr>
-                      <th style={th}>Infinitiv</th>
-                      <th style={th}>Präteritum</th>
-                      <th style={th}>Partizip II</th>
-                      <th style={th}>Перевод</th>
+                    <tr style={{ background: 'var(--surface-2)' }}>
+                      <ColHead title="Перевод" sub="что значит" />
+                      <ColHead title="Infinitiv" sub="начальная" />
+                      <ColHead title="Präteritum" sub="прошедшее" />
+                      <ColHead title="Partizip II" sub="причастие" />
                     </tr>
                   </thead>
                   <tbody>
                     {list.map((v, i) => (
                       <tr key={i}>
+                        <td style={{ ...cell, color: 'var(--ink-soft)' }}>{v.ru}</td>
                         <td style={{ ...cell, fontWeight: 700 }}>
                           {v.inf} <SpeakButton text={v.inf} size={13} />
                         </td>
                         <td style={{ ...cell, color: '#B07D1B' }}>
-                          {learn ? <span style={{ opacity: 0.35 }}>• • •</span> : <>{v.prat} <SpeakButton text={v.prat} size={13} /></>}
+                          {learn ? <span style={{ opacity: 0.35 }}>•••</span> : <>{v.prat} <SpeakButton text={v.prat} size={13} /></>}
                         </td>
                         <td style={{ ...cell, color: 'var(--good)' }}>
-                          {learn ? <span style={{ opacity: 0.35 }}>• • •</span> : <>{v.part} <SpeakButton text={v.part} size={13} /></>}
+                          {learn ? <span style={{ opacity: 0.35 }}>•••</span> : <>{v.part} <SpeakButton text={v.part} size={13} /></>}
                         </td>
-                        <td style={{ ...cell, color: 'var(--ink-soft)' }}>{v.ru}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -94,11 +106,19 @@ export default function CheatSheet() {
 
       {tab === 'pronouns' && (
         <div style={{ overflowX: 'auto', border: '1px solid var(--line)', borderRadius: 12 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 420 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 460, tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '28%' }} />
+              <col style={{ width: '24%' }} />
+              <col style={{ width: '24%' }} />
+              <col style={{ width: '24%' }} />
+            </colgroup>
             <thead>
-              <tr>
-                <th style={th}></th>
-                {data.pronouns.columns.map(c => <th key={c} style={th}>{c}</th>)}
+              <tr style={{ background: 'var(--surface-2)' }}>
+                <ColHead title="Перевод" sub="кто" />
+                <ColHead title="Nominativ" sub="кто? (я)" />
+                <ColHead title="Akkusativ" sub="кого? (меня)" />
+                <ColHead title="Dativ" sub="кому? (мне)" />
               </tr>
             </thead>
             <tbody>

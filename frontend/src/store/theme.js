@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-const saved = localStorage.getItem('theme') || 'dark'
+const saved = localStorage.getItem('theme') || 'light'
 
 function apply(theme) {
   document.documentElement.setAttribute('data-theme', theme)
