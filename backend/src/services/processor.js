@@ -289,6 +289,26 @@ export async function enrichLesson(lessonId) {
     }
   } catch (e) { console.error('enrichLesson title-gen:', e.message) }
 
+  // 5b) Колонки редактирования (📘 учебник / ✏️ тетрадь) — заполняем из слов по источнику, если пусто.
+  // Нужно на пути «добавить фото» (processNewMedia не пишет эти блоки, в отличие от полного процесса).
+  try {
+    const { rows: lc } = await db.query('SELECT text_content, text_content_extra FROM lessons WHERE id=$1', [lessonId])
+    const L = lc[0] || {}
+    const cols = [
+      { col: 'text_content',       where: "(source='textbook' OR source IS NULL)", cur: L.text_content },
+      { col: 'text_content_extra', where: "source='extra'",                        cur: L.text_content_extra },
+    ]
+    for (const c of cols) {
+      if (c.cur && String(c.cur).trim()) continue // не затираем существующий текст
+      const { rows: ws } = await db.query(
+        `SELECT word_de, translation_ru FROM words WHERE lesson_id=$1 AND ${c.where} ORDER BY id`, [lessonId])
+      if (ws.length) {
+        const lines = ws.map(w => `${w.word_de} — ${w.translation_ru}`).join('\n')
+        await db.query(`UPDATE lessons SET ${c.col}=$1 WHERE id=$2`, [lines, lessonId])
+      }
+    }
+  } catch (e) { console.error('enrichLesson fill-columns:', e.message) }
+
   // Перевод ЗАГОЛОВКА и ОПИСАНИЯ урока на активные локали (для страницы «Сегодня»/списка)
   try {
     const { rows: lr } = await db.query(
