@@ -9,7 +9,7 @@ import { config } from '../config.js'
 mkdirSync(config.uploadDir, { recursive: true })
 
 async function uploadPlugin(fastify) {
-  fastify.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } }) // 50MB
+  fastify.register(multipart, { limits: { fileSize: 200 * 1024 * 1024 } }) // 200MB — большие PDF учебников (курс целиком)
 
   // Хелпер для сохранения файла из multipart части
   fastify.decorate('saveUploadedFile', async function (part) {

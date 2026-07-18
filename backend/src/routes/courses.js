@@ -111,11 +111,18 @@ export async function coursesRoutes(fastify) {
     const { rows: c } = await db.query('SELECT id, title FROM courses WHERE id = $1 AND owner_id = $2', [courseId, request.user.id])
     if (!c[0]) return reply.status(404).send({ error: 'Курс не найден' })
 
-    // Читаем PDF из multipart
+    // Читаем PDF из multipart (с понятной ошибкой, если файл превысил лимит)
     let buffer = null
-    const parts = request.parts()
-    for await (const part of parts) {
-      if (part.type === 'file') { buffer = await part.toBuffer(); break }
+    try {
+      const parts = request.parts()
+      for await (const part of parts) {
+        if (part.type === 'file') { buffer = await part.toBuffer(); break }
+      }
+    } catch (e) {
+      if (e.code === 'FST_REQ_FILE_TOO_LARGE' || /too large/i.test(e.message || '')) {
+        return reply.status(413).send({ error: 'PDF слишком большой (лимит 200 МБ). Раздели учебник на части.' })
+      }
+      throw e
     }
     if (!buffer) return reply.status(400).send({ error: 'PDF не получен' })
 
