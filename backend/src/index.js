@@ -30,6 +30,7 @@ import { catalogRoutes } from './routes/catalog.js'
 import { personalWordsRoutes } from './routes/personalWords.js'
 import { offlineRoutes } from './routes/offline.js'
 import { startReminderCron } from './services/reminders.js'
+import { startDripCron } from './services/drip.js'
 import { runMigrationsOnStartup } from './db/migrations/run.js'
 
 // Регистрация плагинов — выделено для переиспользования в тестах
@@ -83,6 +84,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   const app = await buildApp()
   await runMigrationsOnStartup()
   startReminderCron()
+  startDripCron()
   await app.listen({ port: config.port, host: config.host })
   console.log(`Backend запущен на http://${config.host}:${config.port}`)
 }

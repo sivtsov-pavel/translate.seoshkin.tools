@@ -2,6 +2,9 @@ import { readFileSync } from 'fs'
 import { unlink } from 'fs/promises'
 import { db } from '../db/index.js'
 import { saveCourseCover } from '../services/imageOptimize.js'
+import { pdfToImages } from '../services/pdf.js'
+import { processLesson } from '../services/processor.js'
+import { unlockedCount, unlockDateForIndex } from '../services/drip.js'
 
 export async function coursesRoutes(fastify) {
 
@@ -30,20 +33,120 @@ export async function coursesRoutes(fastify) {
     return rows
   })
 
-  // Уроки внутри курса
+  // Уроки внутри курса. Для ученика с расписанием (дрип) добавляем lock-статус и дату открытия.
   fastify.get('/api/courses/:id/lessons', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const courseId = parseInt(request.params.id)
     const { rows: course } = await db.query('SELECT * FROM courses WHERE id = $1', [courseId])
     if (!course[0]) return reply.status(404).send({ error: 'Курс не найден' })
 
     const { rows } = await db.query(`
-      SELECT id, title, date, status, progress, lesson_number, created_at
+      SELECT id, title, date, status, progress, lesson_number, created_at,
+             (SELECT count(*) FROM words w WHERE w.lesson_id = lessons.id)::int AS words_total,
+             (SELECT count(*) FROM exercises e WHERE e.lesson_id = lessons.id)::int AS exercises_total
       FROM lessons
       WHERE course_id = $1
       ORDER BY lesson_number NULLS LAST, created_at
     `, [courseId])
 
-    return { course: course[0], lessons: rows }
+    // Дрип: у ученика есть расписание по этому курсу → размечаем, какие уроки открыты
+    let schedule = null
+    if (request.user.role !== 'owner') {
+      const { rows: sc } = await db.query(
+        'SELECT weekdays, start_date FROM course_schedules WHERE user_id = $1 AND course_id = $2',
+        [request.user.id, courseId])
+      if (sc[0]) {
+        schedule = sc[0]
+        const opened = unlockedCount(sc[0].start_date, sc[0].weekdays)
+        // Считаем только готовые уроки — среди них по порядку открываем opened штук
+        let doneIdx = 0
+        for (const l of rows) {
+          if (l.status === 'done') {
+            l.locked = doneIdx >= opened
+            l.unlock_date = l.locked ? unlockDateForIndex(sc[0].start_date, sc[0].weekdays, doneIdx) : null
+            doneIdx++
+          } else {
+            l.locked = true
+            l.unlock_date = null
+          }
+        }
+      }
+    }
+
+    return { course: course[0], lessons: rows, schedule }
+  })
+
+  // Ученик: получить своё расписание дрип-выдачи по курсу
+  fastify.get('/api/courses/:id/schedule', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const courseId = parseInt(request.params.id)
+    const { rows } = await db.query(
+      'SELECT weekdays, start_date FROM course_schedules WHERE user_id = $1 AND course_id = $2',
+      [request.user.id, courseId])
+    return rows[0] || null
+  })
+
+  // Ученик: задать/обновить расписание (учебные дни недели + дата старта)
+  fastify.put('/api/courses/:id/schedule', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const courseId = parseInt(request.params.id)
+    const { weekdays, start_date } = request.body || {}
+    // Валидация: массив ISO-дней 1..7, непустой
+    const wd = Array.isArray(weekdays) ? [...new Set(weekdays.map(Number).filter(n => n >= 1 && n <= 7))].sort() : []
+    if (!wd.length) return reply.status(400).send({ error: 'Выбери хотя бы один день недели' })
+    const start = start_date || new Date().toISOString().slice(0, 10)
+
+    const { rows } = await db.query(`
+      INSERT INTO course_schedules (user_id, course_id, weekdays, start_date)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (user_id, course_id) DO UPDATE SET weekdays = $3, start_date = $4
+      RETURNING weekdays, start_date`,
+      [request.user.id, courseId, wd, start])
+    return rows[0]
+  })
+
+  // Учитель: массовая загрузка курса одним PDF → каждая страница = отдельный урок в курсе.
+  // Уроки создаются по порядку и обрабатываются в фоне (vision → слова → упражнения).
+  fastify.post('/api/courses/:id/upload-pdf', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const courseId = parseInt(request.params.id)
+    const target = request.headers['x-target-lang'] || 'de'
+    const { rows: c } = await db.query('SELECT id, title FROM courses WHERE id = $1 AND owner_id = $2', [courseId, request.user.id])
+    if (!c[0]) return reply.status(404).send({ error: 'Курс не найден' })
+
+    // Читаем PDF из multipart
+    let buffer = null
+    const parts = request.parts()
+    for await (const part of parts) {
+      if (part.type === 'file') { buffer = await part.toBuffer(); break }
+    }
+    if (!buffer) return reply.status(400).send({ error: 'PDF не получен' })
+
+    const pages = await pdfToImages(buffer)
+    if (!pages.length) return reply.status(400).send({ error: 'Не удалось разобрать PDF на страницы' })
+
+    // Нумерация — продолжаем с текущего максимума в курсе
+    const { rows: mx } = await db.query('SELECT COALESCE(MAX(lesson_number), 0) AS n FROM lessons WHERE course_id = $1', [courseId])
+    let num = mx[0].n
+    const created = []
+    for (const p of pages) {
+      num++
+      const { rows: lr } = await db.query(
+        `INSERT INTO lessons (owner_id, title, course_id, lesson_number, target_lang, status)
+         VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id`,
+        [request.user.id, `Урок ${num}`, courseId, num, target])
+      const lessonId = lr[0].id
+      await db.query(
+        `INSERT INTO lesson_media (lesson_id, type, file_path, source) VALUES ($1, 'photo', $2, 'textbook')`,
+        [lessonId, p.filename])
+      created.push(lessonId)
+    }
+
+    // Отвечаем сразу — обработка страниц идёт в фоне, последовательно (vision-вызовы тяжёлые)
+    reply.code(202).send({ started: true, lessons: created.length })
+    ;(async () => {
+      for (const lessonId of created) {
+        try { await processLesson(lessonId, request.user.id) }
+        catch (e) { fastify.log.error({ lessonId, err: e }, 'Ошибка обработки урока из PDF курса') }
+      }
+    })()
   })
 
   // Создать курс

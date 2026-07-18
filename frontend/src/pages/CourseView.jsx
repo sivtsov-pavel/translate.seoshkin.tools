@@ -18,6 +18,8 @@ export default function CourseView() {
   const [attachId, setAttachId]   = useState('')
   const [uploadingCover, setUploadingCover] = useState(false)
   const coverInputRef = useRef()
+  const pdfInputRef = useRef()
+  const [uploadingPdf, setUploadingPdf] = useState(false)
   const { t } = useI18nStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
@@ -43,6 +45,33 @@ export default function CourseView() {
   }
 
   const handleCoverPick = () => coverInputRef.current?.click()
+
+  // Массовая загрузка курса одним PDF → каждая страница станет отдельным уроком
+  const handlePdfPick = () => pdfInputRef.current?.click()
+  const handlePdfUpload = async (file) => {
+    if (!file) return
+    if (!window.confirm('Загрузить весь курс из PDF? Каждая страница станет отдельным уроком и обработается ИИ (это тратит токены OpenAI). Продолжить?')) return
+    setUploadingPdf(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await uploadFiles(`/courses/${id}/upload-pdf`, form)
+      alert(`Создано уроков: ${res.lessons}. Они обрабатываются в фоне — обнови страницу через минуту.`)
+      setTimeout(load, 3000)
+    } catch (e) {
+      alert('Ошибка: ' + e.message)
+    } finally {
+      setUploadingPdf(false)
+    }
+  }
+
+  // Ученик: сохранить расписание дрип-выдачи (учебные дни + дата старта)
+  const saveSchedule = async (weekdays, startDate) => {
+    try {
+      await api.put(`/courses/${id}/schedule`, { weekdays, start_date: startDate })
+      await load()
+    } catch (e) { alert('Ошибка: ' + e.message) }
+  }
 
   const handleCoverUpload = async (file) => {
     if (!file) return
@@ -132,6 +161,14 @@ export default function CourseView() {
           <Link to={`/lessons/new?course_id=${id}`} style={{ ...btnPrimary, textDecoration: 'none', display: 'inline-block' }}>
             + {c.addLesson}
           </Link>
+          {/* Массовая загрузка всего курса одним PDF (1 страница = 1 урок) */}
+          <input ref={pdfInputRef} type="file" accept="application/pdf" style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; handlePdfUpload(f) }} />
+          <button onClick={handlePdfPick} disabled={uploadingPdf}
+            title="Загрузить весь курс одним PDF — каждая страница станет отдельным уроком"
+            style={{ ...btnSecondary, cursor: uploadingPdf ? 'default' : 'pointer', opacity: uploadingPdf ? 0.6 : 1 }}>
+            {uploadingPdf ? '⏳ Загружаю…' : '📦 Загрузить курс (PDF)'}
+          </button>
           {allLessons.length > 0 && (
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <select value={attachId} onChange={e => setAttachId(e.target.value)} style={{ fontSize: 14, maxWidth: 280 }}>
@@ -157,6 +194,11 @@ export default function CourseView() {
         </div>
       )}
 
+      {/* Ученик: расписание дрип-выдачи (учебные дни → уроки открываются по одному) */}
+      {user?.role !== 'owner' && lessons.some(l => l.status === 'done') && (
+        <SchedulePicker schedule={data.schedule} onSave={saveSchedule} />
+      )}
+
       {lessons.length === 0 ? (
         <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 12, border: '1px dashed var(--line)' }}>
           {c.noLessons}
@@ -168,6 +210,50 @@ export default function CourseView() {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+// Ученик выбирает удобные дни недели + дату старта → уроки открываются по одному в каждый учебный день
+const WEEKDAY_LABELS = [['1','Пн'],['2','Вт'],['3','Ср'],['4','Чт'],['5','Пт'],['6','Сб'],['7','Вс']]
+function SchedulePicker({ schedule, onSave }) {
+  const [days, setDays] = useState(() => new Set((schedule?.weekdays || [1,3,5]).map(String)))
+  const [start, setStart] = useState(() => (schedule?.start_date ? String(schedule.start_date).slice(0,10) : new Date().toISOString().slice(0,10)))
+  const [saving, setSaving] = useState(false)
+  const toggle = (d) => setDays(s => { const n = new Set(s); n.has(d) ? n.delete(d) : n.add(d); return n })
+  const submit = async () => {
+    if (!days.size) { alert('Выбери хотя бы один день'); return }
+    setSaving(true)
+    await onSave([...days].map(Number).sort(), start)
+    setSaving(false)
+  }
+  return (
+    <div style={{ marginBottom: 20, padding: 16, background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 12 }}>
+      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>🗓️ Моё расписание</div>
+      <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 12 }}>
+        Выбери удобные дни — в каждый такой день будет открываться новый урок, придёт напоминание.
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+        {WEEKDAY_LABELS.map(([d, lbl]) => (
+          <button key={d} onClick={() => toggle(d)}
+            style={{
+              width: 44, height: 40, borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700,
+              border: `1px solid ${days.has(d) ? 'var(--accent)' : 'var(--line)'}`,
+              background: days.has(d) ? 'var(--accent)' : 'var(--surface)',
+              color: days.has(d) ? 'var(--accent-ink)' : 'var(--ink-soft)',
+            }}>{lbl}</button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <label style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Старт:
+          <input type="date" value={start} onChange={e => setStart(e.target.value)}
+            style={{ marginLeft: 6, padding: '5px 8px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }} />
+        </label>
+        <button onClick={submit} disabled={saving}
+          style={{ padding: '8px 18px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 9, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+          {saving ? '…' : (schedule ? 'Обновить' : 'Сохранить')}
+        </button>
+      </div>
     </div>
   )
 }
@@ -237,13 +323,20 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
             {regen ? '⏳' : '⚙️ Упражнения'}
           </button>
         )}
-        {/* Ученик: открыть готовый урок → упражнения (курс становится реально проходимым) */}
+        {/* Ученик/учитель: открыть готовый урок; для ученика с дрип-расписанием — замок до даты открытия */}
         {status === 'done' && lesson.words_total > 0 && (
-          <button
-            onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
-            style={{ fontSize: 13, padding: '6px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}>
-            ✅ {isOwner ? 'Открыть' : 'Начать'}
-          </button>
+          lesson.locked ? (
+            <span style={{ fontSize: 12.5, padding: '6px 12px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--ink-soft)', whiteSpace: 'nowrap', fontWeight: 600 }}
+              title="Урок откроется по расписанию">
+              🔒 {lesson.unlock_date ? new Date(lesson.unlock_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : 'позже'}
+            </span>
+          ) : (
+            <button
+              onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
+              style={{ fontSize: 13, padding: '6px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              ✅ {isOwner ? 'Открыть' : 'Начать'}
+            </button>
+          )
         )}
       </div>
     </div>
