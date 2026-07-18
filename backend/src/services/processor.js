@@ -268,7 +268,28 @@ export async function enrichLesson(lessonId) {
     }
   } catch (e) { console.error('enrichLesson exercises:', e.message) }
 
-  // 5) Перевод ЗАГОЛОВКА и ОПИСАНИЯ урока на активные локали (для страницы «Сегодня»/списка)
+  // 5) ИИ-название урока, если оно ещё дефолтное «Урок N» или пустое (на любом пути обработки)
+  try {
+    const { rows: lr0 } = await db.query('SELECT title FROM lessons WHERE id=$1', [lessonId])
+    const curTitle = (lr0[0]?.title || '').trim()
+    const isDefault = !curTitle || /^Урок\s*\d+$/i.test(curTitle) || /^Lektion\s*\d+$/i.test(curTitle)
+    if (isDefault) {
+      const { rows: ws } = await db.query('SELECT word_de, translation_ru FROM words WHERE lesson_id=$1 ORDER BY id', [lessonId])
+      if (ws.length >= 3) {
+        await setProgress(lessonId, 'Придумываю название урока...')
+        const meta = await generateLessonMeta(ws, [], targetLang) // { title, description }
+        if (meta?.title) {
+          // Сохраняем номер, если был: «Урок 1» → «Урок 1: <тема>»
+          const num = (curTitle.match(/\d+/) || [])[0]
+          const newTitle = num ? `Урок ${num}: ${meta.title}` : meta.title
+          await db.query('UPDATE lessons SET title=$1, description=COALESCE(NULLIF(description,\'\'),$2) WHERE id=$3',
+            [newTitle, meta.description || null, lessonId])
+        }
+      }
+    }
+  } catch (e) { console.error('enrichLesson title-gen:', e.message) }
+
+  // Перевод ЗАГОЛОВКА и ОПИСАНИЯ урока на активные локали (для страницы «Сегодня»/списка)
   try {
     const { rows: lr } = await db.query(
       'SELECT title, description, title_translations, description_translations FROM lessons WHERE id=$1', [lessonId])
