@@ -332,6 +332,8 @@ export async function lessonsRoutes(fastify) {
   fastify.post('/api/lessons/:id/media', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
+    // Загрузка медиа запускает обработку (токены) — пока только Павел(1)+Евгений(5)
+    if (!config.uploadAllowedIds.includes(request.user.id)) return reply.status(403).send({ error: 'Загрузка уроков временно ограничена (только администратор)' })
     const lessonId = request.params.id
     // Источник: учебник (по умолчанию) или тетрадь/доска (?source=extra)
     const source = request.query?.source === 'extra' ? 'extra' : 'textbook'

@@ -156,6 +156,7 @@ export async function coursesRoutes(fastify) {
   // Уроки создаются по порядку и обрабатываются в фоне (vision → слова → упражнения).
   fastify.post('/api/courses/:id/upload-pdf', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (!config.uploadAllowedIds.includes(request.user.id)) return reply.status(403).send({ error: 'Загрузка уроков временно ограничена (только администратор)' })
     const courseId = parseInt(request.params.id)
     const target = request.headers['x-target-lang'] || 'de'
     const { rows: c } = await db.query('SELECT id, title FROM courses WHERE id = $1 AND owner_id = $2', [courseId, request.user.id])

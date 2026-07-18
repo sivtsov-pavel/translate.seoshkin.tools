@@ -1,10 +1,21 @@
 import { db } from '../db/index.js'
 import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson } from '../services/processor.js'
+import { config } from '../config.js'
+
+// Разрешена ли пользователю загрузка/обработка уроков (тратит токены) — пока только Павел+Евгений
+function canUpload(request, reply) {
+  if (!config.uploadAllowedIds.includes(request.user.id)) {
+    reply.status(403).send({ error: 'Загрузка уроков временно ограничена (только администратор)' })
+    return false
+  }
+  return true
+}
 
 export async function processRoutes(fastify) {
   // «Нарисовать недостающие картинки»: детсадовские ИИ-иллюстрации для слов урока без фото
   fastify.post('/api/lessons/:id/draw-images', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (!canUpload(request, reply)) return
     const lessonId = parseInt(request.params.id)
     const { rows } = await db.query('SELECT status FROM lessons WHERE id = $1', [lessonId])
     if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
@@ -33,6 +44,7 @@ export async function processRoutes(fastify) {
   // «Свои упражнения»: создать набор из выбранных слов словаря
   fastify.post('/api/lessons/custom', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (!canUpload(request, reply)) return
     const { title, word_ids, course_id } = request.body || {}
     if (!Array.isArray(word_ids) || !word_ids.length) return reply.status(400).send({ error: 'Выберите слова' })
     const { rows } = await db.query(
@@ -51,6 +63,7 @@ export async function processRoutes(fastify) {
   }, async (request, reply) => {
     // Только учитель — обработка тратит токены (картинки/переводы), ученики не могут
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (!canUpload(request, reply)) return
     const lessonId = parseInt(request.params.id)
     const ownerId = request.user.id
 
@@ -72,6 +85,7 @@ export async function processRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (!canUpload(request, reply)) return
     const lessonId = parseInt(request.params.id)
     const { rows } = await db.query('SELECT status FROM lessons WHERE id = $1', [lessonId])
     if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
