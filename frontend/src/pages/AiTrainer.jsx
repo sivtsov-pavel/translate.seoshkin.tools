@@ -221,10 +221,19 @@ function AiTrainerInner() {
   // Голосовой ввод: распознаватель одноязычный, поэтому даём переключатель
   // «родной / немецкий». По умолчанию — язык локали (без ручных настроек телефона).
   const SPEECH_LANG = { ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', bg: 'bg-BG', tr: 'tr-TR', ar: 'ar-SA', es: 'es-ES', fr: 'fr-FR', sq: 'sq-AL' }
+  // Голос изучаемого языка — тренер говорит на нём (de/en/es…), не всегда по-немецки
+  const learnVoice = SPEECH_LANG[localStorage.getItem('target_lang') || 'de'] || 'de-DE'
   // По умолчанию распознаём НЕМЕЦКИЙ (это немецкий тренер — ученик говорит по-немецки).
   // Кнопкой можно переключить на родной язык. Раньше был родной → немецкая речь распознавалась криво.
   const [micDe, setMicDe] = useState(true)
   const V = voiceStr(lang)
+
+  // Push-to-talk: слушать ТОЛЬКО по нажатию кнопки (не постоянно), чтобы не ловить шум вокруг.
+  // Дефолт ВКЛ (Павел): удобнее и без ложных срабатываний.
+  const [pushToTalk, setPushToTalk] = useState(() => localStorage.getItem('trainer_ptt') !== 'false')
+  const pushToTalkRef = useRef(true)
+  useEffect(() => { pushToTalkRef.current = pushToTalk }, [pushToTalk])
+  const togglePtt = () => setPushToTalk(v => { localStorage.setItem('trainer_ptt', v ? 'false' : 'true'); return !v })
 
   // Голосовой режим «как в Gemini»: большое фото, hands-free диалог
   const [voiceMode, setVoiceMode] = useState(false)
@@ -248,7 +257,7 @@ function AiTrainerInner() {
   useEffect(() => { speakingRef.current = speaking }, [speaking])
 
   const { start: startMic, stop: stopMic, listening, isSupported: micSupported } = useSpeechRecognition({
-    lang: micDe ? 'de-DE' : (SPEECH_LANG[lang] || 'de-DE'),
+    lang: micDe ? learnVoice : (SPEECH_LANG[lang] || 'de-DE'),
     onResult: (text) => {
       if (voiceModeRef.current) {
         // Гибрид: запоминаем текст Web Speech как запасной. Если идёт запись —
@@ -267,16 +276,17 @@ function AiTrainerInner() {
   useEffect(() => { listeningRef.current = listening }, [listening])
   useEffect(() => { startMicRef.current = startMic }, [startMic])
 
-  // Непрерывный цикл: как только тренер молчит и не думает — снова слушаем
+  // Непрерывный цикл: как только тренер молчит и не думает — снова слушаем.
+  // В режиме push-to-talk ВЫКЛЮЧЕН — слушаем только по нажатию кнопки (не ловим шум вокруг).
   useEffect(() => {
-    if (!voiceMode || listening || speaking || loading) return
+    if (pushToTalk || !voiceMode || listening || speaking || loading) return
     const t = setTimeout(() => {
-      if (voiceModeRef.current && !speakingRef.current && !busyRef.current && !listeningRef.current) {
+      if (!pushToTalkRef.current && voiceModeRef.current && !speakingRef.current && !busyRef.current && !listeningRef.current) {
         startMicRef.current?.()
       }
     }, 900)  // пауза после речи Pablo — чтобы микрофон не поймал её хвост (эхо-петля)
     return () => clearTimeout(t)
-  }, [voiceMode, listening, speaking, loading])
+  }, [voiceMode, listening, speaking, loading, pushToTalk])
 
   // Отсев галлюцинаций Whisper на тишине/шуме (иначе тренер «говорит сам с собой»)
   const isVoiceJunk = (text) => {
@@ -403,11 +413,11 @@ function AiTrainerInner() {
       if (res.memory?.summary_text) setMemoryHint(res.memory.summary_text)
       const opening = res.opening || fallback
       setMessages([{ role: 'ai', reply: opening, translation: res.opening_translation || null, correction: null, character: ch }])
-      if (opening && speakOnRef.current) speak(opening, 'de-DE')
+      if (opening && speakOnRef.current) speak(opening, learnVoice)
     } catch {
       setSessionId(null)
       setMessages([{ role: 'ai', reply: fallback, translation: null, correction: null, character: ch }])
-      if (fallback && speakOnRef.current) speak(fallback, 'de-DE')
+      if (fallback && speakOnRef.current) speak(fallback, learnVoice)
     } finally {
       setLoading(false)
       setTimeout(() => inputRef.current?.focus(), 100)
@@ -474,11 +484,11 @@ function AiTrainerInner() {
             setTimeout(() => { setReaction(null); setSpeaking(false) }, 700)
           } else {
             playClip(corr ? CLIPS.wrong : CLIPS.correct, () => {
-              speakWithEvents(result.reply, 'de-DE', {
+              speakWithEvents(result.reply, learnVoice, {
                 onStart: () => setSpeaking(true),
                 onEnd:   () => {
                   if (voiceModeRef.current && corr) {
-                    speakWithEvents(corr, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => { setReaction(null); setSpeaking(false) } })
+                    speakWithEvents(corr, learnVoice, { onStart: () => setSpeaking(true), onEnd: () => { setReaction(null); setSpeaking(false) } })
                   } else {
                     setReaction(null); setSpeaking(false)
                   }
@@ -487,7 +497,7 @@ function AiTrainerInner() {
             })
           }
         } else {
-          if (speakOnRef.current) speak(result.reply, 'de-DE')
+          if (speakOnRef.current) speak(result.reply, learnVoice)
         }
       }
     } catch (e) {
@@ -549,7 +559,7 @@ function AiTrainerInner() {
   }
 
   const handleSpeak = (text) => {
-    speak(text, 'de-DE')
+    speak(text, learnVoice)
   }
 
   const resetSession = () => {
@@ -968,6 +978,11 @@ function AiTrainerInner() {
               <button onClick={toggleSpeak} title={speakOn ? 'Выключить голос тренера' : 'Включить голос тренера'}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 15, fontWeight: 600, opacity: speakOn ? 1 : 0.55 }}>
                 {speakOn ? '🔊' : '🔇'}
+              </button>
+              {/* Режим микрофона: 🎤 говорить по нажатию (push-to-talk) / ♾️ слушать постоянно */}
+              <button onClick={togglePtt} title={pushToTalk ? 'Говорить по нажатию (не ловит шум). Нажми — постоянное слушание' : 'Постоянное слушание. Нажми — говорить по кнопке'}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 15, fontWeight: 600 }}>
+                {pushToTalk ? '🎤' : '♾️'}
               </button>
               <button onClick={exitVoice} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
                 💬 {V.text}

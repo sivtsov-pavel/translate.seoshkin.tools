@@ -726,11 +726,18 @@ const TRAINER_LANG_NAMES = {
 // bilingual (§1.8/§5 ТЗ): переводить ли реплику тренера на язык ученика.
 // По умолчанию ВЫКЛ — тренер говорит только на изучаемом языке, без перевода (§5).
 // Тумблер «сначала на родном» может включить перевод; тогда translation заполняется.
-export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk', memory = null, targetWords = null, bilingual = false }) {
+// Изучаемый язык → как называть его в промте тренера (на каком языке отвечать)
+const LEARN_LANG_NAMES = {
+  de: 'німецькою мовою (German)', en: 'англійською мовою (English)', es: 'іспанською мовою (español)',
+  fr: 'французькою мовою (français)', it: 'італійською мовою (italiano)', pt: 'португальською мовою (português)',
+}
+export async function chatWithTrainer({ messages, character = 'lena', scenario = 'free', userLang = 'uk', memory = null, targetWords = null, bilingual = false, targetLang = 'de' }) {
   const char = TRAINER_CHARACTERS[character] || TRAINER_CHARACTERS.lena
   const scenarioDesc = TRAINER_SCENARIOS[scenario] || TRAINER_SCENARIOS.free
   // Мова підказок/перекладу = мова інтерфейсу учня (усі 10 локалей)
   const userLangName = TRAINER_LANG_NAMES[userLang] || TRAINER_LANG_NAMES.uk
+  // Мова, якою тренер ВЕДЕ розмову = вивчувана мова учня (de/en/es…)
+  const learnLangName = LEARN_LANG_NAMES[targetLang] || LEARN_LANG_NAMES.de
 
   // Режим «Тренер по уроку»: фокус на словах конкретного урока
   let wordsBlock = ''
@@ -758,8 +765,8 @@ export async function chatWithTrainer({ messages, character = 'lena', scenario =
 Сценарій: ${scenarioDesc}.
 ${wordsBlock}${memoryBlock}
 Правила:
-1. Основна відповідь ЗАВЖДИ тільки німецькою мовою (reply)
-2. Якщо учень написав не-німецькою — зрозумій сенс та відповідай так, ніби він написав правильно по-німецьки
+1. Основна відповідь ЗАВЖДИ тільки ${learnLangName} (reply)
+2. Якщо учень написав іншою мовою — зрозумій сенс та відповідай так, ніби він написав правильно ${learnLangName}
 3. Виправляй помилки учня дружньо, без осуду (correction — мовою: ${userLangName})
 4. Якщо помилок немає — correction: null
 ${translationRule}

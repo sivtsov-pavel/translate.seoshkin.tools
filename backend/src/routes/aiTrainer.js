@@ -49,7 +49,8 @@ export async function aiTrainerRoutes(fastify) {
     try {
       // Даже в stateless-режиме подмешиваем память — тренер «помнит» ученика
       const memory = await loadMemory(request.user.id)
-      return await chatWithTrainer({ messages: messages.slice(-20), character, scenario, userLang, memory, bilingual })
+      const targetLang = request.headers['x-target-lang'] || 'de'
+      return await chatWithTrainer({ messages: messages.slice(-20), character, scenario, userLang, memory, bilingual, targetLang })
     } catch (e) {
       fastify.log.error(e)
       return reply.status(500).send({ error: e.message })
@@ -141,6 +142,7 @@ export async function aiTrainerRoutes(fastify) {
     )
     const sessionId = rows[0].id
     const memory = await loadMemory(request.user.id)
+    const targetLang = request.headers['x-target-lang'] || 'de'
 
     // Первую реплику генерирует ИИ с учётом памяти — не повторяем одинаковое приветствие
     let opening = null, opening_translation = null
@@ -150,7 +152,7 @@ export async function aiTrainerRoutes(fastify) {
         : (memory && memory.summary_text)
           ? 'Розпочни розмову першим. Ти вже спілкувався з цим учнем раніше — привітайся і природно згадай щось із минулих розмов АБО постав НОВЕ питання за сценарієм. НЕ повторюй щоразу однакове привітання.'
           : 'Розпочни розмову першим: коротко привітайся і постав перше питання за сценарієм.'
-      const r = await chatWithTrainer({ messages: [{ role: 'user', content: instr }], character, scenario, userLang, memory, targetWords: words, bilingual })
+      const r = await chatWithTrainer({ messages: [{ role: 'user', content: instr }], character, scenario, userLang, memory, targetWords: words, bilingual, targetLang })
       opening = r && r.reply ? r.reply : null
       opening_translation = (r && r.translation && r.translation !== 'null') ? r.translation : null
     } catch (e) {
@@ -207,6 +209,7 @@ export async function aiTrainerRoutes(fastify) {
 
     try {
       const memory = await loadMemory(request.user.id)
+      const targetLang = request.headers['x-target-lang'] || 'de'
       const result = await chatWithTrainer({
         messages: openaiMessages,
         character: session.character,
@@ -215,6 +218,7 @@ export async function aiTrainerRoutes(fastify) {
         memory,
         targetWords: session.target_words,
         bilingual,
+        targetLang,
       })
       // Сохраняем ответ тренера
       await db.query(
