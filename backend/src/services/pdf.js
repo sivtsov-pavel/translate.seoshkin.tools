@@ -6,7 +6,7 @@ import { randomUUID } from 'crypto'
 import { config } from '../config.js'
 
 const execFileP = promisify(execFile)
-const MAX_PAGES = 60 // защита от гигантских PDF (каждая страница = vision-вызов)
+const MAX_PAGES = 120 // защита от гигантских PDF (каждая страница = vision-вызов). Учебник ~90-100 стр.
 
 // Конвертирует PDF (буфер) в PNG-страницы в uploadDir через pdftoppm (poppler).
 // Возвращает [{ filename }] — как обычные загруженные фото, дальше обрабатываются как страницы.
