@@ -552,16 +552,20 @@ export default function Layout({ children }) {
           title={`Изучаемый язык: ${tgt.name}`}>
           {tgt.flag} {tgt.name}
         </Link>
-        {location.pathname !== '/' ? (
-          <button onClick={() => navigate(-1)} style={{
-            ...iconBtn, fontSize: 13, fontWeight: 700, color: 'var(--accent)',
-            padding: '0 10px', width: 'auto', gap: 4,
-          }}>
-            ← Назад
-          </button>
-        ) : (
-          <div style={{ width: 40 }} />
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {location.pathname !== '/' && (
+            <button onClick={() => navigate(-1)} style={{
+              ...iconBtn, fontSize: 13, fontWeight: 700, color: 'var(--accent)',
+              padding: '0 8px', width: 'auto', gap: 4,
+            }}>
+              ← Назад
+            </button>
+          )}
+          {/* Флаг изучаемого языка справа — быстрый переход в настройки языка */}
+          <Link to="/settings" title={`Изучаемый язык: ${tgt.name}`} style={{ fontSize: 22, textDecoration: 'none', lineHeight: 1 }}>
+            {tgt.flag}
+          </Link>
+        </div>
       </header>
 
       {/* Офлайн-плашка: аккуратно ВВЕРХУ, сразу под топбаром-хедером */}

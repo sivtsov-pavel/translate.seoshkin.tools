@@ -7,6 +7,9 @@ import { useAuthStore } from '../store/auth.js'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 import { cardUrl, shareLink } from '../utils/share.js'
 
+// Название изучаемого языка — для плейсхолдера поиска (какой словарь)
+const TARGET_LANG_NAME = { de: 'немецкий', es: 'испанский', fr: 'французский', it: 'итальянский', en: 'английский', pt: 'португальский' }
+
 const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
 
 // Мобильный брейкпоинт (≤640px) — адаптация только для мобилки, на ПК всё как было
@@ -229,7 +232,7 @@ export default function Vocabulary() {
   if (loading) return <p style={{ padding: 20, color: 'var(--ink-soft)' }}>{t.vocabulary.loading}</p>
 
   return (
-    <div style={{ paddingBottom: 40 }}>
+    <div style={{ paddingTop: 8, paddingBottom: 40 }}>
       {/* Заголовок + вкладки */}
       <div style={{ padding: '0 14px 8px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0, fontSize: 22, flex: '0 0 auto' }}>{t.vocabulary.title}</h1>
@@ -323,7 +326,7 @@ export default function Vocabulary() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Поиск по немецкому или переводу..."
+              placeholder={`Поиск: слово (${TARGET_LANG_NAME[localStorage.getItem('target_lang') || 'de'] || 'изучаемый язык'}) или перевод…`}
               style={{ width: '100%', paddingRight: 34, boxSizing: 'border-box' }}
             />
             {search
