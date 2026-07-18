@@ -331,10 +331,18 @@ export default function LessonList() {
 
   return (
     <div style={{ paddingBottom: 20 }}>
-      <h1 style={{ margin: '0 0 16px', fontFamily: 'Georgia,serif', fontSize: 22 }}>
-        {t.lessons.title}
-        {user?.role === 'owner' && <span style={{ fontSize: 14, color: 'var(--ink-soft)', fontFamily: 'inherit', fontWeight: 400, marginLeft: 12 }}>вид учителя</span>}
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', margin: '0 0 16px' }}>
+        <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 22 }}>
+          {t.lessons.title}
+          {user?.role === 'owner' && <span style={{ fontSize: 14, color: 'var(--ink-soft)', fontFamily: 'inherit', fontWeight: 400, marginLeft: 12 }}>вид учителя</span>}
+        </h1>
+        {user?.role === 'owner' && (
+          <button onClick={() => navigate('/lessons/new')}
+            style={{ marginLeft: 'auto', padding: '8px 16px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+            + {t.nav.newLesson || 'Новый урок'}
+          </button>
+        )}
+      </div>
 
       {/* Прогресс-бар словаря */}
       {totalWords > 0 && (

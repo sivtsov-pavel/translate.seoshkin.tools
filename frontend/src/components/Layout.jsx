@@ -15,9 +15,18 @@ import { initOffline, isOnline } from '../offline/store.js'
 
 const SIDEBAR_W = 220
 
+// Флаг + название активного изучаемого языка (для верхней панели)
+const TARGET_META = {
+  de: { flag: '🇩🇪', name: 'Немецкий' }, es: { flag: '🇪🇸', name: 'Испанский' },
+  fr: { flag: '🇫🇷', name: 'Французский' }, it: { flag: '🇮🇹', name: 'Итальянский' },
+  en: { flag: '🇬🇧', name: 'Английский' }, pt: { flag: '🇵🇹', name: 'Португальский' },
+}
+function targetMeta() { return TARGET_META[localStorage.getItem('target_lang') || 'de'] || TARGET_META.de }
+
 export default function Layout({ children }) {
   const { user, logout, refreshUser, impersonating, stopImpersonate } = useAuthStore()
   const returnToAdmin = () => { stopImpersonate(); window.location.href = '/admin' }
+  const tgt = targetMeta()
   const { t, lang } = useI18nStore()
   const E = ex(lang)
   const { theme, toggle: toggleTheme } = useThemeStore()
@@ -539,8 +548,9 @@ export default function Layout({ children }) {
             <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
           </svg>
         </button>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)', fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 18 }}>
-          🇩🇪 {t.nav.appName}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)', fontFamily: 'var(--heading-font, Georgia, serif)', fontWeight: 700, fontSize: 18 }}
+          title={`Изучаемый язык: ${tgt.name}`}>
+          {tgt.flag} {tgt.name}
         </Link>
         {location.pathname !== '/' ? (
           <button onClick={() => navigate(-1)} style={{
@@ -681,7 +691,7 @@ export default function Layout({ children }) {
           </button>
         ) : (
           <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>
-            🇩🇪 Deutsch lernen
+            {tgt.flag} {tgt.name}
           </span>
         )}
       </header>
@@ -731,7 +741,7 @@ export default function Layout({ children }) {
           background: 'none', border: 'none', cursor: 'pointer',
           color: 'var(--ink-soft)', fontSize: 10,
         }}>
-          <i className="bi bi-three-dots" style={{ fontSize: 20 }} />
+          <i className="bi bi-list" style={{ fontSize: 22 }} />
           <span>{t.nav.more}</span>
         </button>
       </nav>
