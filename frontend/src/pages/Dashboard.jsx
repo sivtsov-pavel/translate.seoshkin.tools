@@ -23,6 +23,10 @@ export default function Dashboard() {
   })
   const [showLessons, setShowLessons] = useState(() => localStorage.getItem('hide_lessons') !== '1')
   const toggleLessons = () => setShowLessons(v => { localStorage.setItem('hide_lessons', v ? '1' : '0'); return !v })
+  // Активный курс: «Сегодня» показывает уроки только выбранного курса (чтобы не складировалось)
+  const [courses, setCourses] = useState([])
+  const [activeCourse, setActiveCourse] = useState(() => localStorage.getItem('active_course') || '')
+  const changeCourse = (v) => { localStorage.setItem('active_course', v); setActiveCourse(v) }
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
@@ -45,6 +49,7 @@ export default function Dashboard() {
   useEffect(() => {
     reloadStats()
     api.get('/class-games').then(rows => setGames((rows || []).filter(g => g.status === 'ready'))).catch(() => {})
+    api.get('/courses').then(cs => setCourses(Array.isArray(cs) ? cs : [])).catch(() => {})
   }, []) // eslint-disable-line
 
   // Повторить пройденный урок — вернуть его упражнения «на сегодня»
@@ -78,7 +83,22 @@ export default function Dashboard() {
   )
 
   const total        = stats?.total ?? 0
-  const lessons      = stats?.lessons ?? []
+  const allLessons   = stats?.lessons ?? []
+  // Фильтр по активному курсу (пусто = все). Наборы/личные (без course_id) показываем всегда.
+  const lessons = activeCourse
+    ? allLessons.filter(l => String(l.course_id || '') === activeCourse || l.is_set)
+    : allLessons
+  // Селектор активного курса — показываем, когда курсов ≥2 (иначе не нужен)
+  const courseSelector = courses.length >= 2 && (
+    <div style={{ padding: '4px 12px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>📚 Курс:</span>
+      <select value={activeCourse} onChange={e => changeCourse(e.target.value)}
+        style={{ flex: 1, maxWidth: 320, padding: '7px 10px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 13, fontWeight: 600 }}>
+        <option value="">Все курсы</option>
+        {courses.map(c => <option key={c.id} value={String(c.id)}>{c.title}</option>)}
+      </select>
+    </div>
+  )
 
   if (total === 0) {
     return (
@@ -98,6 +118,8 @@ export default function Dashboard() {
   return (
     <div style={{ paddingBottom: 90 }}>
       <style>{`.chips-grid { grid-template-columns: 1fr; } @media (min-width: 480px) { .chips-grid { grid-template-columns: 1fr 1fr; } }`}</style>
+
+      {courseSelector}
 
       {/* Hero — просто заголовок и счёт */}
       <div style={{ padding: '20px 20px 14px' }}>
