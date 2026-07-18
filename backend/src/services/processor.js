@@ -179,8 +179,15 @@ async function findExistingTranslations(wordDe, targetLang, excludeId = 0) {
   return rows[0]?.translations || null
 }
 
+// Платформенный ключ OpenAI на генерацию картинок использует только супер-админ (Павел).
+// Другой учитель, кто захочет генерить свои картинки, добавляет свой ключ OpenAI в настройках
+// (фича «свой ключ» — TODO). Пока: чужим авто-генерация недоступна, только банк слов (бесплатно).
+const IMAGE_GEN_OWNER_ID = 1
+
 export async function enrichLesson(lessonId) {
-  const targetLang = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
+  const lrow = (await db.query('SELECT target_lang, owner_id FROM lessons WHERE id=$1', [lessonId])).rows[0] || {}
+  const targetLang = lrow.target_lang || 'de'
+  const canGenImages = lrow.owner_id === IMAGE_GEN_OWNER_ID
   const activeLocales = await getActiveLocales(targetLang) // напр. ['ru','es'] для испанского
   // 1) Переводы + примеры для неполных слов урока
   try {
@@ -211,9 +218,11 @@ export async function enrichLesson(lessonId) {
       for (const w of rows) {
         if (isFunctionWord(w.word_de)) continue
         try {
-          // Банк слов: уже есть картинка такого же слова → переиспользуем (0 затрат)
+          // Банк слов: уже есть картинка такого же слова → переиспользуем (0 затрат, всем)
           const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
           if (existing) { await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [existing, w.id]); continue }
+          // Платная генерация (gpt-image-1) — только супер-админ (защита токенов). Остальным — без картинки.
+          if (!canGenImages) continue
           const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
           if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
         } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
@@ -754,4 +763,29 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
     }
   })()
   return { added, duplicates: dup, themes: [...byTheme.keys()], sets: affected.length, sentences: savedSents }
+}
+
+// ── Устойчивая дообработка «зависших» уроков ────────────────────────────────
+// Фоновая обработка PDF-курса идёт в памяти процесса и обрывается при рестарте
+// бэкенда (деплой/сбой) — pending-уроки остаются необработанными. Дренер берёт
+// их по одному и доводит до конца. Идемпотентно, переживает рестарты.
+let _draining = false
+export async function drainPendingLessons() {
+  if (_draining) return
+  _draining = true
+  try {
+    // После рестарта живого цикла нет → «processing» с медиа считаем зависшими, возвращаем в очередь
+    await db.query(`UPDATE lessons SET status='pending'
+      WHERE status='processing' AND EXISTS (SELECT 1 FROM lesson_media m WHERE m.lesson_id = lessons.id)`)
+    while (true) {
+      const { rows } = await db.query(
+        `SELECT id, owner_id FROM lessons
+         WHERE status='pending' AND EXISTS (SELECT 1 FROM lesson_media m WHERE m.lesson_id = lessons.id)
+         ORDER BY id LIMIT 1`)
+      if (!rows[0]) break
+      // processLesson сам ставит status='processing'/'done'/'error' — errored не попадёт снова в pending
+      try { await processLesson(rows[0].id, rows[0].owner_id) }
+      catch (e) { console.error('drainPendingLessons', rows[0].id, e.message) }
+    }
+  } finally { _draining = false }
 }

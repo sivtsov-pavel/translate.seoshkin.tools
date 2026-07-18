@@ -3,7 +3,7 @@ import { unlink } from 'fs/promises'
 import { db } from '../db/index.js'
 import { saveCourseCover } from '../services/imageOptimize.js'
 import { pdfToImages } from '../services/pdf.js'
-import { processLesson } from '../services/processor.js'
+import { drainPendingLessons } from '../services/processor.js'
 import { unlockedCount, unlockDateForIndex } from '../services/drip.js'
 
 export async function coursesRoutes(fastify) {
@@ -73,6 +73,30 @@ export async function coursesRoutes(fastify) {
     }
 
     return { course: course[0], lessons: rows, schedule }
+  })
+
+  // Глобальный индикатор: сколько уроков владельца сейчас в обработке/очереди (+ где).
+  // Фронт опрашивает и показывает фоновый бейдж «⏳ обрабатывается N».
+  fastify.get('/api/lessons/processing-status', { preHandler: [fastify.authenticate] }, async (request) => {
+    if (request.user.role !== 'owner') return { processing: 0, pending: 0, error: 0, total: 0 }
+    const { rows } = await db.query(`
+      SELECT
+        count(*) FILTER (WHERE status='processing')::int AS processing,
+        count(*) FILTER (WHERE status='pending')::int    AS pending,
+        count(*) FILTER (WHERE status='error')::int      AS error
+      FROM lessons
+      WHERE owner_id = $1 AND EXISTS (SELECT 1 FROM lesson_media m WHERE m.lesson_id = lessons.id)`,
+      [request.user.id])
+    const r = rows[0] || {}
+    // Что именно сейчас обрабатывается (для подсказки в бейдже)
+    const { rows: cur } = await db.query(
+      `SELECT id, title, progress, course_id FROM lessons
+       WHERE owner_id = $1 AND status='processing' ORDER BY id LIMIT 1`, [request.user.id])
+    return {
+      processing: r.processing || 0, pending: r.pending || 0, error: r.error || 0,
+      active: (r.processing || 0) + (r.pending || 0),
+      current: cur[0] || null,
+    }
   })
 
   // Ученик: получить своё расписание дрип-выдачи по курсу
@@ -146,14 +170,10 @@ export async function coursesRoutes(fastify) {
       created.push(lessonId)
     }
 
-    // Отвечаем сразу — обработка страниц идёт в фоне, последовательно (vision-вызовы тяжёлые)
+    // Отвечаем сразу — обработка страниц идёт в фоне через устойчивый дренер
+    // (переживает рестарт бэкенда: на старте дообработает всё pending).
     reply.code(202).send({ started: true, lessons: created.length })
-    ;(async () => {
-      for (const lessonId of created) {
-        try { await processLesson(lessonId, request.user.id) }
-        catch (e) { fastify.log.error({ lessonId, err: e }, 'Ошибка обработки урока из PDF курса') }
-      }
-    })()
+    drainPendingLessons().catch(e => fastify.log.error({ err: e }, 'drainPendingLessons после PDF'))
   })
 
   // Создать курс

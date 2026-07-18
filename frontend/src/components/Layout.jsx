@@ -6,6 +6,7 @@ import { ex } from '../utils/extraI18n.js'
 import { useThemeStore } from '../store/theme.js'
 import { useAdminOpStore } from '../store/adminOp.js'
 import { useSettingsStore } from '../store/settings.js'
+import ProcessingBadge from './ProcessingBadge.jsx'
 import { api } from '../api/client.js'
 import LangSwitcher from './LangSwitcher.jsx'
 import TargetSwitcher from './TargetSwitcher.jsx'
@@ -491,6 +492,9 @@ export default function Layout({ children }) {
       {/* Флаговая полоска */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 210,
         background: 'linear-gradient(90deg, #111 0 33%, #B3382C 33% 66%, #C9A54A 66% 100%)' }} />
+
+      {/* Фоновый индикатор обработки уроков (правый верхний угол) */}
+      <ProcessingBadge />
 
       {/* Баннер имперсонации: супер-админ вошёл как другой пользователь → кнопка вернуться */}
       {impersonating && (

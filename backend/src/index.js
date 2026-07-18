@@ -87,4 +87,6 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   startDripCron()
   await app.listen({ port: config.port, host: config.host })
   console.log(`Backend запущен на http://${config.host}:${config.port}`)
+  // Дообработка уроков, застрявших после прошлого рестарта (PDF-курсы и т.п.) — в фоне
+  import('./services/processor.js').then(m => m.drainPendingLessons().catch(e => console.error('drain on boot:', e.message)))
 }
