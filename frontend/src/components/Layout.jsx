@@ -187,7 +187,8 @@ export default function Layout({ children }) {
     { to: '/translations', icon: 'bi-globe2',           label: t.nav.translations },
     { to: '/report',       icon: 'bi-bar-chart-fill',   label: t.nav.report },
   ] : [
-    { to: '/join',         icon: 'bi-building-fill',        label: t.nav.myClass },
+    { to: '/join',         icon: 'bi-building-fill',         label: t.nav.myClass },
+    { to: '/courses',      icon: 'bi-mortarboard-fill',      label: t.nav.courses },
     { to: '/my-words',     icon: 'bi-journal-bookmark-fill', label: t.nav.myWords },
   ]
 

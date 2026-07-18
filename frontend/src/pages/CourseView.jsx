@@ -173,6 +173,7 @@ export default function CourseView() {
 }
 
 function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
+  const navigate = useNavigate()
   const [editNum, setEditNum] = useState(String(lesson.lesson_number ?? ''))
   const [saving, setSaving]   = useState(false)
   const [regen, setRegen]     = useState(false)
@@ -234,6 +235,14 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
             title="Пересоздать упражнения из существующих слов (без сканирования фото)"
             style={{ fontSize: 12, padding: '4px 10px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>
             {regen ? '⏳' : '⚙️ Упражнения'}
+          </button>
+        )}
+        {/* Ученик: открыть готовый урок → упражнения (курс становится реально проходимым) */}
+        {status === 'done' && lesson.words_total > 0 && (
+          <button
+            onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
+            style={{ fontSize: 13, padding: '6px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}>
+            ✅ {isOwner ? 'Открыть' : 'Начать'}
           </button>
         )}
       </div>
