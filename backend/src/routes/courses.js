@@ -75,6 +75,20 @@ export async function coursesRoutes(fastify) {
     return { course: course[0], lessons: rows, schedule }
   })
 
+  // Учитель: повторить обработку уроков курса, упавших с ошибкой (напр. после пополнения OpenAI).
+  // Сбрасывает error→pending и запускает устойчивый дренер.
+  fastify.post('/api/courses/:id/retry-failed', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const courseId = parseInt(request.params.id)
+    const { rows } = await db.query(
+      `UPDATE lessons SET status='pending', progress='В очереди на повтор...'
+       WHERE course_id = $1 AND owner_id = $2 AND status='error'
+         AND EXISTS (SELECT 1 FROM lesson_media m WHERE m.lesson_id = lessons.id)
+       RETURNING id`, [courseId, request.user.id])
+    reply.code(202).send({ retry: rows.length })
+    drainPendingLessons().catch(e => fastify.log.error({ err: e }, 'drainPendingLessons retry-failed'))
+  })
+
   // Глобальный индикатор: сколько уроков владельца сейчас в обработке/очереди (+ где).
   // Фронт опрашивает и показывает фоновый бейдж «⏳ обрабатывается N».
   fastify.get('/api/lessons/processing-status', { preHandler: [fastify.authenticate] }, async (request) => {

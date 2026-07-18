@@ -169,6 +169,17 @@ export default function CourseView() {
             style={{ ...btnSecondary, cursor: uploadingPdf ? 'default' : 'pointer', opacity: uploadingPdf ? 0.6 : 1 }}>
             {uploadingPdf ? '⏳ Загружаю…' : '📦 Загрузить курс (PDF)'}
           </button>
+          {/* Повтор ошибочных уроков (напр. после пополнения OpenAI) */}
+          {lessons.some(l => l.status === 'error') && (
+            <button onClick={async () => {
+              const n = lessons.filter(l => l.status === 'error').length
+              if (!window.confirm(`Повторить обработку ${n} уроков с ошибкой? (нужна доступная квота OpenAI)`)) return
+              try { const r = await api.post(`/courses/${id}/retry-failed`); alert(`Отправлено на повтор: ${r.retry}. Идёт в фоне.`); setTimeout(load, 3000) }
+              catch (e) { alert('Ошибка: ' + e.message) }
+            }} style={{ ...btnSecondary, borderColor: 'var(--red, #d64545)', color: 'var(--red, #d64545)' }}>
+              🔁 Повторить ошибочные ({lessons.filter(l => l.status === 'error').length})
+            </button>
+          )}
           {allLessons.length > 0 && (
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <select value={attachId} onChange={e => setAttachId(e.target.value)} style={{ fontSize: 14, maxWidth: 280 }}>
