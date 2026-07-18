@@ -72,6 +72,7 @@ export const fr = {
     startSession: 'Commencer →',
     done: 'Terminé',
     start: 'Commencer',
+    exam: 'Test de la leçon',
     repeatAll: 'Tout revoir',
     lessonWords: 'Mots de la leçon',
     listen: 'Écouter',

@@ -72,6 +72,7 @@ export const uk = {
     startSession: 'Почати повторення →',
     done: 'Пройдено',
     start: 'Почати',
+    exam: 'Залік з уроку',
     repeatAll: 'Повторити все',
     lessonWords: 'Слова уроку',
     listen: 'Прослухати',

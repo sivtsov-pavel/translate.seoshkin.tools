@@ -74,6 +74,7 @@ export const ar = {
     startSession: 'ابدأ ←',
     done: 'مكتمل',
     start: 'ابدأ',
+    exam: 'اختبار الدرس',
     repeatAll: 'مراجعة الكل',
     lessonWords: 'كلمات الدرس',
     listen: 'استمع',

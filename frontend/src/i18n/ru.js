@@ -75,6 +75,7 @@ export const ru = {
     startSession: 'Начать повторение →',
     done: 'Пройдено',
     start: 'Начать',
+    exam: 'Зачёт по уроку',
     repeatAll: 'Повторить всё',
     lessonWords: 'Слова урока',
     listen: 'Прослушать',

@@ -472,19 +472,6 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
           <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{showExercises ? '▲ свернуть' : '▼ упражнения'}</span>
         </div>
       </div>
-      {/* Кнопка «Начать» — на всю ширину блока */}
-      <button
-        onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}`)}
-        style={{
-          width: '100%', marginTop: 12, boxSizing: 'border-box',
-          background: 'var(--accent)', color: 'var(--accent-ink)',
-          border: 'none', borderRadius: 12, padding: '11px 16px',
-          fontSize: 15, fontWeight: 700, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}>
-        ▶ {t.dashboard.start}
-      </button>
-
       {/* Чипы типов упражнений — свёрнуты по умолчанию, раскрываются нижней полосой */}
       {showExercises && (
       <div className="chips-grid" style={{ display: 'grid', gap: 8, marginTop: 14 }}>
@@ -558,6 +545,19 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
         )}
       </div>
       )}
+
+      {/* Кнопка «Зачёт по уроку» — под упражнениями, на всю ширину */}
+      <button
+        onClick={() => navigate(`/exercise-session?lesson_id=${lesson.lesson_id}`)}
+        style={{
+          width: '100%', marginTop: 14, boxSizing: 'border-box',
+          background: 'var(--accent)', color: 'var(--accent-ink)',
+          border: 'none', borderRadius: 12, padding: '11px 16px',
+          fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        }}>
+        ✅ {t.dashboard.exam || 'Зачёт по уроку'}
+      </button>
 
       {/* Слова урока — нижняя панель (с переносом, чтобы иконки не вылезали за экран) */}
       <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

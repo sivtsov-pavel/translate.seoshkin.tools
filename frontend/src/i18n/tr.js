@@ -72,6 +72,7 @@ export const tr = {
     startSession: 'Başla →',
     done: 'Tamamlandı',
     start: 'Başlat',
+    exam: 'Ders sınavı',
     repeatAll: 'Hepsini tekrar et',
     lessonWords: 'Ders kelimeleri',
     listen: 'Dinle',

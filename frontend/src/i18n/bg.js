@@ -72,6 +72,7 @@ export const bg = {
     startSession: 'Започни →',
     done: 'Изпълнено',
     start: 'Старт',
+    exam: 'Тест по урока',
     repeatAll: 'Прегледай всичко',
     lessonWords: 'Думи от урока',
     listen: 'Слушай',

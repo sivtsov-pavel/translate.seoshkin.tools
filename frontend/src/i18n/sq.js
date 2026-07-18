@@ -72,6 +72,7 @@ export const sq = {
     startSession: 'Fillo përsëritjen →',
     done: 'Kryer',
     start: 'Fillo',
+    exam: 'Testi i mësimit',
     repeatAll: 'Përsërit gjithçka',
     lessonWords: 'Fjalët e mësimit',
     listen: 'Dëgjo',

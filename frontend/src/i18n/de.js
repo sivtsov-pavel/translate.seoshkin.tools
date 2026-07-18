@@ -75,6 +75,7 @@ export const de = {
     startSession: 'Wiederholung starten →',
     done: 'Erledigt',
     start: 'Starten',
+    exam: 'Lektionstest',
     repeatAll: 'Alles üben',
     lessonWords: 'Wörter der Lektion',
     listen: 'Anhören',

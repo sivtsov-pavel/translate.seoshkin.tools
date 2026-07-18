@@ -72,6 +72,7 @@ export const en = {
     startSession: 'Start review →',
     done: 'Done',
     start: 'Start',
+    exam: 'Lesson test',
     repeatAll: 'Review all',
     lessonWords: 'Lesson words',
     listen: 'Listen',
