@@ -435,10 +435,21 @@ function Schools() {
 function Users() {
   const [rows, setRows] = useState(null)
   const [err, setErr] = useState('')
+  const { user, impersonate } = useAuthStore()
   useEffect(() => { api.get('/admin/users').then(setRows).catch(e => setErr(e.message)) }, [])
   if (err) return <div style={{ color: 'var(--red)' }}>{err}</div>
   if (!rows) return <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>
   const fmt = d => d ? new Date(d).toLocaleDateString('ru-RU') : '—'
+
+  // Войти как выбранный пользователь (без пароля) и перейти на главную под ним
+  const loginAs = async (u) => {
+    if (!window.confirm(`Войти как ${u.email}? Вы будете действовать от его имени (вернуться — по баннеру сверху).`)) return
+    try {
+      const res = await api.post(`/admin/impersonate/${u.id}`)
+      impersonate(res.token, res.user)
+      window.location.href = '/'
+    } catch (e) { alert('Ошибка: ' + e.message) }
+  }
   return (
     <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 560 }}>
@@ -450,6 +461,7 @@ function Users() {
             <th style={{ padding: '10px 12px', textAlign: 'right' }}>Уроки</th>
             <th style={{ padding: '10px 12px', textAlign: 'right' }}>Слова</th>
             <th style={{ padding: '10px 12px' }}>Активность</th>
+            <th style={{ padding: '10px 12px' }}></th>
           </tr>
         </thead>
         <tbody>
@@ -464,6 +476,15 @@ function Users() {
               <td style={{ padding: '9px 12px', textAlign: 'right' }}>{u.lessons || ''}</td>
               <td style={{ padding: '9px 12px', textAlign: 'right' }}>{u.words || ''}</td>
               <td style={{ padding: '9px 12px', color: 'var(--ink-soft)' }}>{fmt(u.last_active)}</td>
+              <td style={{ padding: '9px 12px' }}>
+                {u.id !== user?.id && (
+                  <button onClick={() => loginAs(u)}
+                    title={`Войти как ${u.email} без пароля`}
+                    style={{ fontSize: 12, padding: '4px 10px', background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 8, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    ↪ Войти как
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

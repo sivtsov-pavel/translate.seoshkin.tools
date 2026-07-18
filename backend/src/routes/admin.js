@@ -136,4 +136,17 @@ export async function adminRoutes(fastify) {
       ORDER BY u.id`)
     return rows
   })
+
+  // Супер-админ: «Войти как» — получить токен любого пользователя БЕЗ его пароля.
+  // Токен помечен impersonatedBy=1, чтобы показать баннер и дать вернуться к себе.
+  fastify.post('/api/admin/impersonate/:userId', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const userId = parseInt(request.params.userId)
+    const { rows } = await db.query('SELECT id, email, role, full_name FROM users WHERE id = $1', [userId])
+    if (!rows[0]) return reply.status(404).send({ error: 'Пользователь не найден' })
+    const u = rows[0]
+    // Подписываем токен целевого пользователя + метка, что это имперсонация супер-админом
+    const token = fastify.jwt.sign({ id: u.id, email: u.email, role: u.role, impersonatedBy: request.user.id })
+    return { token, user: { id: u.id, email: u.email, role: u.role, full_name: u.full_name } }
+  })
 }

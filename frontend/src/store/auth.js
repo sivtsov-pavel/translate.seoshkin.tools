@@ -26,6 +26,34 @@ export const useAuthStore = create((set, get) => ({
   logout: () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    set({ token: null, user: null })
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_user')
+    set({ token: null, user: null, impersonating: null })
+  },
+
+  // Супер-админ «Войти как»: сохраняем свой токен, подменяем на токен целевого юзера.
+  // impersonating != null, пока идёт имперсонация (сохранён admin_token своего аккаунта).
+  impersonating: localStorage.getItem('admin_token') ? JSON.parse(localStorage.getItem('user') || 'null') : null,
+
+  impersonate: (token, user) => {
+    // Сохраняем СВОЙ (админский) токен, только если ещё не в имперсонации
+    if (!localStorage.getItem('admin_token')) {
+      localStorage.setItem('admin_token', localStorage.getItem('token'))
+      localStorage.setItem('admin_user', localStorage.getItem('user'))
+    }
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(user))
+    set({ token, user, impersonating: user })
+  },
+
+  stopImpersonate: () => {
+    const adminToken = localStorage.getItem('admin_token')
+    const adminUser = localStorage.getItem('admin_user')
+    if (!adminToken) return
+    localStorage.setItem('token', adminToken)
+    localStorage.setItem('user', adminUser)
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_user')
+    set({ token: adminToken, user: JSON.parse(adminUser), impersonating: null })
   },
 }))

@@ -15,7 +15,8 @@ import { initOffline, isOnline } from '../offline/store.js'
 const SIDEBAR_W = 220
 
 export default function Layout({ children }) {
-  const { user, logout, refreshUser } = useAuthStore()
+  const { user, logout, refreshUser, impersonating, stopImpersonate } = useAuthStore()
+  const returnToAdmin = () => { stopImpersonate(); window.location.href = '/admin' }
   const { t, lang } = useI18nStore()
   const E = ex(lang)
   const { theme, toggle: toggleTheme } = useThemeStore()
@@ -490,6 +491,22 @@ export default function Layout({ children }) {
       {/* Флаговая полоска */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 210,
         background: 'linear-gradient(90deg, #111 0 33%, #B3382C 33% 66%, #C9A54A 66% 100%)' }} />
+
+      {/* Баннер имперсонации: супер-админ вошёл как другой пользователь → кнопка вернуться */}
+      {impersonating && (
+        <div style={{
+          position: 'fixed', top: 3, left: 0, right: 0, zIndex: 400,
+          background: '#B3382C', color: '#fff', padding: '6px 14px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+          fontSize: 13, fontWeight: 600, flexWrap: 'wrap',
+        }}>
+          <span>👁️ Вы вошли как <b>{impersonating.email}</b> ({impersonating.role === 'owner' ? 'учитель' : 'ученик'})</span>
+          <button onClick={returnToAdmin} style={{
+            padding: '4px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.6)',
+            background: 'rgba(255,255,255,.15)', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 12,
+          }}>↩ Вернуться к себе</button>
+        </div>
+      )}
 
       {/* Постоянный сайдбар (только десктоп ≥1024px, управляется через CSS) */}
       <nav className="layout-sidebar" style={{
