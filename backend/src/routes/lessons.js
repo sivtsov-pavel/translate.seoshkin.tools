@@ -2,6 +2,9 @@ import { db } from '../db/index.js'
 import { generateLetterFill } from '../services/claude.js'
 import { regenerateExercisesFromDb, processNewMedia, enrichLesson } from '../services/processor.js'
 import { pdfToImages } from '../services/pdf.js'
+import { unlink } from 'node:fs/promises'
+import { join } from 'node:path'
+import { config } from '../config.js'
 
 export async function lessonsRoutes(fastify) {
   // Создание урока (опционально с привязкой к курсу)
@@ -393,6 +396,30 @@ export async function lessonsRoutes(fastify) {
     }
 
     return reply.status(201).send({ files: savedFiles, processing: autoProcess })
+  })
+
+  // Удалить одно загруженное медиа урока (фото/аудио) — чтобы переделать урок с нужными страницами.
+  // Удаляет запись lesson_media + файл с диска. Только владелец урока. Слова/упражнения не трогаем
+  // (они уже извлечены); при желании учитель потом пересоберёт урок.
+  fastify.delete('/api/lessons/:id/media/:mediaId', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+    const mediaId = parseInt(request.params.mediaId)
+
+    // Проверяем: медиа принадлежит уроку этого владельца
+    const { rows } = await db.query(
+      `SELECT lm.id, lm.file_path FROM lesson_media lm
+       JOIN lessons l ON l.id = lm.lesson_id
+       WHERE lm.id = $1 AND lm.lesson_id = $2 AND l.owner_id = $3`,
+      [mediaId, lessonId, request.user.id])
+    if (!rows[0]) return reply.status(404).send({ error: 'Файл не найден' })
+
+    // Удаляем файл с диска (не критично, если уже отсутствует)
+    try { await unlink(join(config.uploadDir, rows[0].file_path)) } catch { /* файла может не быть */ }
+    await db.query('DELETE FROM lesson_media WHERE id = $1', [mediaId])
+    return { deleted: mediaId }
   })
 
   // Пересоздать упражнения из существующих слов (без сканирования фото)

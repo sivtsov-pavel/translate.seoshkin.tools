@@ -49,6 +49,18 @@ function EditForm({ lesson, onSave, onCancel }) {
   const fileRef = useRef()
   const camRef = useRef()
   const sourceRef = useRef('textbook')  // какой источник грузим: учебник / тетрадь
+  // Загруженные фото/аудио урока — чтобы можно было удалить не те страницы и переделать урок
+  const [media, setMedia] = useState([])
+  const loadMedia = () => api.get(`/lessons/${lesson.id}`).then(d => setMedia(d.media || [])).catch(() => {})
+  useEffect(() => { loadMedia() }, [lesson.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const deleteMedia = async (mediaId) => {
+    if (!window.confirm('Удалить это фото из урока? (слова/упражнения останутся; переобработать урок можно кнопкой ⚙️)')) return
+    try {
+      await api.delete(`/lessons/${lesson.id}/media/${mediaId}`)
+      setMedia(m => m.filter(x => x.id !== mediaId))
+    } catch (e) { alert('Ошибка удаления: ' + e.message) }
+  }
 
   const save = async () => {
     setSaving(true)
@@ -79,6 +91,7 @@ function EditForm({ lesson, onSave, onCancel }) {
       for (const f of files) form.append('file', f)
       await uploadFiles(`/lessons/${lesson.id}/media?source=${sourceRef.current}`, form)
       alert(`Загружено (${sourceRef.current === 'extra' ? 'тетрадь/доска' : 'учебник'}): ${files.length} файл(ов)`)
+      loadMedia()  // освежаем список загруженных страниц
     } catch (e) {
       alert('Ошибка загрузки: ' + e.message)
     } finally {
@@ -107,6 +120,34 @@ function EditForm({ lesson, onSave, onCancel }) {
           <WordCol title="✏️ Из тетради/доски" text={extraText} setText={setExtraText} onMove={line => moveLine(line, 'extra')} moveHint="Перекинуть в учебник" />
         </div>
       </div>
+      {/* Загруженные фото урока — можно удалить не те страницы и переделать урок */}
+      {media.filter(m => m.type === 'photo').length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>
+            📷 Загруженные страницы ({media.filter(m => m.type === 'photo').length}) — нажми ✕, чтобы удалить не ту
+          </label>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {media.filter(m => m.type === 'photo').map(m => (
+              <div key={m.id} style={{ position: 'relative', width: 76, height: 76, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)', flexShrink: 0 }}>
+                <a href={`/uploads/${m.file_path}`} target="_blank" rel="noreferrer">
+                  <img src={`/uploads/${m.file_path}`} alt="страница" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </a>
+                <span style={{ position: 'absolute', bottom: 2, left: 3, fontSize: 9, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,.55)', borderRadius: 4, padding: '1px 4px' }}>
+                  {m.source === 'extra' ? '✏️' : '📘'}
+                </span>
+                <button onClick={() => deleteMedia(m.id)} title="Удалить это фото"
+                  style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'rgba(214,69,69,.92)', color: '#fff', cursor: 'pointer', fontSize: 12, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 6 }}>
+            После удаления не тех страниц загрузи правильные и нажми ⚙️ «Пересоздать» на карточке урока.
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={save} disabled={saving}
           style={{ padding: '7px 18px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
