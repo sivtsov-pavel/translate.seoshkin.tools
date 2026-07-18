@@ -63,6 +63,25 @@ export async function classesRoutes(fastify) {
     return { ok: true, class: { id: c.id, name: c.name } }
   })
 
+  // Назначить/переназначить ученика в класс (учитель своей школы или супер-админ).
+  // Ученик добавляется в class_members и привязывается к школе класса.
+  fastify.post('/api/classes/:id/members', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const userId = parseInt(request.body?.user_id)
+    if (!userId) return reply.status(400).send({ error: 'Не указан ученик' })
+    const { rows: cr } = await db.query('SELECT id, school_id FROM classes WHERE id=$1', [request.params.id])
+    if (!cr[0]) return reply.status(404).send({ error: 'Класс не найден' })
+    if (!request.user.is_superadmin && cr[0].school_id !== request.user.school_id) return reply.status(403).send({ error: 'Чужая школа' })
+    // Проверяем, что это ученик
+    const { rows: ur } = await db.query("SELECT id FROM users WHERE id=$1 AND role='student'", [userId])
+    if (!ur[0]) return reply.status(404).send({ error: 'Ученик не найден' })
+    await db.query('INSERT INTO class_members (class_id, user_id, role) VALUES ($1,$2,$3) ON CONFLICT (class_id, user_id) DO NOTHING',
+      [cr[0].id, userId, 'student'])
+    // Привязываем ученика к школе этого класса (переназначение школы допускаем)
+    await db.query('UPDATE users SET school_id=$1 WHERE id=$2', [cr[0].school_id, userId])
+    return { ok: true }
+  })
+
   // Убрать ученика из класса (учителю своей школы)
   fastify.delete('/api/classes/:id/members/:userId', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })

@@ -330,7 +330,7 @@ export default function LessonList() {
   const doneLessons   = lessons.filter(l => l.status === 'done').length
 
   return (
-    <div style={{ paddingBottom: 20 }}>
+    <div style={{ paddingTop: 8, paddingBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', margin: '0 0 16px' }}>
         <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 22 }}>
           {t.lessons.title}

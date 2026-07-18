@@ -21,6 +21,8 @@ export async function studentsRoutes(fastify) {
         u.whatsapp,
         u.profession,
         u.created_at,
+        (SELECT c.id   FROM class_members m JOIN classes c ON c.id=m.class_id WHERE m.user_id=u.id ORDER BY m.class_id LIMIT 1) AS class_id,
+        (SELECT c.name FROM class_members m JOIN classes c ON c.id=m.class_id WHERE m.user_id=u.id ORDER BY m.class_id LIMIT 1) AS class_name,
         COUNT(DISTINCT w.id)::int                                              AS words_total,
         COUNT(DISTINCT CASE WHEN w.status = 'known'    THEN w.id END)::int    AS words_known,
         COUNT(DISTINCT CASE WHEN w.status = 'learning' THEN w.id END)::int    AS words_learning,
