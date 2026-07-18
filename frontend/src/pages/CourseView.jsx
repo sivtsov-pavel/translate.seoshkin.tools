@@ -46,17 +46,20 @@ export default function CourseView() {
 
   const handleCoverPick = () => coverInputRef.current?.click()
 
-  // Массовая загрузка курса одним PDF → каждая страница станет отдельным уроком
+  // Массовая загрузка курса одним PDF → уроки (по N страниц на урок)
   const handlePdfPick = () => pdfInputRef.current?.click()
   const handlePdfUpload = async (file) => {
     if (!file) return
-    if (!window.confirm('Загрузить весь курс из PDF? Каждая страница станет отдельным уроком и обработается ИИ (это тратит токены OpenAI). Продолжить?')) return
+    const ans = window.prompt('Сколько страниц PDF на один урок? (1 = каждая страница отдельный урок; 4 = по 4 страницы)', '1')
+    if (ans === null) return
+    const perLesson = Math.min(Math.max(parseInt(ans) || 1, 1), 10)
+    if (!window.confirm(`Загрузить курс из PDF по ${perLesson} стр. на урок? Каждый урок обработается ИИ (тратит токены OpenAI). Продолжить?`)) return
     setUploadingPdf(true)
     try {
       const form = new FormData()
       form.append('file', file)
-      const res = await uploadFiles(`/courses/${id}/upload-pdf`, form)
-      alert(`Создано уроков: ${res.lessons}. Они обрабатываются в фоне — обнови страницу через минуту.`)
+      const res = await uploadFiles(`/courses/${id}/upload-pdf?pages_per_lesson=${perLesson}`, form)
+      alert(`Создано уроков: ${res.lessons}. Обрабатываются в фоне — следи за индикатором ⏳ в правом верхнем углу.`)
       setTimeout(load, 3000)
     } catch (e) {
       alert('Ошибка: ' + e.message)

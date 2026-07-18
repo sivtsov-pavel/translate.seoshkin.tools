@@ -167,20 +167,27 @@ export async function coursesRoutes(fastify) {
     const pages = await pdfToImages(buffer)
     if (!pages.length) return reply.status(400).send({ error: 'Не удалось разобрать PDF на страницы' })
 
+    // Сколько страниц на один урок (по умолчанию 1). Напр. «4» = урок из 4 страниц (4 стр/день).
+    const perLesson = Math.min(Math.max(parseInt(request.query?.pages_per_lesson) || 1, 1), 10)
+
     // Нумерация — продолжаем с текущего максимума в курсе
     const { rows: mx } = await db.query('SELECT COALESCE(MAX(lesson_number), 0) AS n FROM lessons WHERE course_id = $1', [courseId])
     let num = mx[0].n
     const created = []
-    for (const p of pages) {
+    for (let i = 0; i < pages.length; i += perLesson) {
       num++
+      const chunk = pages.slice(i, i + perLesson)
       const { rows: lr } = await db.query(
         `INSERT INTO lessons (owner_id, title, course_id, lesson_number, target_lang, status)
          VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id`,
         [request.user.id, `Урок ${num}`, courseId, num, target])
       const lessonId = lr[0].id
-      await db.query(
-        `INSERT INTO lesson_media (lesson_id, type, file_path, source) VALUES ($1, 'photo', $2, 'textbook')`,
-        [lessonId, p.filename])
+      // Все страницы группы — как медиа одного урока (обработаются вместе)
+      for (const p of chunk) {
+        await db.query(
+          `INSERT INTO lesson_media (lesson_id, type, file_path, source) VALUES ($1, 'photo', $2, 'textbook')`,
+          [lessonId, p.filename])
+      }
       created.push(lessonId)
     }
 
