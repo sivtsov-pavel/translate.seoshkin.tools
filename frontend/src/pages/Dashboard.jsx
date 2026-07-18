@@ -358,8 +358,8 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const [words, setWords]         = useState(null)
-  const [showWords, setShowWords] = useState(false)
-  const [showExercises, setShowExercises] = useState(false) // упражнения свёрнуты по умолчанию
+  const [showWords, setShowWords] = useState(true)     // слова раскрыты по умолчанию
+  const [showExercises, setShowExercises] = useState(true) // упражнения раскрыты по умолчанию
   const [listening, setListening] = useState(false)
   const [gameBusy, setGameBusy]   = useState(false)
 
@@ -404,6 +404,9 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
     }
     return words
   }
+
+  // Слова раскрыты по умолчанию — подгружаем их сразу при появлении карточки
+  useEffect(() => { if (showWords && words === null) loadWords() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleWords = async () => {
     await loadWords()
