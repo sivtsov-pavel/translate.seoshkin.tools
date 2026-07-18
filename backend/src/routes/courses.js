@@ -140,6 +140,18 @@ export async function coursesRoutes(fastify) {
     return rows[0]
   })
 
+  // Учитель: удалить ВСЕ уроки курса (для чистой перезаливки). Сам курс остаётся.
+  // Каскад удаляет слова/упражнения/медиа по FK. ОПАСНО — только владелец, с подтверждением на фронте.
+  fastify.delete('/api/courses/:id/lessons', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const courseId = parseInt(request.params.id)
+    const { rows: c } = await db.query('SELECT id FROM courses WHERE id = $1 AND owner_id = $2', [courseId, request.user.id])
+    if (!c[0]) return reply.status(404).send({ error: 'Курс не найден' })
+    const { rows } = await db.query(
+      'DELETE FROM lessons WHERE course_id = $1 AND owner_id = $2 RETURNING id', [courseId, request.user.id])
+    return { deleted: rows.length }
+  })
+
   // Учитель: массовая загрузка курса одним PDF → каждая страница = отдельный урок в курсе.
   // Уроки создаются по порядку и обрабатываются в фоне (vision → слова → упражнения).
   fastify.post('/api/courses/:id/upload-pdf', { preHandler: [fastify.authenticate] }, async (request, reply) => {

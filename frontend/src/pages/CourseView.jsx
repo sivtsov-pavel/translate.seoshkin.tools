@@ -172,6 +172,17 @@ export default function CourseView() {
             style={{ ...btnSecondary, cursor: uploadingPdf ? 'default' : 'pointer', opacity: uploadingPdf ? 0.6 : 1 }}>
             {uploadingPdf ? '⏳ Загружаю…' : '📦 Загрузить курс (PDF)'}
           </button>
+          {/* Удалить все уроки курса (для чистой перезаливки PDF) */}
+          {lessons.length > 0 && (
+            <button onClick={async () => {
+              if (!window.confirm(`Удалить ВСЕ уроки курса (${lessons.length})? Слова и упражнения тоже удалятся. Сам курс останется.`)) return
+              if (window.prompt('Для подтверждения введи: УДАЛИТЬ') !== 'УДАЛИТЬ') { alert('Отменено'); return }
+              try { const r = await api.delete(`/courses/${id}/lessons`); alert(`Удалено уроков: ${r.deleted}`); load() }
+              catch (e) { alert('Ошибка: ' + e.message) }
+            }} style={{ ...btnSecondary, borderColor: 'var(--red, #d64545)', color: 'var(--red, #d64545)' }}>
+              🗑 Удалить все уроки
+            </button>
+          )}
           {/* Повтор ошибочных уроков (напр. после пополнения OpenAI) */}
           {lessons.some(l => l.status === 'error') && (
             <button onClick={async () => {
