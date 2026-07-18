@@ -4,6 +4,30 @@ import { config } from '../config.js'
 
 const client = new OpenAI({ apiKey: config.openaiApiKey })
 
+// Вырезает первый сбалансированный JSON-объект/массив из строки (игнорируя текст
+// до и после, учитывая строки и экранирование). Спасает от «мусора» вокруг JSON,
+// который иногда добавляет GPT (пояснения, второй объект, markdown-хвосты).
+function extractBalancedJson(s) {
+  const start = s.search(/[{[]/)
+  if (start < 0) return null
+  const open = s[start]
+  const close = open === '{' ? '}' : ']'
+  let depth = 0, inStr = false, esc = false
+  for (let i = start; i < s.length; i++) {
+    const ch = s[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (ch === '\\') esc = true
+      else if (ch === '"') inStr = false
+    } else {
+      if (ch === '"') inStr = true
+      else if (ch === open) depth++
+      else if (ch === close) { depth--; if (depth === 0) return s.slice(start, i + 1) }
+    }
+  }
+  return null // не закрылось — JSON обрезан
+}
+
 function parseJson(text) {
   let clean = text.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim()
   // Убираем управляющие символы внутри JSON-строк (частая проблема с GPT)
@@ -11,6 +35,12 @@ function parseJson(text) {
   try {
     return JSON.parse(clean)
   } catch (e) {
+    // 1) Вырезаем сбалансированный JSON (лишний текст до/после — частый случай)
+    const balanced = extractBalancedJson(clean)
+    if (balanced) {
+      try { return JSON.parse(balanced) } catch {}
+    }
+    // 2) JSON обрезан (закончились токены) — отрезаем по последнему целому элементу
     const lastComma = clean.lastIndexOf('},')
     if (lastComma > 0) {
       const candidate = (clean.startsWith('[') ? '[' : '{') + clean.slice(1, lastComma + 1) + (clean.startsWith('[') ? ']' : '}')
