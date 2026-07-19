@@ -100,6 +100,9 @@ export default function ExerciseSession() {
     <div className="full-page-layout exercise-session-page">
       {/* Мини-бейдж типа упражнения */}
       <div className="exercise-session-type">
+        <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 8, padding: '2px 9px', fontWeight: 700, fontSize: 12, marginRight: 8 }}>
+          {current + 1} / {exercises.length}
+        </span>
         <span>{typeLabel}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Быстрый тумблер озвучки тренера — выкл заменяет голос аватара короткими звуками */}

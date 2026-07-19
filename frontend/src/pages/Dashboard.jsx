@@ -491,14 +491,15 @@ function LessonCard({ lesson, navigate, onReset, pinned, onTogglePin }) {
     }}>
       {/* Шапка на всю ширину — клик по ней раскрывает/сворачивает список упражнений */}
       <div style={{ cursor: 'pointer' }} onClick={() => setShowExercises(v => !v)}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2,
+          background: 'var(--accent-soft)', borderLeft: '3px solid var(--accent)', borderRadius: 8, padding: '8px 10px' }}>
           {onTogglePin && (
             <button onClick={(e) => { e.stopPropagation(); onTogglePin() }} title="Закрепить наверху"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, lineHeight: 1, flexShrink: 0, padding: 0, color: pinned ? 'var(--accent)' : 'var(--ink-soft)' }}>
               {pinned ? '⭐' : '☆'}
             </button>
           )}
-          <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 18, fontWeight: 700, flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 18, fontWeight: 800, flex: 1, minWidth: 0, color: 'var(--ink)' }}>
             {getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || `Урок #${lesson.lesson_id}`}
           </div>
           <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: badge.bg, color: badge.color, flexShrink: 0 }}>
