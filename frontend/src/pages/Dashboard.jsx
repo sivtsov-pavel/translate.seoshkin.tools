@@ -200,20 +200,20 @@ export default function Dashboard() {
         {/* Быстрая тренировка по типу — по ВСЕМ урокам сразу */}
         {total > 0 && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-            <button onClick={() => navigate('/exercise-session?type=flashcard')}
-              style={{ flex: 1, minWidth: 150, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', textAlign: 'left' }}>
-              <span style={{ fontSize: 30, lineHeight: 1 }}>🃏</span>
-              <span style={{ flex: 1 }}>
-                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>Все карточки</span>
-                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Флеш-карты по всем урокам</span>
-              </span>
-            </button>
             <button onClick={() => navigate('/exercise-session?type=multiple_choice')}
               style={{ flex: 1, minWidth: 150, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', textAlign: 'left' }}>
               <span style={{ fontSize: 30, lineHeight: 1 }}>✅</span>
               <span style={{ flex: 1 }}>
                 <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>Выбери ответ</span>
                 <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Тест по всем словам</span>
+              </span>
+            </button>
+            <button onClick={() => navigate('/exercise-session?type=flashcard')}
+              style={{ flex: 1, minWidth: 150, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: 30, lineHeight: 1 }}>🃏</span>
+              <span style={{ flex: 1 }}>
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>Все карточки</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Флеш-карты по всем урокам</span>
               </span>
             </button>
           </div>

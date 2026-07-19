@@ -16,5 +16,5 @@ export const config = {
   publicUrl: process.env.PUBLIC_URL || 'https://translate.seoshkin.tools',
   // Кто может загружать/обрабатывать уроки (тратит токены). Пока — только Павел(1) и Евгений(5).
   // Меняется env-переменной UPLOAD_ALLOWED_IDS="1,5,..." без правки кода.
-  uploadAllowedIds: (process.env.UPLOAD_ALLOWED_IDS || '1,5').split(',').map(n => parseInt(n.trim())).filter(Boolean),
+  uploadAllowedIds: (process.env.UPLOAD_ALLOWED_IDS || '1,5,29').split(',').map(n => parseInt(n.trim())).filter(Boolean),
 }

@@ -435,11 +435,14 @@ function Schools() {
 function Users() {
   const [rows, setRows] = useState(null)
   const [err, setErr] = useState('')
+  const [q, setQ] = useState('')
   const { user, impersonate } = useAuthStore()
   useEffect(() => { api.get('/admin/users').then(setRows).catch(e => setErr(e.message)) }, [])
   if (err) return <div style={{ color: 'var(--red)' }}>{err}</div>
   if (!rows) return <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>
   const fmt = d => d ? new Date(d).toLocaleDateString('ru-RU') : '—'
+  const s = q.trim().toLowerCase()
+  const filtered = s ? rows.filter(u => u.email?.toLowerCase().includes(s) || (u.full_name || '').toLowerCase().includes(s) || String(u.id) === s) : rows
 
   // Войти как выбранный пользователь (без пароля) и перейти на главную под ним
   const loginAs = async (u) => {
@@ -451,7 +454,10 @@ function Users() {
     } catch (e) { alert('Ошибка: ' + e.message) }
   }
   return (
-    <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
+    <div>
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍 Поиск: email, имя или id…"
+        style={{ width: '100%', maxWidth: 360, padding: '8px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }} />
+      <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 560 }}>
         <thead>
           <tr style={{ textAlign: 'left', color: 'var(--ink-soft)', borderBottom: '1px solid var(--line)' }}>
@@ -465,7 +471,7 @@ function Users() {
           </tr>
         </thead>
         <tbody>
-          {rows.map(u => (
+          {filtered.map(u => (
             <tr key={u.id} style={{ borderBottom: '1px solid var(--line)' }}>
               <td style={{ padding: '9px 12px', color: 'var(--ink-soft)' }}>{u.id}</td>
               <td style={{ padding: '9px 12px' }}>
@@ -489,6 +495,7 @@ function Users() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }
