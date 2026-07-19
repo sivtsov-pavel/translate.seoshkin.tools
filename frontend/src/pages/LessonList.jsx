@@ -193,6 +193,7 @@ export default function LessonList() {
   const [deleting, setDeleting]       = useState(null)
   const [addingLetters, setAddingLetters] = useState(null)
   const [addingDictation, setAddingDictation] = useState(null)
+  const [dictModal, setDictModal] = useState(null) // { lessonId, words, selected:Set, q }
   const [addingSpeech, setAddingSpeech]       = useState(null)
   const [regenId, setRegenId]         = useState(null)
   const [processing, setProcessing]   = useState(null)
@@ -271,12 +272,23 @@ export default function LessonList() {
     } catch (e) { alert('Ошибка: ' + e.message) } finally { setAddingLetters(null) }
   }
 
+  // Диктант из ВЫБРАННЫХ слов: открываем модалку со списком слов урока
   const handleAddDictation = async (id) => {
     setAddingDictation(id)
     try {
-      const res = await api.post(`/lessons/${id}/add-dictation`, {})
-      alert(`Добавлено ${res.added} упражнений "Диктант"!`)
+      const words = await api.get(`/lessons/${id}/words`)
+      setDictModal({ lessonId: id, words: words || [], selected: new Set((words || []).map(w => w.id)), q: '' })
     } catch (e) { alert(e.message) } finally { setAddingDictation(null) }
+  }
+  // Сгенерировать диктант из отмеченных слов
+  const generateDictation = async () => {
+    const ids = [...dictModal.selected]
+    if (!ids.length) { alert('Отметь хотя бы одно слово'); return }
+    try {
+      const res = await api.post(`/lessons/${dictModal.lessonId}/add-dictation`, { word_ids: ids })
+      alert(`Диктант готов: ${res.added} слов`)
+      setDictModal(null)
+    } catch (e) { alert(e.message) }
   }
 
   const handleAddSpeech = async (id) => {
@@ -506,6 +518,41 @@ export default function LessonList() {
           })}
         </div>
       )}
+
+      {/* Модалка «Диктант из выбранных слов» */}
+      {dictModal && (() => {
+        const q = (dictModal.q || '').toLowerCase().trim()
+        const shown = q ? dictModal.words.filter(w => w.word_de?.toLowerCase().includes(q) || w.translation_ru?.toLowerCase().includes(q)) : dictModal.words
+        const toggle = (id) => setDictModal(m => { const s = new Set(m.selected); s.has(id) ? s.delete(id) : s.add(id); return { ...m, selected: s } })
+        return (
+          <div onClick={() => setDictModal(null)} style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 520, maxHeight: '85vh', background: 'var(--surface)', borderRadius: '18px 18px 0 0', padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                <h3 style={{ margin: 0, flex: 1 }}>🎙️ Диктант из слов ({dictModal.selected.size})</h3>
+                <button onClick={() => setDictModal(null)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
+              </div>
+              <input value={dictModal.q || ''} onChange={e => setDictModal(m => ({ ...m, q: e.target.value }))} placeholder="Поиск слова…"
+                style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 14, marginBottom: 8 }} />
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <button onClick={() => setDictModal(m => ({ ...m, selected: new Set(m.words.map(w => w.id)) }))} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer' }}>Все</button>
+                <button onClick={() => setDictModal(m => ({ ...m, selected: new Set() }))} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer' }}>Снять</button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', marginBottom: 10 }}>
+                {shown.map(w => (
+                  <label key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 2px', borderTop: '1px solid var(--line)', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={dictModal.selected.has(w.id)} onChange={() => toggle(w.id)} style={{ width: 17, height: 17 }} />
+                    <b style={{ fontSize: 14 }}>{w.word_de}</b>
+                    <span style={{ fontSize: 13, color: 'var(--ink-soft)', marginLeft: 'auto' }}>{w.translation_ru}</span>
+                  </label>
+                ))}
+              </div>
+              <button onClick={generateDictation} style={{ width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+                Создать диктант ({dictModal.selected.size})
+              </button>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

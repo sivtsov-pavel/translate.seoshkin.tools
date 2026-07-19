@@ -132,27 +132,37 @@ export async function lessonsRoutes(fastify) {
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const lessonId = parseInt(request.params.id)
+    // Если переданы word_ids — диктант ТОЛЬКО из выбранных слов (с заменой существующего)
+    const selected = Array.isArray(request.body?.word_ids)
+      ? request.body.word_ids.map(Number).filter(Boolean) : null
 
     const { rows: lessonRows } = await db.query('SELECT id FROM lessons WHERE id = $1', [lessonId])
     if (!lessonRows[0]) return reply.status(404).send({ error: 'Урок не найден' })
 
-    const { rows: already } = await db.query(
-      `SELECT COUNT(*) cnt FROM exercises WHERE lesson_id = $1 AND type = 'dictation'`, [lessonId]
-    )
-    if (parseInt(already[0].cnt) > 0) return reply.status(409).send({ error: 'Диктант уже добавлен' })
+    if (selected) {
+      // Пересобираем диктант из выбранных — удаляем прежний
+      await db.query("DELETE FROM exercises WHERE lesson_id = $1 AND type = 'dictation'", [lessonId])
+    } else {
+      const { rows: already } = await db.query(
+        `SELECT COUNT(*) cnt FROM exercises WHERE lesson_id = $1 AND type = 'dictation'`, [lessonId])
+      if (parseInt(already[0].cnt) > 0) return reply.status(409).send({ error: 'Диктант уже добавлен' })
+    }
 
-    const { rows: wordRows } = await db.query(
-      `SELECT DISTINCT ON (e.payload->>'question')
-         e.word_id,
-         COALESCE(w.word_de, e.payload->>'question') AS word_de,
-         COALESCE(w.translation_ru, e.payload->>'answer') AS translation_ru
-       FROM exercises e
-       LEFT JOIN words w ON w.id = e.word_id
-       WHERE e.lesson_id = $1 AND e.type = 'flashcard'
-       ORDER BY e.payload->>'question'`,
-      [lessonId]
-    )
-    if (!wordRows.length) return reply.status(400).send({ error: 'Нет слов в уроке' })
+    // Слова: выбранные (по id) — из words; иначе все слова урока (из flashcard-упражнений)
+    const { rows: wordRows } = selected
+      ? await db.query(
+          `SELECT id AS word_id, word_de, translation_ru FROM words
+           WHERE lesson_id = $1 AND id = ANY($2::int[]) ORDER BY id`, [lessonId, selected])
+      : await db.query(
+          `SELECT DISTINCT ON (e.payload->>'question')
+             e.word_id,
+             COALESCE(w.word_de, e.payload->>'question') AS word_de,
+             COALESCE(w.translation_ru, e.payload->>'answer') AS translation_ru
+           FROM exercises e
+           LEFT JOIN words w ON w.id = e.word_id
+           WHERE e.lesson_id = $1 AND e.type = 'flashcard'
+           ORDER BY e.payload->>'question'`, [lessonId])
+    if (!wordRows.length) return reply.status(400).send({ error: 'Нет слов для диктанта' })
 
     let added = 0
     for (const w of wordRows) {
