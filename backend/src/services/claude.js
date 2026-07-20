@@ -453,7 +453,9 @@ ${list}`, { max_tokens: 2048 })
   return words.map((w, i) => ({ id: w.id, ...results[i] }))
 }
 
-const TARGET_LANGS = ['en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
+// de включён: для НЕ-немецких курсов (англ/исп) немецкий — валидная родная локаль (иммигранты в Германии).
+// Для немецкого курса de не выбирается через activeLocales (там ['ru']), так что дубля нет.
+const TARGET_LANGS = ['en', 'uk', 'de', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
 const TARGET_LANG_NAMES = { en: 'English', uk: 'українською', de: 'Deutsch', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español', sq: 'shqip' }
 // Для заголовков/описаний уроков переводим И на немецкий (учитель немецкого проверяет контент)
 const META_LANGS = ['en', 'uk', 'de', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
