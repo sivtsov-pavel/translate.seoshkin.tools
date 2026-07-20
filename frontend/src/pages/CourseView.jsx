@@ -221,7 +221,7 @@ export default function CourseView() {
 
       {/* Ученик: расписание дрип-выдачи (учебные дни → уроки открываются по одному) */}
       {user?.role !== 'owner' && lessons.some(l => l.status === 'done') && (
-        <SchedulePicker schedule={data.schedule} onSave={saveSchedule} />
+        <SchedulePicker key={id} schedule={data.schedule} onSave={saveSchedule} />
       )}
 
       {lessons.length === 0 ? (
