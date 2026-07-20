@@ -651,6 +651,7 @@ export default function Settings() {
 
       {/* Push уведомления */}
       <PushSection />
+      <NotifyPrefsSection />
 
       {/* Кнопка сохранения */}
       <button onClick={handleSave}
@@ -679,7 +680,7 @@ function PushSection() {
       setMsg('Уведомления отключены')
     } else {
       const ok = await subscribe()
-      setMsg(ok ? '✓ Уведомления включены! Каждый день в 09:00 придёт напоминание.' : 'Доступ к уведомлениям запрещён в настройках браузера.')
+      setMsg(ok ? '✓ Уведомления включены! Напоминания придут по твоему времени (настрой ниже).' : 'Доступ к уведомлениям запрещён в настройках браузера.')
     }
     setTimeout(() => setMsg(''), 4000)
   }
@@ -694,8 +695,8 @@ function PushSection() {
       </div>
       <div style={{ padding: '14px 18px' }}>
         <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
-          Каждый день в 09:00 — уведомление если есть слова для повторения и ты не заходил.
-          Работает даже когда сайт закрыт.
+          Напоминание придёт в выбранное тобой время (по твоей таймзоне), если есть что
+          повторить и ты не заходил. Работает даже когда сайт закрыт.
         </p>
 
         {permission === 'denied' ? (
@@ -723,6 +724,109 @@ function PushSection() {
             {msg}
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// Простой тумблер вкл/выкл
+function ToggleSwitch({ on, onChange }) {
+  return (
+    <button onClick={() => onChange(!on)} aria-pressed={on}
+      style={{
+        position: 'relative', width: 46, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer',
+        background: on ? 'var(--accent)' : 'var(--surface-2)', transition: 'background .2s', flexShrink: 0,
+      }}>
+      <span style={{
+        position: 'absolute', top: 3, left: on ? 23 : 3, width: 20, height: 20, borderRadius: '50%',
+        background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+      }} />
+    </button>
+  )
+}
+
+// Настройки уведомлений (Duolingo-стиль): тумблеры утро/вечер/вехи + выбор времени.
+// Время в ЛОКАЛЬНОЙ таймзоне юзера (определяется автоматически, показываем какая).
+function NotifyPrefsSection() {
+  const DEFAULTS = { morning: { on: true, time: '09:00' }, evening: { on: true, time: '21:30' }, milestones: { on: true } }
+  const user = useAuthStore(s => s.user)
+  const [prefs, setPrefs] = useState(() => ({ ...DEFAULTS, ...(user?.notify_prefs || {}) }))
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  // Подхватываем серверные значения, когда профиль (auth/me) подгрузился
+  useEffect(() => {
+    if (user?.notify_prefs) setPrefs({ ...DEFAULTS, ...user.notify_prefs })
+  }, [user?.notify_prefs]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const tz = user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+  const setSlot = (slot, patch) => setPrefs(p => ({ ...p, [slot]: { ...p[slot], ...patch } }))
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const res = await api.put('/me/notify-prefs', { notify_prefs: prefs })
+      const next = res.notify_prefs || prefs
+      setPrefs(next)
+      // Персистим в стор/localStorage, чтобы не сбрасывалось при перезаходе
+      useAuthStore.setState(s => {
+        const u = { ...(s.user || {}), notify_prefs: next }
+        localStorage.setItem('user', JSON.stringify(u))
+        return { user: u }
+      })
+      setSaved(true); setTimeout(() => setSaved(false), 2500)
+    } catch { /* сеть — молча */ }
+    finally { setSaving(false) }
+  }
+
+  const cardRow = (label, hint, control) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: '1px solid var(--line)' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>{label}</div>
+        {hint && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>{hint}</div>}
+      </div>
+      {control}
+    </div>
+  )
+  const timeInput = (slot) => (
+    <input type="time" value={prefs[slot].time} disabled={!prefs[slot].on}
+      onChange={e => setSlot(slot, { time: e.target.value })}
+      style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', opacity: prefs[slot].on ? 1 : 0.4 }} />
+  )
+
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, marginBottom: 16, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 18px 10px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--line)' }}>
+        <span style={{ fontSize: 18 }}>⏰</span>
+        <span style={{ fontWeight: 700, fontSize: 15 }}>Когда напоминать</span>
+      </div>
+      <div style={{ padding: '4px 18px 14px' }}>
+        {/* Утро */}
+        {cardRow(
+          'Утреннее напоминание',
+          'Новый урок, что повторить сегодня',
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{timeInput('morning')}<ToggleSwitch on={prefs.morning.on} onChange={v => setSlot('morning', { on: v })} /></div>
+        )}
+        {/* Вечер */}
+        {cardRow(
+          'Вечернее напоминание',
+          'Не потеряй серию 🔥, если не занимался',
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{timeInput('evening')}<ToggleSwitch on={prefs.evening.on} onChange={v => setSlot('evening', { on: v })} /></div>
+        )}
+        {/* Вехи */}
+        {cardRow(
+          'Поздравления с достижениями',
+          'Вехи по словам и урокам 🏆',
+          <ToggleSwitch on={prefs.milestones.on} onChange={v => setSlot('milestones', { on: v })} />
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
+          <button onClick={save} disabled={saving}
+            style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+            {saving ? '…' : 'Сохранить'}
+          </button>
+          {saved && <span style={{ fontSize: 13, color: 'var(--good)' }}>✓ Сохранено</span>}
+          <span style={{ fontSize: 12, color: 'var(--ink-soft)', marginLeft: 'auto' }}>Твоя таймзона: {tz}</span>
+        </div>
       </div>
     </div>
   )

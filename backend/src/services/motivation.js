@@ -1,6 +1,7 @@
 import cron from 'node-cron'
 import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
+import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 
 // Русская форма слова по числу: 1 день / 2 дня / 5 дней
 function plural(n, one, few, many) {
@@ -26,15 +27,20 @@ function streakFromDates(dates) {
   return { streak, today: todayHas }
 }
 
-// 🔥 Серия + 🌙 вечернее: если сегодня не занимался — мягко напоминаем вечером
+// 🔥 Серия + 🌙 вечернее: если сегодня не занимался — мягко напоминаем по локальному вечеру.
+// Тик 15 мин: шлём, когда у юзера наступило его вечернее время (notify_prefs.evening).
 export async function runEveningReminders() {
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const now = new Date()
   const { rows: users } = await db.query(
-    `SELECT DISTINCT u.id, u.motivation
+    `SELECT DISTINCT u.id, u.motivation, u.timezone, u.notify_prefs
      FROM users u JOIN push_subscriptions p ON p.user_id = u.id
      WHERE u.role = 'student'`)
   for (const u of users) {
-    if (u.motivation?.lastEveningPush === todayStr) continue // уже слали сегодня
+    const prefs = sanitizeNotifyPrefs(u.notify_prefs)
+    if (!prefs.evening.on) continue                                // вечерние выключены
+    const local = localParts(u.timezone, now)
+    if (local.minutes < hmToMinutes(prefs.evening.time)) continue  // ещё не наступил локальный вечер
+    if (u.motivation?.lastEveningPush === local.date) continue     // уже слали сегодня
     const { rows: dr } = await db.query(
       `SELECT DISTINCT attempted_at::date AS d FROM exercise_attempts
        WHERE user_id = $1 AND attempted_at > now() - interval '40 days'`, [u.id])
@@ -45,7 +51,7 @@ export async function runEveningReminders() {
     else if (dr.length) body = '🌙 Не забудь позаниматься сегодня — пара минут, и слова закрепятся!'
     else continue // совсем нет активности — вечерним не грузим
     try { await sendToUser(u.id, { title: '📚 Время учиться', body, icon: '/icons/icon-192.png', url: '/' }) } catch {}
-    await db.query(`UPDATE users SET motivation = motivation || jsonb_build_object('lastEveningPush', $2::text) WHERE id = $1`, [u.id, todayStr])
+    await db.query(`UPDATE users SET motivation = motivation || jsonb_build_object('lastEveningPush', $2::text) WHERE id = $1`, [u.id, local.date])
   }
 }
 
@@ -59,8 +65,9 @@ function reached(miles, val, last) {
 }
 
 export async function runMilestones() {
+  const now = new Date()
   const { rows: users } = await db.query(
-    `SELECT u.id, u.motivation,
+    `SELECT u.id, u.motivation, u.timezone, u.notify_prefs,
        (SELECT count(*) FROM user_word_status s WHERE s.user_id = u.id AND s.status = 'known')::int AS known,
        -- Реально ПРОЙДЕННЫЕ уроки: все упражнения урока ушли в будущее (ни одно не «горит»),
        -- а не просто «затронутые» (иначе практика «выбери ответ по словарю» накручивает счёт)
@@ -74,6 +81,13 @@ export async function runMilestones() {
      FROM users u JOIN push_subscriptions p ON p.user_id = u.id
      WHERE u.role = 'student'`)
   for (const u of users) {
+    const prefs = sanitizeNotifyPrefs(u.notify_prefs)
+    if (!prefs.milestones.on) continue                              // поздравления с вехами выключены
+    const local = localParts(u.timezone, now)
+    // Вехи шлём в утреннем слоте, один раз в день (порог всё равно дедупится ниже)
+    if (local.minutes < hmToMinutes(prefs.morning.time)) continue
+    if (u.motivation?.lastMilestoneCheck === local.date) continue
+    await db.query(`UPDATE users SET motivation = motivation || jsonb_build_object('lastMilestoneCheck', $2::text) WHERE id = $1`, [u.id, local.date])
     const wHit = reached(WORD_MILES, u.known, u.motivation?.lastWordsMilestone)
     if (wHit) {
       try { await sendToUser(u.id, { title: '🏆 Отличная работа!', body: `Ты выучил ${wHit} ${plural(wHit, 'слово', 'слова', 'слов')}! Так держать 💪`, icon: '/icons/icon-192.png', url: '/vocabulary' }) } catch {}
@@ -88,9 +102,9 @@ export async function runMilestones() {
 }
 
 export function startMotivationCron() {
-  // Вечернее напоминание/серия — 18:00 UTC (~20:00 в Германии)
-  cron.schedule('0 18 * * *', () => runEveningReminders().catch(e => console.error('evening reminder:', e.message)), { timezone: 'UTC' })
-  // Вехи — 10:00 UTC (после утренних упражнений)
-  cron.schedule('0 10 * * *', () => runMilestones().catch(e => console.error('milestones:', e.message)), { timezone: 'UTC' })
-  console.log('Motivation cron запущен (серия+вечернее 18:00, вехи 10:00 UTC)')
+  // Тик каждые 15 мин (UTC); внутри — по локальному времени юзера:
+  // вечернее/серия — в его вечернее время, вехи — в утреннем слоте (раз в день).
+  cron.schedule('*/15 * * * *', () => runEveningReminders().catch(e => console.error('evening reminder:', e.message)), { timezone: 'UTC' })
+  cron.schedule('*/15 * * * *', () => runMilestones().catch(e => console.error('milestones:', e.message)), { timezone: 'UTC' })
+  console.log('Motivation cron запущен (тик 15 мин, по локальному времени юзера)')
 }

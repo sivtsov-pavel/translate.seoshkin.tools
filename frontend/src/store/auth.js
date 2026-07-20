@@ -18,6 +18,19 @@ export const useAuthStore = create((set, get) => ({
       const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) return
       const data = await res.json()
+      // Автоопределение таймзоны: если браузерная TZ отличается от сохранённой на сервере —
+      // обновляем, чтобы напоминания приходили по локальному времени пользователя.
+      try {
+        const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        if (browserTz && browserTz !== data.timezone) {
+          await fetch('/api/me/timezone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ timezone: browserTz }),
+          })
+          data.timezone = browserTz
+        }
+      } catch {}
       localStorage.setItem('user', JSON.stringify(data))
       set({ user: data })
     } catch {}

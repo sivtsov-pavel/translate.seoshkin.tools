@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { db } from '../db/index.js'
+import { isValidTimezone, sanitizeNotifyPrefs } from '../services/timeutil.js'
 
 export async function authRoutes(fastify) {
   // Регистрация нового пользователя
@@ -83,10 +84,27 @@ export async function authRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request) => {
     const { rows } = await db.query(
-      'SELECT id, email, role, avatar, phone, telegram, whatsapp, profession, full_name, plan FROM users WHERE id = $1',
+      'SELECT id, email, role, avatar, phone, telegram, whatsapp, profession, full_name, plan, timezone, notify_prefs FROM users WHERE id = $1',
       [request.user.id]
     )
+    if (rows[0]) rows[0].notify_prefs = sanitizeNotifyPrefs(rows[0].notify_prefs)
     return rows[0] ?? request.user
+  })
+
+  // Сохранить таймзону юзера (IANA). Вызывается фронтом автоматически при входе,
+  // если определённая браузером TZ отличается от сохранённой.
+  fastify.post('/api/me/timezone', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const tz = (request.body?.timezone || '').toString()
+    if (!isValidTimezone(tz)) return reply.status(400).send({ error: 'Некорректная таймзона' })
+    await db.query('UPDATE users SET timezone = $1 WHERE id = $2', [tz, request.user.id])
+    return { ok: true, timezone: tz }
+  })
+
+  // Настройки уведомлений (тумблеры утро/вечер/вехи + время). Санитизируем структуру.
+  fastify.put('/api/me/notify-prefs', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const prefs = sanitizeNotifyPrefs(request.body?.notify_prefs ?? request.body)
+    await db.query('UPDATE users SET notify_prefs = $1 WHERE id = $2', [JSON.stringify(prefs), request.user.id])
+    return { ok: true, notify_prefs: prefs }
   })
 
   // Обновить свой профиль

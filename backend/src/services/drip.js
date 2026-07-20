@@ -1,6 +1,7 @@
 import cron from 'node-cron'
 import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
+import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 
 // ISO-день недели (1=Пн … 7=Вс) для даты (UTC)
 function isoWeekday(date) {
@@ -100,18 +101,26 @@ export async function playableLessonIds(userId, schoolId) {
   return { playable, needsSchedule }
 }
 
-// Ежедневный проход: если сегодня открылся новый урок — push ученику (один раз на урок).
+// Тик каждые 15 мин: если у юзера открылся новый урок — push по его локальному утру (один раз на урок).
 export async function runDripPush() {
-  const today = new Date()
+  const now = new Date()
   const { rows: schedules } = await db.query(
     `SELECT cs.id, cs.user_id, cs.course_id, cs.weekdays, cs.start_date, cs.last_push_index,
             c.title AS course_title,
+            u.timezone, u.notify_prefs,
             (SELECT count(*) FROM lessons l WHERE l.course_id = cs.course_id AND l.status = 'done')::int AS total_done
      FROM course_schedules cs
-     JOIN courses c ON c.id = cs.course_id`)
+     JOIN courses c ON c.id = cs.course_id
+     JOIN users u ON u.id = cs.user_id`)
 
   for (const s of schedules) {
-    const opened = unlockedCount(s.start_date, s.weekdays, today)
+    const prefs = sanitizeNotifyPrefs(s.notify_prefs)
+    if (!prefs.morning.on) continue                                 // утренние выключены
+    const local = localParts(s.timezone, now)
+    if (local.minutes < hmToMinutes(prefs.morning.time)) continue   // ещё не наступило локальное утро юзера
+    // «Открыто» считаем по ЛОКАЛЬНОЙ дате юзера (иначе у полуночников урок «откроется» не в тот день)
+    const localToday = new Date(local.date + 'T00:00:00Z')
+    const opened = unlockedCount(s.start_date, s.weekdays, localToday)
     // Открыто не больше, чем есть готовых уроков
     const effective = Math.min(opened, s.total_done)
     if (effective > s.last_push_index && effective > 0) {
@@ -130,7 +139,7 @@ export async function runDripPush() {
 }
 
 export function startDripCron() {
-  // Каждый день 09:00 UTC — как reminders
-  cron.schedule('0 9 * * *', () => { runDripPush().catch(e => console.error('drip push:', e.message)) }, { timezone: 'UTC' })
-  console.log('Drip cron запущен (каждый день 09:00 UTC)')
+  // Тик каждые 15 мин (UTC); пуш — по локальному утреннему времени каждого юзера
+  cron.schedule('*/15 * * * *', () => { runDripPush().catch(e => console.error('drip push:', e.message)) }, { timezone: 'UTC' })
+  console.log('Drip cron запущен (тик 15 мин, по локальному утру юзера)')
 }
