@@ -15,8 +15,8 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
   useEffect(() => { speakAuto(payload.question) }, [payload.question])
 
-  // showOriginal (учитель, «язык курса») — авторский перевод-ответ без наложения локали
-  const answer = showOriginal ? (translationRu || payload.answer) : getTranslation(translations, lang, translationRu || payload.answer)
+  // Перевод-ответ на локали ученика
+  const answer = getTranslation(translations, lang, translationRu || payload.answer)
 
   const reveal = () => { setRevealed(true) }
 
@@ -61,7 +61,12 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
           ? <div style={{ fontSize: 26, color: 'var(--accent)', textAlign: 'center', borderTop: '1px solid var(--line)', paddingTop: 16, width: '100%' }}>
               {answer}
             </div>
-          : <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{t.exercise.tapToReveal}</div>
+          : showOriginal
+            // Глобус (учитель) — сразу показать перевод на локали ученика, не переворачивая карточку
+            ? <div style={{ fontSize: 18, color: 'var(--accent)', textAlign: 'center', borderTop: '1px dashed var(--line)', paddingTop: 12, width: '100%' }}>
+                🌐 {answer}
+              </div>
+            : <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>{t.exercise.tapToReveal}</div>
         }
         </div>
       </div>

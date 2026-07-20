@@ -11,8 +11,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
   const [reaction, setReaction] = useState(null)
   const inputRef = useRef(null)
   const { t, lang } = useI18nStore()
-  // showOriginal (учитель, «язык курса») — авторская подсказка без наложения локали
-  const hint = showOriginal ? (translationRu || payload.translation_ru) : (translations?.[lang] || translationRu || payload.translation_ru)
+  const hint = translations?.[lang] || translationRu || payload.translation_ru
 
   useEffect(() => {
     inputRef.current?.focus()

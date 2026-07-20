@@ -14,9 +14,8 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
   const { t, lang } = useI18nStore()
   const pTranslations = payloadTranslations || exercise.payload_translations
   const { word_de, translation_ru, hint_ru, example } = exercise.payload
-  // showOriginal (учитель, «язык курса») — авторский перевод/подсказка без наложения локали
-  const displayTranslation = showOriginal ? (exercise.translation_ru || translation_ru) : getTranslation(exercise.translations, lang, exercise.translation_ru || translation_ru)
-  const displayHint = showOriginal ? hint_ru : getTranslation(pTranslations, lang, hint_ru)
+  const displayTranslation = getTranslation(exercise.translations, lang, exercise.translation_ru || translation_ru)
+  const displayHint = getTranslation(pTranslations, lang, hint_ru)
 
   const handleCheck = async (e) => {
     e.preventDefault()

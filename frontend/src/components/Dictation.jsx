@@ -13,11 +13,8 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
   const inputRef              = useRef(null)
   const { t, lang }           = useI18nStore()
 
-  // В немецкой локали показываем само немецкое слово (fallback de→ru не нужен для диктанта).
-  // showOriginal (учитель, «язык курса») — авторский перевод без наложения локали.
-  const displayTranslation = showOriginal
-    ? (translationRu || translation_ru)
-    : lang === 'de'
+  // В немецкой локали показываем само немецкое слово (fallback de→ru не нужен для диктанта)
+  const displayTranslation = lang === 'de'
     ? word_de
     : getTranslation(translations, lang, translationRu || translation_ru)
 

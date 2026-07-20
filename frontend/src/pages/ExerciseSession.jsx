@@ -31,8 +31,8 @@ export default function ExerciseSession() {
   // Выкл — чтобы аватар не проговаривал «Sehr gut» (в т.ч. чтобы микрофон не ловил свою же речь).
   const [reactionsOn, setReactionsOn] = useState(() => localStorage.getItem('trainer_reactions') !== 'false')
   const toggleReactions = () => setReactionsOn(v => { localStorage.setItem('trainer_reactions', v ? 'false' : 'true'); return !v })
-  // Учитель: показать упражнение на ЯЗЫКЕ КУРСА (авторский оригинал), а не в переводе на свою локаль —
-  // чтобы проверить корректность заданий. Только owner; по умолчанию выкл; ученика не касается.
+  // Учитель: глобус — сразу показать перевод слова на локали ученика (не отвечая/не переворачивая),
+  // чтобы проверить, как ученик видит перевод. Только owner; по умолчанию выкл; ученика не касается.
   const [origView, setOrigView] = useState(() => localStorage.getItem('exercise_orig_view') === '1')
   const toggleOrigView = () => setOrigView(v => { localStorage.setItem('exercise_orig_view', v ? '0' : '1'); return !v })
   const navigate                  = useNavigate()
@@ -112,10 +112,10 @@ export default function ExerciseSession() {
         </span>
         <span>{typeLabel}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Учитель: тумблер «язык курса» — упражнение в оригинале (для проверки), не в переводе локали */}
+          {/* Учитель: глобус — показать перевод слова на локали ученика (проверка) */}
           {user?.role === 'owner' && (
             <button onClick={toggleOrigView}
-              title={showOriginal ? 'Показываю на языке курса (оригинал) — нажми, чтобы вернуть перевод на твою локаль' : 'Показать упражнение на языке курса (оригинал), чтобы проверить задание'}
+              title={showOriginal ? 'Перевод показан — нажми, чтобы скрыть' : 'Показать перевод слова на локали ученика (не отвечая)'}
               style={{ padding: '3px 9px', borderRadius: 8, cursor: 'pointer', fontSize: 13, lineHeight: 1, fontWeight: 700,
                 border: `1px solid ${showOriginal ? 'var(--accent)' : 'var(--line)'}`,
                 background: showOriginal ? 'var(--accent-soft)' : 'var(--surface-2)',

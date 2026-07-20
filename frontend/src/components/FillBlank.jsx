@@ -46,9 +46,8 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
 
   const fullSentence = beforeBlank + payload.blank + afterBlank
 
-  // Перевод предложения — для любого языка (для 'de' fallback → 'en').
-  // showOriginal (учитель, «язык курса») — авторский перевод без наложения локали.
-  const sentenceTranslation = showOriginal ? payload.sentence_ru : getTranslation(payloadTranslations, lang, payload.sentence_ru)
+  // Перевод предложения — на локали ученика (для 'de' fallback → 'en')
+  const sentenceTranslation = getTranslation(payloadTranslations, lang, payload.sentence_ru)
 
   const selectHint = (opt) => {
     setAnswer(opt)

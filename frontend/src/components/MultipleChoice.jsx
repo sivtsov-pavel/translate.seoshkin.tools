@@ -11,11 +11,10 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
   const resultRef = useRef(null)
   const { t, lang } = useI18nStore()
 
-  // Локализованные варианты: если есть payloadTranslations[lang] — массив переводов вариантов.
-  // showOriginal (учитель, «язык курса») — показываем авторские варианты без перевода на локаль.
+  // Локализованные варианты: если есть payloadTranslations[lang] — массив переводов вариантов на локали ученика.
   const { options, correctIdx } = useMemo(() => {
     const orig = payload.options ?? []
-    const effectiveLang = showOriginal ? null : getEffectiveLang(payloadTranslations, lang)
+    const effectiveLang = getEffectiveLang(payloadTranslations, lang)
     const localized = effectiveLang ? payloadTranslations[effectiveLang] : null
     const displayOpts = Array.isArray(localized) && localized.length ? localized : orig
     // Перемешиваем с сохранением исходного индекса — избегаем indexOf по строке (ломается на "сорок" vs "сорок (40)")
@@ -28,12 +27,11 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const effectiveLang = showOriginal ? null : getEffectiveLang(payloadTranslations, lang)
+  const effectiveLang = getEffectiveLang(payloadTranslations, lang)
   // Показываем именно тот вариант который в массиве options, чтобы сообщение об ошибке совпадало с опцией
   const correctAnswer = options[correctIdx]
     || (effectiveLang && payloadTranslations[effectiveLang]?.[payload.correct ?? 0])
-    || (showOriginal ? (payload.options ?? [])[payload.correct ?? 0]
-        : getTranslation(translations, lang, translationRu || (payload.options ?? [])[payload.correct ?? 0]))
+    || getTranslation(translations, lang, translationRu || (payload.options ?? [])[payload.correct ?? 0])
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
   useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])
@@ -86,6 +84,10 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
           <SpeakButton text={germanWord} size={24} />
         </div>
         <p style={{ fontSize: 14, color: 'var(--ink-soft)', margin: '8px 0 0' }}>{t.exercise.chooseTranslation}</p>
+        {/* Глобус (учитель) — показать перевод слова на локали ученика, не отвечая */}
+        {showOriginal && (
+          <p style={{ fontSize: 15, color: 'var(--accent)', fontWeight: 700, margin: '6px 0 0' }}>🌐 {correctAnswer}</p>
+        )}
       </div>
 
       {options.map((opt, idx) => (
