@@ -194,6 +194,7 @@ export default function LessonList() {
   const [addingLetters, setAddingLetters] = useState(null)
   const [addingDictation, setAddingDictation] = useState(null)
   const [dictModal, setDictModal] = useState(null) // { lessonId, words, selected:Set, q }
+  const [errorFilter, setErrorFilter] = useState(false) // показать только проблемные уроки
   const [addingSpeech, setAddingSpeech]       = useState(null)
   const [regenId, setRegenId]         = useState(null)
   const [processing, setProcessing]   = useState(null)
@@ -356,6 +357,24 @@ export default function LessonList() {
         )}
       </div>
 
+      {/* Баннер проблемных уроков — чтобы не искать ошибки среди сотен */}
+      {user?.role === 'owner' && (() => {
+        const bad = lessons.filter(l => l.status === 'error' || l.status === 'pending')
+        if (!bad.length) return null
+        return (
+          <div style={{ marginBottom: 14, padding: '12px 16px', borderRadius: 12, background: 'rgba(214,69,69,.10)', border: '1px solid var(--red, #d64545)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 20 }}>⚠️</span>
+            <span style={{ flex: 1, fontSize: 14, color: 'var(--ink)', fontWeight: 600 }}>
+              {bad.length} {bad.length === 1 ? 'урок не обработался' : bad.length < 5 ? 'урока не обработались' : 'уроков не обработались'} — проверь их
+            </span>
+            <button onClick={() => setErrorFilter(v => !v)}
+              style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--red, #d64545)', background: errorFilter ? 'var(--red, #d64545)' : 'transparent', color: errorFilter ? '#fff' : 'var(--red, #d64545)', cursor: 'pointer', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}>
+              {errorFilter ? 'Показать все' : 'Показать проблемные'}
+            </button>
+          </div>
+        )
+      })()}
+
       {/* Прогресс-бар словаря */}
       {totalWords > 0 && (
         <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12 }}>
@@ -383,7 +402,7 @@ export default function LessonList() {
         <p style={{ color: 'var(--ink-soft)' }}>{t.lessons.empty}</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {lessons.map(lesson => {
+          {(errorFilter ? lessons.filter(l => l.status === 'error' || l.status === 'pending') : lessons).map(lesson => {
             const status = lesson.status || 'pending'
             const isEditing = editingId === lesson.id
             const dateStr = lesson.date ? new Date(lesson.date).toLocaleDateString('ru', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''

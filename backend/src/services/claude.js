@@ -108,7 +108,14 @@ export async function extractFromPhoto(filepath, targetLang = 'de') {
     }],
   })
 
-  return parseJson(res.choices[0].message.content)
+  // Пустая/обложечная страница: GPT возвращает отказ («Извините…») вместо JSON.
+  // Не роняем урок — считаем страницу пустой (слов нет), обработка идёт дальше.
+  try {
+    return parseJson(res.choices[0].message.content)
+  } catch (e) {
+    console.warn('extractFromPhoto: страница без слов (обложка/пустая):', e.message)
+    return { words: [], grammar_points: [], sentences: [] }
+  }
 }
 
 // Камера в читалке: извлечь слова целевого языка с фото + перевод на локаль ученика.
