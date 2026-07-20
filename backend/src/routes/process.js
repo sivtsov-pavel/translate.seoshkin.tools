@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson } from '../services/processor.js'
+import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson, distributeWordsToSets } from '../services/processor.js'
 import { config } from '../config.js'
 
 // Разрешена ли пользователю загрузка/обработка уроков (тратит токены) — пока только Павел+Евгений
@@ -39,6 +39,25 @@ export async function processRoutes(fastify) {
     if (rows[0].owner_id !== request.user.id) return reply.status(403).send({ error: 'Не ваш урок' })
     redistributeLesson(lessonId).catch(err => fastify.log.error({ lessonId, err }, 'Ошибка перераспределения урока'))
     return { started: true, lessonId }
+  })
+
+  // «Распределить в наборы»: слова урока → в тематические наборы словаря (НЕ разбивая урок).
+  // Урок остаётся как есть; слова копируются в наборы по темам (та же логика, что камера/читалка).
+  fastify.post('/api/lessons/:id/distribute-to-sets', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const lessonId = parseInt(request.params.id)
+    const { rows: lr } = await db.query('SELECT owner_id, target_lang FROM lessons WHERE id = $1', [lessonId])
+    if (!lr[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    if (lr[0].owner_id !== request.user.id) return reply.status(403).send({ error: 'Не ваш урок' })
+    const { rows: words } = await db.query('SELECT word_de, translation_ru FROM words WHERE lesson_id = $1', [lessonId])
+    if (!words.length) return reply.status(400).send({ error: 'Нет слов в уроке' })
+    const { rows: sents } = await db.query('SELECT text, translation_ru FROM lesson_sentences WHERE lesson_id = $1', [lessonId])
+    reply.code(202).send({ started: true, words: words.length })
+    distributeWordsToSets(
+      words.map(w => ({ de: w.word_de, tr: w.translation_ru })),
+      request.user.id, lr[0].target_lang,
+      sents.map(s => ({ text: s.text, translation: s.translation_ru }))
+    ).catch(err => fastify.log.error({ lessonId, err }, 'Ошибка распределения в наборы'))
   })
 
   // «Свои упражнения»: создать набор из выбранных слов словаря

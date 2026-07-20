@@ -236,18 +236,14 @@ export default function LessonList() {
   }
 
   // «Перераспределить» — разбить урок на тематические под-уроки (14 → 14.1, 14.2…)
+  // «В наборы»: слова урока → тематические наборы словаря (урок НЕ разбивается)
   const handleRedistribute = async (id) => {
-    if (!window.confirm('Разбить урок на тематические под-уроки (14.1, 14.2…) по темам слов? Исходный урок останется. Создаст новые уроки и упражнения.')) return
+    if (!window.confirm('Распределить слова этого урока в тематические наборы словаря? Урок останется как есть, слова уйдут в наборы по темам.')) return
     setProcessing(id)
-    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Разбиваю на темы...' } : l))
     try {
-      await api.post(`/lessons/${id}/redistribute`, {})
-      const poll = setInterval(async () => {
-        const updated = await api.get(`/lessons/${id}`)
-        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
-        if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null); api.get('/lessons').then(setLessons).catch(() => {}) }
-      }, 3000)
-    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
+      const res = await api.post(`/lessons/${id}/distribute-to-sets`, {})
+      alert(`Распределяю ${res.words} слов по наборам — идёт в фоне. Наборы появятся в Словаре.`)
+    } catch (e) { alert('Ошибка: ' + e.message) } finally { setProcessing(null) }
   }
 
   // «Нарисовать недостающие картинки» — детсадовские ИИ-иллюстрации (тратит OpenAI)
@@ -489,9 +485,9 @@ export default function LessonList() {
                           )}
                           {status === 'done' && (
                             <button onClick={() => handleRedistribute(lesson.id)} disabled={processing === lesson.id}
-                              title="Разбить урок на тематические под-уроки (14.1, 14.2…). Исходный останется."
+                              title="Распределить слова урока в тематические наборы словаря (урок не разбивается)"
                               style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
-                              {processing === lesson.id ? '⏳' : '🧩 Перераспределить'}
+                              {processing === lesson.id ? '⏳' : '🎯 В наборы'}
                             </button>
                           )}
                           <button onClick={() => setEditingId(isEditing ? null : lesson.id)}
