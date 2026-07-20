@@ -51,7 +51,7 @@ export function unlockDateForIndex(startDate, weekdays, index) {
 //  • есть расписание → открыт урок, если наступил учебный день И предыдущий пройден (цепочка).
 export async function playableLessonIds(userId, schoolId) {
   const { rows } = await db.query(
-    `SELECT l.id, l.course_id
+    `SELECT l.id, l.course_id, l.is_set
      FROM lessons l
      WHERE l.status = 'done' AND ($2::int IS NULL OR l.school_id = $2)
      ORDER BY l.course_id NULLS FIRST, l.lesson_number NULLS LAST, l.created_at`,
@@ -60,7 +60,8 @@ export async function playableLessonIds(userId, schoolId) {
   const needsSchedule = []
   const byCourse = new Map()
   for (const l of rows) {
-    if (!l.course_id) { playable.add(l.id); continue } // наборы/личные — всегда открыты
+    // Наборы (is_set) и внекурсовые/личные — всегда открыты, вне дрип-очереди
+    if (!l.course_id || l.is_set) { playable.add(l.id); continue }
     if (!byCourse.has(l.course_id)) byCourse.set(l.course_id, [])
     byCourse.get(l.course_id).push(l)
   }
@@ -70,7 +71,7 @@ export async function playableLessonIds(userId, schoolId) {
     'SELECT course_id, weekdays, start_date FROM course_schedules WHERE user_id = $1', [userId])
   const scMap = new Map(scRows.map(s => [s.course_id, s]))
 
-  const courseLessonIds = rows.filter(l => l.course_id).map(l => l.id)
+  const courseLessonIds = rows.filter(l => l.course_id && !l.is_set).map(l => l.id)
   const { rows: passedRows } = await db.query(
     `SELECT e.lesson_id, count(*)::int AS total_ex,
             count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE)::int AS done_ex
