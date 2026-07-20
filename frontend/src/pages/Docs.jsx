@@ -68,18 +68,33 @@ const SECTIONS_RU = [
   {
     id: 'progress',
     icon: '📊',
-    title: 'Прогресс и статистика',
-    body: `Статус слова:
-• 🔵 Новое — ещё не изучалось
-• 🟡 Изучается — в процессе (следующий показ в будущем)
-• 🟢 Выучено — отвечено правильно несколько раз подряд
+    title: 'Как считаются уроки, прогресс и «баллы»',
+    body: `КОГДА УРОК СЧИТАЕТСЯ ПРОЙДЕННЫМ
+Урок засчитан, когда КАЖДОЕ слово урока отработано хотя бы в одном упражнении
+(любого из 7 типов) — не нужно проходить все 7 упражнений каждого слова.
+Как только все слова «задеты» — урок пройден: в курсе открывается следующий урок,
+а счётчик «📘 уроки» на дашборде растёт.
 
-На главной «Сегодня»:
-  Показываются упражнения с датой ≤ сегодня + все новые.
-  Лимит задаётся в Настройках (по умолчанию 50 в день).
+СТАТУС СЛОВА (🔵 новое → 🟡 учу → 🟢 знаю)
+• 🟡 «учу» — после первого успешного ответа по слову
+• 🟢 «знаю» — после 5 успешных повторений (по алгоритму SM-2)
+Счётчик «💪 слова» = сколько слов в статусе «знаю».
 
-Отчёт (/report):
-  • Количество попыток по дням (за 30 дней)
+ДОСТИЖЕНИЯ
+• 🔥 Серия — сколько дней подряд ты занимался (прервётся, если пропустить день)
+• 🏆 Вехи — поздравления за пороги: слова (10, 25, 50, 100, 200, 300, 500, 1000)
+  и уроки (3, 5, 10, 20, 30, 50, 100)
+
+НА ГЛАВНОЙ «СЕГОДНЯ»
+Показываются упражнения с датой повторения ≤ сегодня + новые.
+Дневной лимит задаётся в Настройках (по умолчанию 50). Большой урок можно
+закрывать по частям в разные дни — прогресс сохраняется.
+
+НАПОМИНАНИЯ
+Пуши приходят по твоему местному времени (Настройки → ⏰ Когда напоминать).
+
+ОТЧЁТ (/report)
+  • Попытки по дням (за 30 дней)
   • Прогресс по каждому уроку
   • Активность учеников (для учителя)`,
   },
@@ -242,17 +257,31 @@ Say the word into the microphone — the system checks your pronunciation.`,
   {
     id: 'progress',
     icon: '📊',
-    title: 'Progress & Statistics',
-    body: `Word status:
-• 🔵 New — not yet studied
-• 🟡 Learning — in progress (next review in the future)
-• 🟢 Mastered — answered correctly several times in a row
+    title: 'How lessons, progress & points are counted',
+    body: `WHEN A LESSON COUNTS AS COMPLETED
+A lesson is completed once EVERY word in it has been practiced in at least one
+exercise (any of the 7 types) — you don't need to finish all 7 exercises per word.
+Once every word is touched, the lesson is done: the next lesson in the course
+unlocks and the "📘 lessons" counter on the dashboard goes up.
 
-Today's page shows:
-  Exercises due today + all new ones.
-  Daily limit set in Settings (default: 50).
+WORD STATUS (🔵 new → 🟡 learning → 🟢 known)
+• 🟡 "learning" — after the first correct answer for the word
+• 🟢 "known" — after 5 successful repetitions (SM-2 algorithm)
+The "💪 words" counter = how many words are "known".
 
-Report (/report):
+ACHIEVEMENTS
+• 🔥 Streak — consecutive days you practiced (breaks if you skip a day)
+• 🏆 Milestones — congrats at thresholds: words (10, 25, 50, 100, 200, 300, 500,
+  1000) and lessons (3, 5, 10, 20, 30, 50, 100)
+
+TODAY'S PAGE
+Shows exercises due today + new ones. Daily limit set in Settings (default 50).
+A big lesson can be finished across several days — progress is saved.
+
+REMINDERS
+Push notifications arrive at your local time (Settings → ⏰ When to remind).
+
+REPORT (/report)
   • Attempts by day (last 30 days)
   • Progress per lesson
   • Student activity (teacher view)`,
