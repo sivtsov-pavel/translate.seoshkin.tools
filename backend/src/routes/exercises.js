@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { playableLessonIds } from '../services/drip.js'
+import { playableLessonIds, LESSON_PASSED_HAVING } from '../services/drip.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { generateWordImage } from '../services/imageGen.js'
@@ -176,7 +176,7 @@ export async function exercisesRoutes(fastify) {
       : `l.status='done' AND l.target_lang = $1 AND ($2::int IS NULL OR l.school_id = $2) AND l.is_set = false`
     const lparam = role === 'owner' ? userId : schoolId
 
-    // Уроки: всего и пройдено (все упражнения ушли в будущее)
+    // Уроки: всего и пройдено (каждое слово урока отработано хотя бы в одном упражнении)
     const { rows: lt } = await db.query(
       `SELECT count(*)::int AS total FROM lessons l WHERE ${lessonWhere}`, [target, lparam])
     const { rows: ld } = await db.query(
@@ -185,7 +185,7 @@ export async function exercisesRoutes(fastify) {
          LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $3
          WHERE ${lessonWhere}
          GROUP BY l.id
-         HAVING count(*) > 0 AND count(*) FILTER (WHERE uep.exercise_id IS NOT NULL) = count(*)
+         HAVING ${LESSON_PASSED_HAVING}
        ) t`, [target, lparam, userId])
 
     // Слова: всего (уникальные по активному языку) и выучено (known)
@@ -266,7 +266,7 @@ export async function exercisesRoutes(fastify) {
        LEFT JOIN user_exercise_progress uep ON uep.exercise_id=e.id AND uep.user_id=$1
        WHERE 1=1 ${doneFilter}
        GROUP BY l.id, l.title, l.title_translations
-       HAVING count(*) > 0 AND count(*) FILTER (WHERE uep.exercise_id IS NOT NULL) = count(*)
+       HAVING ${LESSON_PASSED_HAVING}
        ORDER BY l.date DESC, l.id`,
       [userId]
     )

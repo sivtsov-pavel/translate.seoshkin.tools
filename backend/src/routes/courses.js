@@ -5,7 +5,7 @@ import { saveCourseCover } from '../services/imageOptimize.js'
 import { pdfToImages } from '../services/pdf.js'
 import { drainPendingLessons } from '../services/processor.js'
 import { ownerHasOwnKey } from '../services/openaiClient.js'
-import { unlockedCount, unlockDateForIndex } from '../services/drip.js'
+import { unlockedCount, unlockDateForIndex, LESSON_PASSED_HAVING } from '../services/drip.js'
 
 export async function coursesRoutes(fastify) {
 
@@ -70,19 +70,18 @@ export async function coursesRoutes(fastify) {
       if (sc[0]) {
         schedule = sc[0]
         const opened = unlockedCount(sc[0].start_date, sc[0].weekdays)
-        // Статус «пройден» = сдан зачёт: ВСЕ упражнения урока пройдены хотя бы раз
-        // (есть запись прогресса), даже если что-то ответил неверно — урок засчитан.
+        // Статус «пройден» = каждое слово урока отработано хотя бы в одном упражнении
+        // (см. LESSON_PASSED_HAVING в drip.js) — не нужно щёлкать все 7 упражнений каждого слова.
         const { rows: passedRows } = await db.query(
-          `SELECT e.lesson_id,
-                  count(*)::int AS total_ex,
-                  count(*) FILTER (WHERE uep.exercise_id IS NOT NULL)::int AS done_ex
+          `SELECT e.lesson_id
            FROM exercises e
            JOIN lessons l ON l.id = e.lesson_id
            LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
            WHERE l.course_id = $2
-           GROUP BY e.lesson_id`,
+           GROUP BY e.lesson_id
+           HAVING ${LESSON_PASSED_HAVING}`,
           [request.user.id, courseId])
-        const passedMap = new Map(passedRows.map(r => [r.lesson_id, r.total_ex > 0 && r.done_ex === r.total_ex]))
+        const passedSet = new Set(passedRows.map(r => r.lesson_id))
 
         // Идём по готовым урокам по порядку. prevPassed — пройден ли предыдущий готовый урок.
         let doneIdx = 0
@@ -96,7 +95,7 @@ export async function coursesRoutes(fastify) {
             l.lock_reason = !l.locked ? null : (!calendarOpen ? 'date' : 'prev')
             l.unlock_date = (l.locked && l.lock_reason === 'date')
               ? unlockDateForIndex(sc[0].start_date, sc[0].weekdays, doneIdx) : null
-            prevPassed = passedMap.get(l.id) === true
+            prevPassed = passedSet.has(l.id)
             doneIdx++
           } else {
             l.locked = true

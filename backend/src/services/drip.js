@@ -3,6 +3,13 @@ import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
 import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 
+// «Пройден» = каждое СЛОВО урока отработано хотя бы в одном упражнении (любого типа),
+// а не все 7 упражнений каждого слова. Единое определение для дрипа, дашборда, вех и гейта курса.
+// Требует в запросе алиасы: exercises AS e и LEFT JOIN user_exercise_progress uep (по нужному user_id).
+export const LESSON_PASSED_HAVING = `count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL) > 0
+  AND count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND uep.exercise_id IS NOT NULL)
+    = count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)`
+
 // ISO-день недели (1=Пн … 7=Вс) для даты (UTC)
 function isoWeekday(date) {
   const d = date.getUTCDay() // 0=Вс … 6=Сб
@@ -73,17 +80,16 @@ export async function playableLessonIds(userId, schoolId) {
   const scMap = new Map(scRows.map(s => [s.course_id, s]))
 
   const courseLessonIds = rows.filter(l => l.course_id && !l.is_set).map(l => l.id)
-  // «Пройден» = сдан зачёт: ВСЕ упражнения урока пройдены хотя бы раз (есть запись прогресса),
-  // не дожидаясь идеального SM-2 (даже если что-то ответил неверно — урок засчитан пройденным).
+  // «Пройден» = каждое слово урока отработано хотя бы в одном упражнении (см. LESSON_PASSED_HAVING).
   const { rows: passedRows } = await db.query(
-    `SELECT e.lesson_id, count(*)::int AS total_ex,
-            count(*) FILTER (WHERE uep.exercise_id IS NOT NULL)::int AS done_ex
+    `SELECT e.lesson_id
      FROM exercises e
      LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
      WHERE e.lesson_id = ANY($2)
-     GROUP BY e.lesson_id`,
+     GROUP BY e.lesson_id
+     HAVING ${LESSON_PASSED_HAVING}`,
     [userId, courseLessonIds])
-  const passedMap = new Map(passedRows.map(r => [r.lesson_id, r.total_ex > 0 && r.done_ex === r.total_ex]))
+  const passedSet = new Set(passedRows.map(r => r.lesson_id))
 
   for (const [cid, lessons] of byCourse) {
     const sc = scMap.get(cid)
@@ -94,7 +100,7 @@ export async function playableLessonIds(userId, schoolId) {
       const calendarOpen = doneIdx < opened
       const gateOpen = doneIdx === 0 || prevPassed
       if (calendarOpen && gateOpen) playable.add(l.id)
-      prevPassed = passedMap.get(l.id) === true
+      prevPassed = passedSet.has(l.id)
       doneIdx++
     }
   }

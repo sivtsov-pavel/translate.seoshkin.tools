@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
 import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
+import { LESSON_PASSED_HAVING } from './drip.js'
 
 // Русская форма слова по числу: 1 день / 2 дня / 5 дней
 function plural(n, one, few, many) {
@@ -69,14 +70,14 @@ export async function runMilestones() {
   const { rows: users } = await db.query(
     `SELECT u.id, u.motivation, u.timezone, u.notify_prefs,
        (SELECT count(*) FROM user_word_status s WHERE s.user_id = u.id AND s.status = 'known')::int AS known,
-       -- Реально ПРОЙДЕННЫЕ уроки: все упражнения урока ушли в будущее (ни одно не «горит»),
-       -- а не просто «затронутые» (иначе практика «выбери ответ по словарю» накручивает счёт)
+       -- ПРОЙДЕННЫЕ уроки: каждое слово урока отработано хотя бы в одном упражнении
+       -- (единое определение LESSON_PASSED_HAVING — как дрип/дашборд/гейт курса)
        (SELECT count(*) FROM (
           SELECT l.id
           FROM lessons l JOIN exercises e ON e.lesson_id = l.id
           LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = u.id
           GROUP BY l.id
-          HAVING count(*) > 0 AND count(*) FILTER (WHERE uep.exercise_id IS NOT NULL) = count(*)
+          HAVING ${LESSON_PASSED_HAVING}
         ) done_lessons)::int AS lessons
      FROM users u JOIN push_subscriptions p ON p.user_id = u.id
      WHERE u.role = 'student'`)
