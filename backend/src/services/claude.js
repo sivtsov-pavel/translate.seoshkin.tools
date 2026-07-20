@@ -172,6 +172,7 @@ const MERGE_PROMPT = (t) => `Объедини данные из нескольк
 - Глаголы — в инфинитиве, с маленькой буквы.
 - Прилагательные, наречия, частицы, местоимения — с маленькой буквы.
 - Убери дубли: слово с артиклем и без него — это ОДНО слово, оставь форму с артиклем. Разный регистр одного слова — не новый вход (кроме случаев, где регистр меняет смысл, напр. нем. "Sie/sie").
+- ⚠️ КРИТИЧНО: НЕ выбрасывай слова! Сохрани ВСЕ различные слова со всех страниц. Дедуп — ТОЛЬКО точные повторы одного и того же слова. Числительные (напр. 20, 21, 30, 34 → zwanzig, einundzwanzig…), простые и служебные слова — тоже входят в список, не пропускай их.
 - Числительные: в переводе ТОЛЬКО слово, БЕЗ цифры в скобках («шесть», НЕ «шесть (6)») — скобки ломают озвучку.
 - Объедини грамматические правила без дублей.
 - ПРЕДЛОЖЕНИЯ ("sentences"): собери РЕАЛЬНЫЕ предложения-примеры со страниц (учебник/тетрадь/доска) ДОСЛОВНО — не выдумывай новые. Убери дубли и мусор (обрывки, заголовки, номера). Для каждого дай перевод на русский. Это основа для упражнений урока.
@@ -197,7 +198,27 @@ async function mergeChunk(extractions, transcription = null, existingWords = [],
   const existingBlock = existingWords.length
     ? `\n\nВ УРОКЕ УЖЕ ЕСТЬ эти слова — не добавляй их повторно. Если новое фото уточняет слово (напр. даёт артикль или пример) — верни исправленную форму, иначе пропусти. Возвращай в основном НОВЫЕ слова:\n${existingWords.slice(0, 200).join(', ')}`
     : ''
-  return parseJson(await ask(`${MERGE_PROMPT(TL(targetLang))}\n\nДанные:\n${input}${existingBlock}`, { max_tokens: 8192 }))
+  const merged = parseJson(await ask(`${MERGE_PROMPT(TL(targetLang))}\n\nДанные:\n${input}${existingBlock}`, { max_tokens: 8192 }))
+
+  // 🛟 Страховка от потери слов: если модель выкинула слово из распознавания (напр. числа
+  // 20-34 из тетради), возвращаем его обратно. Дедуп по ключу; уже имеющиеся в уроке — пропускаем.
+  const mergedKeys = new Set((merged.words || []).map(w => wordKey(w.word_de)))
+  const existingKeys = new Set(existingWords.map(wordKey))
+  for (const e of extractions) {
+    for (const w of (e.words || [])) {
+      const de = w?.word_de || w?.de
+      if (!de) continue
+      const k = wordKey(de)
+      if (!k || mergedKeys.has(k) || existingKeys.has(k)) continue
+      mergedKeys.add(k)
+      ;(merged.words ||= []).push({
+        word_de: de,
+        translation_ru: w.translation_ru || w.tr || w.translation || '',
+        example_sentence: w.example_sentence || null,
+      })
+    }
+  }
+  return merged
 }
 
 export async function mergeLesson(extractions, transcription = null, existingWords = [], targetLang = 'de') {
