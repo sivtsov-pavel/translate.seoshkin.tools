@@ -62,7 +62,16 @@ export async function runMilestones() {
   const { rows: users } = await db.query(
     `SELECT u.id, u.motivation,
        (SELECT count(*) FROM user_word_status s WHERE s.user_id = u.id AND s.status = 'known')::int AS known,
-       (SELECT count(DISTINCT e.lesson_id) FROM exercise_attempts a JOIN exercises e ON e.id = a.exercise_id WHERE a.user_id = u.id)::int AS lessons
+       -- Реально ПРОЙДЕННЫЕ уроки: все упражнения урока ушли в будущее (ни одно не «горит»),
+       -- а не просто «затронутые» (иначе практика «выбери ответ по словарю» накручивает счёт)
+       (SELECT count(*) FROM (
+          SELECT l.id
+          FROM lessons l JOIN exercises e ON e.lesson_id = l.id
+          LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = u.id
+          GROUP BY l.id
+          HAVING count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE) > 0
+             AND count(*) FILTER (WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= CURRENT_DATE) = 0
+        ) done_lessons)::int AS lessons
      FROM users u JOIN push_subscriptions p ON p.user_id = u.id
      WHERE u.role = 'student'`)
   for (const u of users) {

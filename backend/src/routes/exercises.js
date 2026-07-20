@@ -117,21 +117,28 @@ export async function exercisesRoutes(fastify) {
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
         ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM() LIMIT ${limit}`
     } else {
-      // Строгий дрип: ученик получает упражнения только из РАЗБЛОКИРОВАННЫХ уроков
-      // (наступил день + предыдущий пройден). Без расписания курс закрыт — заставляем выбрать календарь.
-      const { playable } = await playableLessonIds(userId, request.user.school_id ?? null)
+      // Две дорожки прогресса:
+      //  • «Обучение по урокам» (обычный поток без type) — строгий дрип: только разблокированные уроки.
+      //  • «Усиление знаний» (практика по типу: выбери ответ / карточки) — БЕЗ дрип-ограничений,
+      //    ученик тренирует весь свой словарь сколько хочет.
+      const dripGate = !type // гейтим только поток уроков, не практику по типу
       params = [userId, today]
       if (type)      params.push(type)
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
       params.push(target); const tp = params.length
       params.push(request.user.school_id ?? null); const sp = params.length // школа ученика (null-safe)
-      params.push([...playable]); const pl = params.length // разрешённые дрипом уроки
+      let gateClause = ''
+      if (dripGate) {
+        const { playable } = await playableLessonIds(userId, request.user.school_id ?? null)
+        params.push([...playable]); const pl = params.length
+        gateClause = `AND e.lesson_id = ANY($${pl}::int[])`
+      }
       query = SELECT + `
         WHERE l.status = 'done'
           AND l.target_lang = $${tp}
           AND ($${sp}::int IS NULL OR l.school_id = $${sp})
-          AND e.lesson_id = ANY($${pl}::int[])
+          ${gateClause}
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
