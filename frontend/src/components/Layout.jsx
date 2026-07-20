@@ -194,6 +194,7 @@ export default function Layout({ children }) {
     { to: '/school',       icon: 'bi-building-fill',    label: t.nav.school },
     { to: '/catalog',      icon: 'bi-book-fill',        label: t.nav.catalog },
     { to: '/courses',      icon: 'bi-mortarboard-fill', label: t.nav.courses },
+    { to: '/books',        icon: 'bi-book-half',        label: 'Книги' },
     { to: '/students',     icon: 'bi-people-fill',      label: t.nav.students },
     { to: '/translations', icon: 'bi-globe2',           label: t.nav.translations },
     { to: '/report',       icon: 'bi-bar-chart-fill',   label: t.nav.report },

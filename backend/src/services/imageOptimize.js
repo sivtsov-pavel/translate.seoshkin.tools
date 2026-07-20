@@ -45,3 +45,16 @@ export async function saveCourseCover(buffer, courseId) {
     .toFile(join(dir, filename))
   return `/uploads/course-covers/${filename}`
 }
+
+// Обложка книги — тот же формат, что у курсов (портретная, cover). Имя по bookId +
+// кэш-бастер добавляет вызывающий (URL в БД), так что при перезагрузке превью обновится.
+export async function saveBookCover(buffer, bookId) {
+  const dir = join(config.uploadDir, 'book-covers')
+  mkdirSync(dir, { recursive: true })
+  const filename = `book_${bookId}.webp`
+  await sharp(buffer)
+    .resize(COVER_WIDTH, COVER_HEIGHT, { fit: 'cover' })
+    .webp({ quality: 82 })
+    .toFile(join(dir, filename))
+  return `/uploads/book-covers/${filename}`
+}

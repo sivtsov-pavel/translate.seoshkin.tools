@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { speak, cancel, SpeakButton } from '../hooks/useSpeech.jsx'
+import BookReader from './BookReader.jsx'
 import { api } from '../api/client.js'
 import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import CameraWords from '../components/CameraWords.jsx'
@@ -392,11 +393,17 @@ function TextReaderInner() {
   const [showLessons, setShowLessons] = useState(false)
   const [loadingLesson, setLoadingLesson] = useState(false)
 
+  // Книги (для чтения в отдельном полноэкранном ридере с закладкой)
+  const [books, setBooks]           = useState([])
+  const [showBooks, setShowBooks]   = useState(false)
+  const [openBook, setOpenBook]     = useState(null)
+
   const cancelRef = useRef(false)
 
   useEffect(() => {
     api.get('/phrase-sets').then(setSets).catch(() => {})
     api.get('/reader/lessons').then(setLessons).catch(() => {})
+    api.get('/reader/books').then(setBooks).catch(() => {})
     return () => { cancel(); cancelRef.current = true }
   }, [])
 
@@ -424,15 +431,16 @@ function TextReaderInner() {
     })
   }, [convMessages, convSrcLang, convTgtLang])
 
-  // закрыть дропдаун при клике вне
+  // закрыть дропдауны при клике вне
   useEffect(() => {
-    if (!showLessons) return
+    if (!showLessons && !showBooks) return
     const handler = (e) => {
       if (!e.target.closest('[data-lesson-dropdown]')) setShowLessons(false)
+      if (!e.target.closest('[data-book-dropdown]')) setShowBooks(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [showLessons])
+  }, [showLessons, showBooks])
 
   // ─── слова ───
 
@@ -748,6 +756,9 @@ function TextReaderInner() {
   return (
     <div style={{ padding: '24px 14px 60px' }}>
 
+      {/* Полноэкранный ридер книги (с закладкой) поверх всего */}
+      {openBook && <BookReader book={openBook} onClose={() => { setOpenBook(null); api.get('/reader/books').then(setBooks).catch(() => {}) }} />}
+
       {/* Заголовок + вкладки */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
         <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: 0 }}>📖 Читалка</h1>
@@ -946,6 +957,34 @@ function TextReaderInner() {
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <span style={{ fontWeight: 600 }}>{lesson.title}</span>
                       <span style={{ color: 'var(--ink-soft)', fontSize: 12, marginLeft: 8 }}>{lesson.sentences_count} предл.</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Книга — открывается в отдельном ридере с закладкой */}
+            <div data-book-dropdown style={{ position: 'relative' }}>
+              <button onClick={() => setShowBooks(v => !v)}
+                style={{ padding: '7px 14px', background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                📖 Книга ▾
+              </button>
+              {showBooks && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: 4,
+                  background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12,
+                  boxShadow: '0 8px 24px rgba(0,0,0,.15)', minWidth: 260, maxHeight: 280, overflowY: 'auto',
+                }}>
+                  {books.length === 0 ? (
+                    <div style={{ padding: 14, fontSize: 13, color: 'var(--ink-soft)' }}>Пока нет книг. Учитель добавляет их в разделе «📚 Книги».</div>
+                  ) : books.map(b => (
+                    <div key={b.id} onClick={() => { setOpenBook(b); setShowBooks(false) }}
+                      style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--line)', fontSize: 14, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <span style={{ fontSize: 18 }}>📖</span>
+                      <span style={{ fontWeight: 600, flex: 1 }}>{b.title}</span>
+                      {b.para_index > 0 && <span style={{ color: 'var(--accent)', fontSize: 12 }}>▶ продолжить</span>}
                     </div>
                   ))}
                 </div>
