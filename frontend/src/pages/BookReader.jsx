@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { api } from '../api/client.js'
 import { speak, targetLocale } from '../hooks/useSpeech.jsx'
+import { useI18nStore } from '../store/i18n.js'
+
+// Язык книги (изучаемый) → TTS-локаль для озвучки
+const TTS = { de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT', en: 'en-US', pt: 'pt-PT' }
 
 // Разбивка абзаца на токены (слова/пробелы/пунктуация) — для кликабельных слов.
 const tokenize = (s) => String(s || '').split(/(\s+|[.,!?;:«»"“”()\-—…]+)/).filter(Boolean)
@@ -10,18 +14,23 @@ const isWord = (t) => /[A-Za-zÀ-ÿА-Яа-яäöüßÄÖÜ]/.test(t) && !/^\s+$
 // Место, где остановился, сохраняется автоматически (индекс верхнего видимого абзаца)
 // и восстанавливается при следующем открытии.
 export default function BookReader({ book, onClose }) {
+  const { lang } = useI18nStore()                 // локаль ученика — язык перевода
   const [paras, setParas]     = useState(null)   // null = грузим
   const [title, setTitle]     = useState(book.title || 'Книга')
+  const [bookLang, setBookLang] = useState('de')  // язык книги (изучаемый)
   const [resumeIdx, setResumeIdx] = useState(0)
   const [curIdx, setCurIdx]   = useState(0)
-  const [popup, setPopup]     = useState(null)    // { word, loading, translation, example }
+  const [popup, setPopup]     = useState(null)    // { text, loading, translation, example, inDict, isSel }
+  const [selText, setSelText] = useState('')      // выделенный фрагмент (несколько слов/предложение)
   const [err, setErr]         = useState('')
 
   const paraRefs = useRef([])          // DOM-узлы абзацев
+  const containerRef = useRef(null)    // контейнер текста (для проверки, что выделение внутри книги)
   const visible  = useRef(new Set())   // индексы видимых сейчас абзацев
   const saveTimer = useRef(null)
   const lastSaved = useRef(0)
   const resumedRef = useRef(false)
+  const ttsLang = TTS[bookLang] || targetLocale()
 
   // Загрузка текста книги + сохранённой закладки
   useEffect(() => {
@@ -31,6 +40,7 @@ export default function BookReader({ book, onClose }) {
         if (!alive) return
         setParas(res.paragraphs || [])
         setTitle(res.title || book.title)
+        setBookLang(res.target_lang || 'de')
         setResumeIdx(res.para_index || 0)
         setCurIdx(res.para_index || 0)
         lastSaved.current = res.para_index || 0
@@ -95,23 +105,53 @@ export default function BookReader({ book, onClose }) {
   }
   useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current) }, [])
 
-  // Тап по слову → перевод (словарь/GPT) + озвучка
+  // Выделение текста (несколько слов / предложение) внутри книги → показываем кнопку «перевести».
+  useEffect(() => {
+    const onSel = () => {
+      const s = window.getSelection()
+      const txt = (s?.toString() || '').trim()
+      const inside = s?.anchorNode && containerRef.current?.contains(s.anchorNode)
+      // Реагируем только на осмысленное выделение (2+ слова или длинный фрагмент) внутри текста книги
+      if (txt && inside && (/\s/.test(txt) || txt.length > 14)) setSelText(txt)
+      else if (!txt) setSelText('')
+    }
+    document.addEventListener('selectionchange', onSel)
+    return () => document.removeEventListener('selectionchange', onSel)
+  }, [])
+
+  // Тап по слову → перевод (словарь ИЛИ GPT-фолбэк) + озвучка. inDict = есть ли слово в словаре.
   const onWord = async (raw) => {
     const word = raw.replace(/^(der|die|das|ein|eine|einen|dem|den|des)\s+/i, '').trim()
     if (!word) return
-    speak(word, targetLocale())
-    setPopup({ word, loading: true })
+    if ((window.getSelection()?.toString().trim().length || 0) > 1) return // идёт выделение фразы — не перехватываем
+    speak(word, ttsLang)
+    setPopup({ text: word, loading: true })
     try {
-      const res = await api.get(`/words/lookup?q=${encodeURIComponent(word)}`)
-      setPopup({ word: res?.word_de || word, loading: false, translation: res?.translation_ru || null, example: res?.example_sentence || null })
+      const res = await api.get(`/words/tap?q=${encodeURIComponent(word)}&lang=${lang}`)
+      setPopup({ text: res?.word || word, loading: false, translation: res?.translation || null, example: res?.example || null, inDict: !!res?.inDict })
     } catch {
-      setPopup({ word, loading: false, translation: null })
+      setPopup({ text: word, loading: false, translation: null })
     }
   }
 
+  // Перевод выделенного фрагмента (несколько слов / предложение) через GPT.
+  const translateSelection = async () => {
+    const text = selText.trim()
+    if (!text) return
+    setPopup({ text, loading: true, isSel: true })
+    try {
+      const res = await api.post('/reader/speak-translate', { text, sourceLang: bookLang, targetLang: lang, model: 'fast' })
+      setPopup({ text, loading: false, translation: res?.translation || null, isSel: true })
+    } catch {
+      setPopup({ text, loading: false, translation: null, isSel: true })
+    }
+    setSelText(''); window.getSelection()?.removeAllRanges()
+  }
+
+  // Сохранить в разговорник — работает и для слова, и для выделенного предложения
   const savePhrase = async () => {
     if (!popup) return
-    try { await api.post('/phrasebook', { de: popup.word, ru: popup.translation || '', source: 'book' }); setPopup(p => ({ ...p, saved: true })) } catch {}
+    try { await api.post('/phrasebook', { de: popup.text, ru: popup.translation || '', source: 'book' }); setPopup(p => ({ ...p, saved: true })) } catch {}
   }
 
   const pct = paras && paras.length > 1 ? Math.round(curIdx / (paras.length - 1) * 100) : 0
@@ -131,7 +171,7 @@ export default function BookReader({ book, onClose }) {
       </div>
 
       {/* Текст книги */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px 120px', maxWidth: 760, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div ref={containerRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 18px 120px', maxWidth: 760, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         {err && <div style={{ color: 'var(--red)', padding: 20 }}>{err}</div>}
         {paras === null && !err && <div style={{ color: 'var(--ink-soft)', padding: 20 }}>Открываю книгу…</div>}
         {paras && resumeIdx > 0 && (
@@ -153,22 +193,38 @@ export default function BookReader({ book, onClose }) {
         )}
       </div>
 
-      {/* Попап перевода слова */}
+      {/* Кнопка перевода выделенного фрагмента (несколько слов / предложение) */}
+      {selText && !popup && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 14, background: 'var(--surface)', borderTop: '1px solid var(--line)', boxShadow: '0 -4px 16px rgba(0,0,0,.15)' }}>
+          <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ flex: 1, fontSize: 13, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>«{selText}»</div>
+            <button onClick={translateSelection}
+              style={{ border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
+              🌐 Перевести
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Попап перевода (слово или выделенный фрагмент) */}
       {popup && (
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, background: 'var(--surface)', borderTop: '1px solid var(--line)', boxShadow: '0 -4px 16px rgba(0,0,0,.15)' }}>
           <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <button onClick={() => speak(popup.word, targetLocale())} title="Озвучить"
+            <button onClick={() => speak(popup.text, ttsLang)} title="Озвучить"
               style={{ border: 'none', background: 'var(--surface-2)', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 16 }}>🔊</button>
             <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ fontWeight: 700, fontSize: 17 }}>{popup.word}</div>
-              <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>
-                {popup.loading ? 'перевожу…' : (popup.translation || 'нет в словаре')}
+              <div style={{ fontWeight: 700, fontSize: popup.isSel ? 15 : 17, lineHeight: 1.4 }}>{popup.text}</div>
+              <div style={{ fontSize: 14, color: 'var(--ink)' }}>
+                {popup.loading ? 'перевожу…' : (popup.translation || 'не удалось перевести')}
               </div>
+              {!popup.loading && !popup.isSel && popup.inDict === false && popup.translation && (
+                <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', marginTop: 2 }}>перевод ИИ — нет в словаре, можно добавить →</div>
+              )}
               {popup.example && <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4, fontStyle: 'italic' }}>{popup.example}</div>}
             </div>
-            {!popup.loading && (
+            {!popup.loading && popup.translation && (
               <button onClick={savePhrase} disabled={popup.saved}
-                style={{ border: '1px solid var(--line)', background: 'transparent', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: popup.saved ? 'var(--good)' : 'var(--accent)' }}>
+                style={{ border: '1px solid var(--line)', background: 'transparent', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: popup.saved ? 'var(--good)' : 'var(--accent)', whiteSpace: 'nowrap' }}>
                 {popup.saved ? '✓ в разговорнике' : '＋ в разговорник'}
               </button>
             )}

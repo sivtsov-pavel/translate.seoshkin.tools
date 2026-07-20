@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 
 // Раздел «📚 Книги» (для учителя): загрузка PDF/TXT + обложка. Ученики читают книги в Читалке.
 export default function Books() {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const [books, setBooks]     = useState([])
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
@@ -99,7 +100,7 @@ export default function Books() {
                 {b.source_type?.toUpperCase()} · {Math.max(1, Math.round((b.char_count || 0) / 1000))}k символов
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                <Link to="/reader" style={{ ...btnPrimary, textDecoration: 'none', textAlign: 'center', flex: 1, fontSize: 13, padding: '8px 12px' }}>📖 Читать</Link>
+                <button onClick={() => navigate(`/reader?book=${b.id}`)} style={{ ...btnPrimary, flex: 1, fontSize: 13, padding: '8px 12px' }}>📖 Читать</button>
                 {isOwner && (
                   <button onClick={() => remove(b)} title="Удалить книгу"
                     style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'transparent', color: 'var(--red)', cursor: 'pointer', fontSize: 13 }}>

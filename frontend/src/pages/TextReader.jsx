@@ -404,6 +404,9 @@ function TextReaderInner() {
     api.get('/phrase-sets').then(setSets).catch(() => {})
     api.get('/reader/lessons').then(setLessons).catch(() => {})
     api.get('/reader/books').then(setBooks).catch(() => {})
+    // Открыть книгу сразу, если пришли по ссылке «Читать» из раздела Книги (/reader?book=ID)
+    const bookParam = new URLSearchParams(window.location.search).get('book')
+    if (bookParam) setOpenBook({ id: parseInt(bookParam), title: '' })
     return () => { cancel(); cancelRef.current = true }
   }, [])
 
