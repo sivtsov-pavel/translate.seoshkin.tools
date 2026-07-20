@@ -561,10 +561,6 @@ export default function Layout({ children }) {
               ← Назад
             </button>
           )}
-          {/* Флаг изучаемого языка справа — быстрый переход в настройки языка */}
-          <Link to="/settings" title={`Изучаемый язык: ${tgt.name}`} style={{ fontSize: 22, textDecoration: 'none', lineHeight: 1 }}>
-            {tgt.flag}
-          </Link>
         </div>
       </header>
 

@@ -76,6 +76,19 @@ export default function CourseView() {
     } catch (e) { alert('Ошибка: ' + e.message) }
   }
 
+  // Ученик: «Сбросить достижения — начать заново» (удаляет весь прогресс по курсу → снова с 1-го урока)
+  const [resetting, setResetting] = useState(false)
+  const resetProgress = async () => {
+    if (!window.confirm('Сбросить все достижения по этому курсу и начать заново с первого урока? Прогресс будет удалён.')) return
+    setResetting(true)
+    try {
+      await api.post('/exercises/reset-all', { course_id: parseInt(id) })
+      await load()
+      alert('Готово! Прогресс сброшен — начинай с первого урока.')
+    } catch (e) { alert('Ошибка: ' + e.message) }
+    finally { setResetting(false) }
+  }
+
   const handleCoverUpload = async (file) => {
     if (!file) return
     setUploadingCover(true)
@@ -222,7 +235,17 @@ export default function CourseView() {
       {/* Ученик: расписание дрип-выдачи (учебные дни → уроки открываются по одному).
           Пока календарь не выбран (needs_schedule) — уроки закрыты, показываем как обязательный шаг. */}
       {user?.role !== 'owner' && lessons.some(l => l.status === 'done') && (
-        <SchedulePicker key={id} schedule={data.schedule} onSave={saveSchedule} required={data.needs_schedule} />
+        <>
+          <SchedulePicker key={id} schedule={data.schedule} onSave={saveSchedule} required={data.needs_schedule} />
+          {/* «Начать заново» — сброс достижений по курсу (для перепрохождения) */}
+          <div style={{ margin: '-8px 0 20px' }}>
+            <button onClick={resetProgress} disabled={resetting}
+              title="Удалить прогресс по курсу и начать с первого урока"
+              style={{ fontSize: 12.5, padding: '7px 14px', background: 'var(--surface)', color: 'var(--red)', border: '1px solid rgba(179,56,44,0.4)', borderRadius: 9, cursor: resetting ? 'default' : 'pointer', fontWeight: 600, opacity: resetting ? 0.6 : 1 }}>
+              {resetting ? '…' : '🔄 Сбросить достижения — начать заново'}
+            </button>
+          </div>
+        </>
       )}
 
       {lessons.length === 0 ? (

@@ -74,7 +74,9 @@ a { color: var(--accent); text-decoration: none; }
 
 /* Основной контент — мобиль/планшет */
 .main-content {
-  padding-top: 56px;
+  /* Отступ под реальную высоту фикс-топбара (измеряется в Layout как --topbar-h),
+     иначе на устройствах с более высокой шапкой заголовок/кнопки уходят под хедер */
+  padding-top: calc(var(--topbar-h, 56px) + 6px);
   padding-left: 16px;
   padding-right: 16px;
   min-height: 100vh;

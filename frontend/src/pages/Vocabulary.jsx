@@ -72,6 +72,10 @@ export default function Vocabulary() {
   const [sending, setSending]   = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [creatingSet, setCreatingSet] = useState(false)
+  // Учитель: чекбоксы — вручную выбрать слова для набора (не по фильтру)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const clearSelection = () => setSelectedIds(new Set())
   const { t } = useI18nStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
@@ -182,11 +186,12 @@ export default function Vocabulary() {
     return acc
   }, {})
 
-  // «Свои упражнения»: собрать набор из отфильтрованных слов (учитель)
+  // «Свои упражнения»: собрать набор из ВЫБРАННЫХ галочками слов, а если ничего не выбрано —
+  // из всех отфильтрованных (старое поведение).
   const createSet = async () => {
-    const ids = filtered.map(w => w.id)
-    if (!ids.length) { alert('Нет слов в текущем фильтре'); return }
-    const hint = lessonFilter || (statusFilter ? filterLabels[statusFilter] : 'Мой набор')
+    const ids = selectedIds.size ? [...selectedIds] : filtered.map(w => w.id)
+    if (!ids.length) { alert('Выберите слова галочками или задайте фильтр'); return }
+    const hint = selectedIds.size ? 'Мой набор' : (lessonFilter || (statusFilter ? filterLabels[statusFilter] : 'Мой набор'))
     const title = window.prompt(`Свой набор упражнений из ${ids.length} слов. Название:`, `✏️ ${hint}`.trim())
     if (title === null) return
     setCreatingSet(true)
@@ -196,7 +201,7 @@ export default function Vocabulary() {
         try {
           const st = await api.get(`/lessons/${res.lessonId}/status`)
           if (st.status !== 'processing') {
-            clearInterval(poll); setCreatingSet(false)
+            clearInterval(poll); setCreatingSet(false); clearSelection()
             if (st.status === 'done') navigate(`/exercise-session?lesson_id=${res.lessonId}`)
             else alert('Не удалось собрать набор: ' + (st.progress || ''))
           }
@@ -266,9 +271,15 @@ export default function Vocabulary() {
         )}
         {view === 'words' && user?.role === 'owner' && (
           <button onClick={createSet} disabled={creatingSet}
-            title="Собрать набор упражнений из отфильтрованных слов"
+            title={selectedIds.size ? `Собрать набор из ${selectedIds.size} выбранных слов` : 'Собрать набор из отфильтрованных слов (или отметь галочками нужные)'}
             style={{ padding: '7px 12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
-            {creatingSet ? '⏳ Собираю...' : '✏️ Набор'}
+            {creatingSet ? '⏳ Собираю...' : (selectedIds.size ? `✏️ Набор (${selectedIds.size})` : '✏️ Набор')}
+          </button>
+        )}
+        {view === 'words' && user?.role === 'owner' && selectedIds.size > 0 && (
+          <button onClick={clearSelection} title="Снять выделение со всех слов"
+            style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink-soft)', fontWeight: 600, fontSize: 13, cursor: 'pointer', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
+            ✕ Очистить
           </button>
         )}
         {/* Админ: круглая кнопка-тумблер «показать слова без картинки» + счётчик */}
@@ -449,7 +460,8 @@ export default function Vocabulary() {
               <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{lessonWords.length} сл.</span>
             </div>
             {lessonWords.map(word => (
-              <VocabWord key={word.id} word={word} statusLabels={statusLabels} onStatusChange={updateStatus} />
+              <VocabWord key={word.id} word={word} statusLabels={statusLabels} onStatusChange={updateStatus}
+                selected={selectedIds.has(word.id)} onToggleSelect={() => toggleSelect(word.id)} />
             ))}
           </div>
         ))}
@@ -757,7 +769,7 @@ function GermanNumbers() {
   )
 }
 
-function VocabWord({ word, statusLabels, onStatusChange }) {
+function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelect }) {
   const [imageUrl, setImageUrl]         = useState(word.image_url)
   const [refreshing, setRefreshing]     = useState(false)
   const [uploading, setUploading]       = useState(false)
@@ -844,8 +856,15 @@ function VocabWord({ word, statusLabels, onStatusChange }) {
     <div style={{
       display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px',
       borderBottom: '1px solid var(--line)', borderRadius: 10,
-      marginBottom: 3, background: STATUS_BG[word.status] ?? 'var(--surface)',
+      marginBottom: 3, background: selected ? 'var(--accent-soft)' : (STATUS_BG[word.status] ?? 'var(--surface)'),
+      outline: selected ? '2px solid var(--accent)' : 'none',
     }}>
+      {/* Учитель: галочка «взять слово в набор» */}
+      {user?.role === 'owner' && onToggleSelect && (
+        <input type="checkbox" checked={!!selected} onChange={onToggleSelect}
+          title="Выбрать слово для набора"
+          style={{ width: 20, height: 20, marginTop: 2, flexShrink: 0, cursor: 'pointer', accentColor: 'var(--accent)' }} />
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0, width: 80 }}>
         {imageUrl ? (
           <div style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', background: 'var(--surface-2)', flexShrink: 0 }}>

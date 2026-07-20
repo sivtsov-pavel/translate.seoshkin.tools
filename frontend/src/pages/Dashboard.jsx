@@ -96,6 +96,26 @@ export default function Dashboard() {
 
   const total        = stats?.total ?? 0
   const allLessons   = stats?.lessons ?? []
+  // Курсы, по которым ученик ещё не выбрал календарь обучения (строгий дрип) → баннер-требование
+  const needsSchedule = stats?.needs_schedule ?? []
+  const needsScheduleBanner = needsSchedule.length > 0 && (
+    <div style={{ padding: '10px 12px 4px' }}>
+      {needsSchedule.map(c => (
+        <div key={c.id} onClick={() => navigate(`/courses/${c.id}`)} style={{
+          cursor: 'pointer', background: 'var(--accent-soft)', border: '2px solid var(--accent)',
+          borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8,
+        }}>
+          <span style={{ fontSize: 28 }}>📅</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>Выбери календарь обучения</div>
+            <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
+              «{c.title}» — выбери удобные дни, чтобы открыть уроки →
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
   // Фильтр по активному курсу (пусто = все). Наборы/личные (без course_id) показываем всегда.
   const lessons = activeCourse
     ? allLessons.filter(l => String(l.course_id || '') === activeCourse || l.is_set)
@@ -116,13 +136,17 @@ export default function Dashboard() {
     return (
       <div style={{ paddingTop: 12 }}>
         {gameBanner}
-        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-          <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-            {t.dashboard.allDone}
+        {/* Сначала — требование выбрать календарь (если есть незапланированные курсы) */}
+        {needsScheduleBanner}
+        {needsSchedule.length === 0 && (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+            <div style={{ fontFamily: 'var(--heading-font, Georgia, serif)', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
+              {t.dashboard.allDone}
+            </div>
+            <div style={{ color: 'var(--ink-soft)', fontSize: 15 }}>{t.dashboard.comeBack}</div>
           </div>
-          <div style={{ color: 'var(--ink-soft)', fontSize: 15 }}>{t.dashboard.comeBack}</div>
-        </div>
+        )}
       </div>
     )
   }
@@ -132,6 +156,7 @@ export default function Dashboard() {
       <style>{`.chips-grid { grid-template-columns: 1fr; } @media (min-width: 480px) { .chips-grid { grid-template-columns: 1fr 1fr; } }`}</style>
 
       {courseSelector}
+      {needsScheduleBanner}
 
       {/* Тумблеры «Сегодня»: только текущий урок / все доступные · наборы вкл-выкл */}
       <div style={{ padding: '4px 12px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -303,8 +328,10 @@ export default function Dashboard() {
         const pinnedItems = shown.filter(l => pinned.has(l.lesson_id)).sort(byNew)
         const setsAll = shown.filter(l => l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
         const booksAll = shown.filter(l => !l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
-        // «Только сегодня»: показываем один самый свежий урок (при поиске — все найденные)
-        const books = (todayOnly && !q) ? booksAll.slice(0, 1) : booksAll
+        // «Только сегодня»: показываем ОДИН текущий урок дрипа — самый ранний из доступных
+        // (наименьший id среди незавершённых; дрип уже отсёк заблокированные). При поиске — все.
+        const current = booksAll.length ? booksAll[booksAll.length - 1] : null
+        const books = (todayOnly && !q) ? (current ? [current] : []) : booksAll
         // Наборы — по тумблеру (но при активном поиске показываем всё, что нашлось)
         const sets = (showSets || q) ? setsAll : []
         const hiddenBooks = booksAll.length - books.length

@@ -44,6 +44,59 @@ export function unlockDateForIndex(startDate, weekdays, index) {
   return null
 }
 
+// Какие уроки ученик РЕАЛЬНО может проходить сейчас (строгий дрип, для всех курсов сразу).
+// Возвращает { playable:Set<lessonId>, needsSchedule:[course_id...] }.
+// Правила: внекурсовые уроки/наборы (course_id NULL) — всегда доступны. Курсовые:
+//  • нет расписания по курсу → все закрыты, курс в needsSchedule (заставляем выбрать календарь);
+//  • есть расписание → открыт урок, если наступил учебный день И предыдущий пройден (цепочка).
+export async function playableLessonIds(userId, schoolId) {
+  const { rows } = await db.query(
+    `SELECT l.id, l.course_id
+     FROM lessons l
+     WHERE l.status = 'done' AND ($2::int IS NULL OR l.school_id = $2)
+     ORDER BY l.course_id NULLS FIRST, l.lesson_number NULLS LAST, l.created_at`,
+    [userId, schoolId ?? null])
+  const playable = new Set()
+  const needsSchedule = []
+  const byCourse = new Map()
+  for (const l of rows) {
+    if (!l.course_id) { playable.add(l.id); continue } // наборы/личные — всегда открыты
+    if (!byCourse.has(l.course_id)) byCourse.set(l.course_id, [])
+    byCourse.get(l.course_id).push(l)
+  }
+  if (byCourse.size === 0) return { playable, needsSchedule }
+
+  const { rows: scRows } = await db.query(
+    'SELECT course_id, weekdays, start_date FROM course_schedules WHERE user_id = $1', [userId])
+  const scMap = new Map(scRows.map(s => [s.course_id, s]))
+
+  const courseLessonIds = rows.filter(l => l.course_id).map(l => l.id)
+  const { rows: passedRows } = await db.query(
+    `SELECT e.lesson_id, count(*)::int AS total_ex,
+            count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE)::int AS done_ex
+     FROM exercises e
+     LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+     WHERE e.lesson_id = ANY($2)
+     GROUP BY e.lesson_id`,
+    [userId, courseLessonIds])
+  const passedMap = new Map(passedRows.map(r => [r.lesson_id, r.total_ex > 0 && r.done_ex === r.total_ex]))
+
+  for (const [cid, lessons] of byCourse) {
+    const sc = scMap.get(cid)
+    if (!sc) { needsSchedule.push(cid); continue }
+    const opened = unlockedCount(sc.start_date, sc.weekdays)
+    let doneIdx = 0, prevPassed = true
+    for (const l of lessons) {
+      const calendarOpen = doneIdx < opened
+      const gateOpen = doneIdx === 0 || prevPassed
+      if (calendarOpen && gateOpen) playable.add(l.id)
+      prevPassed = passedMap.get(l.id) === true
+      doneIdx++
+    }
+  }
+  return { playable, needsSchedule }
+}
+
 // Ежедневный проход: если сегодня открылся новый урок — push ученику (один раз на урок).
 export async function runDripPush() {
   const today = new Date()

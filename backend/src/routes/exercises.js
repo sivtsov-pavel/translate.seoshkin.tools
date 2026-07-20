@@ -1,5 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
+import { playableLessonIds } from '../services/drip.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { generateWordImage } from '../services/imageGen.js'
@@ -116,16 +117,21 @@ export async function exercisesRoutes(fastify) {
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
         ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM() LIMIT ${limit}`
     } else {
+      // Строгий дрип: ученик получает упражнения только из РАЗБЛОКИРОВАННЫХ уроков
+      // (наступил день + предыдущий пройден). Без расписания курс закрыт — заставляем выбрать календарь.
+      const { playable } = await playableLessonIds(userId, request.user.school_id ?? null)
       params = [userId, today]
       if (type)      params.push(type)
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
       params.push(target); const tp = params.length
       params.push(request.user.school_id ?? null); const sp = params.length // школа ученика (null-safe)
+      params.push([...playable]); const pl = params.length // разрешённые дрипом уроки
       query = SELECT + `
         WHERE l.status = 'done'
           AND l.target_lang = $${tp}
           AND ($${sp}::int IS NULL OR l.school_id = $${sp})
+          AND e.lesson_id = ANY($${pl}::int[])
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
@@ -147,6 +153,30 @@ export async function exercisesRoutes(fastify) {
        WHERE user_id = $1 AND exercise_id IN (SELECT id FROM exercises WHERE lesson_id = $2)`,
       [request.user.id, lessonId]
     )
+    return { ok: true }
+  })
+
+  // «Сбросить достижения — начать заново»: удаляем ВЕСЬ прогресс ученика
+  // (SRS по упражнениям + статусы слов). Со строгим дрипом снова открыт только 1-й урок.
+  // Опционально course_id — сбросить только этот курс.
+  fastify.post('/api/exercises/reset-all', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const userId = request.user.id
+    const courseId = request.body?.course_id ? parseInt(request.body.course_id) : null
+    if (courseId) {
+      await db.query(
+        `DELETE FROM user_exercise_progress WHERE user_id = $1
+           AND exercise_id IN (SELECT e.id FROM exercises e JOIN lessons l ON l.id = e.lesson_id WHERE l.course_id = $2)`,
+        [userId, courseId])
+      await db.query(
+        `DELETE FROM user_word_status WHERE user_id = $1
+           AND word_id IN (SELECT w.id FROM words w JOIN lessons l ON l.id = w.lesson_id WHERE l.course_id = $2)`,
+        [userId, courseId])
+    } else {
+      await db.query('DELETE FROM user_exercise_progress WHERE user_id = $1', [userId])
+      await db.query('DELETE FROM user_word_status WHERE user_id = $1', [userId])
+    }
     return { ok: true }
   })
 
@@ -180,6 +210,8 @@ export async function exercisesRoutes(fastify) {
     const today = new Date().toISOString().slice(0, 10)
 
     const target = request.headers['x-target-lang'] || 'de'
+    // Для ученика — строгий дрип: только разблокированные уроки; курсы без расписания → needs_schedule
+    let needsScheduleCourses = []
     let query, params
     if (role === 'owner') {
       params = [userId, today, target]
@@ -197,7 +229,9 @@ export async function exercisesRoutes(fastify) {
         ORDER BY l.id, e.type`
     } else {
       // Ученик видит готовые уроки СВОЕЙ школы (null-safe: без школы — как раньше, всё)
-      params = [userId, today, target, request.user.school_id ?? null]
+      const { playable, needsSchedule } = await playableLessonIds(userId, request.user.school_id ?? null)
+      needsScheduleCourses = needsSchedule
+      params = [userId, today, target, request.user.school_id ?? null, [...playable]]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
                l.date AS lesson_date, l.is_set AS is_set, l.course_id,
@@ -209,6 +243,7 @@ export async function exercisesRoutes(fastify) {
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE l.status = 'done' AND l.target_lang = $3
           AND ($4::int IS NULL OR l.school_id = $4)
+          AND l.id = ANY($5::int[])
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
         GROUP BY l.id, l.title, l.description, l.date, l.is_set, l.course_id, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
@@ -289,7 +324,15 @@ export async function exercisesRoutes(fastify) {
     const lessonsTotal = lessonStats[0]?.total ?? 0
     const lessonsDone  = lessonStats[0]?.done_count ?? 0
 
-    return { total, done, byType, lessons, lessonsTotal, lessonsDone }
+    // Курсы, по которым ученик ещё не выбрал календарь — фронт покажет баннер «Выбери календарь»
+    let needsSchedule = []
+    if (needsScheduleCourses.length) {
+      const { rows: cr } = await db.query(
+        'SELECT id, title FROM courses WHERE id = ANY($1::int[])', [needsScheduleCourses])
+      needsSchedule = cr
+    }
+
+    return { total, done, byType, lessons, lessonsTotal, lessonsDone, needs_schedule: needsSchedule }
   })
 
   // Словарь — per-user статус через user_word_status
