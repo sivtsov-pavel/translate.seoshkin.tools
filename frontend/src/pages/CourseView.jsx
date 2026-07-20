@@ -352,8 +352,10 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
         {status === 'done' && lesson.words_total > 0 && (
           lesson.locked ? (
             <span style={{ fontSize: 12.5, padding: '6px 12px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--ink-soft)', whiteSpace: 'nowrap', fontWeight: 600 }}
-              title="Урок откроется по расписанию">
-              🔒 {lesson.unlock_date ? new Date(lesson.unlock_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : 'позже'}
+              title={lesson.lock_reason === 'prev' ? 'Сначала пройди предыдущий урок' : 'Урок откроется по расписанию'}>
+              {lesson.lock_reason === 'prev'
+                ? '🔒 пройди предыдущий'
+                : `🔒 ${lesson.unlock_date ? new Date(lesson.unlock_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : 'позже'}`}
             </span>
           ) : (
             <button

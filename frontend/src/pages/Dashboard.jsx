@@ -12,6 +12,14 @@ import CameraWords from '../components/CameraWords.jsx'
 const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'dictation']
 const TYPE_ICON  = { multiple_choice: '☑️', flashcard: '🃏', letter_fill: '🔤', fill_blank: '✏️', sentence_write: '✍️', speech: '🗣️', dictation: '🎙️' }
 
+// Кнопка-тумблер в ленте под селектором курса
+const ribbonBtn = (active) => ({
+  padding: '7px 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+  border: `1px solid ${active ? 'var(--accent)' : 'var(--line)'}`,
+  background: active ? 'var(--accent-soft)' : 'var(--surface)',
+  color: active ? 'var(--accent)' : 'var(--ink-soft)',
+})
+
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
@@ -21,8 +29,12 @@ export default function Dashboard() {
   const [pinned, setPinned] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem('pinned_lessons') || '[]')) } catch { return new Set() }
   })
-  const [showLessons, setShowLessons] = useState(() => localStorage.getItem('hide_lessons') !== '1')
-  const toggleLessons = () => setShowLessons(v => { localStorage.setItem('hide_lessons', v ? '1' : '0'); return !v })
+  // «Сегодня»: по умолчанию показываем только текущий (самый свежий) урок; тумблер раскрывает все
+  const [todayOnly, setTodayOnly] = useState(() => localStorage.getItem('dash_today_only') !== '0')
+  const toggleTodayOnly = () => setTodayOnly(v => { localStorage.setItem('dash_today_only', v ? '0' : '1'); return !v })
+  // Наборы по темам — отдельный тумблер (можно скрыть, чтобы не отвлекали)
+  const [showSets, setShowSets] = useState(() => localStorage.getItem('dash_show_sets') !== '0')
+  const toggleSets = () => setShowSets(v => { localStorage.setItem('dash_show_sets', v ? '0' : '1'); return !v })
   // Активный курс: «Сегодня» показывает уроки только выбранного курса (чтобы не складировалось)
   const [courses, setCourses] = useState([])
   const [activeCourse, setActiveCourse] = useState(() => localStorage.getItem('active_course') || '')
@@ -120,6 +132,16 @@ export default function Dashboard() {
       <style>{`.chips-grid { grid-template-columns: 1fr; } @media (min-width: 480px) { .chips-grid { grid-template-columns: 1fr 1fr; } }`}</style>
 
       {courseSelector}
+
+      {/* Тумблеры «Сегодня»: только текущий урок / все доступные · наборы вкл-выкл */}
+      <div style={{ padding: '4px 12px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button onClick={toggleTodayOnly} style={ribbonBtn(todayOnly)}>
+          {todayOnly ? '📅 Только сегодня' : '📚 Все доступные'}
+        </button>
+        <button onClick={toggleSets} style={ribbonBtn(showSets)}>
+          {showSets ? '🗂 Наборы: вкл' : '🗂 Наборы: выкл'}
+        </button>
+      </div>
 
       {/* Hero — просто заголовок и счёт */}
       <div style={{ padding: '20px 20px 14px' }}>
@@ -279,8 +301,13 @@ export default function Dashboard() {
         const byNew = (a, b) => b.lesson_id - a.lesson_id
         // Закреплённые (⭐) — в самый верх, ДО наборов; остальное без них
         const pinnedItems = shown.filter(l => pinned.has(l.lesson_id)).sort(byNew)
-        const sets  = shown.filter(l => l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
-        const books = shown.filter(l => !l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
+        const setsAll = shown.filter(l => l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
+        const booksAll = shown.filter(l => !l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
+        // «Только сегодня»: показываем один самый свежий урок (при поиске — все найденные)
+        const books = (todayOnly && !q) ? booksAll.slice(0, 1) : booksAll
+        // Наборы — по тумблеру (но при активном поиске показываем всё, что нашлось)
+        const sets = (showSets || q) ? setsAll : []
+        const hiddenBooks = booksAll.length - books.length
         if (!shown.length) return <div style={{ color: 'var(--ink-soft)', padding: '8px 20px', fontSize: 14 }}>{t.dashboard.nothingFound}</div>
         const Card = l => (
           <LessonCard key={l.lesson_id} lesson={l} navigate={navigate} onReset={repeatLesson}
@@ -300,7 +327,7 @@ export default function Dashboard() {
               </>
             )}
 
-            {/* 📚 Наборы по темам — глобальные, сверху */}
+            {/* 📚 Наборы по темам — глобальные, сверху (по тумблеру showSets, при поиске всегда) */}
             {sets.length > 0 && (
               <>
                 <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600, paddingLeft: 20 }}>
@@ -312,19 +339,24 @@ export default function Dashboard() {
               </>
             )}
 
-            {/* Уроки — плоско, новый сверху, со сворачиванием всей секции */}
-            <div onClick={toggleLessons} style={{ padding: '6px 20px 8px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            {/* Уроки — плоско, новый сверху. При «только сегодня» — один текущий + кнопка раскрыть */}
+            <div style={{ padding: '6px 20px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600 }}>
-                {t.dashboard.lessons}
+                {todayOnly && !q ? 'Сегодняшний урок' : t.dashboard.lessons}
               </span>
-              <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({books.length})</span>
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>
-                {showLessons ? 'скрыть ▲' : 'показать ▼'}
-              </span>
+              <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({booksAll.length})</span>
             </div>
-            {showLessons && (
-              <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {books.length ? books.map(Card) : <div style={{ color: 'var(--ink-soft)', padding: '4px 8px', fontSize: 14 }}>—</div>}
+            <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {books.length ? books.map(Card) : <div style={{ color: 'var(--ink-soft)', padding: '4px 8px', fontSize: 14 }}>—</div>}
+            </div>
+            {hiddenBooks > 0 && (
+              <div style={{ padding: '10px 12px 4px' }}>
+                <button onClick={toggleTodayOnly} style={{
+                  width: '100%', padding: '10px', borderRadius: 12, border: '1px solid var(--line)',
+                  background: 'var(--surface)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                }}>
+                  ▼ Показать все доступные уроки ({hiddenBooks})
+                </button>
               </div>
             )}
           </>

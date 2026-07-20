@@ -48,7 +48,9 @@ export async function coursesRoutes(fastify) {
       ORDER BY lesson_number NULLS LAST, created_at
     `, [courseId])
 
-    // Дрип: у ученика есть расписание по этому курсу → размечаем, какие уроки открыты
+    // Дрип: у ученика есть расписание по этому курсу → размечаем, какие уроки открыты.
+    // СТРОГИЙ дрип: следующий урок открывается, только если (а) наступил учебный день
+    // И (б) предыдущий урок ПРОЙДЕН (все упражнения отправлены в будущее). Не прошёл — закрыт.
     let schedule = null
     if (request.user.role !== 'owner') {
       const { rows: sc } = await db.query(
@@ -57,16 +59,39 @@ export async function coursesRoutes(fastify) {
       if (sc[0]) {
         schedule = sc[0]
         const opened = unlockedCount(sc[0].start_date, sc[0].weekdays)
-        // Считаем только готовые уроки — среди них по порядку открываем opened штук
+        // Статус «пройден» по каждому уроку курса для этого ученика:
+        // пройден = есть упражнения И все имеют next_review_date > сегодня (ни одно не «горит»).
+        const { rows: passedRows } = await db.query(
+          `SELECT e.lesson_id,
+                  count(*)::int AS total_ex,
+                  count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE)::int AS done_ex
+           FROM exercises e
+           JOIN lessons l ON l.id = e.lesson_id
+           LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+           WHERE l.course_id = $2
+           GROUP BY e.lesson_id`,
+          [request.user.id, courseId])
+        const passedMap = new Map(passedRows.map(r => [r.lesson_id, r.total_ex > 0 && r.done_ex === r.total_ex]))
+
+        // Идём по готовым урокам по порядку. prevPassed — пройден ли предыдущий готовый урок.
         let doneIdx = 0
+        let prevPassed = true // у первого урока нет предшественника — гейт «пройден» открыт
         for (const l of rows) {
           if (l.status === 'done') {
-            l.locked = doneIdx >= opened
-            l.unlock_date = l.locked ? unlockDateForIndex(sc[0].start_date, sc[0].weekdays, doneIdx) : null
+            const calendarOpen = doneIdx < opened          // наступил ли учебный день
+            const gateOpen = doneIdx === 0 || prevPassed    // пройден ли предыдущий
+            l.locked = !(calendarOpen && gateOpen)
+            // Причина замка: 'date' — ещё не наступил день; 'prev' — не пройден предыдущий урок
+            l.lock_reason = !l.locked ? null : (!calendarOpen ? 'date' : 'prev')
+            l.unlock_date = (l.locked && l.lock_reason === 'date')
+              ? unlockDateForIndex(sc[0].start_date, sc[0].weekdays, doneIdx) : null
+            prevPassed = passedMap.get(l.id) === true
             doneIdx++
           } else {
             l.locked = true
+            l.lock_reason = null
             l.unlock_date = null
+            prevPassed = false
           }
         }
       }
