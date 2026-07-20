@@ -52,10 +52,20 @@ export async function coursesRoutes(fastify) {
     // СТРОГИЙ дрип: следующий урок открывается, только если (а) наступил учебный день
     // И (б) предыдущий урок ПРОЙДЕН (все упражнения отправлены в будущее). Не прошёл — закрыт.
     let schedule = null
+    let needsSchedule = false
     if (request.user.role !== 'owner') {
       const { rows: sc } = await db.query(
         'SELECT weekdays, start_date FROM course_schedules WHERE user_id = $1 AND course_id = $2',
         [request.user.id, courseId])
+      if (!sc[0]) {
+        // Нет расписания: ученик ОБЯЗАН сначала выбрать календарь обучения.
+        // Пока не выбрал — все готовые уроки закрыты (причина 'no_schedule').
+        const hasDone = rows.some(l => l.status === 'done')
+        if (hasDone) {
+          needsSchedule = true
+          for (const l of rows) { l.locked = true; l.lock_reason = 'no_schedule'; l.unlock_date = null }
+        }
+      }
       if (sc[0]) {
         schedule = sc[0]
         const opened = unlockedCount(sc[0].start_date, sc[0].weekdays)
@@ -97,7 +107,7 @@ export async function coursesRoutes(fastify) {
       }
     }
 
-    return { course: course[0], lessons: rows, schedule }
+    return { course: course[0], lessons: rows, schedule, needs_schedule: needsSchedule }
   })
 
   // Учитель: повторить обработку уроков курса, упавших с ошибкой (напр. после пополнения OpenAI).

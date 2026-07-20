@@ -219,9 +219,10 @@ export default function CourseView() {
         </div>
       )}
 
-      {/* Ученик: расписание дрип-выдачи (учебные дни → уроки открываются по одному) */}
+      {/* Ученик: расписание дрип-выдачи (учебные дни → уроки открываются по одному).
+          Пока календарь не выбран (needs_schedule) — уроки закрыты, показываем как обязательный шаг. */}
       {user?.role !== 'owner' && lessons.some(l => l.status === 'done') && (
-        <SchedulePicker key={id} schedule={data.schedule} onSave={saveSchedule} />
+        <SchedulePicker key={id} schedule={data.schedule} onSave={saveSchedule} required={data.needs_schedule} />
       )}
 
       {lessons.length === 0 ? (
@@ -241,7 +242,7 @@ export default function CourseView() {
 
 // Ученик выбирает удобные дни недели + дату старта → уроки открываются по одному в каждый учебный день
 const WEEKDAY_LABELS = [['1','Пн'],['2','Вт'],['3','Ср'],['4','Чт'],['5','Пт'],['6','Сб'],['7','Вс']]
-function SchedulePicker({ schedule, onSave }) {
+function SchedulePicker({ schedule, onSave, required }) {
   const [days, setDays] = useState(() => new Set((schedule?.weekdays || [1,3,5]).map(String)))
   const [start, setStart] = useState(() => (schedule?.start_date ? String(schedule.start_date).slice(0,10) : new Date().toISOString().slice(0,10)))
   const [saving, setSaving] = useState(false)
@@ -253,10 +254,14 @@ function SchedulePicker({ schedule, onSave }) {
     setSaving(false)
   }
   return (
-    <div style={{ marginBottom: 20, padding: 16, background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 12 }}>
-      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>🗓️ Моё расписание</div>
-      <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 12 }}>
-        Выбери удобные дни — в каждый такой день будет открываться новый урок, придёт напоминание.
+    <div style={{ marginBottom: 20, padding: 16, background: required ? 'var(--accent-soft)' : 'var(--surface-2)', border: `${required ? 2 : 1}px solid ${required ? 'var(--accent)' : 'var(--line)'}`, borderRadius: 12 }}>
+      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
+        {required ? '📅 Выбери календарь обучения' : '🗓️ Моё расписание'}
+      </div>
+      <div style={{ fontSize: 12.5, color: required ? 'var(--accent)' : 'var(--ink-soft)', marginBottom: 12, fontWeight: required ? 600 : 400 }}>
+        {required
+          ? 'Чтобы открыть уроки — выбери удобные дни недели. Уроки будут открываться по одному в каждый учебный день (и только после того, как пройдёшь предыдущий).'
+          : 'Выбери удобные дни — в каждый такой день будет открываться новый урок, придёт напоминание.'}
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
         {WEEKDAY_LABELS.map(([d, lbl]) => (
@@ -352,8 +357,11 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
         {status === 'done' && lesson.words_total > 0 && (
           lesson.locked ? (
             <span style={{ fontSize: 12.5, padding: '6px 12px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--ink-soft)', whiteSpace: 'nowrap', fontWeight: 600 }}
-              title={lesson.lock_reason === 'prev' ? 'Сначала пройди предыдущий урок' : 'Урок откроется по расписанию'}>
-              {lesson.lock_reason === 'prev'
+              title={lesson.lock_reason === 'no_schedule' ? 'Сначала выбери календарь обучения выше'
+                : lesson.lock_reason === 'prev' ? 'Сначала пройди предыдущий урок' : 'Урок откроется по расписанию'}>
+              {lesson.lock_reason === 'no_schedule'
+                ? '🔒 выбери календарь'
+                : lesson.lock_reason === 'prev'
                 ? '🔒 пройди предыдущий'
                 : `🔒 ${lesson.unlock_date ? new Date(lesson.unlock_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : 'позже'}`}
             </span>
