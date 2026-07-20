@@ -5,7 +5,7 @@ import { getTranslation } from '../utils/translation.js'
 import AvatarReaction from './AvatarReaction.jsx'
 import TapText from './TapText.jsx'
 
-export default function SentenceWrite({ exercise, onAnswer, payloadTranslations }) {
+export default function SentenceWrite({ exercise, onAnswer, payloadTranslations, showOriginal }) {
   const [sentence, setSentence] = useState('')
   const [result, setResult] = useState(null)
   const [reaction, setReaction] = useState(null)
@@ -14,8 +14,9 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations 
   const { t, lang } = useI18nStore()
   const pTranslations = payloadTranslations || exercise.payload_translations
   const { word_de, translation_ru, hint_ru, example } = exercise.payload
-  const displayTranslation = getTranslation(exercise.translations, lang, exercise.translation_ru || translation_ru)
-  const displayHint = getTranslation(pTranslations, lang, hint_ru)
+  // showOriginal (учитель, «язык курса») — авторский перевод/подсказка без наложения локали
+  const displayTranslation = showOriginal ? (exercise.translation_ru || translation_ru) : getTranslation(exercise.translations, lang, exercise.translation_ru || translation_ru)
+  const displayHint = showOriginal ? hint_ru : getTranslation(pTranslations, lang, hint_ru)
 
   const handleCheck = async (e) => {
     e.preventDefault()

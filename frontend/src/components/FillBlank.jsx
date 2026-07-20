@@ -7,7 +7,7 @@ import { playCorrect, playWrong } from '../utils/sound.js'
 import AvatarReaction from './AvatarReaction.jsx'
 import TapText from './TapText.jsx'
 
-export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, payloadTranslations, translations, translationRu, exerciseId }) {
+export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, payloadTranslations, translations, translationRu, exerciseId, showOriginal }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [reaction, setReaction] = useState(null)
@@ -46,8 +46,9 @@ export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, pa
 
   const fullSentence = beforeBlank + payload.blank + afterBlank
 
-  // Перевод предложения — для любого языка (для 'de' fallback → 'en')
-  const sentenceTranslation = getTranslation(payloadTranslations, lang, payload.sentence_ru)
+  // Перевод предложения — для любого языка (для 'de' fallback → 'en').
+  // showOriginal (учитель, «язык курса») — авторский перевод без наложения локали.
+  const sentenceTranslation = showOriginal ? payload.sentence_ru : getTranslation(payloadTranslations, lang, payload.sentence_ru)
 
   const selectHint = (opt) => {
     setAnswer(opt)

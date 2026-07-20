@@ -6,15 +6,16 @@ import { getTranslation, getEffectiveLang } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 
-export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations, exerciseId }) {
+export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations, exerciseId, showOriginal }) {
   const [selected, setSelected] = useState(null)
   const resultRef = useRef(null)
   const { t, lang } = useI18nStore()
 
-  // Локализованные варианты: если есть payloadTranslations[lang] — массив переводов вариантов
+  // Локализованные варианты: если есть payloadTranslations[lang] — массив переводов вариантов.
+  // showOriginal (учитель, «язык курса») — показываем авторские варианты без перевода на локаль.
   const { options, correctIdx } = useMemo(() => {
     const orig = payload.options ?? []
-    const effectiveLang = getEffectiveLang(payloadTranslations, lang)
+    const effectiveLang = showOriginal ? null : getEffectiveLang(payloadTranslations, lang)
     const localized = effectiveLang ? payloadTranslations[effectiveLang] : null
     const displayOpts = Array.isArray(localized) && localized.length ? localized : orig
     // Перемешиваем с сохранением исходного индекса — избегаем indexOf по строке (ломается на "сорок" vs "сорок (40)")
@@ -27,11 +28,12 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const effectiveLang = getEffectiveLang(payloadTranslations, lang)
+  const effectiveLang = showOriginal ? null : getEffectiveLang(payloadTranslations, lang)
   // Показываем именно тот вариант который в массиве options, чтобы сообщение об ошибке совпадало с опцией
   const correctAnswer = options[correctIdx]
     || (effectiveLang && payloadTranslations[effectiveLang]?.[payload.correct ?? 0])
-    || getTranslation(translations, lang, translationRu || (payload.options ?? [])[payload.correct ?? 0])
+    || (showOriginal ? (payload.options ?? [])[payload.correct ?? 0]
+        : getTranslation(translations, lang, translationRu || (payload.options ?? [])[payload.correct ?? 0]))
   const germanWord = wordDe || payload.question.replace(/^.*:\s*/i, '').replace(/\?$/, '').trim()
 
   useEffect(() => { if (germanWord) speakAuto(germanWord) }, [germanWord])

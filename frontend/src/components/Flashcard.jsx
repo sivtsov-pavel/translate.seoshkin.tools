@@ -6,7 +6,7 @@ import { getTranslation } from '../utils/translation.js'
 import TapText from './TapText.jsx'
 import { JustifyHint } from './ExerciseActions.jsx'
 
-export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
+export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, showOriginal }) {
   const [revealed, setRevealed] = useState(false)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading]   = useState(false)
@@ -15,7 +15,8 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
   useEffect(() => { speakAuto(payload.question) }, [payload.question])
 
-  const answer = getTranslation(translations, lang, translationRu || payload.answer)
+  // showOriginal (учитель, «язык курса») — авторский перевод-ответ без наложения локали
+  const answer = showOriginal ? (translationRu || payload.answer) : getTranslation(translations, lang, translationRu || payload.answer)
 
   const reveal = () => { setRevealed(true) }
 

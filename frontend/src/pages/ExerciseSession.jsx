@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { isOnline, getOfflineExercises, answerOffline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
+import { useAuthStore } from '../store/auth.js'
 import { getLessonTitle } from '../utils/translation.js'
 import Flashcard from '../components/Flashcard.jsx'
 import FillBlank from '../components/FillBlank.jsx'
@@ -30,9 +31,15 @@ export default function ExerciseSession() {
   // Выкл — чтобы аватар не проговаривал «Sehr gut» (в т.ч. чтобы микрофон не ловил свою же речь).
   const [reactionsOn, setReactionsOn] = useState(() => localStorage.getItem('trainer_reactions') !== 'false')
   const toggleReactions = () => setReactionsOn(v => { localStorage.setItem('trainer_reactions', v ? 'false' : 'true'); return !v })
+  // Учитель: показать упражнение на ЯЗЫКЕ КУРСА (авторский оригинал), а не в переводе на свою локаль —
+  // чтобы проверить корректность заданий. Только owner; по умолчанию выкл; ученика не касается.
+  const [origView, setOrigView] = useState(() => localStorage.getItem('exercise_orig_view') === '1')
+  const toggleOrigView = () => setOrigView(v => { localStorage.setItem('exercise_orig_view', v ? '0' : '1'); return !v })
   const navigate                  = useNavigate()
   const [searchParams]            = useSearchParams()
   const { t, lang }               = useI18nStore()
+  const { user }                  = useAuthStore()
+  const showOriginal = user?.role === 'owner' && origView
 
   // Пометить слово текущего упражнения «в изучение» (сложные/интересные слова)
   const markLearning = async (wordId) => {
@@ -105,6 +112,17 @@ export default function ExerciseSession() {
         </span>
         <span>{typeLabel}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Учитель: тумблер «язык курса» — упражнение в оригинале (для проверки), не в переводе локали */}
+          {user?.role === 'owner' && (
+            <button onClick={toggleOrigView}
+              title={showOriginal ? 'Показываю на языке курса (оригинал) — нажми, чтобы вернуть перевод на твою локаль' : 'Показать упражнение на языке курса (оригинал), чтобы проверить задание'}
+              style={{ padding: '3px 9px', borderRadius: 8, cursor: 'pointer', fontSize: 13, lineHeight: 1, fontWeight: 700,
+                border: `1px solid ${showOriginal ? 'var(--accent)' : 'var(--line)'}`,
+                background: showOriginal ? 'var(--accent-soft)' : 'var(--surface-2)',
+                color: showOriginal ? 'var(--accent)' : 'var(--ink-soft)' }}>
+              🌐
+            </button>
+          )}
           {/* Быстрый тумблер озвучки тренера — выкл заменяет голос аватара короткими звуками */}
           <button onClick={toggleReactions}
             title={reactionsOn ? 'Тренер озвучивает — нажми, чтобы выключить (останутся короткие звуки верно/неверно)' : 'Озвучка выключена — нажми, чтобы включить голос тренера'}
@@ -139,13 +157,13 @@ export default function ExerciseSession() {
 
       {/* Контент упражнения — заполняет оставшееся место */}
       <div className="exercise-session-content" ref={contentRef}>
-        {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-        {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} payloadTranslations={ex.payload_translations} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} />}
-        {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} />}
-        {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} />}
-        {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} />}
-        {ex.type === 'dictation'       && <Dictation       key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} />}
-        {ex.type === 'speech'          && <SpeechExercise  key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} />}
+        {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} />}
+        {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} payloadTranslations={ex.payload_translations} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
+        {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} showOriginal={showOriginal} />}
+        {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} payloadTranslations={ex.payload_translations} showOriginal={showOriginal} />}
+        {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} />}
+        {ex.type === 'dictation'       && <Dictation       key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
+        {ex.type === 'speech'          && <SpeechExercise  key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
       </div>
     </div>
   )

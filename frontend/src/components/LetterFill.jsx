@@ -4,14 +4,15 @@ import { speakAuto, speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 
-export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
+export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, showOriginal }) {
   const [input, setInput]       = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [correct, setCorrect]   = useState(false)
   const [reaction, setReaction] = useState(null)
   const inputRef = useRef(null)
   const { t, lang } = useI18nStore()
-  const hint = translations?.[lang] || translationRu || payload.translation_ru
+  // showOriginal (учитель, «язык курса») — авторская подсказка без наложения локали
+  const hint = showOriginal ? (translationRu || payload.translation_ru) : (translations?.[lang] || translationRu || payload.translation_ru)
 
   useEffect(() => {
     inputRef.current?.focus()
