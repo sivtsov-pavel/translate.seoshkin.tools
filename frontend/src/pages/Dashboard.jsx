@@ -22,6 +22,7 @@ const ribbonBtn = (active) => ({
 
 export default function Dashboard() {
   const [stats, setStats]   = useState(null)
+  const [progress, setProgress] = useState(null)   // динамика: уроки/слова/карточки/серия
   const [loading, setLoading] = useState(true)
   const [games, setGames] = useState([])
   const [completed, setCompleted] = useState([])
@@ -57,11 +58,22 @@ export default function Dashboard() {
       : getOfflineStats()
     load.then(setStats).catch(console.error).finally(() => setLoading(false))
     api.get('/exercises/completed-lessons').then(setCompleted).catch(() => {})
+    if (isOnline()) api.get('/exercises/progress').then(setProgress).catch(() => {})
   }
   useEffect(() => {
     reloadStats()
     api.get('/class-games').then(rows => setGames((rows || []).filter(g => g.status === 'ready'))).catch(() => {})
     api.get('/courses').then(cs => setCourses(Array.isArray(cs) ? cs : [])).catch(() => {})
+  }, []) // eslint-disable-line
+
+  // Авто-обновление без F5: когда возвращаешься на дашборд (после зачёта/карточек) —
+  // перечитываем прогресс и статус уроков (вкладка снова видима / окно в фокусе).
+  useEffect(() => {
+    const onFocus = () => { if (isOnline()) reloadStats() }
+    const onVisible = () => { if (document.visibilityState === 'visible' && isOnline()) reloadStats() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { window.removeEventListener('focus', onFocus); document.removeEventListener('visibilitychange', onVisible) }
   }, []) // eslint-disable-line
 
   // Повторить пройденный урок — вернуть его упражнения «на сегодня»
@@ -177,6 +189,9 @@ export default function Dashboard() {
           {t.dashboard.exercisesWaiting(total)}
         </p>
       </div>
+
+      {/* 📈 Динамика: две дорожки прогресса + карточки за день + серия */}
+      <ProgressPanel progress={progress} />
 
       {/* 📊 Аналитика класса — для учителя (отчётность по ученикам) */}
       {user?.role === 'owner' && (
@@ -439,6 +454,7 @@ export default function Dashboard() {
           </div>
           {completed.map(l => (
             <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '10px 14px', marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: 'rgba(78,154,110,0.16)', color: 'var(--good)', flexShrink: 0 }}>✓ пройдено</span>
               <span style={{ flex: 1, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {getLessonTitle(l.title, l.title_translations, lang)}
               </span>
@@ -452,6 +468,54 @@ export default function Dashboard() {
 
       {/* Реклама для бесплатных на планшете/десктопе (управляется супер-админкой) */}
       <AdSlot />
+    </div>
+  )
+}
+
+// 📈 Панель динамики: шкала «Уроки» + шкала «Слова» + карточки за день + серия дней
+function ProgressPanel({ progress }) {
+  if (!progress) return null
+  const { lessons = {}, words = {}, cards = {}, streak = 0 } = progress
+  const lPct = lessons.total ? Math.round((lessons.done / lessons.total) * 100) : 0
+  const wPct = words.total ? Math.round((words.known / words.total) * 100) : 0
+  const Bar = ({ pct, color }) => (
+    <div style={{ height: 8, borderRadius: 6, background: 'var(--surface-2)', overflow: 'hidden', marginTop: 6 }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 6, transition: 'width .5s' }} />
+    </div>
+  )
+  return (
+    <div style={{ padding: '4px 12px 10px' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 14 }}>
+        {/* Дорожка 1 — уроки */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>📘 Обучение по урокам</span>
+          <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700 }}>{lessons.done ?? 0} / {lessons.total ?? 0}</span>
+        </div>
+        <Bar pct={lPct} color="var(--accent)" />
+
+        {/* Дорожка 2 — слова (усиление знаний) */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginTop: 14 }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>💪 Усиление знаний · слова</span>
+          <span style={{ fontSize: 13, color: 'var(--good)', fontWeight: 700 }}>{words.known ?? 0} / {words.total ?? 0}</span>
+        </div>
+        <Bar pct={wPct} color="var(--good)" />
+
+        {/* Карточки за день + серия */}
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <div style={{ flex: 1, textAlign: 'center', background: 'var(--surface-2)', borderRadius: 12, padding: '10px 6px' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>{cards.today ?? 0}</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>карточек сегодня</div>
+          </div>
+          <div style={{ flex: 1, textAlign: 'center', background: 'var(--surface-2)', borderRadius: 12, padding: '10px 6px' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>{cards.all ?? 0}</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>всего карточек</div>
+          </div>
+          <div style={{ flex: 1, textAlign: 'center', background: streak > 0 ? 'rgba(224,87,111,0.12)' : 'var(--surface-2)', borderRadius: 12, padding: '10px 6px' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: streak > 0 ? '#e0576f' : 'var(--ink-soft)' }}>🔥 {streak}</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>дней подряд</div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

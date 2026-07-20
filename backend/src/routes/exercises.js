@@ -163,6 +163,72 @@ export async function exercisesRoutes(fastify) {
     return { ok: true }
   })
 
+  // Динамика/прогресс для дашборда: две дорожки (уроки + слова) + карточки за день + серия дней.
+  fastify.get('/api/exercises/progress', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const { id: userId, role } = request.user
+    const target = request.headers['x-target-lang'] || 'de'
+    const schoolId = request.user.school_id ?? null
+    // Фильтр уроков: учитель — свои; ученик — готовые своей школы. Только по активному языку, без наборов.
+    const lessonWhere = role === 'owner'
+      ? `l.owner_id = $2 AND l.target_lang = $1 AND l.is_set = false`
+      : `l.status='done' AND l.target_lang = $1 AND ($2::int IS NULL OR l.school_id = $2) AND l.is_set = false`
+    const lparam = role === 'owner' ? userId : schoolId
+
+    // Уроки: всего и пройдено (все упражнения ушли в будущее)
+    const { rows: lt } = await db.query(
+      `SELECT count(*)::int AS total FROM lessons l WHERE ${lessonWhere}`, [target, lparam])
+    const { rows: ld } = await db.query(
+      `SELECT count(*)::int AS done FROM (
+         SELECT l.id FROM lessons l JOIN exercises e ON e.lesson_id = l.id
+         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $3
+         WHERE ${lessonWhere}
+         GROUP BY l.id
+         HAVING count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE) > 0
+            AND count(*) FILTER (WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= CURRENT_DATE) = 0
+       ) t`, [target, lparam, userId])
+
+    // Слова: всего (уникальные по активному языку) и выучено (known)
+    const wordWhere = role === 'owner'
+      ? `l.owner_id = $2 AND l.target_lang = $1`
+      : `l.status='done' AND l.target_lang = $1 AND ($2::int IS NULL OR l.school_id = $2)`
+    const { rows: wt } = await db.query(
+      `SELECT count(DISTINCT lower(w.word_de))::int AS total
+       FROM words w JOIN lessons l ON l.id = w.lesson_id WHERE ${wordWhere}`, [target, lparam])
+    const { rows: wk } = await db.query(
+      `SELECT count(DISTINCT lower(w.word_de))::int AS known
+       FROM user_word_status s JOIN words w ON w.id = s.word_id JOIN lessons l ON l.id = w.lesson_id
+       WHERE s.user_id = $3 AND s.status = 'known' AND ${wordWhere}`, [target, lparam, userId])
+
+    // Карточки сегодня (все попытки за сегодня) + всего за всё время
+    const { rows: ct } = await db.query(
+      `SELECT count(*) FILTER (WHERE attempted_at >= CURRENT_DATE)::int AS today,
+              count(*)::int AS all_time
+       FROM exercise_attempts WHERE user_id = $1`, [userId])
+
+    // Серия дней подряд с активностью (тянем к сегодня; если сегодня ещё не занимался — от вчера)
+    const { rows: days } = await db.query(
+      `SELECT DISTINCT (attempted_at AT TIME ZONE 'UTC')::date AS d
+       FROM exercise_attempts WHERE user_id = $1 ORDER BY d DESC LIMIT 400`, [userId])
+    let streak = 0
+    if (days.length) {
+      const oneDay = 86400000
+      const todayUTC = new Date(new Date().toISOString().slice(0, 10)).getTime()
+      const set = new Set(days.map(r => new Date(r.d).getTime()))
+      // старт: сегодня если есть активность, иначе вчера
+      let cursor = set.has(todayUTC) ? todayUTC : todayUTC - oneDay
+      while (set.has(cursor)) { streak++; cursor -= oneDay }
+    }
+
+    return {
+      lessons: { done: ld[0]?.done ?? 0, total: lt[0]?.total ?? 0 },
+      words:   { known: wk[0]?.known ?? 0, total: wt[0]?.total ?? 0 },
+      cards:   { today: ct[0]?.today ?? 0, all: ct[0]?.all_time ?? 0 },
+      streak,
+    }
+  })
+
   // «Сбросить достижения — начать заново»: удаляем ВЕСЬ прогресс ученика
   // (SRS по упражнениям + статусы слов). Со строгим дрипом снова открыт только 1-й урок.
   // Опционально course_id — сбросить только этот курс.
