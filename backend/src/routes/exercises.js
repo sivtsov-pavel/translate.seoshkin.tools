@@ -185,8 +185,7 @@ export async function exercisesRoutes(fastify) {
          LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $3
          WHERE ${lessonWhere}
          GROUP BY l.id
-         HAVING count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE) > 0
-            AND count(*) FILTER (WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= CURRENT_DATE) = 0
+         HAVING count(*) > 0 AND count(*) FILTER (WHERE uep.exercise_id IS NOT NULL) = count(*)
        ) t`, [target, lparam, userId])
 
     // Слова: всего (уникальные по активному языку) и выучено (known)
@@ -267,8 +266,7 @@ export async function exercisesRoutes(fastify) {
        LEFT JOIN user_exercise_progress uep ON uep.exercise_id=e.id AND uep.user_id=$1
        WHERE 1=1 ${doneFilter}
        GROUP BY l.id, l.title, l.title_translations
-       HAVING count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE) > 0
-          AND count(*) FILTER (WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= CURRENT_DATE) = 0
+       HAVING count(*) > 0 AND count(*) FILTER (WHERE uep.exercise_id IS NOT NULL) = count(*)
        ORDER BY l.date DESC, l.id`,
       [userId]
     )

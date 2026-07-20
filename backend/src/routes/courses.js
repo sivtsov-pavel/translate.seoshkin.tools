@@ -69,12 +69,12 @@ export async function coursesRoutes(fastify) {
       if (sc[0]) {
         schedule = sc[0]
         const opened = unlockedCount(sc[0].start_date, sc[0].weekdays)
-        // Статус «пройден» по каждому уроку курса для этого ученика:
-        // пройден = есть упражнения И все имеют next_review_date > сегодня (ни одно не «горит»).
+        // Статус «пройден» = сдан зачёт: ВСЕ упражнения урока пройдены хотя бы раз
+        // (есть запись прогресса), даже если что-то ответил неверно — урок засчитан.
         const { rows: passedRows } = await db.query(
           `SELECT e.lesson_id,
                   count(*)::int AS total_ex,
-                  count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE)::int AS done_ex
+                  count(*) FILTER (WHERE uep.exercise_id IS NOT NULL)::int AS done_ex
            FROM exercises e
            JOIN lessons l ON l.id = e.lesson_id
            LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1

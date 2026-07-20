@@ -69,8 +69,7 @@ export async function runMilestones() {
           FROM lessons l JOIN exercises e ON e.lesson_id = l.id
           LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = u.id
           GROUP BY l.id
-          HAVING count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE) > 0
-             AND count(*) FILTER (WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= CURRENT_DATE) = 0
+          HAVING count(*) > 0 AND count(*) FILTER (WHERE uep.exercise_id IS NOT NULL) = count(*)
         ) done_lessons)::int AS lessons
      FROM users u JOIN push_subscriptions p ON p.user_id = u.id
      WHERE u.role = 'student'`)

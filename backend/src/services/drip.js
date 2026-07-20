@@ -72,9 +72,11 @@ export async function playableLessonIds(userId, schoolId) {
   const scMap = new Map(scRows.map(s => [s.course_id, s]))
 
   const courseLessonIds = rows.filter(l => l.course_id && !l.is_set).map(l => l.id)
+  // «Пройден» = сдан зачёт: ВСЕ упражнения урока пройдены хотя бы раз (есть запись прогресса),
+  // не дожидаясь идеального SM-2 (даже если что-то ответил неверно — урок засчитан пройденным).
   const { rows: passedRows } = await db.query(
     `SELECT e.lesson_id, count(*)::int AS total_ex,
-            count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE)::int AS done_ex
+            count(*) FILTER (WHERE uep.exercise_id IS NOT NULL)::int AS done_ex
      FROM exercises e
      LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
      WHERE e.lesson_id = ANY($2)
