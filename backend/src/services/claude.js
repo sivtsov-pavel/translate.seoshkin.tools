@@ -1,8 +1,9 @@
-import OpenAI from 'openai'
 import { readFileSync } from 'fs'
-import { config } from '../config.js'
+import { platformClient } from './openaiClient.js'
 
-const client = new OpenAI({ apiKey: config.openaiApiKey })
+// Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
+// принимают необязательный параметр `client`, чтобы работать на ключе владельца урока
+// (мультиарендность оплаты). Все прочие вызовы (тренер, тап-перевод, ридер) — на платформенном.
 
 // Вырезает первый сбалансированный JSON-объект/массив из строки (игнорируя текст
 // до и после, учитывая строки и экранирование). Спасает от «мусора» вокруг JSON,
@@ -50,7 +51,7 @@ function parseJson(text) {
   }
 }
 
-async function ask(prompt, { model = 'gpt-4o-mini', max_tokens = 4096 } = {}) {
+async function ask(prompt, { model = 'gpt-4o-mini', max_tokens = 4096, client = platformClient } = {}) {
   const res = await client.chat.completions.create({
     model,
     max_tokens,
@@ -91,7 +92,7 @@ function getMimeType(filepath) {
   return { png: 'image/png', gif: 'image/gif', webp: 'image/webp' }[ext] || 'image/jpeg'
 }
 
-export async function extractFromPhoto(filepath, targetLang = 'de') {
+export async function extractFromPhoto(filepath, targetLang = 'de', client = platformClient) {
   const imageData = readFileSync(filepath)
   const base64 = imageData.toString('base64')
   const mimeType = getMimeType(filepath)
@@ -129,7 +130,7 @@ export async function extractWordsFromImage(filepath, lang = 'ru', targetLang = 
 ${T.nounRule}; глаголы — в инфинитиве. Игнорируй нечитаемое, числа-страницы, мусор.
 Для каждого дай перевод на ${langName}.
 Верни ТОЛЬКО JSON: {"words":[{"de":"...","tr":"..."}]}`
-  const res = await client.chat.completions.create({
+  const res = await platformClient.chat.completions.create({
     model: 'gpt-4o', max_tokens: 4096,
     messages: [{ role: 'user', content: [
       { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'high' } },
@@ -154,7 +155,7 @@ export async function extractSentencesFromImage(filepath, lang = 'ru', targetLan
 - "words" — разбор по ключевым словам: массив {"de":"...","tr":"..."}. ${T.nounRule}; глаголы — в инфинитиве; служебные слова можно опустить. Перевод слов — на ${langName}.
 Игнорируй мусор, номера страниц, нечитаемое.
 Верни ТОЛЬКО JSON: {"sentences":[{"original":"...","translation":"...","words":[{"de":"...","tr":"..."}]}]}`
-  const res = await client.chat.completions.create({
+  const res = await platformClient.chat.completions.create({
     model: 'gpt-4o', max_tokens: 4096,
     messages: [{ role: 'user', content: [
       { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'high' } },
@@ -190,7 +191,7 @@ function wordKey(word_de) {
 }
 const hasArticle = (s) => /^(der|die|das)\s/i.test(s || '')
 
-async function mergeChunk(extractions, transcription = null, existingWords = [], targetLang = 'de') {
+async function mergeChunk(extractions, transcription = null, existingWords = [], targetLang = 'de', client = platformClient) {
   const slim = extractions.map(e => ({ words: e.words || [], grammar_points: e.grammar_points || [], example_sentences: e.example_sentences || [] }))
   const input = JSON.stringify({ extractions: slim, transcription }, null, 2)
   // Умная обработка тетради/доски: даём модели список уже имеющихся слов урока,
@@ -198,7 +199,7 @@ async function mergeChunk(extractions, transcription = null, existingWords = [],
   const existingBlock = existingWords.length
     ? `\n\nВ УРОКЕ УЖЕ ЕСТЬ эти слова — не добавляй их повторно. Если новое фото уточняет слово (напр. даёт артикль или пример) — верни исправленную форму, иначе пропусти. Возвращай в основном НОВЫЕ слова:\n${existingWords.slice(0, 200).join(', ')}`
     : ''
-  const merged = parseJson(await ask(`${MERGE_PROMPT(TL(targetLang))}\n\nДанные:\n${input}${existingBlock}`, { max_tokens: 8192 }))
+  const merged = parseJson(await ask(`${MERGE_PROMPT(TL(targetLang))}\n\nДанные:\n${input}${existingBlock}`, { max_tokens: 8192, client }))
 
   // 🛟 Страховка от потери слов: если модель выкинула слово из распознавания (напр. числа
   // 20-34 из тетради), возвращаем его обратно. Дедуп по ключу; уже имеющиеся в уроке — пропускаем.
@@ -221,10 +222,10 @@ async function mergeChunk(extractions, transcription = null, existingWords = [],
   return merged
 }
 
-export async function mergeLesson(extractions, transcription = null, existingWords = [], targetLang = 'de') {
+export async function mergeLesson(extractions, transcription = null, existingWords = [], targetLang = 'de', client = platformClient) {
   const CHUNK = 6
   if (extractions.length <= CHUNK) {
-    return mergeChunk(extractions, transcription, existingWords, targetLang)
+    return mergeChunk(extractions, transcription, existingWords, targetLang, client)
   }
 
   const chunks = []
@@ -234,7 +235,7 @@ export async function mergeLesson(extractions, transcription = null, existingWor
 
   const partials = []
   for (let i = 0; i < chunks.length; i++) {
-    const partial = await mergeChunk(chunks[i], i === 0 ? transcription : null, existingWords, targetLang)
+    const partial = await mergeChunk(chunks[i], i === 0 ? transcription : null, existingWords, targetLang, client)
     partials.push(partial)
   }
 
@@ -274,7 +275,7 @@ export async function mergeLesson(extractions, transcription = null, existingWor
 
 // AI-название и описание урока по его содержимому (когда учитель не задал тему).
 // Возвращает { title, description } по-русски.
-export async function generateLessonMeta(words = [], grammarPoints = [], targetLang = 'de') {
+export async function generateLessonMeta(words = [], grammarPoints = [], targetLang = 'de', client = platformClient) {
   const wl = words.slice(0, 60).map(w => `${w.word_de} — ${w.translation_ru}`).join(', ')
   const gl = (grammarPoints || []).slice(0, 8).map(g => g.description).filter(Boolean).join('; ')
   const prompt = `Ты помогаешь учителю ${TL(targetLang).name} языка. По содержимому урока придумай:
@@ -354,14 +355,14 @@ function shuffleOptions(ex) {
 
 // Разбивка слов урока на тематические группы (для кнопки «Перераспределить»).
 // Возвращает [{title, word_ids:[...]}] — каждое слово ровно в одну группу.
-export async function groupWordsByTheme(words, targetLang = 'de') {
+export async function groupWordsByTheme(words, targetLang = 'de', client = platformClient) {
   const list = words.map(w => `${w.id}: ${w.word_de} — ${w.translation_ru}`).join('\n')
   const prompt = `Раздели слова урока (${TL(targetLang).name} язык) на 2–6 ТЕМАТИЧЕСКИХ групп по смыслу (например «Школа», «Еда», «Семья», «Глаголы движения»). Каждое слово помести РОВНО в одну группу. Дай каждой группе короткое название по-русски (1–3 слова). Не оставляй слов без группы.
 Слова (формат "id: слово — перевод"):
 ${list}
 
 Верни СТРОГО JSON без markdown: {"groups":[{"title":"Тема","word_ids":[1,2,3]}]}`
-  const data = parseJson(await ask(prompt, { max_tokens: 2048 }))
+  const data = parseJson(await ask(prompt, { max_tokens: 2048, client }))
   return (data.groups || []).filter(g => g && g.title && Array.isArray(g.word_ids) && g.word_ids.length)
 }
 
@@ -375,7 +376,7 @@ export const CANON_THEMES = [
 
 // Классификация + НОРМАЛИЗАЦИЯ слов: существительные → с артиклем, глаголы → инфинитив,
 // каждое слово → РОВНО в одну канонической тему. Основа чистого банка без свалки.
-export async function classifyWordsToThemes(words, targetLang = 'de') {
+export async function classifyWordsToThemes(words, targetLang = 'de', client = platformClient) {
   if (!words.length) return []
   const list = words.map((w, i) => `${i}: ${w.de}${w.tr ? ' — ' + w.tr : ''}`).join('\n')
   const prompt = `Есть слова на ${TL(targetLang).name} языке. Для КАЖДОГО слова:
@@ -390,20 +391,20 @@ export async function classifyWordsToThemes(words, targetLang = 'de') {
 Верни СТРОГО JSON без markdown: {"items":[{"i":0,"de":"...","tr":"...","theme":"..."}]}
 Слова:
 ${list}`
-  const data = parseJson(await ask(prompt, { model: 'gpt-4o', max_tokens: 3000 }))
+  const data = parseJson(await ask(prompt, { model: 'gpt-4o', max_tokens: 3000, client }))
   return (data.items || [])
     .filter(it => it && it.de && it.theme)
     .map(it => ({ de: String(it.de).trim(), tr: String(it.tr || '').trim(), theme: CANON_THEMES.includes(it.theme) ? it.theme : 'Разное' }))
 }
 
-export async function generateExercises(words, grammar_points, targetLang = 'de', sentences = []) {
+export async function generateExercises(words, grammar_points, targetLang = 'de', sentences = [], client = platformClient) {
   const allExercises = []
   // Реальные предложения урока — приоритетный источник для fill_blank/sentence_write
   const realSentences = (sentences || []).map(s => (typeof s === 'string' ? s : s?.text)).filter(Boolean).slice(0, 40)
   for (let i = 0; i < words.length; i += BATCH_SIZE) {
     const batch = words.slice(i, i + BATCH_SIZE)
     const input = JSON.stringify({ words: batch, grammar_points, sentences: realSentences }, null, 2)
-    const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192 })
+    const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192, client })
     allExercises.push(...parseJson(text).map(shuffleOptions))
   }
   return allExercises
@@ -437,7 +438,7 @@ Reply ONLY with JSON (no markdown), feedback in ${langName}:
   return parseJson(await ask(prompt, { max_tokens: 400 }))
 }
 
-export async function enrichWords(words) {
+export async function enrichWords(words, client = platformClient) {
   const list = words.map((w, i) => `${i + 1}. ${w.word_de}`).join('\n')
   const text = await ask(`Для каждого немецкого слова/выражения уровня A1 дай:
 - translation_ru: перевод на русский (кратко)
@@ -448,7 +449,7 @@ export async function enrichWords(words) {
 [{"translation_ru": "...", "example_sentence": "...", "example_sentence_ru": "..."}, ...]
 
 Слова:
-${list}`, { max_tokens: 2048 })
+${list}`, { max_tokens: 2048, client })
   const results = parseJson(text)
   return words.map((w, i) => ({ id: w.id, ...results[i] }))
 }
@@ -463,7 +464,7 @@ const META_LANGS = ['en', 'uk', 'de', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
 // Перевод заголовка и описания урока с русского на локали интерфейса (для страницы «Сегодня»
 // и списка уроков). База — русский (title/description уже по-русски). onlyLangs — активные локали.
 // Возвращает { title: {lang: '...'}, description: {lang: '...'} }.
-export async function translateLessonMeta(title, description, onlyLangs = null) {
+export async function translateLessonMeta(title, description, onlyLangs = null, client = platformClient) {
   const langs = onlyLangs ? META_LANGS.filter(l => onlyLangs.includes(l)) : META_LANGS
   if (!langs.length || !title) return { title: {}, description: {} }
   const prompt = `Переведи НАЗВАНИЕ и ОПИСАНИЕ урока с русского на языки: ${langs.map(l => TARGET_LANG_NAMES[l] || l).join(', ')}.
@@ -494,7 +495,7 @@ export async function translateLessonMeta(title, description, onlyLangs = null) 
 }
 
 // onlyLangs — ограничить набор языков (напр. ['es'] для испанского контента: только ru[база]+es).
-export async function translateWordsToAllLangs(words, onlyLangs = null) {
+export async function translateWordsToAllLangs(words, onlyLangs = null, client = platformClient) {
   const langs = onlyLangs ? TARGET_LANGS.filter(l => onlyLangs.includes(l)) : TARGET_LANGS
   if (!langs.length) return {} // активна только базовая локаль — переводить нечего
   const jsonShape = `{ ${langs.map(l => `"${l}": "..."`).join(', ')} }`
@@ -511,7 +512,7 @@ export async function translateWordsToAllLangs(words, onlyLangs = null) {
 Переводы должны быть краткими (слово или словосочетание), как в словаре.
 
 ${list}`,
-        { max_tokens: 4096 }
+        { max_tokens: 4096, client }
       )
       const parsed = parseJson(text)
       for (const [id, t] of Object.entries(parsed)) results[id] = t
@@ -526,7 +527,7 @@ ${list}`,
 // Возвращает объект { id: { en: {...}, fr: {...} } } для упражнений
 // fill_blank: переводим немецкое предложение на 8 языков (включая ru)
 // multiple_choice + sentence_write: переводим русский текст на 7 языков
-export async function translateExercisePayloads(exercises, onlyLangs = null) {
+export async function translateExercisePayloads(exercises, onlyLangs = null, client = platformClient) {
   const BATCH = 15
   const results = {}
   const FB_ALL = ['ru', 'en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq'] // fill_blank (вкл ru)
@@ -561,7 +562,7 @@ export async function translateExercisePayloads(exercises, onlyLangs = null) {
 { "<id>": { ${fbLangs.map(l => `"${l}": "..."`).join(', ')} } }
 
 ${list}`,
-          { max_tokens: 4096 }
+          { max_tokens: 4096, client }
         )
         const parsed = parseJson(text)
         for (const [id, langs] of Object.entries(parsed)) results[id] = langs
@@ -582,7 +583,7 @@ ${list}`,
 { "<id>": { ${ruLangs.map(l => `"${l}": <перевод>`).join(', ')} } }
 
 ${list}`,
-          { max_tokens: 4096 }
+          { max_tokens: 4096, client }
         )
         const parsed = parseJson(text)
         for (const [id, langs] of Object.entries(parsed)) results[id] = langs
@@ -807,7 +808,7 @@ ${translationRule}
 СТРОГО повертай лише JSON без markdown:
 {"reply":"...","correction":"...або null",${translationSchema}}`
 
-  const res = await client.chat.completions.create({
+  const res = await platformClient.chat.completions.create({
     model: 'gpt-4o-mini',
     max_tokens: 512,
     response_format: { type: 'json_object' },   // модель обязана вернуть валидный JSON
@@ -847,7 +848,7 @@ ${dialog}
 
 ДУЖЕ ВАЖЛИВО: поле summary_text напиши САМЕ мовою користувача — ${langName}. Це мова інтерфейсу учня, а не обовʼязково українська.`
 
-  const res = await client.chat.completions.create({
+  const res = await platformClient.chat.completions.create({
     model: 'gpt-4o-mini',
     max_tokens: 700,
     response_format: { type: 'json_object' },

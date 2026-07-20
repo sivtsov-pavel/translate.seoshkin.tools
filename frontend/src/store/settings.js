@@ -76,7 +76,9 @@ applyVisual(loadVisual())
 export const useSettingsStore = create((set, get) => ({
   // Серверные настройки
   daily_limit: 50,
-  openai_key: '',
+  // Ключ OpenAI на клиент не приходит (секрет). Держим только факт наличия + маску для UI.
+  openai_key_set: false,
+  openai_key_mask: null,
   // Визуальные настройки (localStorage)
   ...loadVisual(),
 
@@ -88,7 +90,8 @@ export const useSettingsStore = create((set, get) => ({
       const data = await api.get('/settings')
       const patch = {
         daily_limit: data.daily_limit ?? 50,
-        openai_key: data.openai_key ?? '',
+        openai_key_set: data.openai_key_set ?? false,
+        openai_key_mask: data.openai_key_mask ?? null,
         loaded: true,
       }
       // Визуальные настройки с сервера — чтобы не слетали после чистки кеша/перезахода
@@ -132,11 +135,10 @@ export const useSettingsStore = create((set, get) => ({
     applyVisual(visual)
     localStorage.setItem(LS_KEY, JSON.stringify(visual))
 
-    // Сохранить серверные настройки
+    // Сохранить серверные настройки (ключ OpenAI — отдельным эндпоинтом, см. saveOpenaiKey)
     try {
       await api.patch('/settings', {
         daily_limit: next.daily_limit,
-        openai_key: next.openai_key || null,
       })
     } catch (e) {
       console.error('Ошибка сохранения настроек:', e)
@@ -147,5 +149,17 @@ export const useSettingsStore = create((set, get) => ({
     } catch (e) {
       console.error('Ошибка сохранения вида:', e)
     }
+  },
+
+  // Сохранить/очистить свой ключ OpenAI. key='' — очистить. Возвращает { openai_key_set, openai_key_mask }.
+  saveOpenaiKey: async (key) => {
+    const res = await api.put('/settings/openai-key', { key: key || '' })
+    set({ openai_key_set: res.openai_key_set, openai_key_mask: res.openai_key_mask })
+    return res
+  },
+
+  // Проверить ключ OpenAI (переданный или сохранённый). Возвращает { ok, error? }.
+  testOpenaiKey: async (key) => {
+    return api.post('/settings/openai-key/test', { key: key || '' })
   },
 }))

@@ -30,18 +30,20 @@ async function fetchToBuffer(url) {
 // Пробует gpt-image-1 (base64), фолбэк — dall-e-2 (url). Всё пережимается в webp (imageOptimize).
 // Картинка = СМЫСЛ (концепт), без текста → одна на все 10 языков (банк слов делит её между
 // нем./исп./фр…). Отсутствие текста заодно чинит баг «надпись не на том языке».
-export async function generateWordImage(wordDe, translationRu, wordId, targetLang = 'de') {
+// client — OpenAI-клиент; по умолчанию платформенный, но processor передаёт клиент владельца
+// урока (генерация картинок идёт за счёт учителя, если у него задан свой ключ).
+export async function generateWordImage(wordDe, translationRu, wordId, targetLang = 'de', client = openai) {
   const prompt = `Simple cheerful flat vector illustration for a children's flashcard. Show clearly the concept: "${translationRu}". Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style.
 IMPORTANT: absolutely NO text, NO letters, NO words, NO signs, NO captions in any language — only the drawing.`
   try {
-    const r = await openai.images.generate({ model: 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', n: 1 })
+    const r = await client.images.generate({ model: 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', n: 1 })
     if (r.data?.[0]?.b64_json) return await saveOptimizedImage(Buffer.from(r.data[0].b64_json, 'base64'), wordId)
     if (r.data?.[0]?.url) return await saveOptimizedImage(await fetchToBuffer(r.data[0].url), wordId)
   } catch (e) {
     console.error('gpt-image-1:', e.message)
   }
   try {
-    const r2 = await openai.images.generate({ model: 'dall-e-2', prompt, size: '512x512', n: 1 })
+    const r2 = await client.images.generate({ model: 'dall-e-2', prompt, size: '512x512', n: 1 })
     return await saveOptimizedImage(await fetchToBuffer(r2.data[0].url), wordId)
   } catch (e) {
     console.error('dall-e-2:', e.message)

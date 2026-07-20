@@ -1,6 +1,7 @@
 import { db } from '../db/index.js'
 import { generateLetterFill } from '../services/claude.js'
 import { regenerateExercisesFromDb, processNewMedia, enrichLesson } from '../services/processor.js'
+import { ownerHasOwnKey } from '../services/openaiClient.js'
 import { pdfToImages } from '../services/pdf.js'
 import { unlink } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -342,8 +343,9 @@ export async function lessonsRoutes(fastify) {
   fastify.post('/api/lessons/:id/media', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
-    // Загрузка медиа запускает обработку (токены) — пока только Павел(1)+Евгений(5)
-    if (!config.uploadAllowedIds.includes(request.user.id)) return reply.status(403).send({ error: 'Загрузка уроков временно ограничена (только администратор)' })
+    // Загрузка медиа запускает обработку (токены): администратор из белого списка ЛИБО учитель со своим ключом OpenAI
+    if (!config.uploadAllowedIds.includes(request.user.id) && !(await ownerHasOwnKey(request.user.id)))
+      return reply.status(403).send({ error: 'Загрузка уроков ограничена. Добавьте свой ключ OpenAI в Настройках, чтобы обрабатывать уроки за свой счёт.' })
     const lessonId = request.params.id
     // Источник: учебник (по умолчанию) или тетрадь/доска (?source=extra)
     const source = request.query?.source === 'extra' ? 'extra' : 'textbook'

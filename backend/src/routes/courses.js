@@ -4,6 +4,7 @@ import { db } from '../db/index.js'
 import { saveCourseCover } from '../services/imageOptimize.js'
 import { pdfToImages } from '../services/pdf.js'
 import { drainPendingLessons } from '../services/processor.js'
+import { ownerHasOwnKey } from '../services/openaiClient.js'
 import { unlockedCount, unlockDateForIndex } from '../services/drip.js'
 
 export async function coursesRoutes(fastify) {
@@ -191,7 +192,9 @@ export async function coursesRoutes(fastify) {
   // Уроки создаются по порядку и обрабатываются в фоне (vision → слова → упражнения).
   fastify.post('/api/courses/:id/upload-pdf', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
-    if (!config.uploadAllowedIds.includes(request.user.id)) return reply.status(403).send({ error: 'Загрузка уроков временно ограничена (только администратор)' })
+    // Администратор из белого списка ЛИБО учитель со своим ключом OpenAI (обрабатывает за свой счёт)
+    if (!config.uploadAllowedIds.includes(request.user.id) && !(await ownerHasOwnKey(request.user.id)))
+      return reply.status(403).send({ error: 'Загрузка уроков ограничена. Добавьте свой ключ OpenAI в Настройках, чтобы обрабатывать уроки за свой счёт.' })
     const courseId = parseInt(request.params.id)
     const target = request.headers['x-target-lang'] || 'de'
     const { rows: c } = await db.query('SELECT id, title FROM courses WHERE id = $1 AND owner_id = $2', [courseId, request.user.id])

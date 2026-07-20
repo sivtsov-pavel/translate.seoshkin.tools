@@ -162,6 +162,11 @@ export default function Settings() {
   const isOwner = user?.role === 'owner'
   const [saved, setSaved] = useState(false)
   const [keyVisible, setKeyVisible]   = useState(false)
+  // Ключ OpenAI: сам ключ с сервера не приходит (секрет). Локально держим только НОВЫЙ ввод
+  // и статус проверки/сохранения. Факт наличия ключа и маску берём из стора.
+  const [keyDraft, setKeyDraft] = useState('')
+  const [keyMsg, setKeyMsg]     = useState(null) // { kind:'ok'|'err'|'info', text }
+  const [keyBusy, setKeyBusy]   = useState(false)
   const [smtpPassVisible, setSmtpPassVisible] = useState(false)
   // Бампается, когда с сервера подъехали trainerReactions/voiceName — форсит ремонт
   // TrainerReactionsRow/VoicePicker, чтобы их localStorage-инициализация перечиталась заново
@@ -169,7 +174,6 @@ export default function Settings() {
 
   const [draft, setDraft] = useState({
     daily_limit:  store.daily_limit,
-    openai_key:   store.openai_key,
     zoom:         store.zoom,
     fontFamily:   store.fontFamily,
     headingFont:  store.headingFont  || 'Georgia',
@@ -192,7 +196,6 @@ export default function Settings() {
   useEffect(() => {
     setDraft({
       daily_limit:  store.daily_limit,
-      openai_key:   store.openai_key,
       zoom:         store.zoom,
       fontFamily:   store.fontFamily,
       headingFont:  store.headingFont  || 'Georgia',
@@ -268,6 +271,41 @@ export default function Settings() {
     }
     return next
   })
+
+  // Проверить ключ OpenAI: если в поле введён новый — проверяем его, иначе сохранённый.
+  const handleTestKey = async () => {
+    setKeyBusy(true); setKeyMsg({ kind: 'info', text: 'Проверяю ключ…' })
+    try {
+      const res = await store.testOpenaiKey(keyDraft.trim())
+      setKeyMsg(res.ok ? { kind: 'ok', text: '✓ Ключ работает' } : { kind: 'err', text: res.error || 'Ключ не прошёл проверку' })
+    } catch (e) {
+      setKeyMsg({ kind: 'err', text: e?.message || 'Ошибка проверки' })
+    } finally { setKeyBusy(false) }
+  }
+
+  // Сохранить введённый ключ (шифруется на сервере). Пустой ввод не сохраняем — для очистки есть «Удалить».
+  const handleSaveKey = async () => {
+    const k = keyDraft.trim()
+    if (!k) { setKeyMsg({ kind: 'err', text: 'Введите ключ' }); return }
+    setKeyBusy(true); setKeyMsg({ kind: 'info', text: 'Сохраняю…' })
+    try {
+      await store.saveOpenaiKey(k)
+      setKeyDraft(''); setKeyMsg({ kind: 'ok', text: '✓ Ключ сохранён' })
+    } catch (e) {
+      setKeyMsg({ kind: 'err', text: e?.message || 'Ошибка сохранения' })
+    } finally { setKeyBusy(false) }
+  }
+
+  // Удалить сохранённый ключ (вернуться на ключ сервера).
+  const handleClearKey = async () => {
+    setKeyBusy(true); setKeyMsg({ kind: 'info', text: 'Удаляю…' })
+    try {
+      await store.saveOpenaiKey('')
+      setKeyDraft(''); setKeyMsg({ kind: 'info', text: 'Ключ удалён — используется ключ сервера' })
+    } catch (e) {
+      setKeyMsg({ kind: 'err', text: e?.message || 'Ошибка' })
+    } finally { setKeyBusy(false) }
+  }
 
   const handleSave = async () => {
     await store.saveSettings(draft)
@@ -503,13 +541,14 @@ export default function Settings() {
 
       {/* ── Интеграции ── */}
       <Section icon="🔑" title="Интеграции">
-        <Row label="OpenAI API Key" hint="Нужен для обработки фото уроков, перевода и проверки упражнений. Хранится в вашем профиле.">
+        <Row label="OpenAI API Key" hint="Свой ключ — обработка фото уроков, картинки, переводы и упражнения идут за ваш счёт. Хранится зашифрованным, на клиент не отдаётся.">
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
               type={keyVisible ? 'text' : 'password'}
-              value={draft.openai_key || ''}
-              onChange={e => update('openai_key', e.target.value)}
-              placeholder="sk-..."
+              value={keyDraft}
+              onChange={e => { setKeyDraft(e.target.value); setKeyMsg(null) }}
+              placeholder={store.openai_key_set ? 'Ключ задан — введите новый, чтобы заменить' : 'sk-...'}
+              autoComplete="off"
               style={{ flex: 1, fontFamily: 'monospace', fontSize: 13 }}
             />
             <button onClick={() => setKeyVisible(v => !v)}
@@ -517,8 +556,35 @@ export default function Settings() {
               <i className={`bi bi-eye${keyVisible ? '-slash' : ''}`} />
             </button>
           </div>
-          {draft.openai_key && <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 4 }}>✓ Ключ задан</div>}
-          {!draft.openai_key && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>Если не задан — используется ключ сервера. Получить: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a></div>}
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            <button onClick={handleTestKey} disabled={keyBusy}
+              style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: keyBusy ? 'default' : 'pointer', fontSize: 13, opacity: keyBusy ? 0.6 : 1 }}>
+              🔍 Проверить
+            </button>
+            <button onClick={handleSaveKey} disabled={keyBusy || !keyDraft.trim()}
+              style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', cursor: (keyBusy || !keyDraft.trim()) ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, opacity: (keyBusy || !keyDraft.trim()) ? 0.5 : 1 }}>
+              💾 Сохранить ключ
+            </button>
+            {store.openai_key_set && (
+              <button onClick={handleClearKey} disabled={keyBusy}
+                style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'transparent', color: 'var(--red)', cursor: keyBusy ? 'default' : 'pointer', fontSize: 13, opacity: keyBusy ? 0.6 : 1 }}>
+                Удалить
+              </button>
+            )}
+          </div>
+
+          {keyMsg && (
+            <div style={{ fontSize: 12, marginTop: 8, color: keyMsg.kind === 'ok' ? 'var(--good)' : keyMsg.kind === 'err' ? 'var(--red)' : 'var(--ink-soft)' }}>
+              {keyMsg.text}
+            </div>
+          )}
+          {store.openai_key_set && !keyMsg && (
+            <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 8 }}>✓ Ключ задан{store.openai_key_mask ? ` (${store.openai_key_mask})` : ''}</div>
+          )}
+          {!store.openai_key_set && !keyMsg && (
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>Если не задан — используется ключ сервера. Получить: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a></div>
+          )}
         </Row>
 
         {/* SMTP — только для owner */}

@@ -3,6 +3,10 @@ export const config = {
   port: parseInt(process.env.PORT || '8090'),
   host: process.env.HOST || '0.0.0.0',
   jwtSecret: process.env.JWT_SECRET || 'dev_secret_change_me',
+  // Секрет для шифрования чувствительных настроек (ключ OpenAI учителя) в БД (AES-256-GCM).
+  // Отдельная переменная предпочтительна; при отсутствии — fallback на JWT_SECRET, чтобы не
+  // требовать нового env на сервере. ⚠️ Смена секрета делает старые зашифрованные ключи нечитаемыми.
+  settingsEncKey: process.env.SETTINGS_ENC_KEY || process.env.JWT_SECRET || 'dev_secret_change_me',
   databaseUrl: process.env.DATABASE_URL || 'postgresql://german_app:secret@localhost:5432/german_learning',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   openaiApiKey: process.env.OPENAI_API_KEY || '',

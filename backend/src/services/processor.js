@@ -5,6 +5,7 @@ import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, e
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
+import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
 
 // К какому скану (lesson_media) относится слово — ищем в извлечениях по каждому фото.
 // pairs: [{ mediaId, extraction }]. Совпадение по слову (без артикля, регистронезависимо).
@@ -21,7 +22,9 @@ function mediaIdForWord(wordDe, pairs) {
 // «Нарисовать недостающие»: детсадовские ИИ-картинки для слов урока без фото.
 // Служебные слова (предлоги/артикли/местоимения/числа) пропускаем — им картинка не нужна.
 export async function drawLessonImages(lessonId) {
-  const targetLang = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
+  const lrow = (await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]
+  const targetLang = lrow?.target_lang || 'de'
+  const client = await getOwnerClient(lrow?.owner_id) // ключ владельца или платформенный
   const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id=$1 AND image_url IS NULL ORDER BY id', [lessonId])
   const target = rows.filter(w => !isFunctionWord(w.word_de))
   let done = 0
@@ -31,7 +34,7 @@ export async function drawLessonImages(lessonId) {
       // Банк слов: переиспользуем существующую картинку такого же слова (0 затрат)
       const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
       if (existing) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [existing, w.id]); done++; continue }
-      const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
+      const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client)
       if (url) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [url, w.id]); done++ }
     } catch (e) { console.error('drawLessonImages', w.word_de, e.message) }
   }
@@ -74,12 +77,13 @@ export async function redistributeLesson(lessonId) {
       'SELECT owner_id, course_id, target_lang, lesson_number, title FROM lessons WHERE id=$1', [lessonId])
     const L = lr[0]
     if (!L) return
+    const client = await getOwnerClient(L.owner_id) // ключ владельца или платформенный
     await setProgress(lessonId, 'Разбиваю урок на темы...')
     const { rows: words } = await db.query(
       'SELECT id, word_de, translation_ru, example_sentence, image_url, translations, source, media_id FROM words WHERE lesson_id=$1 ORDER BY id', [lessonId])
     if (words.length < 4) { await db.query("UPDATE lessons SET progress='Мало слов для разбивки (нужно ≥4)' WHERE id=$1", [lessonId]); return }
 
-    const groups = await groupWordsByTheme(words, L.target_lang)
+    const groups = await groupWordsByTheme(words, L.target_lang, client)
     if (!groups.length) { await db.query("UPDATE lessons SET progress='Не удалось разбить на темы' WHERE id=$1", [lessonId]); return }
 
     const base = (String(L.title || '').match(/(\d+)/) || [])[1] || L.lesson_number || lessonId
@@ -115,7 +119,7 @@ export async function redistributeLesson(lessonId) {
       }
       // Упражнения из слов набора + его предложений
       const { rows: nw } = await db.query('SELECT id, word_de, translation_ru, example_sentence FROM words WHERE lesson_id=$1 ORDER BY id', [newId])
-      const exercises = await generateExercises(nw, [], L.target_lang, await getLessonSentences(newId))
+      const exercises = await generateExercises(nw, [], L.target_lang, await getLessonSentences(newId), client)
       const wordMap = Object.fromEntries(nw.map(w => [w.word_de, w.id]))
       for (const ex of exercises) {
         await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -180,14 +184,16 @@ async function findExistingTranslations(wordDe, targetLang, excludeId = 0) {
 }
 
 // Платформенный ключ OpenAI на генерацию картинок использует только супер-админ (Павел).
-// Другой учитель, кто захочет генерить свои картинки, добавляет свой ключ OpenAI в настройках
-// (фича «свой ключ» — TODO). Пока: чужим авто-генерация недоступна, только банк слов (бесплатно).
+// Другой учитель генерит свои картинки за свой счёт, добавив свой ключ OpenAI в настройках
+// (см. ownerHasOwnKey). Без ключа чужим авто-генерация недоступна — только банк слов (бесплатно).
 const IMAGE_GEN_OWNER_ID = 1
 
 export async function enrichLesson(lessonId) {
-  const lrow = (await db.query('SELECT target_lang, owner_id FROM lessons WHERE id=$1', [lessonId])).rows[0] || {}
+  const lrow = (await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0] || {}
   const targetLang = lrow.target_lang || 'de'
-  const canGenImages = lrow.owner_id === IMAGE_GEN_OWNER_ID
+  const client = await getOwnerClient(lrow.owner_id) // ключ владельца или платформенный
+  // Платная авто-генерация картинок: супер-админ (платформенный ключ) ИЛИ учитель со своим ключом OpenAI.
+  const canGenImages = lrow.owner_id === IMAGE_GEN_OWNER_ID || await ownerHasOwnKey(lrow.owner_id)
   const activeLocales = await getActiveLocales(targetLang) // напр. ['ru','es'] для испанского
   // 1) Переводы + примеры для неполных слов урока
   try {
@@ -195,7 +201,7 @@ export async function enrichLesson(lessonId) {
       `SELECT id, word_de, translation_ru FROM words
        WHERE lesson_id = $1 AND (example_sentence IS NULL OR word_de = translation_ru) ORDER BY id`, [lessonId])
     for (let i = 0; i < rows.length; i += 20) {
-      const res = await enrichWords(rows.slice(i, i + 20))
+      const res = await enrichWords(rows.slice(i, i + 20), client)
       for (const r of res) {
         if (!r) continue
         await db.query(
@@ -221,9 +227,9 @@ export async function enrichLesson(lessonId) {
           // Банк слов: уже есть картинка такого же слова → переиспользуем (0 затрат, всем)
           const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
           if (existing) { await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [existing, w.id]); continue }
-          // Платная генерация (gpt-image-1) — только супер-админ (защита токенов). Остальным — без картинки.
+          // Платная генерация (gpt-image-1) — супер-админ или учитель со своим ключом. Остальным — только банк слов.
           if (!canGenImages) continue
-          const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang)
+          const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client)
           if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
         } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
       }
@@ -244,7 +250,7 @@ export async function enrichLesson(lessonId) {
         if (existing) await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(existing), w.id])
         else toTranslate.push(w)
       }
-      const results = toTranslate.length ? await translateWordsToAllLangs(toTranslate, activeLocales) : {}
+      const results = toTranslate.length ? await translateWordsToAllLangs(toTranslate, activeLocales, client) : {}
       for (const [id, t] of Object.entries(results)) {
         await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(t), parseInt(id)])
       }
@@ -260,7 +266,7 @@ export async function enrichLesson(lessonId) {
          AND (payload_translations IS NULL OR payload_translations = '{}' OR NOT (payload_translations ? 'sq')) ORDER BY id`, [lessonId])
     for (let i = 0; i < rows.length; i += 15) {
       try {
-        const results = await translateExercisePayloads(rows.slice(i, i + 15), activeLocales)
+        const results = await translateExercisePayloads(rows.slice(i, i + 15), activeLocales, client)
         for (const [id, langs] of Object.entries(results)) {
           await db.query('UPDATE exercises SET payload_translations = COALESCE(payload_translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
         }
@@ -322,7 +328,7 @@ export async function enrichLesson(lessonId) {
       const descMissing = hasDesc && need.some(l => !(L.description_translations && L.description_translations[l]))
       if (titleMissing || descMissing) {
         await setProgress(lessonId, 'Перевожу заголовок и описание урока...')
-        const meta = await translateLessonMeta(L.title, L.description, activeLocales)
+        const meta = await translateLessonMeta(L.title, L.description, activeLocales, client)
         await db.query(
           `UPDATE lessons SET
              title_translations = COALESCE(title_translations, '{}'::jsonb) || $1::jsonb,
@@ -346,7 +352,9 @@ export async function regenerateExercisesFromDb(lessonId) {
       [lessonId]
     )
     if (!wordRows.length) throw new Error('Нет слов для этого урока')
-    const targetLang = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
+    const lrow = (await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]
+    const targetLang = lrow?.target_lang || 'de'
+    const client = await getOwnerClient(lrow?.owner_id) // ключ владельца или платформенный
 
     const words = wordRows.map(w => ({
       word_de: w.word_de,
@@ -361,7 +369,7 @@ export async function regenerateExercisesFromDb(lessonId) {
     await setProgress(lessonId, `Генерирую упражнения для ${words.length} слов...`)
 
     // Генерируем упражнения батчами по 15 слов
-    const exercises = await generateExercises(words, [], targetLang, await getLessonSentences(lessonId))
+    const exercises = await generateExercises(words, [], targetLang, await getLessonSentences(lessonId), client)
 
     for (const ex of exercises) {
       const wordId = wordMap[ex.word_de] || null
@@ -403,6 +411,7 @@ export async function processNewMedia(lessonId) {
   const { rows: lrow } = await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])
   const ownerId = lrow[0]?.owner_id
   const targetLang = lrow[0]?.target_lang || 'de'
+  const client = await getOwnerClient(ownerId) // ключ владельца или платформенный
   await setProgress(lessonId, `Обрабатываю ${media.length} новых фото...`)
 
   for (const src of ['textbook', 'extra']) {
@@ -411,7 +420,7 @@ export async function processNewMedia(lessonId) {
     const pairs = []
     for (const photo of list) {
       try {
-        const extraction = await extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang)
+        const extraction = await extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client)
         pairs.push({ mediaId: photo.id, extraction })
         await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
       } catch (e) { console.error('processNewMedia extract', e.message) }
@@ -419,7 +428,7 @@ export async function processNewMedia(lessonId) {
     if (!pairs.length) continue
     // Умная обработка: сверяем с уже имеющимися словами урока (тетрадь после учебника)
     const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
-    const cons = await mergeLesson(pairs.map(p => p.extraction), null, existRows.map(r => r.word_de), targetLang)
+    const cons = await mergeLesson(pairs.map(p => p.extraction), null, existRows.map(r => r.word_de), targetLang, client)
     for (const w of (cons.words || [])) {
       const mediaId = mediaIdForWord(w.word_de, pairs) // с какого скана слово
       await db.query(
@@ -438,7 +447,7 @@ export async function processNewMedia(lessonId) {
      WHERE w.lesson_id=$1 AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id=w.id AND e.lesson_id=$1)`, [lessonId])
   if (wordRows.length) {
     await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
-    const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId))
+    const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId), client)
     const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
     for (const ex of exercises) {
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -463,6 +472,7 @@ export async function saveCameraWords(lessonId, words) {
     const ownerId = lrow[0]?.owner_id
     const targetLang = lrow[0]?.target_lang || 'de'
     if (!ownerId) throw new Error('Урок не найден')
+    const client = await getOwnerClient(ownerId) // ключ владельца или платформенный
     await setProgress(lessonId, 'Добавляю слова с фото...')
     for (const w of words) {
       if (!w || !w.de) continue
@@ -477,7 +487,7 @@ export async function saveCameraWords(lessonId, words) {
        WHERE w.lesson_id=$1 AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id=w.id AND e.lesson_id=$1)`, [lessonId])
     if (wordRows.length) {
       await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
-      const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId))
+      const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId), client)
       const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
       for (const ex of exercises) {
         await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -500,14 +510,16 @@ export async function saveCameraWords(lessonId, words) {
 export async function generateCustomSet(lessonId, wordIds) {
   try {
     await setProgress(lessonId, 'Собираю упражнения из выбранных слов...')
-    const tl = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
+    const lrow = (await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]
+    const tl = lrow?.target_lang || 'de'
+    const client = await getOwnerClient(lrow?.owner_id) // ключ владельца или платформенный
     const { rows: words } = await db.query(
       'SELECT id, word_de, translation_ru, example_sentence FROM words WHERE id = ANY($1::int[]) ORDER BY id', [wordIds])
     if (!words.length) {
       await db.query("UPDATE lessons SET status='error', progress='Нет слов' WHERE id=$1", [lessonId])
       return
     }
-    const exercises = await generateExercises(words, [], tl, await getLessonSentences(lessonId))
+    const exercises = await generateExercises(words, [], tl, await getLessonSentences(lessonId), client)
     const wordMap = Object.fromEntries(words.map(w => [w.word_de, w.id]))
     for (const ex of exercises) {
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -538,6 +550,7 @@ export async function processLesson(lessonId, ownerId) {
     const targetLang = lessonRows[0]?.target_lang || 'de' // изучаемый язык урока
     // Слова всегда сохраняем под реальным владельцем урока
     ownerId = lessonRows[0]?.owner_id ?? ownerId
+    const client = await getOwnerClient(ownerId) // генерация урока — за счёт учителя (свой ключ) или платформенная
 
     const { rows: mediaFiles } = await db.query(
       'SELECT * FROM lesson_media WHERE lesson_id = $1',
@@ -558,7 +571,7 @@ export async function processLesson(lessonId, ownerId) {
         }
         await setProgress(lessonId, `Фото ${offset + i + 1}...`)
         const filepath = join(config.uploadDir, photo.file_path)
-        const extraction = await extractFromPhoto(filepath, targetLang)
+        const extraction = await extractFromPhoto(filepath, targetLang, client)
         out.push(extraction)
         await db.query('UPDATE lesson_media SET processed = true, raw_extraction = $1 WHERE id = $2', [JSON.stringify(extraction), photo.id])
       }
@@ -571,7 +584,7 @@ export async function processLesson(lessonId, ownerId) {
       await setProgress(lessonId, 'Расшифровка аудио...')
       for (const audio of audios) {
         const filepath = join(config.uploadDir, audio.file_path)
-        transcription = await transcribeAudio(filepath)
+        transcription = await transcribeAudio(filepath, client)
         await db.query('UPDATE lesson_media SET processed = true WHERE id = $1', [audio.id])
       }
     }
@@ -591,7 +604,7 @@ export async function processLesson(lessonId, ownerId) {
       await setProgress(lessonId, 'Составляю конспект урока...')
       // Тетрадь/доска (extra) сверяется с уже извлечёнными словами учебника — не дублируем
       const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
-      const cons = await mergeLesson(ex, text, existRows.map(r => r.word_de), targetLang)
+      const cons = await mergeLesson(ex, text, existRows.map(r => r.word_de), targetLang, client)
       for (const word of (cons.words || [])) {
         const mediaId = mediaIdForWord(word.word_de, pairs) // с какого скана слово
         await db.query(
@@ -630,7 +643,7 @@ export async function processLesson(lessonId, ownerId) {
     await setProgress(lessonId, `Создаю упражнения для ${totalWords} слов...`)
     let exercises = []
     if (totalWords > 0) {
-      exercises = await generateExercises(consolidated.words, consolidated.grammar_points, targetLang, await getLessonSentences(lessonId))
+      exercises = await generateExercises(consolidated.words, consolidated.grammar_points, targetLang, await getLessonSentences(lessonId), client)
     }
 
     const { rows: wordRows } = await db.query(
@@ -663,7 +676,7 @@ export async function processLesson(lessonId, ownerId) {
         const needTitle = !curTitle || /^Урок\s+\d+$/i.test(curTitle)
         const needDesc  = !metaRows[0]?.description
         if (needTitle || needDesc) {
-          const meta = await generateLessonMeta(consolidated.words, consolidated.grammar_points, targetLang)
+          const meta = await generateLessonMeta(consolidated.words, consolidated.grammar_points, targetLang, client)
           // Номер урока: если задан вручную — сохраняем; иначе берём СЛЕДУЮЩИЙ свободный
           // (max «Урок N» у учителя + 1), чтобы не было дублей «Урок 3» и урок был новым.
           const numMatch = curTitle.match(/Урок\s+(\d+)/i)
@@ -716,7 +729,8 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
   const clean = (rawWords || []).filter(w => w && w.de).map(w => ({ de: String(w.de).trim(), tr: String(w.tr || '').trim() }))
   if (!clean.length) return { added: 0, duplicates: 0, themes: [] }
 
-  const items = await classifyWordsToThemes(clean, targetLang)
+  const client = await getOwnerClient(ownerId) // классификация — за счёт учителя (свой ключ) или платформенная
+  const items = await classifyWordsToThemes(clean, targetLang, client)
   if (!items.length) return { added: 0, duplicates: 0, themes: [] }
 
   const bare = s => String(s).toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '')
