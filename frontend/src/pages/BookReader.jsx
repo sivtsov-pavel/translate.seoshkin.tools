@@ -23,6 +23,9 @@ export default function BookReader({ book, onClose }) {
   const [popup, setPopup]     = useState(null)    // { text, loading, translation, example, inDict, isSel }
   const [selText, setSelText] = useState('')      // выделенный фрагмент (несколько слов/предложение)
   const [err, setErr]         = useState('')
+  const [aloudMode, setAloudMode] = useState(false) // режим «читать вслух»: клик по тексту запускает озвучку
+  const [speakIdx, setSpeakIdx]   = useState(-1)    // абзац, который сейчас читается вслух (-1 = нет)
+  const aloudCancel = useRef(false)
 
   const paraRefs = useRef([])          // DOM-узлы абзацев
   const containerRef = useRef(null)    // контейнер текста (для проверки, что выделение внутри книги)
@@ -97,13 +100,17 @@ export default function BookReader({ book, onClose }) {
 
   // Сохранить закладку при закрытии (немедленно, без дебаунса)
   const close = () => {
+    aloudCancel.current = true; window.speechSynthesis?.cancel()
     if (saveTimer.current) clearTimeout(saveTimer.current)
     if (curIdx !== lastSaved.current) {
       api.put(`/books/${book.id}/position`, { para_index: curIdx }).catch(() => {})
     }
     onClose()
   }
-  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current) }, [])
+  useEffect(() => () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    aloudCancel.current = true; window.speechSynthesis?.cancel() // не оставляем озвучку после ухода со страницы
+  }, [])
 
   // Выделение текста (несколько слов / предложение) внутри книги → показываем кнопку «перевести».
   useEffect(() => {
@@ -148,6 +155,33 @@ export default function BookReader({ book, onClose }) {
     setSelText(''); window.getSelection()?.removeAllRanges()
   }
 
+  // ── Чтение вслух: система читает книгу с выбранного абзаца, дальше сама, с подсветкой ──
+  const startAloud = (fromIdx) => {
+    if (!paras || !paras.length) return
+    const synth = window.speechSynthesis
+    if (!synth) return
+    aloudCancel.current = false
+    setPopup(null)
+    const voices = synth.getVoices()
+    const voice = voices.find(v => v.lang.startsWith(bookLang)) || voices.find(v => v.lang.startsWith('de'))
+    const rate = parseFloat(localStorage.getItem('voice_rate') || '0.9')
+    const playNext = (i) => {
+      if (aloudCancel.current || i >= paras.length) { setSpeakIdx(-1); return }
+      setSpeakIdx(i)
+      const el = paraRefs.current[i]
+      if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      synth.cancel()
+      const utt = new SpeechSynthesisUtterance(paras[i])
+      utt.lang = ttsLang; utt.rate = rate
+      if (voice) utt.voice = voice
+      utt.onend = () => { if (!aloudCancel.current) playNext(i + 1) }
+      utt.onerror = () => { if (!aloudCancel.current) playNext(i + 1) }
+      synth.speak(utt)
+    }
+    playNext(fromIdx)
+  }
+  const stopAloud = () => { aloudCancel.current = true; window.speechSynthesis?.cancel(); setSpeakIdx(-1) }
+
   // Сохранить в разговорник — работает и для слова, и для выделенного предложения
   const savePhrase = async () => {
     if (!popup) return
@@ -163,6 +197,13 @@ export default function BookReader({ book, onClose }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px' }}>
           <button onClick={close} style={{ border: 'none', background: 'var(--surface-2)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 14, color: 'var(--ink)' }}>← Закрыть</button>
           <div style={{ fontWeight: 700, fontSize: 15, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
+          {speakIdx >= 0 ? (
+            <button onClick={stopAloud} title="Остановить чтение"
+              style={{ border: 'none', background: 'var(--red)', color: '#fff', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>⏹ Стоп</button>
+          ) : (
+            <button onClick={() => setAloudMode(v => !v)} title="Читать вслух: включи и нажми на текст с нужного места"
+              style={{ border: `1px solid ${aloudMode ? 'var(--accent)' : 'var(--line)'}`, background: aloudMode ? 'var(--accent-soft)' : 'var(--surface-2)', color: aloudMode ? 'var(--accent)' : 'var(--ink)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🔊 Вслух</button>
+          )}
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>{pct}%</div>
         </div>
         <div style={{ height: 3, background: 'var(--surface-2)' }}>
@@ -174,16 +215,25 @@ export default function BookReader({ book, onClose }) {
       <div ref={containerRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 18px 120px', maxWidth: 760, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         {err && <div style={{ color: 'var(--red)', padding: 20 }}>{err}</div>}
         {paras === null && !err && <div style={{ color: 'var(--ink-soft)', padding: 20 }}>Открываю книгу…</div>}
-        {paras && resumeIdx > 0 && (
+        {paras && resumeIdx > 0 && speakIdx < 0 && (
           <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 16, textAlign: 'center' }}>↓ продолжаем с места, где ты остановился</div>
+        )}
+        {aloudMode && speakIdx < 0 && (
+          <div style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 16, textAlign: 'center', fontWeight: 600 }}>🔊 Нажми на текст — начну читать вслух с этого места</div>
         )}
         {paras && paras.map((p, i) => (
           <p key={i} data-idx={i} ref={el => (paraRefs.current[i] = el)}
-            style={{ margin: '0 0 18px', lineHeight: 1.9, fontSize: 18, color: 'var(--ink)' }}>
+            onClick={() => { if (aloudMode) startAloud(i) }}
+            style={{
+              margin: '0 0 18px', lineHeight: 1.9, fontSize: 18, color: 'var(--ink)',
+              cursor: aloudMode ? 'pointer' : 'auto',
+              background: speakIdx === i ? 'var(--accent-soft)' : 'transparent',
+              borderRadius: 6, padding: speakIdx === i ? '4px 6px' : 0, transition: 'background .2s',
+            }}>
             {tokenize(p).map((tok, j) => isWord(tok) ? (
-              <span key={j} onClick={() => onWord(tok)}
-                style={{ cursor: 'pointer', borderRadius: 4, padding: '0 1px' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-soft)'}
+              <span key={j} onClick={(e) => { if (aloudMode) return; e.stopPropagation(); onWord(tok) }}
+                style={{ cursor: aloudMode ? 'pointer' : 'pointer', borderRadius: 4, padding: '0 1px' }}
+                onMouseEnter={e => { if (!aloudMode) e.currentTarget.style.background = 'var(--accent-soft)' }}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>{tok}</span>
             ) : <span key={j}>{tok}</span>)}
           </p>

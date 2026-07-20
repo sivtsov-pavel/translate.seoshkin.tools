@@ -16,7 +16,8 @@ export default function Books() {
   const [busy, setBusy]       = useState(false)
   const [err, setErr]         = useState('')
 
-  const load = () => api.get('/books').then(setBooks).catch(() => {}).finally(() => setLoading(false))
+  // Список — из /reader/books (виден всем: свои книги + книги школы). Загрузка/удаление — только учителю.
+  const load = () => api.get('/reader/books').then(setBooks).catch(() => {}).finally(() => setLoading(false))
   useEffect(() => { load() }, [])
 
   const isOwner = user?.role === 'owner'
