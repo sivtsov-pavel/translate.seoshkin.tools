@@ -70,14 +70,21 @@ export async function readerRoutes(fastify) {
   // words: [{de, tr}]. Генерация упражнений идёт в фоне.
   fastify.post('/api/reader/save-to-lesson', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
-    const { lesson_id, title, words } = request.body || {}
+    const { lesson_id, title, words, course_id } = request.body || {}
     if (!Array.isArray(words) || !words.length) return reply.status(400).send({ error: 'Нет слов' })
     const target = request.headers['x-target-lang'] || 'de'
     let lid = lesson_id ? parseInt(lesson_id) : null
     if (!lid) {
+      // Привязка к курсу (если выбран) — чтобы урок из камеры не остался «одиночкой» вне курса
+      const cid = course_id ? parseInt(course_id) : null
+      let num = null
+      if (cid) {
+        const { rows: mx } = await db.query('SELECT COALESCE(MAX(lesson_number),0)+1 AS n FROM lessons WHERE course_id=$1', [cid])
+        num = mx[0].n
+      }
       const { rows } = await db.query(
-        "INSERT INTO lessons (owner_id, title, date, status, target_lang) VALUES ($1,$2,CURRENT_DATE,'processing',$3) RETURNING id",
-        [request.user.id, (title && title.trim()) || '📷 Слова с фото', target])
+        "INSERT INTO lessons (owner_id, title, date, status, target_lang, course_id, lesson_number) VALUES ($1,$2,CURRENT_DATE,'processing',$3,$4,$5) RETURNING id",
+        [request.user.id, (title && title.trim()) || '📷 Слова с фото', target, cid, num])
       lid = rows[0].id
     } else {
       await db.query("UPDATE lessons SET status='processing' WHERE id=$1", [lid])

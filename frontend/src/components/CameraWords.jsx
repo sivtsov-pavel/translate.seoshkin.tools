@@ -20,14 +20,19 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
   const [err, setErr] = useState('')
   const [savedCount, setSavedCount] = useState(0)
   const [lessons, setLessons] = useState([])
-  const [target, setTarget] = useState('')     // '' = новый набор, иначе lesson_id
+  const [courses, setCourses] = useState([])
+  const [target, setTarget] = useState('')     // '' = новый набор/урок, иначе lesson_id
+  const [saveCourse, setSaveCourse] = useState('') // курс для НОВОГО урока (чтобы не остался сиротой)
   const [lessonMsg, setLessonMsg] = useState('')
   const [distMsg, setDistMsg] = useState('')
   const [distBusy, setDistBusy] = useState(false)
   const [savedSentIdx, setSavedSentIdx] = useState(() => new Set()) // предложения, сохранённые в разговорник
 
   useEffect(() => {
-    if (isOwner) api.get('/lessons').then(d => setLessons((Array.isArray(d) ? d : d.lessons || []).filter(l => l.status === 'done' || l.words_count > 0))).catch(() => {})
+    if (isOwner) {
+      api.get('/lessons').then(d => setLessons((Array.isArray(d) ? d : d.lessons || []).filter(l => l.status === 'done' || l.words_count > 0))).catch(() => {})
+      api.get('/courses').then(cs => setCourses(Array.isArray(cs) ? cs : [])).catch(() => {})
+    }
   }, [isOwner])
 
   // Отмеченные слова: в режиме предложений собираем из разбора всех предложений (дедуп по de),
@@ -74,6 +79,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
       const res = await api.post('/reader/save-to-lesson', {
         lesson_id: target || undefined,
         title: target ? undefined : '📷 Слова с фото',
+        course_id: (!target && saveCourse) ? saveCourse : undefined, // курс только для НОВОГО урока
         words: chosen.map(w => ({ de: w.de, tr: w.tr })),
       })
       setLessonMsg(`✓ Отправлено в урок (упражнения создаются в фоне). Урок #${res.lesson_id}`)
@@ -265,6 +271,17 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                     В урок
                   </button>
                 </div>
+                {/* Новый урок → привязка к курсу, чтобы не остался «одиночкой» вне курса */}
+                {!target && (
+                  <div style={{ marginTop: 8 }}>
+                    <select value={saveCourse} onChange={e => setSaveCourse(e.target.value)}
+                      style={{ width: '100%', padding: '9px 10px', borderRadius: 9, fontSize: 13.5, background: 'var(--surface)', color: 'var(--ink)', border: `1px solid ${saveCourse ? 'var(--line)' : 'var(--accent)'}` }}>
+                      <option value="">📚 Без курса (отдельный урок)</option>
+                      {courses.map(c => <option key={c.id} value={c.id}>Привязать к курсу: {c.title}</option>)}
+                    </select>
+                    {!saveCourse && <div style={{ fontSize: 11.5, color: 'var(--accent)', marginTop: 4 }}>💡 Лучше привязать к курсу — иначе урок повиснет отдельно в «Сегодня».</div>}
+                  </div>
+                )}
                 {lessonMsg && <div style={{ fontSize: 12, color: lessonMsg.startsWith('✓') ? 'var(--good, #16a34a)' : 'var(--ink-soft)', marginTop: 6 }}>{lessonMsg}</div>}
               </div>
             )}
