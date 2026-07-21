@@ -42,9 +42,14 @@ export default function Layout({ children }) {
   const [pushResult, setPushResult] = useState(null)
   const drawerRef = useRef()
   const isRtl = t.dir === 'rtl'
+  // Настройки меню из супер-админки: какие пункты скрыть + свои пункты
+  const [menuCfg, setMenuCfg] = useState({ hidden: [], custom: [] })
 
-  // Загружаем серверные настройки и обновляем профиль один раз при старте
-  useEffect(() => { fetchSettings(); refreshUser() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Загружаем серверные настройки, профиль и конфиг меню один раз при старте
+  useEffect(() => {
+    fetchSettings(); refreshUser()
+    api.get('/platform/public-config').then(c => { if (c?.menu) setMenuCfg({ hidden: c.menu.hidden || [], custom: c.menu.custom || [] }) }).catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Офлайн-ядро: предзагрузка словаря/упражнений в IndexedDB + синк очереди ответов
   const [online, setOnline] = useState(isOnline())
@@ -178,7 +183,9 @@ export default function Layout({ children }) {
 
   // Группы пунктов навигации
   const learningItems = [
-    { to: '/lessons',                     icon: 'bi-book-fill',                 label: t.nav.lessons },
+    // «Уроки» — управленческий раздел учителя (создание/редактирование). Ученику он путал:
+    // туда шли учиться вместо «Сегодня». Для ученика скрыт (учится на «Сегодня»); учителю — ниже в блоке «Класс».
+    ...(user?.role === 'owner' ? [{ to: '/lessons', icon: 'bi-book-fill', label: t.nav.lessons }] : []),
     { to: '/sets',                        icon: 'bi-collection-fill',           label: t.nav.sets },
     { to: '/vocabulary',                  icon: 'bi-card-list',                 label: t.nav.vocabulary },
     { to: '/ai-trainer',                  icon: 'bi-person-video3',             label: 'AI тренер' },
@@ -208,22 +215,32 @@ export default function Layout({ children }) {
     { to: '/register',    icon: 'bi-person-plus-fill', label: t.nav.addStudent || 'Новый ученик' },
   ] : []
 
+  // Применяем настройки меню из супер-админки: скрываем отмеченные пункты и добавляем свои.
+  const hiddenSet = new Set(menuCfg.hidden || [])
+  const customFor = (section) => (menuCfg.custom || [])
+    .filter(c => c && c.url && c.label && (c.section || 'learning') === section && (!c.roles || c.roles === 'all' || c.roles === user?.role))
+    .map(c => ({ to: c.url, icon: c.icon || 'bi-link-45deg', label: c.label, external: /^https?:\/\//i.test(c.url) }))
+  const withCfg = (items, section) => [...items.filter(it => !hiddenSet.has(it.to)), ...customFor(section)]
+  const navLearning = withCfg(learningItems, 'learning')
+  const navClass    = withCfg(classItems, 'class')
+
   const NavItem = ({ item, onClick }) => {
-    const active = isActive(item.to)
-    return (
-      <Link to={item.to} onClick={onClick} style={{
-        display: 'flex', alignItems: 'center', gap: 11,
-        padding: '9px 12px', borderRadius: 10, fontSize: 14,
-        textDecoration: 'none',
-        color: active ? 'var(--accent)' : 'var(--ink)',
-        background: active ? 'var(--accent-soft)' : 'transparent',
-        fontWeight: active ? 700 : 400,
-        transition: 'background .15s',
-      }}>
-        <i className={`bi ${item.icon}`} style={{ width: 17, textAlign: 'center', fontSize: 15, flexShrink: 0 }} />
-        {item.label}
-      </Link>
-    )
+    const active = !item.external && isActive(item.to)
+    const style = {
+      display: 'flex', alignItems: 'center', gap: 11,
+      padding: '9px 12px', borderRadius: 10, fontSize: 14, textDecoration: 'none',
+      color: active ? 'var(--accent)' : 'var(--ink)',
+      background: active ? 'var(--accent-soft)' : 'transparent',
+      fontWeight: active ? 700 : 400, transition: 'background .15s',
+    }
+    const inner = <>
+      <i className={`bi ${item.icon}`} style={{ width: 17, textAlign: 'center', fontSize: 15, flexShrink: 0 }} />
+      {item.label}
+    </>
+    // Свои пункты с внешней ссылкой (http…) — обычный <a> в новой вкладке; внутренние — Link
+    return item.external
+      ? <a href={item.to} target="_blank" rel="noreferrer" onClick={onClick} style={style}>{inner}</a>
+      : <Link to={item.to} onClick={onClick} style={style}>{inner}</Link>
   }
 
   const SectionLabel = ({ label }) => (
@@ -297,13 +314,13 @@ export default function Layout({ children }) {
 
           {/* Обучение */}
           <SectionLabel label="Обучение" />
-          {learningItems.map(item => <NavItem key={item.to} item={item} onClick={close} />)}
+          {navLearning.map(item => <NavItem key={item.to} item={item} onClick={close} />)}
 
           {/* Класс: учителю — школа/курсы/ученики; ученику — вход в класс по коду */}
-          {classItems.length > 0 && (
+          {navClass.length > 0 && (
             <>
               <SectionLabel label="Класс" />
-              {classItems.map(item => <NavItem key={item.to} item={item} onClick={close} />)}
+              {navClass.map(item => <NavItem key={item.to} item={item} onClick={close} />)}
             </>
           )}
 

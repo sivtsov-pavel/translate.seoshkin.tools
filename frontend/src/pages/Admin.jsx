@@ -72,6 +72,7 @@ export default function Admin() {
         {[
           ['overview', '📊 Обзор'],
           ['monetization', '💶 Монетизация'],
+          ['menu', '☰ Меню'],
           ['languages', '🌍 Языки'],
           ['schools', '🏫 Школы'],
           ['users', '👥 Пользователи'],
@@ -87,9 +88,143 @@ export default function Admin() {
 
       {tab === 'overview' && <Overview />}
       {tab === 'monetization' && <Monetization />}
+      {tab === 'menu' && <MenuManager />}
       {tab === 'languages' && <Languages />}
       {tab === 'schools' && <Schools />}
       {tab === 'users' && <Users />}
+    </div>
+  )
+}
+
+// Известные пункты навигации (совпадают с to-путями в Layout.jsx).
+// Чекбокс = «показывать»; снятый — путь попадает в config.menu.hidden и скрывается у всех.
+const KNOWN_MENU_ITEMS = {
+  learning: [
+    { to: '/lessons',    label: 'Уроки (учитель)' },
+    { to: '/sets',       label: 'Наборы' },
+    { to: '/vocabulary', label: 'Словарь' },
+    { to: '/ai-trainer', label: 'AI тренер' },
+    { to: '/reader',     label: 'Читалка' },
+    { to: '/books',      label: 'Книги' },
+    { to: '/phrasebook', label: 'Разговорник' },
+    { to: '/grammar',    label: 'Грамматика' },
+    { to: '/love',       label: 'Любовь' },
+    { to: '/tutors',     label: 'Репетиторы' },
+  ],
+  class: [
+    { to: '/school',       label: 'Школа' },
+    { to: '/catalog',      label: 'Каталог' },
+    { to: '/courses',      label: 'Курсы' },
+    { to: '/students',     label: 'Ученики' },
+    { to: '/translations', label: 'Переводы' },
+    { to: '/report',       label: 'Отчёт' },
+    { to: '/join',         label: 'Мой класс (ученик)' },
+    { to: '/my-words',     label: 'Мои слова (ученик)' },
+  ],
+}
+
+function MenuManager() {
+  const [cfg, setCfg] = useState(null)
+  const [err, setErr] = useState('')
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  // Форма нового пункта
+  const [nItem, setNItem] = useState({ label: '', url: '', icon: 'bi-link-45deg', section: 'learning', roles: 'all' })
+
+  useEffect(() => { api.get('/admin/platform-settings').then(setCfg).catch(e => setErr(e.message)) }, [])
+  if (err) return <div style={{ color: 'var(--red)' }}>{err}</div>
+  if (!cfg) return <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>
+
+  const menu = cfg.menu || { hidden: [], custom: [] }
+  const hidden = new Set(menu.hidden || [])
+  const custom = menu.custom || []
+
+  const updateMenu = (next) => { setCfg(c => ({ ...c, menu: next })); setSaved(false) }
+  const toggleHidden = (to) => {
+    const h = new Set(hidden)
+    if (h.has(to)) h.delete(to); else h.add(to)
+    updateMenu({ ...menu, hidden: [...h], custom })
+  }
+  const addCustom = () => {
+    if (!nItem.label.trim() || !nItem.url.trim()) return
+    updateMenu({ ...menu, hidden: [...hidden], custom: [...custom, { ...nItem, label: nItem.label.trim(), url: nItem.url.trim() }] })
+    setNItem({ label: '', url: '', icon: 'bi-link-45deg', section: 'learning', roles: 'all' })
+  }
+  const removeCustom = (idx) => updateMenu({ ...menu, hidden: [...hidden], custom: custom.filter((_, i) => i !== idx) })
+
+  const save = async () => {
+    setSaving(true); setErr('')
+    try { await api.put('/admin/platform-settings', { config: cfg }); setSaved(true) }
+    catch (e) { setErr(e.message) }
+    finally { setSaving(false) }
+  }
+
+  const inp = { padding: '7px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }
+  const sectionBlock = (key, title) => (
+    <div>
+      <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)', margin: '0 0 8px' }}>{title}</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {KNOWN_MENU_ITEMS[key].map(it => (
+          <label key={it.to} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, cursor: 'pointer' }}>
+            <input type="checkbox" checked={!hidden.has(it.to)} onChange={() => toggleHidden(it.to)} />
+            <span style={{ color: hidden.has(it.to) ? 'var(--ink-soft)' : 'var(--ink)' }}>{it.label}</span>
+            <code style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-soft)' }}>{it.to}</code>
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 13, margin: 0 }}>
+        Сними галочку — пункт скроется в меню у всех. Ниже можно добавить свои пункты (внутренний путь или внешняя ссылка).
+      </p>
+
+      {sectionBlock('learning', 'Обучение')}
+      {sectionBlock('class', 'Класс')}
+
+      <div>
+        <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)', margin: '0 0 8px' }}>Свои пункты</h3>
+        {custom.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+            {custom.map((c, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, padding: '6px 10px', border: '1px solid var(--line)', borderRadius: 8 }}>
+                <i className={`bi ${c.icon || 'bi-link-45deg'}`} />
+                <span>{c.label}</span>
+                <code style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{c.url}</code>
+                <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>· {c.section === 'class' ? 'Класс' : 'Обучение'}</span>
+                <button onClick={() => removeCustom(i)} style={{ marginLeft: 'auto', border: 'none', background: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 16 }}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, alignItems: 'center' }}>
+          <input style={inp} placeholder="Название" value={nItem.label} onChange={e => setNItem(n => ({ ...n, label: e.target.value }))} />
+          <input style={inp} placeholder="URL или /path" value={nItem.url} onChange={e => setNItem(n => ({ ...n, url: e.target.value }))} />
+          <input style={inp} placeholder="иконка (bi-...)" value={nItem.icon} onChange={e => setNItem(n => ({ ...n, icon: e.target.value }))} />
+          <select style={inp} value={nItem.section} onChange={e => setNItem(n => ({ ...n, section: e.target.value }))}>
+            <option value="learning">Обучение</option>
+            <option value="class">Класс</option>
+          </select>
+          <select style={inp} value={nItem.roles} onChange={e => setNItem(n => ({ ...n, roles: e.target.value }))}>
+            <option value="all">Всем</option>
+            <option value="owner">Учителям</option>
+            <option value="student">Ученикам</option>
+          </select>
+          <button onClick={addCustom} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 600, cursor: 'pointer' }}>+ Добавить</button>
+        </div>
+        <p style={{ color: 'var(--ink-soft)', fontSize: 12, margin: '8px 0 0' }}>
+          Иконки — <a href="https://icons.getbootstrap.com/" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>Bootstrap Icons</a> (напр. bi-star-fill). Внешняя ссылка (http…) откроется в новой вкладке.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={save} disabled={saving} style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+          {saving ? 'Сохраняю…' : 'Сохранить'}
+        </button>
+        {saved && <span style={{ color: 'var(--good, #16a34a)', fontSize: 14 }}>✓ Сохранено. Изменения появятся после перезагрузки страницы.</span>}
+      </div>
     </div>
   )
 }
