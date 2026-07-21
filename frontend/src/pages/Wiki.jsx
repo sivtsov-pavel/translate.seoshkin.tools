@@ -187,7 +187,7 @@ const WIKI = {
       },
       {
         icon: '🏪', title: 'Google Play (скоро)',
-        body: 'В будущем приложение появится в Google Play Store — тогда можно будет установить как обычное приложение через магазин.\n\nАктуальная версия всегда доступна на сайте translate.seoshkin.tools — там обновления появляются мгновенно, без ожидания проверки в магазине.\n\nPWA-приложение (установка через браузер) работает так же хорошо, как приложение из магазина.',
+        body: 'В будущем приложение появится в Google Play Store — тогда можно будет установить как обычное приложение через магазин.\n\nАктуальная версия всегда доступна на сайте deutschlernen.ai — там обновления появляются мгновенно, без ожидания проверки в магазине.\n\nPWA-приложение (установка через браузер) работает так же хорошо, как приложение из магазина.',
       },
       {
         icon: '🔄', title: 'Обновления',
@@ -534,7 +534,7 @@ const WIKI = {
       {
         "icon": "🏪",
         "title": "Google Play (скоро)",
-        "body": "В бъдеще приложението ще се появи в Google Play Store — тогава ще може да се инсталира като обикновено приложение през магазина.\n\nАктуалната версия винаги е достъпна на сайта translate.seoshkin.tools — там обновленията се появяват мигновено, без чакане на проверка в магазина.\n\nPWA приложението (инсталиране през браузър) работи също толкова добре, колкото приложение от магазина."
+        "body": "В бъдеще приложението ще се появи в Google Play Store — тогава ще може да се инсталира като обикновено приложение през магазина.\n\nАктуалната версия винаги е достъпна на сайта deutschlernen.ai — там обновленията се появяват мигновено, без чакане на проверка в магазина.\n\nPWA приложението (инсталиране през браузър) работи също толкова добре, колкото приложение от магазина."
       },
       {
         "icon": "🔄",
@@ -773,7 +773,7 @@ const WIKI = {
       {
         "icon": "🏪",
         "title": "Google Play (yakında)",
-        "body": "İleride uygulama Google Play Store'da yer alacak — o zaman mağaza üzerinden normal bir uygulama gibi kurulabilecek.\n\nGüncel sürüm her zaman translate.seoshkin.tools sitesinde mevcuttur — orada güncellemeler, mağaza incelemesi beklenmeden anında görünür.\n\nPWA uygulaması (tarayıcı üzerinden kurulum) mağazadaki bir uygulama kadar iyi çalışır."
+        "body": "İleride uygulama Google Play Store'da yer alacak — o zaman mağaza üzerinden normal bir uygulama gibi kurulabilecek.\n\nGüncel sürüm her zaman deutschlernen.ai sitesinde mevcuttur — orada güncellemeler, mağaza incelemesi beklenmeden anında görünür.\n\nPWA uygulaması (tarayıcı üzerinden kurulum) mağazadaki bir uygulama kadar iyi çalışır."
       },
       {
         "icon": "🔄",
@@ -1012,7 +1012,7 @@ const WIKI = {
       {
         "icon": "🏪",
         "title": "Google Play (قريبًا)",
-        "body": "في المستقبل سيتوفر التطبيق في متجر Google Play — عندها سيكون بالإمكان تثبيته كتطبيق عادي عبر المتجر.\n\nالنسخة الحالية متاحة دائمًا على موقع translate.seoshkin.tools — وهناك تظهر التحديثات فورًا دون انتظار مراجعة المتجر.\n\nتطبيق PWA (التثبيت عبر المتصفح) يعمل بجودة مماثلة لتطبيق من المتجر."
+        "body": "في المستقبل سيتوفر التطبيق في متجر Google Play — عندها سيكون بالإمكان تثبيته كتطبيق عادي عبر المتجر.\n\nالنسخة الحالية متاحة دائمًا على موقع deutschlernen.ai — وهناك تظهر التحديثات فورًا دون انتظار مراجعة المتجر.\n\nتطبيق PWA (التثبيت عبر المتصفح) يعمل بجودة مماثلة لتطبيق من المتجر."
       },
       {
         "icon": "🔄",
@@ -1251,7 +1251,7 @@ const WIKI = {
       {
         "icon": "🏪",
         "title": "Google Play (próximamente)",
-        "body": "En el futuro, la aplicación aparecerá en Google Play Store — entonces se podrá instalar como una aplicación normal desde la tienda.\n\nLa versión actual siempre está disponible en el sitio translate.seoshkin.tools — ahí las actualizaciones aparecen al instante, sin esperar la revisión de la tienda.\n\nLa aplicación PWA (instalada desde el navegador) funciona igual de bien que una aplicación de la tienda."
+        "body": "En el futuro, la aplicación aparecerá en Google Play Store — entonces se podrá instalar como una aplicación normal desde la tienda.\n\nLa versión actual siempre está disponible en el sitio deutschlernen.ai — ahí las actualizaciones aparecen al instante, sin esperar la revisión de la tienda.\n\nLa aplicación PWA (instalada desde el navegador) funciona igual de bien que una aplicación de la tienda."
       },
       {
         "icon": "🔄",
@@ -1490,7 +1490,7 @@ const WIKI = {
       {
         "icon": "🏪",
         "title": "Google Play (bientôt)",
-        "body": "À l'avenir, l'application sera disponible sur le Google Play Store — il sera alors possible de l'installer comme une application classique via la boutique.\n\nLa version actuelle est toujours accessible sur le site translate.seoshkin.tools — les mises à jour y apparaissent instantanément, sans attendre la validation de la boutique.\n\nL'application PWA (installation via le navigateur) fonctionne tout aussi bien qu'une application venant de la boutique."
+        "body": "À l'avenir, l'application sera disponible sur le Google Play Store — il sera alors possible de l'installer comme une application classique via la boutique.\n\nLa version actuelle est toujours accessible sur le site deutschlernen.ai — les mises à jour y apparaissent instantanément, sans attendre la validation de la boutique.\n\nL'application PWA (installation via le navigateur) fonctionne tout aussi bien qu'une application venant de la boutique."
       },
       {
         "icon": "🔄",
@@ -1729,7 +1729,7 @@ const WIKI = {
       {
         "icon": "🏪",
         "title": "Google Play (së shpejti)",
-        "body": "Në të ardhmen aplikacioni do të shfaqet në Google Play Store — atëherë do të mund të instalohet si një aplikacion i zakonshëm nga dyqani.\n\nVersioni aktual është gjithmonë i disponueshëm në sajtin translate.seoshkin.tools — atje përditësimet shfaqen menjëherë, pa pritur verifikimin në dyqan.\n\nAplikacioni PWA (instalimi përmes shfletuesit) punon po aq mirë sa aplikacioni nga dyqani."
+        "body": "Në të ardhmen aplikacioni do të shfaqet në Google Play Store — atëherë do të mund të instalohet si një aplikacion i zakonshëm nga dyqani.\n\nVersioni aktual është gjithmonë i disponueshëm në sajtin deutschlernen.ai — atje përditësimet shfaqen menjëherë, pa pritur verifikimin në dyqan.\n\nAplikacioni PWA (instalimi përmes shfletuesit) punon po aq mirë sa aplikacioni nga dyqani."
       },
       {
         "icon": "🔄",

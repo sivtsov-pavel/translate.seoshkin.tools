@@ -217,22 +217,22 @@ export async function enrichLesson(lessonId) {
   //    (учитель нарисует кнопкой). Служебные слова всегда пропускаем (им картинка не нужна).
   try {
     const { rows: ps } = await db.query("SELECT config->'features'->>'autoImages' AS ai FROM platform_settings WHERE id=1")
-    const autoImages = ps[0]?.ai !== 'false' // по умолчанию авто
-    if (autoImages) {
-      await setProgress(lessonId, 'Рисую картинки...')
-      const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id = $1 AND image_url IS NULL ORDER BY id', [lessonId])
-      for (const w of rows) {
-        if (isFunctionWord(w.word_de)) continue
-        try {
-          // Банк слов: уже есть картинка такого же слова → переиспользуем (0 затрат, всем)
-          const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
-          if (existing) { await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [existing, w.id]); continue }
-          // Платная генерация (gpt-image-1) — супер-админ или учитель со своим ключом. Остальным — только банк слов.
-          if (!canGenImages) continue
-          const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client)
-          if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
-        } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
-      }
+    const autoImages = ps[0]?.ai !== 'false' // по умолчанию авто; управляет ТОЛЬКО платной генерацией
+    await setProgress(lessonId, 'Подбираю картинки...')
+    const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id = $1 AND image_url IS NULL ORDER BY id', [lessonId])
+    for (const w of rows) {
+      if (isFunctionWord(w.word_de)) continue
+      try {
+        // Банк слов: уже есть картинка такого же слова → переиспользуем ВСЕГДА (0 затрат, всем,
+        // независимо от тумблера авто-генерации — иначе после перераспределения слова, у которых
+        // картинка есть в банке, остаются пустыми). Правило Павла: есть в банке → берём оттуда.
+        const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
+        if (existing) { await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [existing, w.id]); continue }
+        // Платная генерация (gpt-image-1) — только при вкл. авто И доступе (супер-админ / свой ключ).
+        if (!autoImages || !canGenImages) continue
+        const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client)
+        if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
+      } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
     }
   } catch (e) { console.error('enrichLesson images:', e.message) }
 

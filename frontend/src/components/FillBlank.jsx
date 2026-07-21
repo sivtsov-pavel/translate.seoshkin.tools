@@ -6,13 +6,17 @@ import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 import AvatarReaction from './AvatarReaction.jsx'
 import TapText from './TapText.jsx'
+import { normalizeFillBlank } from '../utils/fillblank.js'
 
-export default function FillBlank({ payload, onAnswer, lessonTitle, imageUrl, payloadTranslations, translations, translationRu, exerciseId, showOriginal }) {
+export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, imageUrl, payloadTranslations, translations, translationRu, exerciseId, showOriginal }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [reaction, setReaction] = useState(null)
   const { t, lang } = useI18nStore()
   const inputRef = useRef(null)
+
+  // Чиним «двойной артикль» (Die die Arztvisite) на лету — см. utils/fillblank.js
+  const payload = useMemo(() => normalizeFillBlank(rawPayload), [rawPayload])
 
   const isCorrect = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
   const parts = payload.sentence.split('___')

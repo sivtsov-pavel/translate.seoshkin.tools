@@ -3,7 +3,7 @@ import { db } from '../db/index.js'
 
 const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY  || ''
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || ''
-const VAPID_EMAIL   = process.env.ADMIN_EMAIL        || 'admin@translate.seoshkin.tools'
+const VAPID_EMAIL   = process.env.ADMIN_EMAIL        || 'admin@deutschlernen.ai'
 
 let initialized = false
 

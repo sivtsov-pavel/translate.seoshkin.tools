@@ -858,7 +858,7 @@ export default function Landing() {
           <Link to="/cookies"  style={{ color: 'var(--ink-soft)' }}>Cookies</Link>
         </div>
         <div style={{ marginTop: 16, fontSize: 12, opacity: 0.5 }}>
-          © 2026 Deutsch.lernen · translate.seoshkin.tools
+          © 2026 Deutsch.lernen · deutschlernen.ai
         </div>
       </footer>
     </div>

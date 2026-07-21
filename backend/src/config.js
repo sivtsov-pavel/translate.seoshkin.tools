@@ -17,7 +17,8 @@ export const config = {
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
   stripePriceMonthly: process.env.STRIPE_PRICE_MONTHLY || '',
   stripePriceYearly: process.env.STRIPE_PRICE_YEARLY || '',
-  publicUrl: process.env.PUBLIC_URL || 'https://translate.seoshkin.tools',
+  // Основной боевой домен. translate.seoshkin.tools — доп., редиректит сюда (см. nginx/).
+  publicUrl: process.env.PUBLIC_URL || 'https://deutschlernen.ai',
   // Кто может загружать/обрабатывать уроки (тратит токены). Пока — только Павел(1) и Евгений(5).
   // Меняется env-переменной UPLOAD_ALLOWED_IDS="1,5,..." без правки кода.
   uploadAllowedIds: (process.env.UPLOAD_ALLOWED_IDS || '1,5,29').split(',').map(n => parseInt(n.trim())).filter(Boolean),

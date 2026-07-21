@@ -24,8 +24,17 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
     setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
   }, [word_de])
 
+  // Нормализация ответа диктанта: регистр не важен + срезаем хвост-подсказку в скобках
+  // («zum Beispiel (z.B.)» → «zum beispiel», «das Wort (Wörter)» → «das wort»),
+  // схлопываем повторные пробелы. Артикль и основа слова при этом остаются обязательными.
+  const norm = (s) => (s || '')
+    .toLowerCase()
+    .replace(/\s*\([^)]*\)\s*/g, ' ') // убрать «(z.B.)», «(Wörter)» и т.п.
+    .replace(/\s+/g, ' ')
+    .trim()
+
   const check = () => {
-    const isCorrect = input.trim().toLowerCase() === word_de.trim().toLowerCase()
+    const isCorrect = norm(input) === norm(word_de)
     setCorrect(isCorrect)
     setChecked(true)
     // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)

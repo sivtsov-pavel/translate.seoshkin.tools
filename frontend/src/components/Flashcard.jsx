@@ -6,12 +6,20 @@ import { getTranslation } from '../utils/translation.js'
 import TapText from './TapText.jsx'
 import { JustifyHint } from './ExerciseActions.jsx'
 
-export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, showOriginal }) {
+export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, showOriginal, wordId, onMarkLearning, learned }) {
   const [revealed, setRevealed] = useState(false)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading]   = useState(false)
+  const [inStudy, setInStudy]   = useState(!!learned) // «в изучение» нажато для этого слова
   const gradeRef = useRef(0)
   const { t, lang } = useI18nStore()
+
+  // Добавить слово карточки в изучение → в Словаре оно попадёт в раздел «учу»
+  const addToStudy = () => {
+    if (inStudy || !wordId) return
+    setInStudy(true)
+    onMarkLearning?.(wordId)
+  }
 
   useEffect(() => { speakAuto(payload.question) }, [payload.question])
 
@@ -73,6 +81,21 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
       {/* Подсказка «Обоснуй» — доступна до и после переворота */}
       <JustifyHint wordDe={payload.question} correctAnswer={payload.answer} type="flashcard" />
+
+      {/* «В изучение» — слово карточки попадёт в раздел «учу» в Словаре */}
+      {wordId && (
+        <button onClick={addToStudy} disabled={inStudy}
+          title={t.exercise?.addToStudyHint || 'Добавить слово в изучение (учить/повторять)'}
+          style={{
+            marginTop: 12, width: '100%', padding: '10px', borderRadius: 10,
+            cursor: inStudy ? 'default' : 'pointer', fontSize: 14, fontWeight: 600,
+            border: `1px solid ${inStudy ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
+            background: inStudy ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent-soft)',
+            color: inStudy ? 'var(--good, #16a34a)' : 'var(--accent)',
+          }}>
+          {inStudy ? `★ ${t.exercise?.inStudy || 'В изучении'}` : `⭐ ${t.exercise?.toStudy || 'В изучение'}`}
+        </button>
+      )}
 
       {revealed && (
         <div style={{ display: 'flex', gap: 8, marginTop: 12, opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import PublicHeader from '../components/PublicHeader.jsx'
 
 const UPDATED = '10 июля 2026 г.'
-const APP     = 'translate.seoshkin.tools'
+const APP     = 'deutschlernen.ai'
 const EMAIL   = 'sivtsov.pavel@gmail.com'
 
 export default function Terms() {

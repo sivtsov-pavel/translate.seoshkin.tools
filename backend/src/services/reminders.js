@@ -3,6 +3,7 @@ import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
 import { sendEmail } from './email.js'
 import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
+import { config } from '../config.js'
 
 // Тик каждые 15 минут (UTC). Внутри — шлём каждому юзеру по его ЛОКАЛЬНОМУ утреннему
 // времени (из notify_prefs.morning), один раз в день. Так «09:00» приходит в 9 утра
@@ -63,7 +64,7 @@ export async function sendReminders() {
             <h2 style="color:#C9A54A">📚 Nicht vergessen!</h2>
             <p>Привет! Сегодня тебя ждут <strong>${count} ${label}</strong> для повторения.</p>
             <p>Даже 10-15 минут в день дают отличный результат. Зайди и позанимайся!</p>
-            <a href="https://translate.seoshkin.tools"
+            <a href="${config.publicUrl}"
                style="display:inline-block;padding:12px 24px;background:#C9A54A;color:#1a1a1a;border-radius:10px;font-weight:700;text-decoration:none;margin-top:12px">
               Открыть приложение →
             </a>

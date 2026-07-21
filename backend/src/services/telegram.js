@@ -1,4 +1,5 @@
 // Отправка уведомлений в Telegram через Bot API (без сторонних библиотек)
+import { config } from '../config.js'
 
 const BOTS = [
   { token: process.env.TELEGRAM_SUPPORT_BOT_TOKEN, chatId: process.env.TELEGRAM_SUPPORT_CHAT_ID },
@@ -7,7 +8,7 @@ const BOTS = [
 
 export async function sendTelegramNotification({ senderName, chatType, body }) {
   const typeLabel = chatType === 'teacher' ? 'учителю' : 'в поддержку'
-  const text = `💬 *Новое сообщение* ${typeLabel}\n\nОт: *${senderName}*\n\n${body}\n\nhttps://translate.seoshkin.tools`
+  const text = `💬 *Новое сообщение* ${typeLabel}\n\nОт: *${senderName}*\n\n${body}\n\n${config.publicUrl}`
 
   for (const bot of BOTS) {
     if (!bot.token || !bot.chatId) continue

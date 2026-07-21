@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { db } from '../db/index.js'
+import { config } from '../config.js'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'sivtsov.pavel@gmail.com'
 
@@ -65,7 +66,7 @@ export async function sendNewMessageEmail({ senderName, chatType, body, conversa
       from: `"Deutsch.lernen" <${from}>`,
       to: ADMIN_EMAIL,
       subject: `💬 Новое сообщение ${typeLabel} от ${senderName}`,
-      text: `${senderName} написал ${typeLabel}:\n\n${body}\n\nhttps://translate.seoshkin.tools (чат #${conversationId})`,
+      text: `${senderName} написал ${typeLabel}:\n\n${body}\n\n${config.publicUrl} (чат #${conversationId})`,
       html: `
         <div style="font-family:sans-serif;max-width:520px">
           <h2 style="color:#C9A54A">💬 Новое сообщение</h2>
@@ -74,7 +75,7 @@ export async function sendNewMessageEmail({ senderName, chatType, body, conversa
             ${body.replace(/\n/g, '<br>')}
           </blockquote>
           <p style="margin-top:20px">
-            <a href="https://translate.seoshkin.tools/chat"
+            <a href="${config.publicUrl}/chat"
                style="background:#C9A54A;color:#000;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">
               Ответить в приложении →
             </a>

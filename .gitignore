@@ -11,3 +11,4 @@ test/
 
 # Claude Code локальные файлы/воркри (Fable и др.)
 .claude/
+bags/
