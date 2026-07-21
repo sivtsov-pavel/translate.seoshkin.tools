@@ -103,12 +103,13 @@ export async function exercisesRoutes(fastify) {
     // иначе применяем дневной лимит пользователя
     const limit = lesson_id ? 300 : dailyLimit
     const target = request.headers['x-target-lang'] || 'de'
-    // Порядок раздачи. Поток уроков (без type) — БЛОКАМИ по уроку: новейший (текущий на
-    // прохождение) первым, потом повторения старых. Так заголовок не «скачет» между уроками
-    // и прохождение урока идёт цельно. Практика по типу (усиление) — прежний SRS-микс.
+    // Порядок раздачи. Поток уроков (без type) — БЛОКАМИ по уроку: текущий (с бо́льшим номером
+    // урока — в дрипе это фронтир) первым, потом повторения старых. По lesson_number (а не id!),
+    // чтобы стендалон-уроки с высоким id, но низким номером не прыгали вперёд. Так заголовок
+    // не «скачет». Практика по типу (усиление) — прежний SRS-микс.
     const orderBy = type
       ? 'COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
-      : 'l.id DESC, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
+      : 'l.lesson_number DESC NULLS LAST, l.id DESC, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
 
     let query, params
     if (role === 'owner') {
