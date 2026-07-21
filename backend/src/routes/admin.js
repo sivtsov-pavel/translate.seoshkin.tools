@@ -121,6 +121,11 @@ export async function adminRoutes(fastify) {
       // Тарифы для страницы подписки (можно показывать всем)
       paidEnabled: !!mon.paid_enabled,
       pricing: cfg.pricing ?? {},
+      // Настройки меню (супер-админ управляет): что скрыть + свои пункты. Читает навигация.
+      menu: {
+        hidden: Array.isArray(cfg.menu?.hidden) ? cfg.menu.hidden : [],
+        custom: Array.isArray(cfg.menu?.custom) ? cfg.menu.custom : [],
+      },
     }
   })
 

@@ -178,6 +178,24 @@ export async function exercisesRoutes(fastify) {
     return rows
   })
 
+  // Сколько упражнений данного типа ученик уже отработал СЕГОДНЯ (по уникальным упражнениям).
+  // Нужно, чтобы счётчик в практике по типу продолжался «с места» после выхода/возврата,
+  // а не сбрасывался на «1 / N»: отвеченные сегодня выпадают из выборки (их next_review ушёл вперёд).
+  fastify.get('/api/exercises/done-today', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const userId = request.user.id
+    const { type } = request.query
+    const { rows } = await db.query(
+      `SELECT count(DISTINCT a.exercise_id)::int AS done
+       FROM exercise_attempts a
+       JOIN exercises e ON e.id = a.exercise_id
+       WHERE a.user_id = $1 AND a.attempted_at >= CURRENT_DATE
+         AND ($2::text IS NULL OR e.type = $2)`,
+      [userId, type ?? null])
+    return { done: rows[0]?.done ?? 0, dailyLimit: await getUserDailyLimit(userId) }
+  })
+
   // «Пройти урок заново»: сбрасываем даты повторения — все упражнения урока
   // снова становятся «на сегодня» (прогресс не удаляем, только возвращаем в очередь).
   fastify.post('/api/exercises/reset-lesson/:lessonId', {

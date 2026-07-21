@@ -26,6 +26,9 @@ export default function ExerciseSession() {
     window.scrollTo?.({ top: 0 })
   }, [current])
   const [loading, setLoading]     = useState(true)
+  // Смещение счётчика для практики по типу: сколько упражнений этого типа уже сделано СЕГОДНЯ.
+  // Позволяет продолжать «34 / 100» после выхода/возврата, а не начинать заново с «1».
+  const [doneOffset, setDoneOffset] = useState(0)
   const [starred, setStarred]     = useState(() => new Set()) // слова, помеченные «в изучение»
   // Быстрый тумблер озвучки/видео-реакции тренера (тот же флаг, что в Настройках).
   // Выкл — чтобы аватар не проговаривал «Sehr gut» (в т.ч. чтобы микрофон не ловил свою же речь).
@@ -58,6 +61,13 @@ export default function ExerciseSession() {
     if (type)      qs.set('type', type)
     if (lesson_id) qs.set('lesson_id', lesson_id)
     const url = `/exercises/today${qs.toString() ? '?' + qs : ''}`
+
+    // Практика по типу (без конкретного урока): узнаём, сколько этого типа уже сделано сегодня,
+    // чтобы счётчик продолжался с места, а не сбрасывался при повторном входе.
+    if (type && !lesson_id && isOnline()) {
+      api.get(`/exercises/done-today?type=${encodeURIComponent(type)}`)
+        .then(r => setDoneOffset(r?.done || 0)).catch(() => {})
+    }
 
     // Без сети (или сервер недоступен) — упражнения из локальной базы (офлайн-ядро)
     const loadOffline = () => getOfflineExercises({ lessonId: lesson_id, type })
@@ -108,7 +118,7 @@ export default function ExerciseSession() {
       {/* Мини-бейдж типа упражнения */}
       <div className="exercise-session-type">
         <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 8, padding: '2px 9px', fontWeight: 700, fontSize: 12, marginRight: 8 }}>
-          {current + 1} / {exercises.length}
+          {doneOffset + current + 1} / {doneOffset + exercises.length}
         </span>
         <span>{typeLabel}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -149,9 +159,6 @@ export default function ExerciseSession() {
               🗣️ Тренер
             </button>
           )}
-          <span style={{ color: 'var(--ink-soft)', fontSize: 11 }}>
-            {current + 1} / {exercises.length}
-          </span>
         </div>
       </div>
 

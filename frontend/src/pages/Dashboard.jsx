@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [courses, setCourses] = useState([])
   const [activeCourse, setActiveCourse] = useState(() => localStorage.getItem('active_course') || '')
   const changeCourse = (v) => { localStorage.setItem('active_course', v); setActiveCourse(v) }
+  const [pickSchedCourse, setPickSchedCourse] = useState('') // выбор курса для настройки расписания (когда курсов много)
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
@@ -110,22 +111,41 @@ export default function Dashboard() {
   const allLessons   = stats?.lessons ?? []
   // Курсы, по которым ученик ещё не выбрал календарь обучения (строгий дрип) → баннер-требование
   const needsSchedule = stats?.needs_schedule ?? []
+  // Один курс без расписания → прямой баннер (клик → расписание). Несколько → сначала выбор
+  // курса (курсов будет много), потом переход к его расписанию.
   const needsScheduleBanner = needsSchedule.length > 0 && (
     <div style={{ padding: '10px 12px 4px' }}>
-      {needsSchedule.map(c => (
-        <div key={c.id} onClick={() => navigate(`/courses/${c.id}`)} style={{
+      {needsSchedule.length === 1 ? (
+        <div onClick={() => navigate(`/courses/${needsSchedule[0].id}`)} style={{
           cursor: 'pointer', background: 'var(--accent-soft)', border: '2px solid var(--accent)',
-          borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8,
+          borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
         }}>
           <span style={{ fontSize: 28 }}>📅</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>Выбери календарь обучения</div>
-            <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
-              «{c.title}» — выбери удобные дни, чтобы открыть уроки →
+            <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>«{needsSchedule[0].title}» — выбери удобные дни, чтобы открыть уроки →</div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ background: 'var(--accent-soft)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 28 }}>📅</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>Выбери курс и настрой календарь</div>
+            <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, marginBottom: 8 }}>Сначала выбери курс, затем удобные дни — уроки откроются.</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select value={pickSchedCourse} onChange={e => setPickSchedCourse(e.target.value)}
+                style={{ flex: 1, minWidth: 0, padding: '9px 10px', borderRadius: 10, border: '1px solid var(--accent)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 13, fontWeight: 600 }}>
+                <option value="">— Выбери курс —</option>
+                {needsSchedule.map(c => <option key={c.id} value={String(c.id)}>{c.title}</option>)}
+              </select>
+              <button onClick={() => pickSchedCourse && navigate(`/courses/${pickSchedCourse}`)} disabled={!pickSchedCourse}
+                style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 13, cursor: pickSchedCourse ? 'pointer' : 'default', opacity: pickSchedCourse ? 1 : 0.5, whiteSpace: 'nowrap' }}>
+                Настроить →
+              </button>
             </div>
           </div>
         </div>
-      ))}
+      )}
     </div>
   )
   // Фильтр по активному курсу (пусто = все). Наборы/личные (без course_id) показываем всегда.
