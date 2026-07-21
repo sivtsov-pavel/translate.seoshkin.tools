@@ -343,9 +343,10 @@ export default function Dashboard() {
         const pinnedItems = shown.filter(l => pinned.has(l.lesson_id)).sort(byNew)
         const setsAll = shown.filter(l => l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
         const booksAll = shown.filter(l => !l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
-        // «Только сегодня»: показываем ОДИН текущий урок дрипа — самый ранний из доступных
-        // (наименьший id среди незавершённых; дрип уже отсёк заблокированные). При поиске — все.
-        const current = booksAll.length ? booksAll[booksAll.length - 1] : null
+        // «Только сегодня»: показываем ОДИН текущий урок — новейший доступный (тот, что на
+        // прохождении). booksAll отсортирован byNew (по убыванию id), значит [0] — самый новый.
+        // Совпадает с порядком сессии «Повторить всё» (новейший урок первым). При поиске — все.
+        const current = booksAll.length ? booksAll[0] : null
         const books = (todayOnly && !q) ? (current ? [current] : []) : booksAll
         // Наборы — по тумблеру (но при активном поиске показываем всё, что нашлось)
         const sets = (showSets || q) ? setsAll : []
@@ -386,7 +387,9 @@ export default function Dashboard() {
               <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600 }}>
                 {todayOnly && !q ? 'Сегодняшний урок' : t.dashboard.lessons}
               </span>
-              <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({booksAll.length})</span>
+              {/* Счётчик всех уроков — только в режиме «все уроки». В «Сегодняшний урок» (один
+                  урок) число «(15)» читалось как номер урока — убираем, чтобы не путало. */}
+              {!(todayOnly && !q) && <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>({booksAll.length})</span>}
             </div>
             <div style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {books.length ? books.map(Card) : <div style={{ color: 'var(--ink-soft)', padding: '4px 8px', fontSize: 14 }}>—</div>}
