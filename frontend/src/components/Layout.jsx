@@ -12,6 +12,7 @@ import LangSwitcher from './LangSwitcher.jsx'
 import TargetSwitcher from './TargetSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 import { initOffline, isOnline } from '../offline/store.js'
+import { useKeyboardInset } from '../hooks/useKeyboardInset.js'
 
 const SIDEBAR_W = 220
 
@@ -24,6 +25,7 @@ const TARGET_META = {
 function targetMeta() { return TARGET_META[localStorage.getItem('target_lang') || 'de'] || TARGET_META.de }
 
 export default function Layout({ children }) {
+  useKeyboardInset()
   const { user, logout, refreshUser, impersonating, stopImpersonate } = useAuthStore()
   const returnToAdmin = () => { stopImpersonate(); window.location.href = '/admin' }
   const tgt = targetMeta()

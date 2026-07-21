@@ -165,7 +165,7 @@ function WordPanel({ words, onRemove, onClear }) {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+      position: 'fixed', bottom: 'var(--keyboard-inset, 0px)', left: '50%', transform: 'translateX(-50%)',
       width: '100%', maxWidth: 640, zIndex: 300,
       background: 'var(--surface)', borderTop: '1px solid var(--line)',
       borderRadius: '20px 20px 0 0',
@@ -233,7 +233,7 @@ function ReaderHistoryPanel({ entries, search, onSearchChange, onClear, onClose 
   const filtered = entries.filter(e => historyMatchesQuery(e, search))
   return (
     <div style={{
-      position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+      position: 'fixed', bottom: 'var(--keyboard-inset, 0px)', left: '50%', transform: 'translateX(-50%)',
       width: '100%', maxWidth: 640, zIndex: 350,
       background: 'var(--surface)', borderTop: '1px solid var(--line)',
       borderRadius: '20px 20px 0 0',

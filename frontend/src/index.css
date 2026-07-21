@@ -173,7 +173,7 @@ a { color: var(--accent); text-decoration: none; }
   top: var(--topbar-h, 64px);
   left: 0;
   right: 0;
-  bottom: var(--bottom-nav-h, 76px);
+  bottom: calc(var(--bottom-nav-h, 76px) + var(--keyboard-inset, 0px));
   z-index: 5;
   overflow: hidden;
   background: var(--bg);
