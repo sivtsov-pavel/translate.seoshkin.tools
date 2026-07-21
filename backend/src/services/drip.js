@@ -61,9 +61,9 @@ export async function playableLessonIds(userId, schoolId) {
   const { rows } = await db.query(
     `SELECT l.id, l.course_id, l.is_set
      FROM lessons l
-     WHERE l.status = 'done' AND ($2::int IS NULL OR l.school_id = $2)
+     WHERE l.status = 'done' AND ($1::int IS NULL OR l.school_id = $1)
      ORDER BY l.course_id NULLS FIRST, l.lesson_number NULLS LAST, l.created_at`,
-    [userId, schoolId ?? null])
+    [schoolId ?? null])
   const playable = new Set()
   const needsSchedule = []
   const byCourse = new Map()
