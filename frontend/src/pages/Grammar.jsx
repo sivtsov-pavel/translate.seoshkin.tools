@@ -93,8 +93,8 @@ export default function Grammar() {
       }}>
         <span style={{ fontSize: 26 }}>🔖</span>
         <span style={{ flex: 1 }}>
-          <span style={{ fontWeight: 800, display: 'block' }}>Шпаргалки</span>
-          <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Неправильные глаголы (3 формы) и местоимения — с озвучкой и тренажёром</span>
+          <span style={{ fontWeight: 800, display: 'block' }}>{E.grammarCheatsheetsTitle}</span>
+          <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{E.grammarCheatsheetsDesc}</span>
         </span>
         <span style={{ color: 'var(--accent)', fontWeight: 700 }}>→</span>
       </a>
@@ -127,7 +127,7 @@ export default function Grammar() {
                   {c.image && (
                     <button onClick={() => setZoom(c.image)}
                       style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid var(--line)', borderRadius: 8, padding: '7px 12px', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 13 }}>
-                      📷 Показать оригинал плаката
+                      {E.grammarShowOriginal}
                     </button>
                   )}
                 </div>

@@ -57,7 +57,7 @@ export default function Crossword() {
       style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, maxWidth: 200 }}>
       <option value="">{t.games.allWords}</option>
       <option value="learning">{t.games.inLearning}</option>
-      {(lessons || []).filter(l => l.status === 'done').map(l => <option key={l.id} value={l.id}>{l.title || `Урок ${l.id}`}</option>)}
+      {(lessons || []).filter(l => l.status === 'done').map(l => <option key={l.id} value={l.id}>{l.title || `${t.courses.lessonNum}${l.id}`}</option>)}
     </select>
   )
 
