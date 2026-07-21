@@ -119,9 +119,9 @@ export default function Dashboard() {
         }}>
           <span style={{ fontSize: 28 }}>📅</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>Выбери календарь обучения</div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>{t.dashboard.needsScheduleTitle}</div>
             <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
-              «{c.title}» — выбери удобные дни, чтобы открыть уроки →
+              {t.dashboard.needsScheduleDesc(c.title)}
             </div>
           </div>
         </div>
@@ -135,10 +135,10 @@ export default function Dashboard() {
   // Селектор активного курса — показываем, когда курсов ≥2 (иначе не нужен)
   const courseSelector = courses.length >= 2 && (
     <div style={{ padding: '4px 12px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>📚 Курс:</span>
+      <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.courseLabel}</span>
       <select value={activeCourse} onChange={e => changeCourse(e.target.value)}
         style={{ flex: 1, maxWidth: 320, padding: '7px 10px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 13, fontWeight: 600 }}>
-        <option value="">Все курсы</option>
+        <option value="">{t.dashboard.allCourses}</option>
         {courses.map(c => <option key={c.id} value={String(c.id)}>{c.title}</option>)}
       </select>
     </div>
@@ -173,10 +173,10 @@ export default function Dashboard() {
       {/* Тумблеры «Сегодня»: только текущий урок / все доступные · наборы вкл-выкл */}
       <div style={{ padding: '4px 12px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button onClick={toggleTodayOnly} style={ribbonBtn(todayOnly)}>
-          {todayOnly ? '📅 Только сегодня' : '📚 Все доступные'}
+          {todayOnly ? t.dashboard.todayOnlyOn : t.dashboard.todayOnlyOff}
         </button>
         <button onClick={toggleSets} style={ribbonBtn(showSets)}>
-          {showSets ? '🗂 Наборы: вкл' : '🗂 Наборы: выкл'}
+          {showSets ? t.dashboard.setsOn : t.dashboard.setsOff}
         </button>
       </div>
 
@@ -266,16 +266,16 @@ export default function Dashboard() {
               style={{ flex: 1, minWidth: 150, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', textAlign: 'left' }}>
               <span style={{ fontSize: 30, lineHeight: 1 }}>✅</span>
               <span style={{ flex: 1 }}>
-                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>Выбери ответ</span>
-                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Тест по всем словам</span>
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>{t.dashboard.chooseAnswerTitle}</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.chooseAnswerDesc}</span>
               </span>
             </button>
             <button onClick={() => navigate('/exercise-session?type=flashcard')}
               style={{ flex: 1, minWidth: 150, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', border: '2px solid var(--accent)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer', textAlign: 'left' }}>
               <span style={{ fontSize: 30, lineHeight: 1 }}>🃏</span>
               <span style={{ flex: 1 }}>
-                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>Все карточки</span>
-                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Флеш-карты по всем урокам</span>
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', display: 'block' }}>{t.dashboard.allCardsTitle}</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.allCardsDesc}</span>
               </span>
             </button>
           </div>
@@ -364,7 +364,7 @@ export default function Dashboard() {
             {pinnedItems.length > 0 && (
               <>
                 <div style={{ padding: '0 0 8px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)', fontWeight: 700, paddingLeft: 20 }}>
-                  ⭐ Закреплённые
+                  {t.dashboard.pinnedSection}
                 </div>
                 <div style={{ padding: '0 12px 8px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {pinnedItems.map(Card)}
@@ -387,7 +387,7 @@ export default function Dashboard() {
             {/* Уроки — плоско, новый сверху. При «только сегодня» — один текущий + кнопка раскрыть */}
             <div style={{ padding: '6px 20px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 600 }}>
-                {todayOnly && !q ? 'Сегодняшний урок' : t.dashboard.lessons}
+                {todayOnly && !q ? t.dashboard.todayLessonLabel : t.dashboard.lessons}
               </span>
               {/* Счётчик всех уроков — только в режиме «все уроки». В «Сегодняшний урок» (один
                   урок) число «(15)» читалось как номер урока — убираем, чтобы не путало. */}
@@ -402,7 +402,7 @@ export default function Dashboard() {
                   width: '100%', padding: '10px', borderRadius: 12, border: '1px solid var(--line)',
                   background: 'var(--surface)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
                 }}>
-                  ▼ Показать все доступные уроки ({hiddenBooks})
+                  {t.dashboard.showAllAvailable(hiddenBooks)}
                 </button>
               </div>
             )}
@@ -459,7 +459,7 @@ export default function Dashboard() {
           </div>
           {completed.map(l => (
             <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '10px 14px', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: 'rgba(78,154,110,0.16)', color: 'var(--good)', flexShrink: 0 }}>✓ пройдено</span>
+              <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: 'rgba(78,154,110,0.16)', color: 'var(--good)', flexShrink: 0 }}>{t.dashboard.passedBadge}</span>
               <span style={{ flex: 1, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {getLessonTitle(l.title, l.title_translations, lang)}
               </span>
@@ -479,6 +479,7 @@ export default function Dashboard() {
 
 // 📈 Панель динамики: шкала «Уроки» + шкала «Слова» + карточки за день + серия дней
 function ProgressPanel({ progress }) {
+  const { t } = useI18nStore()
   if (!progress) return null
   const { lessons = {}, words = {}, cards = {}, streak = 0 } = progress
   const lPct = lessons.total ? Math.round((lessons.done / lessons.total) * 100) : 0
@@ -493,14 +494,14 @@ function ProgressPanel({ progress }) {
       <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 14 }}>
         {/* Дорожка 1 — уроки */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>📘 Обучение по урокам</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>{t.dashboard.progressLessons}</span>
           <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700 }}>{lessons.done ?? 0} / {lessons.total ?? 0}</span>
         </div>
         <Bar pct={lPct} color="var(--accent)" />
 
         {/* Дорожка 2 — слова (усиление знаний) */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginTop: 14 }}>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>💪 Усиление знаний · слова</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>{t.dashboard.progressWords}</span>
           <span style={{ fontSize: 13, color: 'var(--good)', fontWeight: 700 }}>{words.known ?? 0} / {words.total ?? 0}</span>
         </div>
         <Bar pct={wPct} color="var(--good)" />
@@ -509,15 +510,15 @@ function ProgressPanel({ progress }) {
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
           <div style={{ flex: 1, textAlign: 'center', background: 'var(--surface-2)', borderRadius: 12, padding: '10px 6px' }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>{cards.today ?? 0}</div>
-            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>карточек сегодня</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t.dashboard.cardsToday}</div>
           </div>
           <div style={{ flex: 1, textAlign: 'center', background: 'var(--surface-2)', borderRadius: 12, padding: '10px 6px' }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>{cards.all ?? 0}</div>
-            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>всего карточек</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t.dashboard.cardsAll}</div>
           </div>
           <div style={{ flex: 1, textAlign: 'center', background: streak > 0 ? 'rgba(224,87,111,0.12)' : 'var(--surface-2)', borderRadius: 12, padding: '10px 6px' }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: streak > 0 ? '#e0576f' : 'var(--ink-soft)' }}>🔥 {streak}</div>
-            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>дней подряд</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{t.dashboard.streakDays}</div>
           </div>
         </div>
       </div>

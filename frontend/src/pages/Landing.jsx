@@ -188,6 +188,7 @@ const L = {
     tagline: 'German for immigrants',
     subtitle: 'Learn German with smart repetition, dictations and AI explanations. Free.',
     cta: 'Start for free',
+    charity: '💛 The app is currently free for everyone — our contribution to helping Ukrainians and immigrants learn the language.',
     ctaLogin: 'Already have an account',
     docsLink: 'Documentation',
     modules: [
@@ -213,6 +214,7 @@ const L = {
       text: 'Install on your phone via browser — no App Store, no Google Play.',
       android: 'Android: Chrome → menu ⋮ → "Install app"',
       apk: 'Download APK for Android',
+      apkOffline: 'Install the APK — all exercises work offline, without internet.',
       ios: 'iPhone: Safari → share → "Add to Home Screen"',
     },
     ai: {
@@ -225,6 +227,7 @@ const L = {
     tagline: 'Deutsch für Einwanderer',
     subtitle: 'Lerne Deutsch mit intelligentem Wiederholen, Diktaten und KI-Erklärungen. Kostenlos.',
     cta: 'Kostenlos starten',
+    charity: '💛 Die App ist derzeit für alle kostenlos — unser Beitrag, um Ukrainern und Einwanderern das Sprachenlernen zu erleichtern.',
     ctaLogin: 'Schon ein Konto',
     docsLink: 'Dokumentation',
     modules: [
@@ -250,6 +253,7 @@ const L = {
       text: 'Installiere auf dem Handy über den Browser — kein App Store, kein Google Play.',
       android: 'Android: Chrome → Menü ⋮ → „App installieren"',
       apk: 'APK für Android herunterladen',
+      apkOffline: 'Installiere die APK — alle Übungen funktionieren offline, ohne Internet.',
       ios: 'iPhone: Safari → Teilen → „Zum Startbildschirm"',
     },
     ai: {
@@ -262,6 +266,7 @@ const L = {
     tagline: 'Німецька для емігрантів',
     subtitle: 'Вчи німецьку з розумним повторенням, диктантами та ШІ-поясненнями. Безкоштовно.',
     cta: 'Почати безкоштовно',
+    charity: '💛 Зараз застосунок безкоштовний для всіх — наш внесок у допомогу українцям та іммігрантам у вивченні мови.',
     ctaLogin: 'Вже є акаунт',
     docsLink: 'Документація',
     modules: [
@@ -287,6 +292,7 @@ const L = {
       text: 'Встанови на телефон через браузер — без App Store, без Google Play.',
       android: 'Android: Chrome → меню ⋮ → «Встановити додаток»',
       apk: 'Завантажити APK для Android',
+      apkOffline: 'Встанови APK — і всі вправи працюють офлайн, без інтернету.',
       ios: 'iPhone: Safari → поділитися → «На екран Домівки»',
     },
     ai: {
@@ -299,6 +305,7 @@ const L = {
     tagline: 'Немски за емигранти',
     subtitle: 'Учи немски с умно повторение, диктовки и AI обяснения. Безплатно.',
     cta: 'Започни безплатно',
+    charity: '💛 В момента приложението е безплатно за всички — нашият принос към помощта за украинци и имигранти в изучаването на езика.',
     ctaLogin: 'Вече имам акаунт',
     docsLink: 'Документация',
     modules: [
@@ -324,6 +331,7 @@ const L = {
       text: 'Инсталирай на телефона чрез браузър — без App Store, без Google Play.',
       android: 'Android: Chrome → меню ⋮ → „Инсталиране на приложението"',
       apk: 'Изтегли APK за Android',
+      apkOffline: 'Инсталирай APK — и всички упражнения работят офлайн, без интернет.',
       ios: 'iPhone: Safari → споделяне → „Добавяне към начален екран"',
     },
     ai: {
@@ -336,6 +344,7 @@ const L = {
     tagline: 'Göçmenler için Almanca',
     subtitle: 'Akıllı tekrar, dikte ve AI açıklamalarıyla Almanca öğren. Ücretsiz.',
     cta: 'Ücretsiz başla',
+    charity: '💛 Uygulama şu anda herkes için ücretsiz — Ukraynalılara ve göçmenlere dil öğreniminde katkımız.',
     ctaLogin: 'Zaten hesabım var',
     docsLink: 'Dokümantasyon',
     modules: [
@@ -361,6 +370,7 @@ const L = {
       text: 'Tarayıcı üzerinden telefona yükle — App Store veya Google Play gerekmez.',
       android: 'Android: Chrome → menü ⋮ → "Uygulamayı yükle"',
       apk: 'Android için APK indir',
+      apkOffline: 'APK\'yı yükle — tüm alıştırmalar internetsiz, çevrimdışı çalışır.',
       ios: 'iPhone: Safari → paylaş → "Ana Ekrana Ekle"',
     },
     ai: {
@@ -373,6 +383,7 @@ const L = {
     tagline: 'الألمانية للمهاجرين',
     subtitle: 'تعلم الألمانية بالتكرار الذكي والإملاء وشروحات الذكاء الاصطناعي. مجانًا.',
     cta: 'ابدأ مجانًا',
+    charity: '💛 التطبيق حاليًا مجاني للجميع — مساهمتنا في مساعدة الأوكرانيين والمهاجرين على تعلم اللغة.',
     ctaLogin: 'لديّ حساب بالفعل',
     docsLink: 'التوثيق',
     modules: [
@@ -398,6 +409,7 @@ const L = {
       text: 'ثبّته على هاتفك عبر المتصفح — بدون App Store أو Google Play.',
       android: 'أندرويد: Chrome → القائمة ⋮ → "تثبيت التطبيق"',
       apk: 'تنزيل APK لأندرويد',
+      apkOffline: 'ثبّت ملف APK — وستعمل كل التمارين دون اتصال بالإنترنت.',
       ios: 'آيفون: Safari → مشاركة → "إضافة إلى الشاشة الرئيسية"',
     },
     ai: {
@@ -410,6 +422,7 @@ const L = {
     tagline: 'Alemán para inmigrantes',
     subtitle: 'Aprende alemán con repetición inteligente, dictados y explicaciones de IA. Gratis.',
     cta: 'Empezar gratis',
+    charity: '💛 Ahora mismo la app es gratuita para todos — nuestra contribución para ayudar a ucranianos e inmigrantes a aprender el idioma.',
     ctaLogin: 'Ya tengo cuenta',
     docsLink: 'Documentación',
     modules: [
@@ -435,6 +448,7 @@ const L = {
       text: 'Instálala en tu móvil desde el navegador — sin App Store ni Google Play.',
       android: 'Android: Chrome → menú ⋮ → "Instalar aplicación"',
       apk: 'Descargar APK para Android',
+      apkOffline: 'Instala el APK — todos los ejercicios funcionan sin conexión, sin internet.',
       ios: 'iPhone: Safari → compartir → "Añadir a pantalla de inicio"',
     },
     ai: {
@@ -447,6 +461,7 @@ const L = {
     tagline: 'Allemand pour les immigrants',
     subtitle: 'Apprenez l\'allemand avec une répétition intelligente, des dictées et des explications IA. Gratuit.',
     cta: 'Commencer gratuitement',
+    charity: '💛 L\'application est actuellement gratuite pour tous — notre contribution pour aider les Ukrainiens et les immigrants à apprendre la langue.',
     ctaLogin: 'J\'ai déjà un compte',
     docsLink: 'Documentation',
     modules: [
@@ -472,6 +487,7 @@ const L = {
       text: 'Installe sur ton téléphone via le navigateur — sans App Store ni Google Play.',
       android: 'Android: Chrome → menu ⋮ → «Installer l\'application»',
       apk: 'Télécharger l\'APK pour Android',
+      apkOffline: 'Installe l\'APK — tous les exercices fonctionnent hors ligne, sans internet.',
       ios: 'iPhone: Safari → partager → «Sur l\'écran d\'accueil»',
     },
     ai: {
@@ -484,6 +500,7 @@ const L = {
     tagline: 'Gjermanisht për emigrantët',
     subtitle: 'Mëso gjermanisht me përsëritje inteligjente, diktate dhe shpjegime AI. Falas.',
     cta: 'Fillo falas',
+    charity: '💛 Aplikacioni tani është falas për të gjithë — kontributi ynë për të ndihmuar ukrainasit dhe emigrantët të mësojnë gjuhën.',
     ctaLogin: 'Kam tashmë llogari',
     docsLink: 'Dokumentacion',
     modules: [
@@ -509,6 +526,7 @@ const L = {
       text: 'Instalo në telefon nëpërmjet shfletuesit — pa App Store apo Google Play.',
       android: 'Android: Chrome → menu ⋮ → "Instalo aplikacionin"',
       apk: 'Shkarko APK për Android',
+      apkOffline: 'Instalo APK-në — të gjitha ushtrimet punojnë offline, pa internet.',
       ios: 'iPhone: Safari → ndaj → "Shto në ekranin kryesor"',
     },
     ai: {
