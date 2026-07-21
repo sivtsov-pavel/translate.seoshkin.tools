@@ -583,7 +583,7 @@ function Users() {
   const loginAs = async (u) => {
     if (!window.confirm(`Войти как ${u.email}? Вы будете действовать от его имени (вернуться — по баннеру сверху).`)) return
     try {
-      const res = await api.post(`/admin/impersonate/${u.id}`)
+      const res = await api.post(`/admin/impersonate/${u.id}`, {})
       impersonate(res.token, res.user)
       window.location.href = '/'
     } catch (e) { alert('Ошибка: ' + e.message) }
