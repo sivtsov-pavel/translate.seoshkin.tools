@@ -43,14 +43,22 @@ function NewLessonInner() {
   const N = NSTR[lang] || NSTR.en
   const pollRef   = useRef(null)
 
-  // Автономер урока: считаем следующий по порядку (в курсе или в общем пуле)
+  // Курсы для привязки: чтобы урок из раздела «Уроки» не оставался «одиночкой» вне курса
+  // (такие уроки лезут в «Сегодня» и путают нумерацию). По умолчанию — курс из ссылки (если пришли из курса).
+  const [courses, setCourses] = useState([])
+  const [selectedCourse, setSelectedCourse] = useState(courseId || '')
+  useEffect(() => {
+    api.get('/courses').then(cs => setCourses(Array.isArray(cs) ? cs : [])).catch(() => {})
+  }, [])
+
+  // Автономер урока: считаем следующий по порядку (в выбранном курсе или в общем пуле)
   useEffect(() => {
     api.get('/lessons').then(all => {
-      const list = (all || []).filter(l => courseId ? String(l.course_id) === String(courseId) : !l.course_id)
+      const list = (all || []).filter(l => selectedCourse ? String(l.course_id) === String(selectedCourse) : !l.course_id)
       const maxNum = list.reduce((m, l) => Math.max(m, l.lesson_number || 0), 0)
       setNextNumber(maxNum + 1)
     }).catch(() => setNextNumber(null))
-  }, [courseId])
+  }, [selectedCourse])
 
   const addPhotos = useCallback((files) => {
     const newItems = files.filter(f => f.type.startsWith('image/')).map(file => ({ file, preview: URL.createObjectURL(file) }))
@@ -98,7 +106,7 @@ function NewLessonInner() {
           setStatus('done')
           photos.forEach(p => URL.revokeObjectURL(p.preview))
           extraPhotos.forEach(p => URL.revokeObjectURL(p.preview))
-          setTimeout(() => navigate(courseId ? `/courses/${courseId}` : '/'), 2500)
+          setTimeout(() => navigate(selectedCourse ? `/courses/${selectedCourse}` : '/'), 2500)
         } else if (res.status === 'error') {
           clearInterval(pollRef.current)
           setError(res.progress || 'Ошибка обработки')
@@ -120,7 +128,7 @@ function NewLessonInner() {
         title: title.trim() || autoTitle,
         description: description.trim() || null,
         date: new Date().toISOString().slice(0, 10),
-        course_id: courseId ? parseInt(courseId) : null,
+        course_id: selectedCourse ? parseInt(selectedCourse) : null,
         lesson_number: nextNumber || null,
       })
       setStatus('uploading')
@@ -171,6 +179,21 @@ function NewLessonInner() {
           <input value={title} onChange={e => setTitle(e.target.value)}
             placeholder={nextNumber ? `${N.word} ${nextNumber}` : t.lessons.topicPlaceholder} disabled={isProcessing}
             style={{ width: '100%', boxSizing: 'border-box' }} />
+        </div>
+
+        {/* Привязка к курсу — чтобы урок не остался «одиночкой» вне курса (иначе лезет в «Сегодня») */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>📚 Курс</label>
+          <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} disabled={isProcessing}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '9px 10px', borderRadius: 8, border: `1px solid ${selectedCourse ? 'var(--line)' : 'var(--accent)'}`, background: 'var(--surface)', color: 'var(--ink)' }}>
+            <option value="">— Без курса (отдельный урок) —</option>
+            {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>
+          {!selectedCourse && (
+            <div style={{ fontSize: 12.5, color: 'var(--accent)', marginTop: 6 }}>
+              💡 Совет: привяжи урок к курсу — тогда он идёт по порядку и не «висит» отдельно в «Сегодня». Без курса — только для разовых уроков/наборов.
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: 24 }}>
