@@ -94,7 +94,12 @@ export async function playableLessonIds(userId, schoolId) {
   for (const [cid, lessons] of byCourse) {
     const sc = scMap.get(cid)
     if (!sc) { needsSchedule.push(cid); continue }
-    const opened = unlockedCount(sc.start_date, sc.weekdays)
+    // Открыто уроков = max(календарь, пройдено+1). Пройденные уроки и ТЕКУЩИЙ (следующий за
+    // ними) всегда доступны — их у ученика не отнять; календарь лишь ограничивает забег ВПЕРЁД
+    // (нельзя перескочить дальше текущего быстрее расписания). Защищает от рассинхрона, когда
+    // прогресс обогнал календарь (напр. расписание пересоздали позже прохождения).
+    const passedCount = lessons.filter(l => passedSet.has(l.id)).length
+    const opened = Math.max(unlockedCount(sc.start_date, sc.weekdays), passedCount + 1)
     let doneIdx = 0, prevPassed = true
     for (const l of lessons) {
       const calendarOpen = doneIdx < opened

@@ -69,7 +69,6 @@ export async function coursesRoutes(fastify) {
       }
       if (sc[0]) {
         schedule = sc[0]
-        const opened = unlockedCount(sc[0].start_date, sc[0].weekdays)
         // Статус «пройден» = каждое слово урока отработано хотя бы в одном упражнении
         // (см. LESSON_PASSED_HAVING в drip.js) — не нужно щёлкать все 7 упражнений каждого слова.
         const { rows: passedRows } = await db.query(
@@ -82,6 +81,10 @@ export async function coursesRoutes(fastify) {
            HAVING ${LESSON_PASSED_HAVING}`,
           [request.user.id, courseId])
         const passedSet = new Set(passedRows.map(r => r.lesson_id))
+        // Открыто = max(календарь, пройдено+1): пройденные уроки и ТЕКУЩИЙ всегда доступны,
+        // календарь лишь ограничивает забег вперёд (единая логика с drip.js playableLessonIds).
+        const passedCount = rows.filter(l => l.status === 'done' && passedSet.has(l.id)).length
+        const opened = Math.max(unlockedCount(sc[0].start_date, sc[0].weekdays), passedCount + 1)
 
         // Идём по готовым урокам по порядку. prevPassed — пройден ли предыдущий готовый урок.
         let doneIdx = 0
