@@ -103,13 +103,12 @@ export async function exercisesRoutes(fastify) {
     // иначе применяем дневной лимит пользователя
     const limit = lesson_id ? 300 : dailyLimit
     const target = request.headers['x-target-lang'] || 'de'
-    // Порядок раздачи. Поток уроков (без type) — БЛОКАМИ по уроку: текущий (с бо́льшим номером
-    // урока — в дрипе это фронтир) первым, потом повторения старых. По lesson_number (а не id!),
-    // чтобы стендалон-уроки с высоким id, но низким номером не прыгали вперёд. Так заголовок
-    // не «скачет». Практика по типу (усиление) — прежний SRS-микс.
+    // Порядок раздачи для owner/практики. Поток уроков (без type) — БЛОКАМИ по уроку в
+    // ЕСТЕСТВЕННОМ порядке (номер по возрастанию), чтобы заголовок не «скакал». У ученика
+    // порядок точнее (непройденные первыми) — см. studentOrder ниже. Практика по типу — SRS-микс.
     const orderBy = type
       ? 'COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
-      : 'l.lesson_number DESC NULLS LAST, l.id DESC, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
+      : 'l.lesson_number ASC NULLS LAST, l.id ASC, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
 
     let query, params
     if (role === 'owner') {
@@ -136,21 +135,28 @@ export async function exercisesRoutes(fastify) {
       const p = params.length
       params.push(target); const tp = params.length
       params.push(request.user.school_id ?? null); const sp = params.length // школа ученика (null-safe)
-      let gateClause = ''
+      let gateClause = '', passedClause = '', studentOrder = orderBy
       if (dripGate) {
-        const { playable } = await playableLessonIds(userId, request.user.school_id ?? null)
+        const { playable, passed } = await playableLessonIds(userId, request.user.school_id ?? null)
         params.push([...playable]); const pl = params.length
         gateClause = `AND e.lesson_id = ANY($${pl}::int[])`
+        params.push([...passed]); const pp = params.length
+        // Не подаём НЕтронутые упражнения уже пройденных уроков (слова закрыты — только реальные
+        // повторения). Исключение — открыт конкретный урок (lesson_id): там показываем всё.
+        if (!lesson_id) passedClause = `AND NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${pp}::int[]))`
+        // Порядок: непройденные уроки (текущий) первыми, потом повторения пройденных; внутри по номеру.
+        studentOrder = `(e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
       }
       query = SELECT + `
         WHERE l.status = 'done'
           AND l.target_lang = $${tp}
           AND ($${sp}::int IS NULL OR l.school_id = $${sp})
           ${gateClause}
+          ${passedClause}
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY ${orderBy} LIMIT ${limit}`
+        ORDER BY ${studentOrder} LIMIT ${limit}`
     }
 
     const { rows } = await db.query(query, params)

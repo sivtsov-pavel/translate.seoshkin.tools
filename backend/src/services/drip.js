@@ -73,7 +73,7 @@ export async function playableLessonIds(userId, schoolId) {
     if (!byCourse.has(l.course_id)) byCourse.set(l.course_id, [])
     byCourse.get(l.course_id).push(l)
   }
-  if (byCourse.size === 0) return { playable, needsSchedule }
+  if (byCourse.size === 0) return { playable, needsSchedule, passed: new Set() }
 
   const { rows: scRows } = await db.query(
     'SELECT course_id, weekdays, start_date FROM course_schedules WHERE user_id = $1', [userId])
@@ -104,7 +104,7 @@ export async function playableLessonIds(userId, schoolId) {
       doneIdx++
     }
   }
-  return { playable, needsSchedule }
+  return { playable, needsSchedule, passed: passedSet }
 }
 
 // Тик каждые 15 мин: если у юзера открылся новый урок — push по его локальному утру (один раз на урок).

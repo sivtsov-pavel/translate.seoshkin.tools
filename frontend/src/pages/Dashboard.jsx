@@ -343,12 +343,12 @@ export default function Dashboard() {
         const pinnedItems = shown.filter(l => pinned.has(l.lesson_id)).sort(byNew)
         const setsAll = shown.filter(l => l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
         const booksAll = shown.filter(l => !l.is_set && !pinned.has(l.lesson_id)).sort(byNew)
-        // «Только сегодня»: показываем ОДИН текущий урок — с бо́льшим НОМЕРОМ урока (в дрипе это
-        // фронтир, тот что на прохождении). По lesson_number (а не id!), чтобы совпадать с порядком
-        // сессии и чтобы стендалон-уроки с высоким id не выдавались за «текущий». При поиске — все.
-        const current = booksAll.length
-          ? [...booksAll].sort((a, b) => (b.lesson_number ?? -1) - (a.lesson_number ?? -1) || b.lesson_id - a.lesson_id)[0]
-          : null
+        // «Только сегодня»: показываем ОДИН ТЕКУЩИЙ урок — первый НЕ пройденный по порядку
+        // (фронтир дрипа: прошёл 1,2 → текущий 3, а не последний по номеру). Пройденные берём из
+        // /exercises/completed-lessons. Если всё пройдено — показываем последний.
+        const completedIds = new Set((completed || []).map(c => c.id))
+        const byNumAsc = [...booksAll].sort((a, b) => (a.lesson_number ?? 1e9) - (b.lesson_number ?? 1e9) || a.lesson_id - b.lesson_id)
+        const current = byNumAsc.find(l => !completedIds.has(l.lesson_id)) || byNumAsc[byNumAsc.length - 1] || null
         const books = (todayOnly && !q) ? (current ? [current] : []) : booksAll
         // Наборы — по тумблеру (но при активном поиске показываем всё, что нашлось)
         const sets = (showSets || q) ? setsAll : []
