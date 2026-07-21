@@ -103,6 +103,13 @@ export async function exercisesRoutes(fastify) {
     // иначе применяем дневной лимит пользователя
     const limit = lesson_id ? 300 : dailyLimit
     const target = request.headers['x-target-lang'] || 'de'
+    // Порядок раздачи. Поток уроков (без type) — БЛОКАМИ по уроку: новейший (текущий на
+    // прохождение) первым, потом повторения старых. Так заголовок не «скачет» между уроками
+    // и прохождение урока идёт цельно. Практика по типу (усиление) — прежний SRS-микс.
+    const orderBy = type
+      ? 'COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
+      : 'l.id DESC, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()'
+
     let query, params
     if (role === 'owner') {
       params = [userId, today]
@@ -115,7 +122,7 @@ export async function exercisesRoutes(fastify) {
           AND l.target_lang = $${tp}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM() LIMIT ${limit}`
+        ORDER BY ${orderBy} LIMIT ${limit}`
     } else {
       // Две дорожки прогресса:
       //  • «Обучение по урокам» (обычный поток без type) — строгий дрип: только разблокированные уроки.
@@ -142,7 +149,7 @@ export async function exercisesRoutes(fastify) {
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM() LIMIT ${limit}`
+        ORDER BY ${orderBy} LIMIT ${limit}`
     }
 
     const { rows } = await db.query(query, params)
