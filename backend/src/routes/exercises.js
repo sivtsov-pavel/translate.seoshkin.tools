@@ -117,12 +117,27 @@ export async function exercisesRoutes(fastify) {
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
       params.push(target); const tp = params.length
+      // Поток уроков (без type): текущий (первый НЕпройденный) урок первым + не подаём нетронутые
+      // упражнения уже пройденных уроков (как у ученика). Пройденные считаем по прогрессу owner.
+      let passedClause = '', ownerOrder = orderBy
+      if (!type) {
+        const { rows: pr } = await db.query(
+          `SELECT e.lesson_id FROM exercises e
+           LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+           JOIN lessons l ON l.id = e.lesson_id
+           WHERE l.owner_id = $1 AND l.target_lang = $2 AND l.is_set = false
+           GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, [userId, target])
+        params.push(pr.map(r => r.lesson_id)); const pp = params.length
+        if (!lesson_id) passedClause = `AND NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${pp}::int[]))`
+        ownerOrder = `(e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
+      }
       query = SELECT + `
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           AND l.target_lang = $${tp}
+          ${passedClause}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
-        ORDER BY ${orderBy} LIMIT ${limit}`
+        ORDER BY ${ownerOrder} LIMIT ${limit}`
     } else {
       // Две дорожки прогресса:
       //  • «Обучение по урокам» (обычный поток без type) — строгий дрип: только разблокированные уроки.
