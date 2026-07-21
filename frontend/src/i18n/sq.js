@@ -104,6 +104,9 @@ export const sq = {
     pinnedSection: '⭐ Të fiksuara',
     todayLessonLabel: 'Mësimi i sotëm',
 
+    createSetTitle: "+ krijo një set",
+    createSetDesc: "Krijo një set ushtrimesh nga fjalët e nevojshme të fjalorit",
+
     loading: 'Duke ngarkuar...',
   },
   exercise: {

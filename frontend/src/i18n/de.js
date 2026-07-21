@@ -107,6 +107,9 @@ export const de = {
     pinnedSection: '⭐ Angeheftet',
     todayLessonLabel: 'Heutige Lektion',
 
+    createSetTitle: "+ Set erstellen",
+    createSetDesc: "Stelle ein Übungsset aus gewünschten Wörtern zusammen",
+
     loading: 'Laden...',
   },
   // Übungen

@@ -104,6 +104,9 @@ export const tr = {
     pinnedSection: '⭐ Sabitlenenler',
     todayLessonLabel: 'Bugünkü ders',
 
+    createSetTitle: "+ set oluştur",
+    createSetDesc: "Sözlükteki istediğin kelimelerden bir alıştırma seti oluştur",
+
     loading: 'Yükleniyor...',
   },
   exercise: {

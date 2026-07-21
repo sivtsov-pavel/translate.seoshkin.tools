@@ -107,6 +107,9 @@ export const ru = {
     pinnedSection: '⭐ Закреплённые',
     todayLessonLabel: 'Сегодняшний урок',
 
+    createSetTitle: "+ создать набор",
+    createSetDesc: "Собери набор упражнений из нужных слов словаря",
+
     loading: 'Загрузка...',
   },
   // Упражнения

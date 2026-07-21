@@ -104,6 +104,9 @@ export const es = {
     pinnedSection: '⭐ Fijadas',
     todayLessonLabel: 'Lección de hoy',
 
+    createSetTitle: "+ crear conjunto",
+    createSetDesc: "Crea un conjunto de ejercicios con las palabras que necesites del diccionario",
+
     loading: 'Cargando...',
   },
   exercise: {

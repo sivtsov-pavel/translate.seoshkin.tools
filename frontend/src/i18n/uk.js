@@ -104,6 +104,9 @@ export const uk = {
     pinnedSection: '⭐ Закріплені',
     todayLessonLabel: 'Сьогоднішній урок',
 
+    createSetTitle: "+ створити набір",
+    createSetDesc: "Зберіть набір вправ із потрібних слів словника",
+
     loading: 'Завантаження...',
   },
   exercise: {

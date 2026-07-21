@@ -106,6 +106,9 @@ export const ar = {
     pinnedSection: '⭐ مثبّت',
     todayLessonLabel: 'درس اليوم',
 
+    createSetTitle: "+ إنشاء مجموعة",
+    createSetDesc: "اجمع مجموعة تمارين من الكلمات التي تحتاجها من القاموس",
+
     loading: 'جاري التحميل...',
   },
   exercise: {

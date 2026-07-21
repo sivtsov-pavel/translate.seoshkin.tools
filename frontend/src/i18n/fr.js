@@ -104,6 +104,9 @@ export const fr = {
     pinnedSection: '⭐ Épinglées',
     todayLessonLabel: "Leçon du jour",
 
+    createSetTitle: "+ créer un ensemble",
+    createSetDesc: "Crée un ensemble d'exercices à partir des mots du dictionnaire",
+
     loading: 'Chargement...',
   },
   exercise: {

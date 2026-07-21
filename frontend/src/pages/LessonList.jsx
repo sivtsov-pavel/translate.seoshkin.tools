@@ -197,6 +197,7 @@ export default function LessonList() {
   const [errorFilter, setErrorFilter] = useState(false) // показать только проблемные уроки
   const [addingSpeech, setAddingSpeech]       = useState(null)
   const [regenId, setRegenId]         = useState(null)
+  const [openMenuId, setOpenMenuId]   = useState(null) // «…» с второстепенными действиями (пересоздать/картинки/наборы/буквы/диктант)
   const [processing, setProcessing]   = useState(null)
   const [editingId, setEditingId]     = useState(null)
   const { t, lang } = useI18nStore()
@@ -476,49 +477,65 @@ export default function LessonList() {
                               {processing === lesson.id ? '⏳' : '✨ Обработать всё'}
                             </button>
                           )}
-                          {status === 'done' && (
-                            <button onClick={() => handleDrawImages(lesson.id)} disabled={processing === lesson.id}
-                              title="Нарисовать детские ИИ-картинки для слов без фото (платно)"
-                              style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
-                              {processing === lesson.id ? '⏳' : '🎨'}
-                            </button>
-                          )}
-                          {status === 'done' && (
-                            <button onClick={() => handleRedistribute(lesson.id)} disabled={processing === lesson.id}
-                              title="Распределить слова урока в тематические наборы словаря (урок не разбивается)"
-                              style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
-                              {processing === lesson.id ? '⏳' : '🎯 В наборы'}
-                            </button>
-                          )}
                           <button onClick={() => setEditingId(isEditing ? null : lesson.id)}
                             style={actionBtn(isEditing ? 'var(--accent)' : 'var(--surface-2)', isEditing ? 'var(--accent-ink)' : 'var(--ink-soft)', true)}>
                             ✏️
                           </button>
-                          {lesson.words_total > 0 && (
-                            <button onClick={() => handleRegen(lesson)} disabled={regenId === lesson.id || status === 'processing'}
-                              title="Пересоздать упражнения"
-                              style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
-                              {regenId === lesson.id ? '⏳' : '⚙️'}
+                          {/* Второстепенные действия — под «…», чтобы не захламлять карточку */}
+                          <div style={{ position: 'relative' }}>
+                            <button onClick={() => setOpenMenuId(openMenuId === lesson.id ? null : lesson.id)}
+                              title="Ещё действия"
+                              style={actionBtn(openMenuId === lesson.id ? 'var(--accent)' : 'var(--surface-2)', openMenuId === lesson.id ? 'var(--accent-ink)' : 'var(--ink-soft)', true)}>
+                              …
                             </button>
-                          )}
-                          {status === 'done' && (
-                            <>
-                              <button onClick={() => handleAddLetterFill(lesson.id)} disabled={addingLetters === lesson.id}
-                                title="Добавить «Добавь букву»"
-                                style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
-                                {addingLetters === lesson.id ? '⏳' : '🔤'}
-                              </button>
-                              <button onClick={() => handleAddDictation(lesson.id)} disabled={addingDictation === lesson.id}
-                                title="Добавить диктант"
-                                style={actionBtn('var(--surface-2)', 'var(--ink-soft)', true)}>
-                                {addingDictation === lesson.id ? '⏳' : '🎙️'}
-                              </button>
-                            </>
-                          )}
-                          <button onClick={() => handleDelete(lesson.id)} disabled={deleting === lesson.id}
-                            style={actionBtn('transparent', 'var(--red)', true, 'var(--red)')}>
-                            {deleting === lesson.id ? '...' : '✕'}
-                          </button>
+                            {openMenuId === lesson.id && (
+                              <>
+                                <div onClick={() => setOpenMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 90 }} />
+                                <div style={{
+                                  position: 'absolute', top: '100%', right: 0, marginTop: 4, zIndex: 91,
+                                  background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 10,
+                                  boxShadow: '0 8px 24px rgba(0,0,0,0.25)', minWidth: 220, padding: 6,
+                                  display: 'flex', flexDirection: 'column', gap: 2,
+                                }}>
+                                  {status === 'done' && (
+                                    <button onClick={() => { setOpenMenuId(null); handleDrawImages(lesson.id) }} disabled={processing === lesson.id}
+                                      style={menuItemBtn}>
+                                      🎨 Нарисовать картинки
+                                    </button>
+                                  )}
+                                  {status === 'done' && (
+                                    <button onClick={() => { setOpenMenuId(null); handleRedistribute(lesson.id) }} disabled={processing === lesson.id}
+                                      style={menuItemBtn}>
+                                      🎯 В наборы по темам
+                                    </button>
+                                  )}
+                                  {lesson.words_total > 0 && (
+                                    <button onClick={() => { setOpenMenuId(null); handleRegen(lesson) }} disabled={regenId === lesson.id || status === 'processing'}
+                                      style={menuItemBtn}>
+                                      ⚙️ Пересоздать упражнения
+                                    </button>
+                                  )}
+                                  {status === 'done' && (
+                                    <button onClick={() => { setOpenMenuId(null); handleAddLetterFill(lesson.id) }} disabled={addingLetters === lesson.id}
+                                      style={menuItemBtn}>
+                                      🔤 Добавить «Добавь букву»
+                                    </button>
+                                  )}
+                                  {status === 'done' && (
+                                    <button onClick={() => { setOpenMenuId(null); handleAddDictation(lesson.id) }} disabled={addingDictation === lesson.id}
+                                      style={menuItemBtn}>
+                                      🎙️ Добавить диктант
+                                    </button>
+                                  )}
+                                  <div style={{ height: 1, background: 'var(--line)', margin: '4px 2px' }} />
+                                  <button onClick={() => { setOpenMenuId(null); handleDelete(lesson.id) }} disabled={deleting === lesson.id}
+                                    style={{ ...menuItemBtn, color: 'var(--red)' }}>
+                                    {deleting === lesson.id ? '...' : '✕ Удалить урок'}
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </>
                       )}
                     </div>
@@ -589,6 +606,12 @@ function StatusBadge({ status }) {
       {label}
     </span>
   )
+}
+
+// Пункт выпадающего меню «…» (второстепенные действия урока)
+const menuItemBtn = {
+  textAlign: 'left', padding: '9px 12px', borderRadius: 7, border: 'none',
+  background: 'none', color: 'var(--ink)', fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap',
 }
 
 const actionBtn = (bg, color, icon = false, borderColor) => ({

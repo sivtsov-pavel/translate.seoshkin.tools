@@ -104,6 +104,9 @@ export const en = {
     pinnedSection: '⭐ Pinned',
     todayLessonLabel: "Today's lesson",
 
+    createSetTitle: "+ Create a set",
+    createSetDesc: "Build an exercise set from the words you need",
+
     loading: 'Loading...',
   },
   exercise: {

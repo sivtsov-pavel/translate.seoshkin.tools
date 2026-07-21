@@ -104,6 +104,9 @@ export const bg = {
     pinnedSection: '⭐ Закачени',
     todayLessonLabel: 'Днешен урок',
 
+    createSetTitle: "+ създай комплект",
+    createSetDesc: "Събери комплект упражнения от нужните думи от речника",
+
     loading: 'Зареждане...',
   },
   exercise: {

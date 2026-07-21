@@ -328,6 +328,20 @@ export default function Dashboard() {
             <span style={{ background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 10, fontWeight: 800, padding: '2px 9px', borderRadius: 20, flexShrink: 0 }}>NEW</span>
           </div>
         </Link>
+        {/* ✏️ Свой набор упражнений из словаря — вход прямо с дашборда (был доступен только из Словаря) */}
+        <Link to="/vocabulary" style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: 'var(--surface)', border: '2px dashed var(--accent)',
+            borderRadius: 16, padding: '14px 16px', marginTop: 8,
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <span style={{ fontSize: 32, lineHeight: 1 }}>✏️</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 2 }}>{t.dashboard.createSetTitle}</div>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.dashboard.createSetDesc}</div>
+            </div>
+          </div>
+        </Link>
         {/* 🎮 Игра класса — читаем фразы урока по очереди */}
         <div onClick={() => games.length && navigate(`/class-game/${games[0].id}`)}
           style={{
