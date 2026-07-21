@@ -64,6 +64,30 @@ export async function personalWordsRoutes(fastify) {
     return { added, skipped }
   })
 
+  // Добавить ОДНО слово в личный словарь текстом (тап по слову в Читалке/книге).
+  // Плюсик доступен даже если слово уже есть — upsert, дубля не создаст.
+  fastify.post('/api/personal-words', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const target = request.headers['x-target-lang'] || 'de'
+    const userId = request.user.id
+    const word = String(request.body?.word || '').trim()
+    const translation = String(request.body?.translation || '').trim() || null
+    if (!word) return reply.status(400).send({ error: 'Нет слова' })
+    // Картинка из банка по смыслу (перевод) — бесплатно
+    let image = null
+    if (translation) {
+      const img = await db.query("SELECT image_url FROM words WHERE lower(trim(translation_ru))=$1 AND image_url IS NOT NULL LIMIT 1", [translation.toLowerCase()])
+      image = img.rows[0]?.image_url || null
+    }
+    const ins = await db.query(
+      `INSERT INTO personal_words (user_id, target_lang, word, translation, image_url)
+       VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (user_id, target_lang, word)
+       DO UPDATE SET translation = COALESCE(personal_words.translation, EXCLUDED.translation)
+       RETURNING id, word, translation, image_url, status`,
+      [userId, target, word, translation, image])
+    return { added: ins.rows[0], ok: true }
+  })
+
   // Статус слова (new/learning/known)
   fastify.patch('/api/personal-words/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { status } = request.body || {}
