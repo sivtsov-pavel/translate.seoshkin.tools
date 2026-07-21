@@ -46,6 +46,9 @@ export async function coursesRoutes(fastify) {
              (SELECT count(*) FROM exercises e WHERE e.lesson_id = lessons.id)::int AS exercises_total
       FROM lessons
       WHERE course_id = $1
+        -- Пустые авто-уроки из PDF (обложка/пустая страница — ИИ не нашёл слов) прячем из списка,
+        -- данные не удаляем (фото остаётся в БД, урок виден только через прямую ссылку/БД).
+        AND NOT (auto_pdf AND status = 'done' AND NOT EXISTS (SELECT 1 FROM words w WHERE w.lesson_id = lessons.id))
       ORDER BY lesson_number NULLS LAST, created_at
     `, [courseId])
 
@@ -231,8 +234,8 @@ export async function coursesRoutes(fastify) {
       num++
       const chunk = pages.slice(i, i + perLesson)
       const { rows: lr } = await db.query(
-        `INSERT INTO lessons (owner_id, title, course_id, lesson_number, target_lang, status)
-         VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id`,
+        `INSERT INTO lessons (owner_id, title, course_id, lesson_number, target_lang, status, auto_pdf)
+         VALUES ($1, $2, $3, $4, $5, 'pending', true) RETURNING id`,
         [request.user.id, `Урок ${num}`, courseId, num, target])
       const lessonId = lr[0].id
       // Все страницы группы — как медиа одного урока (обработаются вместе)

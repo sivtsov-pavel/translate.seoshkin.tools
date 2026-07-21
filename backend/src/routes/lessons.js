@@ -54,7 +54,10 @@ export async function lessonsRoutes(fastify) {
     // Личные наборы ученика («мои сложные слова») в общий список не показываем никому,
     // кроме их владельца — иначе они утекли бы всей школе.
     const personalFilter = ` AND (NOT l.is_personal OR l.owner_id = ${parseInt(request.user.id)})`
-    const filter = (role === 'owner' ? 'WHERE l.target_lang = $1' : "WHERE l.status = 'done' AND l.target_lang = $1") + personalFilter
+    // Пустые авто-уроки из PDF (обложка/пустая страница — ИИ не нашёл слов) прячем из списка,
+    // данные не удаляем (фото остаётся в БД, урок виден только напрямую/через БД).
+    const emptyAutoPdfFilter = ' AND NOT (l.auto_pdf AND l.status = \'done\' AND NOT EXISTS (SELECT 1 FROM words w2 WHERE w2.lesson_id = l.id))'
+    const filter = (role === 'owner' ? 'WHERE l.target_lang = $1' : "WHERE l.status = 'done' AND l.target_lang = $1") + personalFilter + emptyAutoPdfFilter
 
     const { rows } = await db.query(
       `SELECT l.*,
