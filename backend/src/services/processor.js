@@ -829,7 +829,24 @@ export async function drainPendingLessons() {
   if (_draining) return
   _draining = true
   try {
-    // После рестарта живого цикла нет → «processing» с медиа считаем зависшими, возвращаем в очередь
+    // После рестарта живого цикла нет → «processing» считаем зависшими. ВАЖНО: не все зависшие
+    // одинаковы — урок, у которого уже ЕСТЬ слова/упражнения, завис на «✨ Обработать всё» (enrich),
+    // а не на первичной обработке. Прогнать его через processLesson заново нельзя — он не дедуплицирует
+    // упражнения (обычный INSERT без ON CONFLICT) и задвоит их. Такие уроки дообрабатываем через
+    // idempotent enrichLesson (запросы там сами бьют только по недостающим полям) и сразу ставим done.
+    const { rows: stuckEnrich } = await db.query(
+      `SELECT id FROM lessons WHERE status='processing' AND EXISTS (SELECT 1 FROM words w WHERE w.lesson_id = lessons.id)`)
+    for (const { id } of stuckEnrich) {
+      try {
+        await enrichLesson(id)
+        await db.query("UPDATE lessons SET status='done', progress='Готово (дообработано после рестарта).' WHERE id=$1", [id])
+      } catch (e) {
+        console.error('drainPendingLessons enrich-recovery', id, e.message)
+        await db.query("UPDATE lessons SET status='done', progress='Готово (с ошибками при дообработке).' WHERE id=$1", [id])
+      }
+    }
+    // Остальные «processing» без слов — зависли на первичной обработке (никогда не были done),
+    // их безопасно вернуть в pending и прогнать через полный processLesson.
     await db.query(`UPDATE lessons SET status='pending'
       WHERE status='processing' AND EXISTS (SELECT 1 FROM lesson_media m WHERE m.lesson_id = lessons.id)`)
     while (true) {
