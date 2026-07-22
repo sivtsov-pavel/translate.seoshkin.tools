@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useI18nStore } from '../store/i18n.js'
+import tourStrings from '../i18n/tour.json'
 
 // Онбординг-тур по всей системе. Простым, тёплым языком — для детей и взрослых,
 // которые не дружат с технологиями. Подсвечивает ТОЛЬКО видимые элементы; для шагов
@@ -20,8 +21,8 @@ function visibleEl(sels) {
 }
 
 export default function Tour({ onClose, onMenu }) {
-  const { t } = useI18nStore()
-  const T = t.tour || {}
+  const { lang } = useI18nStore()
+  const T = tourStrings[lang] || tourStrings.ru
 
   // Селектор пункта МЕНЮ строго внутри шторки/сайдбара (а не одноимённой ссылки в топбаре/нижней панели)
   const M = (href) => [`.layout-drawer a[href="${href}"]`, `.layout-sidebar a[href="${href}"]`]
