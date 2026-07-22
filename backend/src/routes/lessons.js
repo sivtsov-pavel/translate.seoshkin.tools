@@ -61,6 +61,9 @@ export async function lessonsRoutes(fastify) {
 
     const { rows } = await db.query(
       `SELECT l.*,
+          -- Готовый урок не должен показывать текст от прошлой обработки — progress имеет
+          -- смысл только пока идёт/упала обработка (перекрывает l.progress из l.*, см. ниже).
+          CASE WHEN l.status IN ('processing', 'pending', 'error') THEN l.progress ELSE NULL END AS progress,
           COUNT(DISTINCT lm.id)::int AS media_count,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images,
@@ -273,6 +276,7 @@ export async function lessonsRoutes(fastify) {
     const params = request.user.role === 'owner' ? [id] : [id, request.user.id]
     const { rows } = await db.query(
       `SELECT l.*,
+          CASE WHEN l.status IN ('processing', 'pending', 'error') THEN l.progress ELSE NULL END AS progress,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images
        FROM lessons l

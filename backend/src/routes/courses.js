@@ -41,7 +41,11 @@ export async function coursesRoutes(fastify) {
     if (!course[0]) return reply.status(404).send({ error: 'Курс не найден' })
 
     const { rows } = await db.query(`
-      SELECT id, title, date, status, progress, lesson_number, created_at,
+      SELECT id, title, date, status,
+             -- Готовый урок не должен показывать текст от прошлой обработки («Перевожу...») —
+             -- progress имеет смысл только пока идёт/упала обработка.
+             CASE WHEN status IN ('processing', 'pending', 'error') THEN progress ELSE NULL END AS progress,
+             lesson_number, created_at,
              (SELECT count(*) FROM words w WHERE w.lesson_id = lessons.id)::int AS words_total,
              (SELECT count(*) FROM exercises e WHERE e.lesson_id = lessons.id)::int AS exercises_total
       FROM lessons

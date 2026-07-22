@@ -313,6 +313,7 @@ function SchedulePicker({ schedule, onSave, required }) {
 
 function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
   const navigate = useNavigate()
+  const { t } = useI18nStore()
   const [editNum, setEditNum] = useState(String(lesson.lesson_number ?? ''))
   const [saving, setSaving]   = useState(false)
   const [regen, setRegen]     = useState(false)
@@ -364,7 +365,7 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span style={{ color: STATUS_COLOR[status], fontSize: 14 }}>{STATUS_ICON[status]}</span>
           <span style={{ fontSize: 12, color: STATUS_COLOR[status], fontWeight: 600 }}>
-            {lesson.status === 'processing' && lesson.progress ? lesson.progress : status}
+            {lesson.status === 'processing' && lesson.progress ? lesson.progress : (t.lessons.status[status] || status)}
           </span>
         </div>
         {isOwner && (
