@@ -1,8 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useSettingsStore, applyVisual } from '../store/settings.js'
 import { useAuthStore } from '../store/auth.js'
 import { usePushNotifications } from '../hooks/usePushNotifications.jsx'
 import { api } from '../api/client.js'
+import ProfileTab from './Profile.jsx'
+
+const TABS = [
+  { id: 'profile',      label: '👤 Профиль' },
+  { id: 'settings',     label: '⚙️ Настройки' },
+  { id: 'integrations', label: '🔑 Интеграции' },
+  { id: 'reminders',    label: '⏰ Напоминания' },
+]
 
 const VOICE_KEY = 'de_voice_name'
 
@@ -160,6 +169,10 @@ export default function Settings() {
   const store = useSettingsStore()
   const { user } = useAuthStore()
   const isOwner = user?.role === 'owner'
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = TABS.findIndex(t => t.id === searchParams.get('tab'))
+  const [tab, setTab] = useState(initialTab >= 0 ? initialTab : 0)
+  const selectTab = (i) => { setTab(i); setSearchParams(prev => { prev.set('tab', TABS[i].id); return prev }, { replace: true }) }
   const [saved, setSaved] = useState(false)
   const [keyVisible, setKeyVisible]   = useState(false)
   // Ключ OpenAI: сам ключ с сервера не приходит (секрет). Локально держим только НОВЫЙ ввод
@@ -318,11 +331,28 @@ export default function Settings() {
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 80 }}>
-      <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>⚙️ Настройки</h1>
-      <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 24px' }}>
-        Персональные настройки — применяются только для вашего аккаунта
+      <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>Аккаунт</h1>
+      <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 20px' }}>
+        Профиль и персональные настройки — применяются только для вашего аккаунта
       </p>
 
+      {/* Вкладки */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 24, flexWrap: 'wrap', borderBottom: '1px solid var(--line)', paddingBottom: 2 }}>
+        {TABS.map((tb, i) => (
+          <button key={tb.id} onClick={() => selectTab(i)} style={{
+            padding: '9px 16px', fontSize: 13.5, fontWeight: 600, borderRadius: '10px 10px 0 0',
+            border: 'none', borderBottom: tab === i ? '2px solid var(--blue)' : '2px solid transparent',
+            cursor: 'pointer', background: tab === i ? 'var(--surface)' : 'transparent',
+            color: tab === i ? 'var(--blue)' : 'var(--ink-soft)',
+          }}>
+            {tb.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 0 && <ProfileTab />}
+
+      {tab === 1 && <>
       {/* ── Обучение ── */}
       <Section icon="🎯" title="Обучение">
         <Row
@@ -538,7 +568,9 @@ export default function Settings() {
           </div>
         </Section>
       )}
+      </>}
 
+      {tab === 2 && <>
       {/* ── Интеграции ── */}
       <Section icon="🔑" title="Интеграции">
         <Row label="OpenAI API Key" hint="Свой ключ — обработка фото уроков, картинки, переводы и упражнения идут за ваш счёт. Хранится зашифрованным, на клиент не отдаётся.">
@@ -648,12 +680,18 @@ export default function Settings() {
           </Row>
         )}
       </Section>
+      </>}
 
+      {tab === 3 && <>
       {/* Push уведомления */}
       <PushSection />
       <NotifyPrefsSection />
+      </>}
 
-      {/* Кнопка сохранения */}
+      {/* Кнопка сохранения — для вкладок «Настройки» (daily_limit) и «Интеграции» (SMTP);
+          визуальные поля (zoom/шрифт/голос/тема) уже сохраняются сразу через update().
+          Профиль и Напоминания сохраняются своими кнопками внутри вкладок. */}
+      {(tab === 1 || tab === 2) && (
       <button onClick={handleSave}
         style={{
           width: '100%', padding: '14px', borderRadius: 14, border: 'none', cursor: 'pointer',
@@ -664,6 +702,7 @@ export default function Settings() {
         }}>
         {saved ? '✓ Сохранено!' : 'Сохранить настройки'}
       </button>
+      )}
     </div>
   )
 }

@@ -244,7 +244,7 @@ export default function Layout({ children }) {
             )}
           </div>
           {user && (
-            <Link to="/profile" onClick={close} style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
+            <Link to="/settings?tab=profile" onClick={close} style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: 'var(--gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: /\p{Emoji}/u.test(avatarChar) ? 20 : 15, fontWeight: 700 }}>{avatarChar}</div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{displayName}</div>

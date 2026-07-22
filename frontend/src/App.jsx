@@ -40,7 +40,6 @@ import WordMatch from './pages/WordMatch.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
 import Cookies from './pages/Cookies.jsx'
-import Profile from './pages/Profile.jsx'
 import AiTrainer from './pages/AiTrainer.jsx'
 import Admin from './pages/Admin.jsx'
 import Upgrade from './pages/Upgrade.jsx'
@@ -85,7 +84,8 @@ export default function App() {
         <Route path="/chat"          element={<ProtectedRoute><Layout><Chat           /></Layout></ProtectedRoute>} />
         <Route path="/game/match"    element={<ProtectedRoute><Layout><WordMatch      /></Layout></ProtectedRoute>} />
         <Route path="/game/crossword" element={<ProtectedRoute><Layout><Crossword     /></Layout></ProtectedRoute>} />
-        <Route path="/profile"    element={<ProtectedRoute><Layout><Profile    /></Layout></ProtectedRoute>} />
+        {/* Профиль слит с Настройками во вкладки — старые ссылки не бьются */}
+        <Route path="/profile"    element={<Navigate to="/settings?tab=profile" replace />} />
         <Route path="/ai-trainer" element={<ProtectedRoute><Layout><AiTrainer /></Layout></ProtectedRoute>} />
         <Route path="/admin"      element={<ProtectedRoute><Layout><Admin      /></Layout></ProtectedRoute>} />
         <Route path="/upgrade"    element={<ProtectedRoute><Layout><Upgrade    /></Layout></ProtectedRoute>} />

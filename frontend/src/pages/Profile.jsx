@@ -96,9 +96,7 @@ export default function Profile() {
   const isEmoji     = /\p{Emoji}/u.test(form.avatar || '')
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <h1 style={{ marginBottom: 24 }}>Мой профиль</h1>
-
+    <div>
       {/* Аватар */}
       <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 20 }}>
         <h2 style={{ fontSize: 16, marginBottom: 16 }}>Аватар</h2>
