@@ -710,6 +710,7 @@ export default function Settings() {
 function PushSection() {
   const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications()
   const [msg, setMsg] = useState('')
+  const [testing, setTesting] = useState(false)
 
   if (!supported) return null
 
@@ -722,6 +723,20 @@ function PushSection() {
       setMsg(ok ? '✓ Уведомления включены! Напоминания придут по твоему времени (настрой ниже).' : 'Доступ к уведомлениям запрещён в настройках браузера.')
     }
     setTimeout(() => setMsg(''), 4000)
+  }
+
+  // Мгновенный тест доставки на ЭТО устройство (минуя гейты утро/вечер/активность)
+  const handleTest = async () => {
+    setTesting(true)
+    try {
+      const r = await api.post('/push/test', {})
+      setMsg(`✓ Отправлено на ${r?.devices ?? 0} устройств(о). Если не пришло на телефон — проверь разрешение уведомлений и экономию батареи для приложения/Chrome.`)
+    } catch (e) {
+      setMsg('Не удалось отправить: ' + (e?.message || 'ошибка'))
+    } finally {
+      setTesting(false)
+      setTimeout(() => setMsg(''), 7000)
+    }
   }
 
   return (
@@ -755,6 +770,17 @@ function PushSection() {
             ) : (
               <><i className="bi bi-bell-fill" /> Включить уведомления</>
             )}
+          </button>
+        )}
+
+        {/* Проверить доставку на это устройство прямо сейчас */}
+        {subscribed && (
+          <button onClick={handleTest} disabled={testing} style={{
+            marginTop: 10, padding: '9px 18px', borderRadius: 10, border: '1px solid var(--accent)', cursor: testing ? 'default' : 'pointer',
+            background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            {testing ? '…' : <><i className="bi bi-send" /> Отправить тестовый push себе</>}
           </button>
         )}
 

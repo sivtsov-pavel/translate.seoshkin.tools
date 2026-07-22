@@ -27,6 +27,21 @@ export async function pushRoutes(fastify) {
     return { ok: true }
   })
 
+  // Тест доставки на СВОИ устройства — мгновенно, минуя все гейты (утро/вечер/активность).
+  fastify.post('/api/push/test', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const { rows } = await db.query('SELECT count(*)::int AS n FROM push_subscriptions WHERE user_id=$1', [request.user.id])
+    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+    await sendToUser(request.user.id, {
+      title: '🔔 Тест уведомления',
+      body: `Push работает на этом устройстве! (${time})`,
+      icon: '/icons/icon-192.png',
+      url: '/',
+    })
+    return { ok: true, devices: rows[0].n }
+  })
+
   // Отправить пуш от учителя — только owner
   fastify.post('/api/push/send', {
     preHandler: [fastify.authenticate],
