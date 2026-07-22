@@ -310,19 +310,31 @@ export default function Dashboard() {
 
       {/* ---------- ПУТЬ УРОКОВ (нитка) ---------- */}
       <section className="dl-screen2">
-        {/* Тумблеры слева (справа их перекрывала бы плавающая камера): все уроки/текущий + наборы */}
-        {(books.length > 0 || setsAll.length > 0) && (
-          <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
-            {books.length > 0 && (
-              <button onClick={toggleAllLessons} style={ribbonBtn(showAllLessons)}>
-                {showAllLessons ? `📚 ${t.dashboard.allLessons || 'Все уроки'}` : `📍 ${t.dashboard.currentLesson || 'Текущий урок'}`}
-              </button>
-            )}
-            {setsAll.length > 0 && (
-              <button onClick={toggleSets} style={ribbonBtn(showSets)}>
-                🗂 {t.nav.sets || 'Наборы'}: {showSets ? (t.dashboard.on || 'вкл') : (t.dashboard.off || 'выкл')}
-              </button>
-            )}
+        {/* Тумблеры — блоки с переключателем (как в макете): все уроки/текущий + наборы */}
+        {books.length > 0 && (
+          <div className="dl-sets-toggle-row" style={{ marginBottom: 8 }}>
+            <div>
+              <div className="dl-sets-toggle-title">📚 {t.dashboard.allLessons || 'Все уроки'}</div>
+              <div className="dl-sets-toggle-sub">
+                {showAllLessons ? (t.dashboard.allLessonsSub || 'Показан весь путь уроков') : (t.dashboard.currentLessonSub || 'Показан только текущий урок')}
+              </div>
+            </div>
+            <label className="dl-switch">
+              <input type="checkbox" checked={showAllLessons} onChange={toggleAllLessons} />
+              <span className="dl-switch-track"><span className="dl-switch-thumb" /></span>
+            </label>
+          </div>
+        )}
+        {setsAll.length > 0 && (
+          <div className="dl-sets-toggle-row" style={{ marginBottom: 8 }}>
+            <div>
+              <div className="dl-sets-toggle-title">🗂 {t.nav.sets || 'Наборы'}</div>
+              <div className="dl-sets-toggle-sub">{t.dashboard.setsSub || 'Твои подборки слов для тренировки'}</div>
+            </div>
+            <label className="dl-switch">
+              <input type="checkbox" checked={showSets} onChange={toggleSets} />
+              <span className="dl-switch-track"><span className="dl-switch-thumb" /></span>
+            </label>
           </div>
         )}
         {books.length > 0 && (() => {
