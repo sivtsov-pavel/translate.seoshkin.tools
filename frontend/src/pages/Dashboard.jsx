@@ -4,7 +4,7 @@ import {
   BookOpenText, Zap, Flame, Play, CheckCircle2, Layers, Puzzle, SquarePen,
   Gamepad2, Search, Volume2, RotateCcw, Pencil, ChevronUp, ChevronDown, Check,
   Star, Sparkles, MessageCircle, Heart, ArrowRight, Mic, BarChart3, Printer,
-  Camera, GraduationCap,
+  Camera, GraduationCap, Lock,
 } from 'lucide-react'
 import { api } from '../api/client.js'
 import { getOfflineLessonWords, getOfflineStats, isOnline } from '../offline/store.js'
@@ -123,12 +123,15 @@ export default function Dashboard() {
   const books = shown.filter(l => !l.is_set).sort((a, b) => ts(a.lesson_date) - ts(b.lesson_date) || a.lesson_id - b.lesson_id)
   const setsAll = shown.filter(l => l.is_set).sort((a, b) => b.lesson_id - a.lesson_id)
   const completedIds = new Set((completed || []).map(c => c.id))
-  const current = books.find(l => !completedIds.has(l.lesson_id)) || books[books.length - 1] || null
+  // Текущий — первый НЕпройденный и НЕзакрытый (locked уроки видно, но проходить нельзя)
+  const current = books.find(l => !l.locked && !completedIds.has(l.lesson_id)) || books.filter(l => !l.locked).slice(-1)[0] || null
 
-  // Статус для нитки
+  // Статус для нитки: пройден / текущий / закрыт (дрип) / доступен
   const pathLessons = books.map(l => ({
     ...l,
-    status: completedIds.has(l.lesson_id) ? 'done' : (current && l.lesson_id === current.lesson_id ? 'current' : 'upcoming'),
+    status: l.locked ? 'locked'
+      : completedIds.has(l.lesson_id) ? 'done'
+      : (current && l.lesson_id === current.lesson_id ? 'current' : 'upcoming'),
   }))
   const selLesson = pathLessons.find(l => l.lesson_id === (selectedId ?? current?.lesson_id)) || null
 
@@ -471,6 +474,7 @@ function LessonPath({ lessons, selectedId, onSelect, lang }) {
           <span className="dl-node-icon">
             {p.status === 'done' ? <Check size={22} strokeWidth={2.6} />
               : p.status === 'current' ? <Star size={22} fill="currentColor" />
+              : p.status === 'locked' ? <Lock size={20} />
               : <Star size={22} />}
           </span>
           {p.status === 'current' && <span className="dl-node-pulse" />}
@@ -526,6 +530,49 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
   const handleReset = () => {
     if (navigator.onLine === false) { alert(t.offlineMode?.sectionTitle || 'Нужен интернет'); return }
     if (window.confirm('Сбросить прогресс урока и пройти заново?')) onReset(id)
+  }
+
+  // Закрытый (дрип) урок — видно, но проходить нельзя. Слова можно посмотреть заранее.
+  if (lesson.status === 'locked') {
+    return (
+      <div className="dl-detail-card">
+        <div className="dl-detail-head" style={{ background: 'var(--surface-2)' }}>
+          <span className="dl-detail-star"><Lock size={16} /></span>
+          <span className="dl-detail-title">{title}</span>
+          <span className="dl-detail-tag">🔒</span>
+        </div>
+        <div style={{ padding: '14px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--gold-dark)', fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
+            <Lock size={15} /> {t.dashboard.lockedLesson || 'Откроется по расписанию'}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+            {t.dashboard.lockedLessonSub || 'Сначала пройди текущий урок — этот откроется следующим. Слова можно посмотреть заранее.'}
+          </div>
+        </div>
+        <div className="dl-detail-controls">
+          <span className="dl-ctrl-words">{t.dashboard.lessonWords} <b>{wordsCount}</b></span>
+          <button className="dl-linklike dl-ctrl-chevron" onClick={toggleWords}>
+            {wordsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+        </div>
+        {wordsOpen && (
+          <div className="dl-word-list">
+            {(!words || !words.length) && <div className="dl-word-empty">—</div>}
+            {words && words.map(w => {
+              const tr = getTranslation(w.translations, lang, w.translation_ru)
+              return (
+                <div key={w.id} className="dl-word-row">
+                  <span title={w.source === 'extra' ? 'Из тетради' : 'Из учебника'} style={{ fontSize: 12, flexShrink: 0 }}>{w.source === 'extra' ? '✏️' : '📖'}</span>
+                  <b>{w.word_de}</b>
+                  <SpeakButton text={w.word_de} size={13} appendText={tr} />
+                  <span className="dl-word-dash">—</span> {tr}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (

@@ -103,6 +103,7 @@
 .dl-node--done { background: var(--gold); color: #fff; box-shadow: 0 4px 10px rgba(140,109,47,0.4); }
 .dl-node--current { background: var(--surface); color: var(--blue); border: 3px solid var(--blue); box-shadow: 0 6px 16px rgba(62,127,193,0.35); }
 .dl-node--upcoming { background: var(--surface); color: var(--gold-dark); border: 2px dashed var(--gold); }
+.dl-node--locked { background: var(--surface-2); color: var(--ink-soft); border: 2px solid var(--line); opacity: .8; }
 .dl-node--selected { box-shadow: 0 0 0 4px rgba(62,127,193,0.28); }
 .dl-node-icon { display: flex; z-index: 2; }
 .dl-node-pulse { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--blue); opacity: .6; animation: dl-pulse 1.8s infinite; }

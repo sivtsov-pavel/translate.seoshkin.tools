@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Globe, Volume2, VolumeX, Star, MessageCircle } from 'lucide-react'
+import { Globe, Volume2, VolumeX, Star, MessageCircle, Moon, SkipForward } from 'lucide-react'
 import { api } from '../api/client.js'
 import { isOnline, getOfflineExercises, answerOffline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -17,6 +17,8 @@ import SpeechExercise from '../components/SpeechExercise.jsx'
 // Порядок типов упражнений в уроке (педагогический, по просьбе Павла):
 // вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение → проговори → диктант
 const TYPE_SEQ = { multiple_choice: 0, flashcard: 1, letter_fill: 2, fill_blank: 3, sentence_write: 4, speech: 5, dictation: 6 }
+// Голосовые/на слух типы — их можно пропустить в «хвосты» (напр. ночью неудобно говорить)
+const VOICE_TYPES = new Set(['speech', 'dictation'])
 
 export default function ExerciseSession() {
   const [exercises, setExercises] = useState([])
@@ -37,6 +39,10 @@ export default function ExerciseSession() {
   const [finished, setFinished]   = useState(false) // сессия закончилась — экран «Продолжить/Готово»
   const [continuing, setContinuing] = useState(false)
   const [lessonDone, setLessonDone] = useState(false) // упражнений на сегодня больше нет — урок пройден
+  const [tails, setTails]         = useState(0)     // «хвосты» — пропущенные упражнения этого урока
+  const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
+  const [quiet, setQuiet]         = useState(() => localStorage.getItem('quiet_mode') === '1') // тихий режим
+  const toggleQuiet = () => setQuiet(v => { localStorage.setItem('quiet_mode', v ? '0' : '1'); return !v })
   const [starred, setStarred]     = useState(() => new Set()) // слова, помеченные «в изучение»
   // Быстрый тумблер озвучки/видео-реакции тренера (тот же флаг, что в Настройках).
   // Выкл — чтобы аватар не проговаривал «Sehr gut» (в т.ч. чтобы микрофон не ловил свою же речь).
@@ -74,15 +80,27 @@ export default function ExerciseSession() {
     const loadOffline = () => getOfflineExercises({ lessonId, type })
     return (isOnline() ? api.get(url).catch(loadOffline) : loadOffline())
       .then(exs => {
-        // Педагогический порядок типов в уроке (просьба Павла): узнавание → продукция → на слух.
-        // вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение →
-        // проговори слова → диктант. Внутри типа порядок сохраняется (стабильная сортировка).
-        const ordered = [...exs].sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
+        let list = [...exs]
+        // Тихий режим: голосовые типы (проговори/диктант) уносим в «хвосты» — если ты не выбрал
+        // их осознанно (type=speech/dictation) и не проходишь сами хвосты.
+        if (quiet && !VOICE_TYPES.has(type) && !inTails) {
+          list.filter(e => VOICE_TYPES.has(e.type)).forEach(e => api.post(`/exercises/${e.id}/defer`, {}).catch(() => {}))
+          list = list.filter(e => !VOICE_TYPES.has(e.type))
+        }
+        // Педагогический порядок типов: вопрос-ответ → флеш → буква → слово → предложение → проговори → диктант
+        const ordered = list.sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
         setExercises(ordered)
         setCurrent(0)
         return ordered
       })
   }
+
+  // Загрузка «хвостов» урока (пропущенные упражнения) — отдельная сессия
+  const loadTails = () => api.get(`/exercises/deferred?lesson_id=${lessonId}`).then(exs => {
+    const ordered = [...(exs || [])].sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
+    setExercises(ordered); setCurrent(0); setInTails(true); setFinished(false); setLessonDone(false)
+    return ordered
+  })
 
   useEffect(() => {
     // Практика по типу (без урока): продолжаем счётчик с места (сколько сделано сегодня).
@@ -106,15 +124,29 @@ export default function ExerciseSession() {
     }
 
     const next = current + 1
-    if (next >= exercises.length) {
-      setDoneOffset(o => o + exercises.length)
-      // Сессия конкретного урока грузит ВСЕ его упражнения → пройдены все, «Продолжить» не нужно
-      // (иначе перезапрос вернёт те же). Практика по типу без урока — SRS-партиями, с «Продолжить».
-      if (lessonId) setLessonDone(true)
-      setFinished(true)
-    } else {
-      setCurrent(next)
+    if (next >= exercises.length) endSession()
+    else setCurrent(next)
+  }
+
+  // Завершение сессии: для урока считаем «хвосты» (пропущенные) — урок пройден, только если их нет.
+  const endSession = async () => {
+    setDoneOffset(o => o + exercises.length)
+    if (lessonId) {
+      let n = 0
+      try { const d = await api.get(`/exercises/deferred?lesson_id=${lessonId}`); n = Array.isArray(d) ? d.length : 0 } catch {}
+      setTails(n)
+      setLessonDone(true) // урок «пройден» по упражнениям; если n>0 — предложим добить хвосты
     }
+    setFinished(true)
+  }
+
+  // Пропустить упражнение в «хвосты» (напр. «проговори слова» ночью)
+  const skipExercise = async () => {
+    const ex = exercises[current]
+    try { await api.post(`/exercises/${ex.id}/defer`, {}) } catch {}
+    const next = current + 1
+    if (next >= exercises.length) endSession()
+    else setCurrent(next)
   }
 
   // «На главную» — со скроллом к своему уроку на дашборде
@@ -138,27 +170,38 @@ export default function ExerciseSession() {
     return (
       <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
-          {/* «Урок пройден» — только когда сделаны ВСЕ упражнения (или сдан зачёт).
-              Пока есть ещё упражнения — говорим про УПРАЖНЕНИЯ, не про урок. */}
-          <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone && (exam || !type) ? '🏆' : '🎉'}</div>
-          <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-            {lessonDone
-              ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
-                 : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
-              : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
-          </div>
-          <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 22px' }}>
-            {lessonDone
-              ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉')
-                 : (type ? (t.exercise.exercisesDoneSub || 'Все упражнения этого типа сделаны.') : (t.exercise.lessonPassedSub || 'Ты прошёл все упражнения урока! 🎉')))
-              : (t.exercise.batchDoneSub || 'Продолжим следующую партию.')}
-          </p>
-          {!lessonDone && (
-            <button onClick={continuePractice} disabled={continuing}
-              style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-              {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'} →`}
-            </button>
-          )}
+          {(() => {
+            const hasTails = lessonDone && tails > 0 && !exam // остались пропущенные (хвосты)
+            return (<>
+              <div style={{ fontSize: 52, marginBottom: 10 }}>{hasTails ? '🧩' : (lessonDone && (exam || !type) ? '🏆' : '🎉')}</div>
+              <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+                {hasTails ? (t.exercise.tailsTitle || 'Почти! Остались хвосты')
+                  : lessonDone
+                    ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
+                       : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
+                    : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
+              </div>
+              <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 22px' }}>
+                {hasTails ? (t.exercise.tailsSub ? t.exercise.tailsSub(tails) : `Ты пропустил ${tails} упр. (проговори/диктант). Пройди их для полного финиша урока.`)
+                  : lessonDone
+                    ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉')
+                       : (type ? (t.exercise.exercisesDoneSub || 'Все упражнения этого типа сделаны.') : (t.exercise.lessonPassedSub || 'Ты прошёл все упражнения урока! 🎉')))
+                    : (t.exercise.batchDoneSub || 'Продолжим следующую партию.')}
+              </p>
+              {hasTails && (
+                <button onClick={() => loadTails()}
+                  style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--gold)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+                  🧩 {t.exercise.doTails || 'Пройти хвосты'} ({tails})
+                </button>
+              )}
+              {!lessonDone && (
+                <button onClick={continuePractice} disabled={continuing}
+                  style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+                  {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'} →`}
+                </button>
+              )}
+            </>)
+          })()}
           <button onClick={goHome}
             style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
             {t.exercise.toHome || 'На главную'}
@@ -181,6 +224,13 @@ export default function ExerciseSession() {
           {doneOffset + current + 1} / {doneOffset + exercises.length}
         </span>
         <span>{typeLabel}</span>
+        {/* Пропустить голосовое (проговори/диктант) в хвосты — если не осознанный выбор типа */}
+        {VOICE_TYPES.has(ex.type) && !exam && type !== ex.type && (
+          <button onClick={skipExercise} title="Пропустить в «хвосты» (пройдёшь позже)"
+            style={{ marginLeft: 10, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--gold)', background: 'var(--yellow-soft)', color: 'var(--gold-dark)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <SkipForward size={13} /> {t.exercise.skip || 'Пропустить'}
+          </button>
+        )}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Учитель: глобус — показать перевод слова на локали ученика (проверка) */}
           {user?.role === 'owner' && (
@@ -201,6 +251,15 @@ export default function ExerciseSession() {
               background: reactionsOn ? 'rgba(62,127,193,0.12)' : 'var(--surface-2)',
               color: reactionsOn ? 'var(--blue)' : 'var(--ink-soft)' }}>
             {reactionsOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          </button>
+          {/* 🌙 Тихий режим — авто-пропуск голосовых (проговори/диктант) в хвосты (для ночи) */}
+          <button onClick={toggleQuiet}
+            title={quiet ? 'Тихий режим вкл — голосовые уходят в хвосты. Нажми, чтобы выключить' : 'Тихий режим — авто-пропуск «проговори/диктант» (удобно ночью)'}
+            style={{ ...hdrBtn, display: 'flex', alignItems: 'center',
+              border: `1px solid ${quiet ? 'var(--gold)' : 'var(--line)'}`,
+              background: quiet ? 'var(--yellow-soft)' : 'var(--surface-2)',
+              color: quiet ? 'var(--gold-dark)' : 'var(--ink-soft)' }}>
+            <Moon size={16} />
           </button>
           {ex.word_id && (
             <button onClick={() => markLearning(ex.word_id)} disabled={starred.has(ex.word_id)}

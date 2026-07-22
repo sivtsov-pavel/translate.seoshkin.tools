@@ -336,6 +336,7 @@ export async function exercisesRoutes(fastify) {
     const target = request.headers['x-target-lang'] || 'de'
     // Для ученика — строгий дрип: только разблокированные уроки; курсы без расписания → needs_schedule
     let needsScheduleCourses = []
+    let playableSet = null // set разблокированных уроков ученика (для отметки закрытых на карте)
     let query, params
     if (role === 'owner') {
       params = [userId, today, target]
@@ -355,6 +356,7 @@ export async function exercisesRoutes(fastify) {
       // Ученик видит готовые уроки СВОЕЙ школы (null-safe: без школы — как раньше, всё)
       const { playable, needsSchedule } = await playableLessonIds(userId, request.user.school_id ?? null, target)
       needsScheduleCourses = needsSchedule
+      playableSet = playable
       params = [userId, today, target, request.user.school_id ?? null, [...playable]]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
@@ -447,6 +449,29 @@ export async function exercisesRoutes(fastify) {
     )
     const lessonsTotal = lessonStats[0]?.total ?? 0
     const lessonsDone  = lessonStats[0]?.done_count ?? 0
+
+    // Ученик: показываем на карте и ЗАКРЫТЫЕ (дрип) уроки — видно, но проходить нельзя (locked).
+    // Разблокированные без упражнений «на сегодня» тоже добавляем (чтобы путь был полным).
+    if (playableSet) {
+      const shownIds = new Set(lessons.map(l => l.lesson_id))
+      const { rows: allLes } = await db.query(
+        `SELECT l.id AS lesson_id, l.title AS lesson_title, l.date AS lesson_date, l.is_set AS is_set, l.course_id,
+                l.description AS lesson_description,
+                COALESCE(l.title_translations,'{}') AS lesson_title_translations,
+                COALESCE(l.description_translations,'{}') AS lesson_description_translations
+         FROM lessons l
+         WHERE l.status='done' AND l.target_lang=$1 AND l.is_set=false AND l.course_id IS NOT NULL
+           AND ($2::int IS NULL OR l.school_id=$2)`,
+        [target, request.user.school_id ?? null])
+      for (const l of allLes) {
+        if (shownIds.has(l.lesson_id)) {
+          const ex = lessons.find(x => x.lesson_id === l.lesson_id); if (ex) ex.locked = false
+        } else {
+          lessons.push({ ...l, is_set: false, total: 0, byType: {}, words_count: 0, locked: !playableSet.has(l.lesson_id) })
+        }
+      }
+      lessons.sort((a, b) => ts(b.lesson_date) - ts(a.lesson_date) || (a.lesson_id - b.lesson_id))
+    }
 
     // Курсы, по которым ученик ещё не выбрал календарь — фронт покажет баннер «Выбери календарь»
     let needsSchedule = []
@@ -611,7 +636,43 @@ export async function exercisesRoutes(fastify) {
       [exerciseId, userId, userAnswer, quality >= 3, quality]
     )
 
+    // Прошёл упражнение → снимаем его из «хвостов» (если было пропущено)
+    await db.query('DELETE FROM exercise_deferrals WHERE user_id=$1 AND exercise_id=$2', [userId, exerciseId])
+
     return { correct: quality >= 3, nextReviewDate }
+  })
+
+  // Пропустить упражнение в «хвосты» (осознанный скип, напр. «проговори слова» ночью)
+  fastify.post('/api/exercises/:id/defer', { preHandler: [fastify.authenticate] }, async (request) => {
+    await db.query(
+      `INSERT INTO exercise_deferrals (user_id, exercise_id) VALUES ($1, $2)
+       ON CONFLICT (user_id, exercise_id) DO NOTHING`,
+      [request.user.id, parseInt(request.params.id)])
+    return { ok: true }
+  })
+
+  // «Хвосты»: пропущенные упражнения. ?lesson_id — по уроку (полные строки для сессии хвостов);
+  // без него — счётчики по урокам (для дашборда).
+  fastify.get('/api/exercises/deferred', { preHandler: [fastify.authenticate] }, async (request) => {
+    const userId = request.user.id
+    const lessonId = request.query?.lesson_id ? parseInt(request.query.lesson_id) : null
+    if (lessonId) {
+      const { rows } = await db.query(
+        `SELECT e.id, e.lesson_id, e.word_id, e.type, e.payload, e.payload_translations, e.image_url,
+                w.translations, w.translation_ru, l.title AS lesson_title, l.title_translations AS lesson_title_translations
+         FROM exercise_deferrals d
+         JOIN exercises e ON e.id = d.exercise_id
+         JOIN lessons l ON l.id = e.lesson_id
+         LEFT JOIN words w ON w.id = e.word_id
+         WHERE d.user_id = $1 AND e.lesson_id = $2
+         ORDER BY e.id`, [userId, lessonId])
+      return rows
+    }
+    const { rows } = await db.query(
+      `SELECT e.lesson_id, count(*)::int AS cnt
+       FROM exercise_deferrals d JOIN exercises e ON e.id = d.exercise_id
+       WHERE d.user_id = $1 GROUP BY e.lesson_id`, [userId])
+    return rows
   })
 
   // Проверка предложения через Claude + per-user SRS

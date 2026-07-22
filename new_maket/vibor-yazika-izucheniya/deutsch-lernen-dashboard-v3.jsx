@@ -1,0 +1,825 @@
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+
+/* ------------------------------------------------------------------
+   v3 — финальная версия:
+   - убран переключатель Вариант A / B, оставлена только раскладка A
+   - все эмодзи-иконки заменены на единый набор линейных SVG-иконок (Icon)
+     (в реальном проекте компонент Icon можно 1:1 заменить на lucide-react)
+------------------------------------------------------------------- */
+
+const COURSES = [
+  { id: "de", label: "Немецкий", flag: "🇩🇪", stripe: ["#1a1a1a", "#d00", "#ffce00"] },
+  { id: "en", label: "Английский", flag: "🇬🇧", stripe: ["#00247d", "#fff", "#cf142b"] },
+  { id: "es", label: "Испанский", flag: "🇪🇸", stripe: ["#aa151b", "#f1bf00", "#aa151b"] },
+  { id: "fr", label: "Французский", flag: "🇫🇷", stripe: ["#0055a4", "#fff", "#ef4135"] },
+];
+
+/* ================= ICON SET (заменяет эмодзи) ================= */
+
+function Icon({ name, size = 20, className = "" }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", className };
+  switch (name) {
+    case "book": return <svg {...p}><path d="M4 6c0-1.1.9-2 2-2h5v15H6c-1.1 0-2-.9-2-2V6Z" /><path d="M20 6c0-1.1-.9-2-2-2h-5v15h5c1.1 0 2-.9 2-2V6Z" /></svg>;
+    case "zap": return <svg {...p} fill="currentColor" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" /></svg>;
+    case "flame": return <svg {...p} fill="currentColor" stroke="none"><path d="M12 2c1 3-3 4.2-3 8.2a3 3 0 0 0 6 0c0-1-.4-1.8-.9-2.4 1 .5 2.9 2 2.9 5.2a5 5 0 0 1-10 0c0-5.3 4.3-6.3 5-11Z" /></svg>;
+    case "play": return <svg {...p} fill="currentColor" stroke="none"><path d="M7 4.5v15l13-7.5Z" /></svg>;
+    case "sparkles": return <svg {...p} fill="currentColor" stroke="none"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z" /><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" /></svg>;
+    case "message": return <svg {...p}><path d="M21 12c0 4.4-4 8-9 8-1.4 0-2.7-.3-3.9-.8L3 20l1-4.2C3.4 14.6 3 13.3 3 12c0-4.4 4-8 9-8s9 3.6 9 8Z" /></svg>;
+    case "heart": return <svg {...p} fill="currentColor" stroke="none"><path d="M12 21s-7-4.5-9.5-9C1 8.5 2 5 5.5 5c2 0 3.3 1.2 4 2.2.7-1 2-2.2 4-2.2 3.5 0 4.5 3.5 3 7-2.5 4.5-9.5 9-9.5 9Z" /></svg>;
+    case "arrowRight": return <svg {...p}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+    case "checkCircle": return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9" /></svg>;
+    case "layers": return <svg {...p}><path d="M12 3 3 8l9 5 9-5-9-5Z" /><path d="M3 12l9 5 9-5" /><path d="M3 16l9 5 9-5" /></svg>;
+    case "puzzle": return <svg {...p}><path d="M4 4h6a3 3 0 0 1 6 0h4v6a3 3 0 0 1 0 6v4h-4a3 3 0 0 1-6 0H4v-4a3 3 0 0 1 0-6V4Z" /></svg>;
+    case "editPlus": return <svg {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" /></svg>;
+    case "gamepad": return <svg {...p}><path d="M8 6h8a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4c-.8 0-1.4-.4-2-1l-1-1H11l-1 1c-.6.6-1.2 1-2 1a4 4 0 0 1-4-4v-4a4 4 0 0 1 4-4Z" /><path d="M8 11v2M7 12h2" /><circle cx="15" cy="10.5" r=".6" fill="currentColor" /><circle cx="17.2" cy="12.5" r=".6" fill="currentColor" /></svg>;
+    case "search": return <svg {...p}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>;
+    case "volume": return <svg {...p}><path d="M4 9v6h4l5 5V4L8 9H4Z" /><path d="M16.5 8a5 5 0 0 1 0 8" /></svg>;
+    case "refresh": return <svg {...p}><path d="M20 11A8 8 0 0 0 6.3 6.3L4 8.6" /><path d="M4 4v4.6h4.6" /><path d="M4 13a8 8 0 0 0 13.7 4.7L20 15.4" /><path d="M20 20v-4.6h-4.6" /></svg>;
+    case "pencil": return <svg {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" /></svg>;
+    case "chevronUp": return <svg {...p}><path d="M18 15l-6-6-6 6" /></svg>;
+    case "chevronDown": return <svg {...p}><path d="M6 9l6 6 6-6" /></svg>;
+    case "check": return <svg {...p} strokeWidth="2.6"><path d="M5 13l4 4L19 7" /></svg>;
+    case "star": return <svg {...p} fill="currentColor" stroke="none"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2Z" /></svg>;
+    case "starOutline": return <svg {...p}><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2Z" /></svg>;
+    case "mic": return <svg {...p}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><path d="M12 19v4M8 23h8" /></svg>;
+    case "speaker": return <svg {...p}><path d="M4 9v6h4l5 5V4L8 9H4Z" /></svg>;
+    case "moon": return <svg {...p} fill="currentColor" stroke="none"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>;
+    case "globe": return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>;
+    case "settings": return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>;
+    case "logout": return <svg {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>;
+    case "home": return <svg {...p}><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /></svg>;
+    case "backpack": return <svg {...p}><path d="M8 3h8v3H8z" /><path d="M6 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V8Z" /><path d="M9 12h6" /></svg>;
+    case "bookOpen": return <svg {...p}><path d="M12 6c-2-1-5-1-7 0v13c2-1 5-1 7 0 2-1 5-1 7 0V6c-2-1-5-1-7 0Z" /><path d="M12 6v13" /></svg>;
+    case "bot": return <svg {...p}><rect x="4" y="8" width="16" height="11" rx="2" /><circle cx="9" cy="13.2" r="1.1" fill="currentColor" stroke="none" /><circle cx="15" cy="13.2" r="1.1" fill="currentColor" stroke="none" /><path d="M12 8V4M9 4h6" /></svg>;
+    case "glasses": return <svg {...p}><circle cx="6" cy="14" r="3" /><circle cx="18" cy="14" r="3" /><path d="M9 14h6M3 12l1-5a2 2 0 0 1 2-1M21 12l-1-5a2 2 0 0 0-2-1" /></svg>;
+    case "library": return <svg {...p}><path d="M5 21V4a1 1 0 0 1 1-1h3v18H6a1 1 0 0 1-1-1Z" /><path d="M11 3h3v18h-3z" /><path d="M17.3 3.3l2.9.8-4.7 17.4-2.9-.8Z" /></svg>;
+    case "graduationCap": return <svg {...p}><path d="M22 10 12 5 2 10l10 5 10-5Z" /><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" /></svg>;
+    case "camera": return <svg {...p} viewBox="0 0 48 48" width={size * 1.6} height={size * 1.6}><rect x="6" y="16" width="36" height="24" rx="4" strokeWidth="2.4" /><rect x="17" y="10" width="14" height="7" rx="2" fill="currentColor" stroke="none" /><circle cx="24" cy="28" r="8" strokeWidth="2.4" /><circle cx="24" cy="28" r="3.2" fill="currentColor" stroke="none" /><circle cx="35" cy="21" r="1.6" fill="currentColor" stroke="none" /></svg>;
+    default: return null;
+  }
+}
+
+const EXERCISES_TEMPLATE = [
+  { icon: "checkCircle", count: 2, label: "Выбери ответ" },
+  { icon: "layers", count: 2, label: "Флеш-карта" },
+  { icon: "abc", count: 2, label: "Добавь букву" },
+  { icon: "pencil", count: 2, label: "Заполни пропуск" },
+  { icon: "editPlus", count: 2, label: "Напиши предложение" },
+  { icon: "message", count: 3, label: "Проговори слова" },
+  { icon: "mic", count: 3, label: "Диктант" },
+  { icon: "message", count: null, label: "Произношение с тренером", special: true },
+];
+
+const PATH_LESSONS = [
+  {
+    id: "l1", title: "Первые шаги и приветствия", status: "done", tag: "пройдено",
+    pending: 0, wordsCount: 15,
+    exercises: EXERCISES_TEMPLATE,
+    words: [
+      { de: "Hallo", ru: "привет" },
+      { de: "Tschüss", ru: "пока" },
+      { de: "Danke", ru: "спасибо" },
+    ],
+  },
+  {
+    id: "l2", title: "Общение и язык", status: "done", tag: "пройдено",
+    pending: 0, wordsCount: 18,
+    exercises: EXERCISES_TEMPLATE,
+    words: [
+      { de: "die Muttersprache", ru: "родной язык" },
+      { de: "buchstabieren", ru: "называть по буквам" },
+      { de: "fragen", ru: "спрашивать" },
+    ],
+  },
+  {
+    id: "l3", title: "Физиотерапия, еда и цвета", status: "current", tag: "в процессе",
+    pending: 53, wordsCount: 22,
+    exercises: [
+      { icon: "editPlus", count: 9, label: "Напиши предложение" },
+      { icon: "message", count: 22, label: "Проговори слова" },
+      { icon: "mic", count: 22, label: "Диктант" },
+      { icon: "message", count: null, label: "Произношение с тренером", special: true },
+    ],
+    words: [
+      { de: "die Physiotherapie", ru: "физиотерапия" },
+      { de: "das Mittagessen", ru: "обед" },
+      { de: "das Abendessen", ru: "ужин" },
+      { de: "die Station", ru: "станция / отделение" },
+    ],
+  },
+  {
+    id: "l4", title: "Города, улицы и буквы", status: "upcoming", tag: "новое",
+    pending: 122, wordsCount: 25, exercises: EXERCISES_TEMPLATE, words: [],
+  },
+  {
+    id: "l5", title: "Спорт, языки и учёба", status: "upcoming", tag: "новое",
+    pending: 152, wordsCount: 40, exercises: EXERCISES_TEMPLATE, words: [],
+  },
+  {
+    id: "l6", title: "Покупки", status: "upcoming", tag: "новое",
+    pending: 16, wordsCount: 3,
+    exercises: EXERCISES_TEMPLATE,
+    words: [
+      { de: "das Geld", ru: "деньги" },
+      { de: "bestellen", ru: "заказывать" },
+      { de: "einkaufen", ru: "делать покупки" },
+    ],
+  },
+];
+
+const GAMES_LIST = [
+  { id: "g1", icon: "checkCircle", title: "Выбери ответ", sub: "Тест по всем словам" },
+  { id: "g2", icon: "layers", title: "Все карточки", sub: "Флеш-карты по всем урокам" },
+  { id: "g3", icon: "layers", title: "Словопара", sub: "Найди пары слов — 8 пар, таймер", badge: "NEW" },
+  { id: "g4", icon: "puzzle", title: "Кроссворд", sub: "Впиши слова по переводам", badge: "NEW" },
+  { id: "g5", icon: "editPlus", title: "+ создать набор", sub: "Собери набор упражнений из нужных слов словаря", dashed: true },
+  { id: "g6", icon: "gamepad", title: "Игра класса", sub: "Готова — читаем фразы урока по очереди", badge: "ГОТОВА" },
+];
+
+const FEATURE_CARDS = [
+  { id: "trainer", icon: "sparkles", title: "Hallo! Ich bin Pablo", sub: "Поговорим — голосом или текстом", tone: "trainer", corner: "message" },
+  { id: "love", icon: "heart", title: "Любовь к детям", sub: "Тёплые фразы для детей — с любовью", tone: "love", corner: "arrowRight" },
+];
+
+const SETS_DEMO = [
+  { id: "s1", title: "Ресторан", count: 12 },
+  { id: "s2", title: "Врач и больница", count: 9 },
+];
+
+const MENU_ITEMS = [
+  { icon: "home", label: "Сегодня" },
+  { icon: "backpack", label: "Наборы" },
+  { icon: "bookOpen", label: "Словарь" },
+  { icon: "bot", label: "AI тренер" },
+  { icon: "glasses", label: "Читалка" },
+  { icon: "library", label: "Книги" },
+  { icon: "message", label: "Разговорник" },
+  { icon: "graduationCap", label: "Грамматика" },
+];
+
+export default function App() {
+  const [screen, setScreen] = useState("gate"); // 'gate' | 'app'
+  const [courseId, setCourseId] = useState("de");
+  const [hasToured, setHasToured] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [setsOn, setSetsOn] = useState(false);
+  const [tourStep, setTourStep] = useState(-1);
+  const [selectedLessonId, setSelectedLessonId] = useState("l3");
+
+  const activeCourse = COURSES.find((c) => c.id === courseId);
+
+  const hamburgerRef = useRef(null);
+  const metricsRef = useRef(null);
+  const featuresRef = useRef(null);
+  const pathRef = useRef(null);
+  const setsToggleRef = useRef(null);
+  const profileRef = useRef(null);
+
+  const tourSteps = [
+    { ref: hamburgerRef, title: "Меню", text: "Здесь весь список разделов: словарь, читалка, грамматика и остальное." },
+    { ref: metricsRef, title: "Прогресс дня", text: "Урок и слова — два независимых счётчика, видно сразу без скролла." },
+    { ref: featuresRef, title: "Тренер, игры, поиск", text: "Всё, что было раньше — тренер, «Любовь к детям», игры и поиск урока — осталось на месте." },
+    { ref: pathRef, title: "Путь уроков", text: "Прокрути вниз — уроки идут ниткой. Тапни по кружку — раскроется вся карточка урока: упражнения, зачёт, слова." },
+    { ref: setsToggleRef, title: "Наборы", text: "Скрыты по умолчанию — включай, только когда собираешь свою подборку." },
+    { ref: profileRef, title: "Профиль", text: "Тут тема, язык интерфейса и выход из аккаунта." },
+  ];
+
+  const selectCourse = (id) => {
+    setCourseId(id);
+    setScreen("app");
+    if (!hasToured) {
+      setTimeout(() => setTourStep(0), 450);
+      setHasToured(true);
+    }
+  };
+
+  const nextTourStep = () => {
+    if (tourStep < tourSteps.length - 1) setTourStep(tourStep + 1);
+    else setTourStep(-1);
+  };
+
+  return (
+    <div className="dl-root">
+      <style>{css}</style>
+
+      <div className={"dl-app" + (screen === "gate" ? " dl-app--blurred" : "")}>
+        {/* ---------- TOPBAR ---------- */}
+        <div className="dl-topbar">
+          <button className="dl-icon-btn" ref={hamburgerRef} onClick={() => setMenuOpen(true)} aria-label="Меню">
+            <span className="dl-burger" />
+          </button>
+          <div className="dl-course-label">
+            <span>{activeCourse.flag}</span> {activeCourse.label}
+            <span className="dl-stripe-mini" style={{ background: `linear-gradient(90deg, ${activeCourse.stripe.join(",")})` }} />
+          </div>
+          <button className="dl-switch-course" onClick={() => setScreen("gate")}>Сменить курс</button>
+        </div>
+
+        {/* ---------- ЭКРАН 1: HERO / МЕТРИКИ ---------- */}
+        <section className="dl-hero">
+          <div className="dl-greeting">Привет, Pablo <span className="dl-wave">👋</span></div>
+          <p className="dl-greeting-sub">3821 упражнений ждут повторения</p>
+
+          <div className="dl-metrics" ref={metricsRef}>
+            <MetricCard icon="book" title="Обучение по урокам" value={2} total={14} color="var(--blue)" />
+            <MetricCard icon="zap" title="Усиление знаний · слова" value={3} total={892} color="var(--teal)" />
+          </div>
+
+          <div className="dl-stats-trio">
+            <div className="dl-stat"><b>276</b><span>карточек сегодня</span></div>
+            <div className="dl-stat"><b>523</b><span>всего карточек</span></div>
+            <div className="dl-stat dl-stat--fire"><b><Icon name="flame" size={15} className="dl-inline-icon" />3</b><span>дней подряд</span></div>
+          </div>
+
+          <button className="dl-repeat-big"><Icon name="play" size={16} /> Повторить всё <span>3821</span></button>
+        </section>
+
+        {/* ---------- ТРЕНЕР / ИГРЫ / ПОИСК ---------- */}
+        <section className="dl-features" ref={featuresRef}>
+          <div className="dl-eyebrow dl-eyebrow--block">Тренер</div>
+          {FEATURE_CARDS.map((c) => (
+            <div key={c.id} className={`dl-feature-card dl-feature-card--${c.tone}`}>
+              <span className="dl-feature-avatar"><Icon name={c.icon} size={20} /></span>
+              <div className="dl-feature-text">
+                <div className="dl-feature-title">{c.title}</div>
+                <div className="dl-feature-sub">{c.sub}</div>
+              </div>
+              <span className="dl-feature-corner"><Icon name={c.corner} size={17} /></span>
+            </div>
+          ))}
+
+          <div className="dl-eyebrow dl-eyebrow--block">Игры</div>
+          <div className="dl-games-grid">
+            {GAMES_LIST.slice(0, 2).map((g) => (
+              <GameTile key={g.id} game={g} />
+            ))}
+          </div>
+          <div className="dl-games-list">
+            {GAMES_LIST.slice(2).map((g) => (
+              <GameRow key={g.id} game={g} />
+            ))}
+          </div>
+
+          <div className="dl-search">
+            <Icon name="search" size={17} />
+            <input placeholder="Поиск урока по теме…" />
+          </div>
+
+          <div className="dl-scrollcue">
+            <span>Уроки ниже</span>
+            <Icon name="chevronDown" size={16} className="dl-scrollcue-arrow" />
+          </div>
+        </section>
+
+        {/* ---------- ЭКРАН 2: ПУТЬ УРОКОВ + НАБОРЫ ---------- */}
+        <section className="dl-screen2">
+          <div className="dl-section-head">
+            <span className="dl-eyebrow">Путь урока</span>
+            <span className="dl-stripe-thin" style={{ background: `linear-gradient(90deg, ${activeCourse.stripe.join(",")})` }} />
+          </div>
+
+          <LessonPath
+            lessons={PATH_LESSONS}
+            innerRef={pathRef}
+            selectedId={selectedLessonId}
+            onSelect={(id) => setSelectedLessonId(id === selectedLessonId ? null : id)}
+          />
+
+          {selectedLessonId && (
+            <LessonDetailCard lesson={PATH_LESSONS.find((l) => l.id === selectedLessonId)} />
+          )}
+
+          <div className="dl-sets-toggle-row" ref={setsToggleRef}>
+            <div>
+              <div className="dl-sets-toggle-title">Наборы</div>
+              <div className="dl-sets-toggle-sub">Твои подборки слов для точечной тренировки</div>
+            </div>
+            <label className="dl-switch">
+              <input type="checkbox" checked={setsOn} onChange={(e) => setSetsOn(e.target.checked)} />
+              <span className="dl-switch-track"><span className="dl-switch-thumb" /></span>
+            </label>
+          </div>
+
+          {setsOn && (
+            <div className="dl-sets-list">
+              {SETS_DEMO.map((s) => (
+                <div key={s.id} className="dl-set-card">
+                  <span>{s.title}</span>
+                  <span className="dl-set-count">{s.count}</span>
+                </div>
+              ))}
+              <button className="dl-set-add"><Icon name="editPlus" size={15} /> создать набор</button>
+            </div>
+          )}
+        </section>
+
+        {/* ---------- ГАМБУРГЕР-МЕНЮ ---------- */}
+        {menuOpen && (
+          <div className="dl-drawer-overlay" onClick={() => setMenuOpen(false)}>
+            <div className="dl-drawer" onClick={(e) => e.stopPropagation()}>
+              <div className="dl-drawer-head">
+                <span>{activeCourse.flag} {activeCourse.label}</span>
+                <button className="dl-drawer-close" onClick={() => setMenuOpen(false)}>✕</button>
+              </div>
+              {MENU_ITEMS.map((m) => (
+                <div key={m.label} className="dl-drawer-item">
+                  <span className="dl-drawer-icon"><Icon name={m.icon} size={18} /></span>{m.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ---------- ПЛАВАЮЩИЕ КНОПКИ: КАМЕРА + АВАТАР ---------- */}
+        <div className="dl-fab-stack">
+          <button className="dl-camera-fab" aria-label="Сканировать слово">
+            <Icon name="camera" size={17} />
+          </button>
+          <button
+            className="dl-avatar-fab"
+            ref={profileRef}
+            onClick={() => setProfileOpen((v) => !v)}
+            aria-label="Настройки профиля"
+          >
+            P
+          </button>
+        </div>
+
+        {profileOpen && (
+          <div className="dl-profile-pop">
+            <div className="dl-profile-user">
+              <div className="dl-profile-avatar">P</div>
+              <div>
+                <div className="dl-profile-name">pablo.seoshkin</div>
+                <div className="dl-profile-role">Ученик</div>
+              </div>
+            </div>
+            <div className="dl-profile-row"><Icon name="moon" size={16} /> Тёмная тема</div>
+            <div className="dl-profile-row"><Icon name="globe" size={16} /> Язык интерфейса · RU</div>
+            <div className="dl-profile-row"><Icon name="settings" size={16} /> Настройки аккаунта</div>
+            <div className="dl-profile-row dl-profile-row--danger"><Icon name="logout" size={16} /> Выйти</div>
+          </div>
+        )}
+      </div>
+
+      {/* ---------- ГЕЙТ ВЫБОРА КУРСА ---------- */}
+      {screen === "gate" && (
+        <div className="dl-gate">
+          <div className="dl-gate-panel">
+            <div className="dl-gate-eyebrow">Выбери язык</div>
+            <h1 className="dl-gate-title">Какой курс продолжим?</h1>
+            <div className="dl-gate-grid">
+              {COURSES.map((c) => (
+                <button key={c.id} className="dl-gate-tile" onClick={() => selectCourse(c.id)}>
+                  <span className="dl-flag">{c.flag}</span>
+                  <span className="dl-gate-tile-label">{c.label}</span>
+                  <span className="dl-stripe" style={{ background: `linear-gradient(90deg, ${c.stripe.join(",")})` }} />
+                </button>
+              ))}
+            </div>
+            <p className="dl-gate-hint">Курс всегда можно сменить кнопкой сверху</p>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- ТУР ---------- */}
+      {tourStep >= 0 && screen === "app" && (
+        <TourOverlay step={tourSteps[tourStep]} stepIndex={tourStep} total={tourSteps.length} onNext={nextTourStep} onSkip={() => setTourStep(-1)} />
+      )}
+    </div>
+  );
+}
+
+/* ================= METRIC CARD ================= */
+
+function MetricCard({ icon, title, value, total, color }) {
+  const pct = Math.max(4, Math.round((value / total) * 100));
+  return (
+    <div className="dl-metric-card">
+      <div className="dl-metric-top">
+        <span className="dl-metric-icon" style={{ color }}><Icon name={icon} size={17} /></span>
+        <span className="dl-metric-title">{title}</span>
+      </div>
+      <div className="dl-metric-bar-track">
+        <div className="dl-metric-bar-fill" style={{ width: pct + "%", background: color }} />
+      </div>
+      <div className="dl-metric-count">{value} / {total}</div>
+    </div>
+  );
+}
+
+/* ================= GAME TILES / ROWS ================= */
+
+function GameTile({ game }) {
+  return (
+    <div className="dl-game-tile">
+      <span className="dl-game-tile-icon"><Icon name={game.icon} size={19} /></span>
+      <div className="dl-game-tile-title">{game.title}</div>
+      <div className="dl-game-tile-sub">{game.sub}</div>
+    </div>
+  );
+}
+
+function GameRow({ game }) {
+  return (
+    <div className={"dl-game-row" + (game.dashed ? " dl-game-row--dashed" : "")}>
+      <span className="dl-game-row-icon"><Icon name={game.icon} size={18} /></span>
+      <div className="dl-game-row-text">
+        <div className="dl-game-row-title">{game.title}</div>
+        <div className="dl-game-row-sub">{game.sub}</div>
+      </div>
+      {game.badge && <span className={"dl-badge" + (game.badge === "ГОТОВА" ? " dl-badge--ready" : "")}>{game.badge}</span>}
+    </div>
+  );
+}
+
+/* ================= LESSON PATH (нитка) ================= */
+
+function LessonPath({ lessons, innerRef, selectedId, onSelect }) {
+  const NODE = 64;
+  const GAP_Y = 118;
+  const xPattern = [0, -78, 74, -46, 52, 0, -70];
+
+  const points = useMemo(
+    () =>
+      lessons.map((l, i) => ({
+        ...l,
+        x: 160 + xPattern[i % xPattern.length],
+        y: 50 + i * GAP_Y,
+      })),
+    [lessons]
+  );
+
+  const pathD = useMemo(() => {
+    if (points.length < 2) return "";
+    let d = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const p0 = points[i - 1];
+      const p1 = points[i];
+      const midY = (p0.y + p1.y) / 2;
+      d += ` C ${p0.x} ${midY}, ${p1.x} ${midY}, ${p1.x} ${p1.y}`;
+    }
+    return d;
+  }, [points]);
+
+  const height = points[points.length - 1].y + 90;
+
+  return (
+    <div className="dl-path" ref={innerRef} style={{ height }}>
+      <svg className="dl-path-svg" viewBox={`0 0 320 ${height}`} preserveAspectRatio="none">
+        <path d={pathD} className="dl-thread-bg" />
+        <path
+          d={pathD}
+          className="dl-thread-done"
+          style={{
+            strokeDasharray: 2000,
+            strokeDashoffset: 2000 - (2000 * (points.filter((p) => p.status === "done").length + 0.5)) / points.length,
+          }}
+        />
+      </svg>
+
+      {points.map((p) => (
+        <button
+          key={p.id}
+          className={`dl-node dl-node--${p.status}` + (p.id === selectedId ? " dl-node--selected" : "")}
+          style={{ left: p.x - NODE / 2, top: p.y - NODE / 2, width: NODE, height: NODE }}
+          title={p.title}
+          onClick={() => onSelect(p.id)}
+        >
+          <span className="dl-node-icon">
+            <Icon name={p.status === "done" ? "check" : p.status === "current" ? "star" : "starOutline"} size={22} />
+          </span>
+          {p.status === "current" && <span className="dl-node-pulse" />}
+          <span className="dl-node-label">{p.title}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ================= LESSON DETAIL CARD (ничего не выброшено) ================= */
+
+function LessonDetailCard({ lesson }) {
+  const [exOpen, setExOpen] = useState(true);
+  const [wordsOpen, setWordsOpen] = useState(false);
+
+  return (
+    <div className="dl-detail-card">
+      <div className="dl-detail-head">
+        <span className="dl-detail-star"><Icon name="starOutline" size={16} /></span>
+        <span className="dl-detail-title">{lesson.title}</span>
+        <span className={"dl-detail-tag" + (lesson.tag === "пройдено" ? " dl-detail-tag--done" : "")}>{lesson.tag}</span>
+      </div>
+
+      <div className="dl-detail-sub">
+        {lesson.pending} упражнений ждут повторения{" "}
+        <button className="dl-linklike" onClick={() => setExOpen(!exOpen)}>
+          <Icon name={exOpen ? "chevronUp" : "chevronDown"} size={13} className="dl-inline-icon" />
+          {exOpen ? "свернуть" : "упражнения"}
+        </button>
+      </div>
+
+      {exOpen && (
+        <>
+          <div className="dl-ex-grid">
+            {lesson.exercises.map((ex, i) => (
+              <div key={i} className={"dl-ex-btn" + (ex.special ? " dl-ex-btn--special" : "")}>
+                <span className="dl-ex-icon">{ex.icon === "abc" ? <span className="dl-ex-abc">abc</span> : <Icon name={ex.icon} size={16} />}</span>
+                {ex.count != null && <span className="dl-ex-count">{ex.count}</span>}
+                <span className="dl-ex-label">{ex.label}</span>
+              </div>
+            ))}
+          </div>
+          <button className="dl-pass-btn"><Icon name="checkCircle" size={16} /> Зачёт по уроку</button>
+        </>
+      )}
+
+      <div className="dl-detail-controls">
+        <button className="dl-ctrl-btn"><Icon name="volume" size={15} /> Прослушать</button>
+        <button className="dl-ctrl-btn"><Icon name="refresh" size={15} /> Сбросить</button>
+        <button className="dl-ctrl-pencil"><Icon name="pencil" size={14} /> {lesson.pending}</button>
+        <span className="dl-ctrl-words">Слова урока <b>{lesson.wordsCount}</b></span>
+        <button className="dl-linklike dl-ctrl-chevron" onClick={() => setWordsOpen(!wordsOpen)}>
+          <Icon name={wordsOpen ? "chevronUp" : "chevronDown"} size={15} />
+        </button>
+      </div>
+
+      {wordsOpen && (
+        <div className="dl-word-list">
+          {lesson.words.length === 0 && <div className="dl-word-empty">Слова появятся, когда откроешь урок целиком</div>}
+          {lesson.words.map((w, i) => (
+            <div key={i} className="dl-word-row">
+              <b>{w.de}</b> <Icon name="speaker" size={13} className="dl-word-speaker" /> <span className="dl-word-dash">—</span> {w.ru}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================= TOUR OVERLAY ================= */
+
+function TourOverlay({ step, stepIndex, total, onNext, onSkip }) {
+  const [rect, setRect] = useState(null);
+
+  const measure = useCallback(() => {
+    if (step?.ref?.current) setRect(step.ref.current.getBoundingClientRect());
+  }, [step]);
+
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [measure]);
+
+  if (!rect) return null;
+
+  const pad = 8;
+  const highlightStyle = { top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 };
+  const tooltipStyle = {
+    top: Math.min(rect.bottom + 16, window.innerHeight - 190),
+    left: Math.max(16, Math.min(rect.left, window.innerWidth - 316)),
+  };
+
+  return (
+    <div className="dl-tour">
+      <div className="dl-tour-highlight" style={highlightStyle} />
+      <div className="dl-tour-card" style={tooltipStyle}>
+        <div className="dl-tour-dots">
+          {Array.from({ length: total }).map((_, i) => (
+            <span key={i} className={"dl-dot" + (i === stepIndex ? " dl-dot--active" : "")} />
+          ))}
+        </div>
+        <h3>{step.title}</h3>
+        <p>{step.text}</p>
+        <div className="dl-tour-actions">
+          <button className="dl-tour-skip" onClick={onSkip}>Пропустить</button>
+          <button className="dl-tour-next" onClick={onNext}>{stepIndex === total - 1 ? "Готово" : "Далее"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= CSS ================= */
+
+const css = `
+:root{
+  --cream:#F6F1E7; --card:#FFFFFF; --ink:#2B2A28; --muted:#8A8477;
+  --gold:#B9975B; --gold-dark:#8C6D2F; --blue:#3E7FC1; --blue-dark:#2F65A0;
+  --teal:#2F9E8F; --yellow-soft:#F6E7A6; --line:rgba(43,42,40,0.09);
+  --shadow:0 6px 20px rgba(43,42,40,0.10);
+  font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+.dl-root{ position:relative; min-height:600px; background:var(--cream); }
+.dl-app{ max-width:520px; margin:0 auto; padding-bottom:60px; transition:filter .35s ease; }
+.dl-app--blurred{ filter:blur(6px) saturate(0.9); pointer-events:none; user-select:none; }
+.dl-inline-icon{ vertical-align:-2px; margin-right:3px; }
+
+/* gate */
+.dl-gate{ position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 30% 20%, rgba(185,151,91,0.35), rgba(43,42,40,0.55) 65%); backdrop-filter: blur(2px); }
+.dl-gate-panel{ width:min(440px, 90vw); background:rgba(255,255,255,0.72); backdrop-filter: blur(18px); border-radius:24px;
+  padding:36px 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.6); text-align:center; }
+.dl-gate-eyebrow{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-dark); font-weight:700; margin-bottom:8px; }
+.dl-gate-title{ font-family: Georgia, "Iowan Old Style", serif; font-size:24px; margin:0 0 26px; color:var(--ink); }
+.dl-gate-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.dl-gate-tile{ position:relative; background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px 10px 16px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:8px; transition:transform .18s ease, box-shadow .18s ease; overflow:hidden; }
+.dl-gate-tile:hover{ transform:translateY(-3px) rotate(-0.5deg); box-shadow:0 10px 24px rgba(0,0,0,0.14); }
+.dl-flag{ font-size:30px; }
+.dl-gate-tile-label{ font-size:13.5px; font-weight:600; color:var(--ink); }
+.dl-stripe{ position:absolute; bottom:0; left:0; right:0; height:4px; }
+.dl-gate-hint{ margin-top:20px; font-size:11.5px; color:var(--muted); }
+
+/* topbar */
+.dl-topbar{ display:flex; align-items:center; gap:12px; padding:14px 18px; position:sticky; top:0; background:var(--cream); z-index:20; }
+.dl-icon-btn{ width:38px; height:38px; border-radius:11px; background:var(--card); border:none; box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.dl-burger, .dl-burger::before, .dl-burger::after{ content:""; display:block; width:16px; height:2px; background:var(--ink); border-radius:2px; }
+.dl-burger{ position:relative; }
+.dl-burger::before{ position:absolute; top:-5px; }
+.dl-burger::after{ position:absolute; top:5px; }
+.dl-course-label{ position:relative; flex:1; font-weight:700; font-size:14px; color:var(--ink); font-family:Georgia,serif; }
+.dl-stripe-mini{ display:block; height:3px; width:34px; border-radius:2px; margin-top:4px; }
+.dl-switch-course{ font-size:12px; background:var(--card); border:none; color:var(--blue); font-weight:600; padding:8px 12px; border-radius:10px; box-shadow:var(--shadow); cursor:pointer; }
+
+/* hero */
+.dl-hero{ padding:6px 22px 20px; }
+.dl-greeting{ font-family:Georgia,"Iowan Old Style",serif; font-size:26px; color:var(--ink); }
+.dl-wave{ display:inline-block; animation:wave 1.8s infinite; transform-origin:70% 70%; }
+@keyframes wave{ 0%,100%{transform:rotate(0)} 20%{transform:rotate(14deg)} 40%{transform:rotate(-8deg)} 60%{transform:rotate(14deg)} }
+.dl-greeting-sub{ margin:4px 0 22px; font-size:13px; color:var(--muted); }
+
+.dl-metrics{ display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.dl-metric-card{ background:var(--card); border-radius:16px; padding:14px 16px; box-shadow:var(--shadow); }
+.dl-metric-top{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+.dl-metric-icon{ display:flex; }
+.dl-metric-title{ font-size:13px; font-weight:700; color:var(--ink); }
+.dl-metric-bar-track{ height:7px; background:var(--cream); border-radius:6px; overflow:hidden; }
+.dl-metric-bar-fill{ height:100%; border-radius:6px; transition:width .4s ease; }
+.dl-metric-count{ margin-top:6px; font-size:11.5px; color:var(--muted); }
+
+.dl-stats-trio{ display:flex; gap:10px; margin-bottom:20px; }
+.dl-stat{ flex:1; background:var(--card); border-radius:14px; padding:12px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:3px; text-align:center; }
+.dl-stat b{ font-size:17px; color:var(--ink); display:flex; align-items:center; justify-content:center; gap:3px; }
+.dl-stat span{ font-size:10.5px; color:var(--muted); }
+.dl-stat--fire b{ color:#D9622B; }
+
+.dl-repeat-big{ background:var(--blue); color:#fff; border:none; border-radius:14px; padding:15px; font-weight:700; font-size:14.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; }
+.dl-repeat-big span{ background:rgba(255,255,255,0.25); border-radius:8px; padding:2px 8px; font-size:12.5px; }
+.dl-repeat-big:hover{ background:var(--blue-dark); }
+
+.dl-scrollcue{ padding-top:24px; display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--muted); font-size:11px; }
+.dl-scrollcue-arrow{ animation:bounce 1.6s infinite; }
+@keyframes bounce{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* restored features block */
+.dl-features{ padding:4px 22px 18px; }
+.dl-eyebrow--block{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:16px 2px 8px; }
+
+.dl-feature-card{ display:flex; align-items:center; gap:14px; border-radius:16px; padding:16px; margin-bottom:10px; border:1.5px solid transparent; }
+.dl-feature-card--trainer{ background:linear-gradient(120deg,#EDE9FB,#DDE7EA); border-color:#8FB8D8; }
+.dl-feature-card--love{ background:linear-gradient(120deg,#FBEAEA,#F6DCE0); border-color:#E48B93; }
+.dl-feature-avatar{ width:44px; height:44px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); flex-shrink:0; color:var(--ink); }
+.dl-feature-text{ flex:1; }
+.dl-feature-title{ font-weight:700; font-size:14px; color:var(--ink); }
+.dl-feature-sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+.dl-feature-corner{ color:var(--muted); display:flex; }
+
+.dl-games-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.dl-game-tile{ background:var(--card); border:1.5px solid var(--blue); border-radius:14px; padding:14px; box-shadow:var(--shadow); color:var(--blue); }
+.dl-game-tile-icon{ display:flex; }
+.dl-game-tile-title{ font-weight:700; font-size:13.5px; color:var(--ink); margin-top:8px; }
+.dl-game-tile-sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+.dl-games-list{ display:flex; flex-direction:column; gap:10px; }
+.dl-game-row{ display:flex; align-items:center; gap:12px; background:var(--card); border:1.5px solid var(--blue); border-radius:14px; padding:12px 14px; box-shadow:var(--shadow); }
+.dl-game-row--dashed{ border-style:dashed; border-color:#c9c2ab; box-shadow:none; }
+.dl-game-row-icon{ color:var(--blue); display:flex; }
+.dl-game-row-text{ flex:1; }
+.dl-game-row-title{ font-weight:700; font-size:13.5px; color:var(--ink); }
+.dl-game-row-sub{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+.dl-badge{ background:var(--blue); color:#fff; font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:20px; }
+.dl-badge--ready{ background:var(--teal); }
+
+.dl-search{ display:flex; align-items:center; gap:10px; background:var(--card); border-radius:14px; padding:12px 16px; box-shadow:var(--shadow); margin-top:6px; color:var(--muted); }
+.dl-search input{ border:none; outline:none; background:none; font-size:13.5px; flex:1; color:var(--ink); }
+.dl-search input::placeholder{ color:var(--muted); }
+
+/* screen 2 */
+.dl-screen2{ padding:10px 22px 10px; }
+.dl-section-head{ display:flex; align-items:center; gap:12px; margin:6px 2px 4px; }
+.dl-eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+.dl-stripe-thin{ flex:1; height:2px; border-radius:2px; opacity:.5; }
+
+/* path */
+.dl-path{ position:relative; margin:10px 0 30px; }
+.dl-path-svg{ position:absolute; inset:0; width:100%; height:100%; }
+.dl-thread-bg{ fill:none; stroke:#e4dcc8; stroke-width:6; stroke-linecap:round; }
+.dl-thread-done{ fill:none; stroke:var(--gold); stroke-width:6; stroke-linecap:round; }
+.dl-node{ position:absolute; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:none; padding:0; }
+.dl-node--done{ background:var(--gold); color:#fff; box-shadow:0 4px 10px rgba(140,109,47,0.4); }
+.dl-node--current{ background:#fff; color:var(--blue); border:3px solid var(--blue); box-shadow:0 6px 16px rgba(62,127,193,0.35); }
+.dl-node--upcoming{ background:#fff; color:var(--gold-dark); border:2px dashed #d8cba6; }
+.dl-node--selected{ box-shadow:0 0 0 4px rgba(62,127,193,0.25); }
+.dl-node-icon{ display:flex; z-index:2; }
+.dl-node-pulse{ position:absolute; inset:-6px; border-radius:50%; border:2px solid var(--blue); opacity:.6; animation:pulse 1.8s infinite; }
+@keyframes pulse{ 0%{transform:scale(0.85); opacity:.6} 100%{transform:scale(1.35); opacity:0} }
+.dl-node-label{ position:absolute; top:100%; margin-top:8px; width:120px; text-align:center; font-size:11px; color:var(--ink); left:50%; transform:translateX(-50%); }
+.dl-node--upcoming .dl-node-label{ color:var(--muted); }
+
+/* detail card */
+.dl-detail-card{ background:var(--card); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; margin:0 0 22px; border:1px solid var(--line); }
+.dl-detail-head{ display:flex; align-items:center; gap:10px; background:var(--yellow-soft); padding:16px 18px; }
+.dl-detail-star{ color:var(--gold-dark); display:flex; }
+.dl-detail-title{ flex:1; font-weight:800; font-size:16px; color:var(--ink); }
+.dl-detail-tag{ font-size:11px; background:#fff; color:var(--gold-dark); padding:4px 10px; border-radius:20px; font-weight:700; }
+.dl-detail-tag--done{ background:#DCEFE0; color:#2E7D46; }
+.dl-detail-sub{ padding:12px 18px 4px; font-size:12.5px; color:var(--muted); }
+.dl-linklike{ background:none; border:none; color:var(--blue); font-weight:700; font-size:12.5px; cursor:pointer; padding:0 0 0 4px; display:inline-flex; align-items:center; }
+
+.dl-ex-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 18px 4px; }
+.dl-ex-btn{ position:relative; background:var(--cream); border-radius:12px; padding:12px 12px 12px 40px; font-size:12.5px; color:var(--ink); min-height:20px; display:flex; align-items:center; }
+.dl-ex-btn--special{ background:#EAF1FB; border:1.5px solid var(--blue); color:var(--blue); font-weight:700; }
+.dl-ex-icon{ position:absolute; left:10px; top:50%; transform:translateY(-50%); display:flex; }
+.dl-ex-abc{ font-size:9px; font-weight:800; background:#7c8aa5; color:#fff; padding:2px 4px; border-radius:4px; }
+.dl-ex-count{ position:absolute; left:32px; top:50%; transform:translateY(-50%); background:var(--yellow-soft); color:var(--gold-dark); font-size:11px; font-weight:800; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; }
+.dl-ex-btn--special .dl-ex-count{ display:none; }
+.dl-ex-label{ margin-left:22px; }
+
+.dl-pass-btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:calc(100% - 36px); margin:14px 18px 16px; background:var(--blue); color:#fff; border:none; border-radius:14px; padding:14px; font-weight:700; font-size:14.5px; cursor:pointer; }
+.dl-pass-btn:hover{ background:var(--blue-dark); }
+
+.dl-detail-controls{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:0 18px 16px; border-top:1px solid var(--line); padding-top:14px; margin:0 18px 14px; }
+.dl-ctrl-btn{ display:flex; align-items:center; gap:6px; background:var(--cream); border:none; border-radius:10px; padding:8px 12px; font-size:12px; color:var(--ink); cursor:pointer; }
+.dl-ctrl-pencil{ display:flex; align-items:center; gap:6px; background:var(--yellow-soft); border:1.5px solid var(--gold); border-radius:10px; padding:8px 12px; font-size:12px; color:var(--gold-dark); font-weight:700; cursor:pointer; }
+.dl-ctrl-words{ font-size:12px; color:var(--ink); margin-left:auto; }
+.dl-ctrl-words b{ background:var(--cream); border-radius:8px; padding:1px 7px; margin-left:4px; }
+.dl-ctrl-chevron{ color:var(--blue); }
+
+.dl-word-list{ padding:0 18px 18px; display:flex; flex-direction:column; }
+.dl-word-row{ padding:10px 0; border-bottom:1px solid var(--line); font-size:14px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+.dl-word-row b{ font-weight:700; }
+.dl-word-speaker{ opacity:.6; }
+.dl-word-dash{ color:var(--muted); }
+.dl-word-empty{ font-size:12px; color:var(--muted); padding:6px 0; font-style:italic; }
+
+/* sets */
+.dl-sets-toggle-row{ display:flex; align-items:center; justify-content:space-between; background:var(--card); border-radius:14px; padding:14px 16px; box-shadow:var(--shadow); border-left:3px solid var(--teal); margin-top:8px; }
+.dl-sets-toggle-title{ font-size:14px; font-weight:700; color:var(--ink); }
+.dl-sets-toggle-sub{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+.dl-switch{ position:relative; width:42px; height:24px; display:inline-block; }
+.dl-switch input{ opacity:0; width:0; height:0; }
+.dl-switch-track{ position:absolute; inset:0; background:#ddd6c6; border-radius:20px; transition:background .2s; cursor:pointer; }
+.dl-switch input:checked + .dl-switch-track{ background:var(--teal); }
+.dl-switch-thumb{ position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+.dl-switch input:checked + .dl-switch-track .dl-switch-thumb{ transform:translateX(18px); }
+.dl-sets-list{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+.dl-set-card{ background:var(--card); border-radius:12px; padding:11px 14px; display:flex; justify-content:space-between; font-size:13.5px; box-shadow:var(--shadow); }
+.dl-set-count{ color:var(--muted); }
+.dl-set-add{ display:flex; align-items:center; justify-content:center; gap:6px; border:1.5px dashed #c9c2ab; background:transparent; border-radius:12px; padding:11px; font-size:13px; color:var(--muted); cursor:pointer; }
+
+/* drawer */
+.dl-drawer-overlay{ position:fixed; inset:0; background:rgba(20,18,14,0.45); z-index:70; display:flex; }
+.dl-drawer{ width:260px; height:100%; background:#fff; padding:20px 16px; box-shadow:8px 0 30px rgba(0,0,0,0.2); animation:slidein .22s ease; }
+@keyframes slidein{ from{ transform:translateX(-100%);} to{ transform:translateX(0);} }
+.dl-drawer-head{ display:flex; justify-content:space-between; align-items:center; font-weight:700; font-family:Georgia,serif; margin-bottom:16px; color:var(--ink); }
+.dl-drawer-close{ border:none; background:none; font-size:16px; cursor:pointer; color:var(--muted); }
+.dl-drawer-item{ display:flex; align-items:center; gap:12px; padding:11px 6px; font-size:14px; color:var(--ink); border-radius:10px; cursor:pointer; }
+.dl-drawer-item:hover{ background:var(--cream); }
+.dl-drawer-icon{ width:20px; display:flex; justify-content:center; color:var(--muted); }
+
+/* fab stack: camera + avatar */
+.dl-fab-stack{ position:fixed; right:20px; bottom:24px; display:flex; flex-direction:column; align-items:center; gap:14px; z-index:55; }
+.dl-camera-fab{ width:48px; height:48px; border-radius:50%; background:#fff; color:var(--ink); border:1px solid var(--line); box-shadow:0 8px 20px rgba(0,0,0,0.18); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.dl-camera-fab:hover{ transform:translateY(-2px); }
+.dl-avatar-fab{ width:52px; height:52px; border-radius:50%; background:var(--gold); color:#fff; font-weight:700; font-size:18px; border:3px solid #fff; box-shadow:0 8px 20px rgba(0,0,0,0.25); cursor:pointer; }
+.dl-profile-pop{ position:fixed; right:20px; bottom:86px; width:230px; background:#fff; border-radius:16px; box-shadow:0 16px 40px rgba(0,0,0,0.25); padding:14px; z-index:56; }
+.dl-profile-user{ display:flex; align-items:center; gap:10px; padding-bottom:10px; margin-bottom:8px; border-bottom:1px solid var(--line); }
+.dl-profile-avatar{ width:36px; height:36px; border-radius:50%; background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; }
+.dl-profile-name{ font-size:13px; font-weight:700; color:var(--ink); }
+.dl-profile-role{ font-size:10.5px; color:var(--muted); }
+.dl-profile-row{ display:flex; align-items:center; gap:10px; padding:9px 4px; font-size:13px; color:var(--ink); border-radius:8px; cursor:pointer; }
+.dl-profile-row:hover{ background:var(--cream); }
+.dl-profile-row--danger{ color:#C0392B; }
+
+/* tour */
+.dl-tour{ position:fixed; inset:0; z-index:90; }
+.dl-tour-highlight{ position:absolute; border-radius:16px; box-shadow:0 0 0 4000px rgba(20,18,14,0.55), 0 0 0 3px var(--blue); transition:all .25s ease; pointer-events:none; }
+.dl-tour-card{ position:absolute; width:290px; background:#fff; border-radius:16px; padding:16px 18px; box-shadow:0 16px 40px rgba(0,0,0,0.3); }
+.dl-tour-dots{ display:flex; gap:5px; margin-bottom:10px; }
+.dl-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); }
+.dl-dot--active{ background:var(--blue); }
+.dl-tour-card h3{ margin:0 0 6px; font-size:15px; color:var(--ink); font-family:Georgia,serif; }
+.dl-tour-card p{ margin:0 0 14px; font-size:13px; color:var(--muted); line-height:1.45; }
+.dl-tour-actions{ display:flex; justify-content:space-between; align-items:center; }
+.dl-tour-skip{ background:none; border:none; color:var(--muted); font-size:12.5px; cursor:pointer; }
+.dl-tour-next{ background:var(--blue); color:#fff; border:none; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; }
+.dl-tour-next:hover{ background:var(--blue-dark); }
+`;
