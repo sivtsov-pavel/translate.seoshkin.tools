@@ -25,6 +25,7 @@ export default function Tour({ onClose, onMenu }) {
     { center: true, title: T.welcomeTitle || 'Привет! 👋', text: T.welcomeText || 'Давай я за минутку покажу, где что находится. Ничего сложного — просто нажимай «Далее».' },
     { sels: ['.layout-hamburger', '.layout-sidebar'], title: T.menuTitle || 'Главное меню', text: T.menuText || 'Отсюда открываются все разделы. На телефоне — кнопка с тремя палочками ☰ слева вверху. Нажал — выехало меню.' },
     { menu: true, sels: ['a[href="/"]'], title: T.todayTitle || '🏠 Сегодня', text: T.todayText || 'Главная страница. Тут твои уроки и задания на сегодня — с чего начинать, видно сразу.' },
+    { menu: true, sels: ['a[href="/sets"]'], title: T.setsNavTitle || '🎒 Наборы', text: T.setsNavText || 'Тематические подборки слов — еда, город, дом и другие темы. Удобно, когда хочешь потренировать что-то одно.' },
     { menu: true, sels: ['a[href="/vocabulary"]'], title: T.vocabTitle || '📖 Словарь', text: T.vocabText || 'Все слова, которые ты учишь. Можно послушать, как они звучат, и повторить.' },
     { menu: true, sels: ['a[href="/ai-trainer"]'], title: T.trainerTitle || '🤖 AI-тренер Pablo', text: T.trainerText || 'Твой личный помощник Pablo. Говори с ним голосом или пиши — он ответит по-немецки и мягко поправит, если ошибся. Как живой учитель, только всегда рядом.' },
     { menu: true, sels: ['a[href="/reader"]'], title: T.readerTitle || '👓 Читалка', text: T.readerText || 'Читай тексты на изучаемом языке. Не понял слово? Просто нажми на него пальцем — покажет перевод и озвучит.' },
@@ -79,10 +80,13 @@ export default function Tour({ onClose, onMenu }) {
   const isCenter = rect === 'center'
   const isLast = i >= steps.length - 1
 
-  // Позиция карточки
+  // Позиция карточки. Шаги по меню — карточку ставим ВНИЗУ по центру, чтобы не висела над шторкой.
+  const isMenu = !isCenter && steps[i].menu
   let card
   if (isCenter) {
     card = { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }
+  } else if (isMenu) {
+    card = { bottom: 'calc(var(--bottom-nav-h, 0px) + 20px)', left: '50%', transform: 'translateX(-50%)' }
   } else {
     const below = rect.bottom + 210 < window.innerHeight
     card = {
@@ -99,8 +103,10 @@ export default function Tour({ onClose, onMenu }) {
         ? <div style={{ position: 'absolute', inset: 0, background: 'rgba(20,18,14,0.62)' }} />
         : <div style={{ position: 'absolute', top: rect.top - 8, left: rect.left - 8, width: rect.width + 16, height: rect.height + 16, borderRadius: 14, boxShadow: '0 0 0 4000px rgba(20,18,14,0.62), 0 0 0 3px var(--blue)', transition: 'all .25s ease', pointerEvents: 'none' }} />}
 
-      <div style={{ position: 'absolute', ...card, width: 290, background: 'var(--surface)', borderRadius: 16, padding: '18px 20px', boxShadow: '0 16px 40px rgba(0,0,0,0.35)', border: '1px solid var(--line)' }}>
-        <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap' }}>
+      <div style={{ position: 'absolute', ...card, width: 290, maxWidth: 'calc(100vw - 24px)', background: 'var(--surface)', borderRadius: 16, padding: '18px 20px', boxShadow: '0 16px 40px rgba(0,0,0,0.35)', border: '1px solid var(--line)' }}>
+        {/* Крестик закрыть */}
+        <button onClick={onClose} aria-label="Закрыть тур" style={{ position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: 8, border: 'none', background: 'var(--surface-2)', color: 'var(--ink-soft)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, lineHeight: 1 }}>✕</button>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap', paddingRight: 30 }}>
           {steps.map((s, k) => <span key={k} style={{ width: 6, height: 6, borderRadius: '50%', background: k === i ? 'var(--blue)' : 'var(--line)' }} />)}
         </div>
         <h3 style={{ margin: '0 0 8px', fontSize: 16, color: 'var(--ink)', fontFamily: 'var(--heading-font)' }}>{steps[i].title}</h3>
