@@ -14,6 +14,10 @@ import LetterFill from '../components/LetterFill.jsx'
 import Dictation from '../components/Dictation.jsx'
 import SpeechExercise from '../components/SpeechExercise.jsx'
 
+// Порядок типов упражнений в уроке (педагогический, по просьбе Павла):
+// вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение → проговори → диктант
+const TYPE_SEQ = { multiple_choice: 0, flashcard: 1, letter_fill: 2, fill_blank: 3, sentence_write: 4, speech: 5, dictation: 6 }
+
 export default function ExerciseSession() {
   const [exercises, setExercises] = useState([])
   const [current, setCurrent]     = useState(0)
@@ -70,9 +74,10 @@ export default function ExerciseSession() {
     const loadOffline = () => getOfflineExercises({ lessonId, type })
     return (isOnline() ? api.get(url).catch(loadOffline) : loadOffline())
       .then(exs => {
-        const dictation = exs.filter(e => e.type === 'dictation') // диктант последним
-        const rest      = exs.filter(e => e.type !== 'dictation')
-        const ordered   = [...rest, ...dictation]
+        // Педагогический порядок типов в уроке (просьба Павла): узнавание → продукция → на слух.
+        // вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение →
+        // проговори слова → диктант. Внутри типа порядок сохраняется (стабильная сортировка).
+        const ordered = [...exs].sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
         setExercises(ordered)
         setCurrent(0)
         return ordered
