@@ -13,23 +13,41 @@
   --red: #B3382C;
   --good: #4E9A6E;
   --radius: 18px;
+  /* Новая дизайн-система (макет v3), адаптирована под тёмную тему */
+  --blue: #5A9BD8;
+  --blue-dark: #3E7FC1;
+  --teal: #3DB3A2;
+  --gold: #C9A54A;
+  --gold-dark: #A9863C;
+  --yellow-soft: #33301F;
+  --card-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  --heading-font: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
   color-scheme: dark;
 }
 
 /* ── Светлая тема ── */
 [data-theme="light"] {
-  --bg: #F8F7F2;
+  --bg: #F6F1E7;
   --surface: #FFFFFF;
-  --surface-2: #EFEDE6;
-  --ink: #1A1917;
-  --ink-soft: #78766F;
-  --line: #DEDBD0;
+  --surface-2: #ECE6D8;
+  --ink: #2B2A28;
+  --ink-soft: #8A8477;
+  --line: rgba(43,42,40,0.10);
   --accent: #B8912A;
   --accent-ink: #FFFFFF;
   --accent-soft: #FEF3C7;
   --red: #C0392B;
   --good: #2E7D52;
   --radius: 18px;
+  /* Новая дизайн-система (макет v3) — кремовая палитра */
+  --blue: #3E7FC1;
+  --blue-dark: #2F65A0;
+  --teal: #2F9E8F;
+  --gold: #B9975B;
+  --gold-dark: #8C6D2F;
+  --yellow-soft: #F6E7A6;
+  --card-shadow: 0 6px 20px rgba(43,42,40,0.10);
+  --heading-font: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
   color-scheme: light;
 }
 
