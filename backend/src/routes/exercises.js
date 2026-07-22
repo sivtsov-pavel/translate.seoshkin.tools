@@ -152,7 +152,7 @@ export async function exercisesRoutes(fastify) {
       params.push(request.user.school_id ?? null); const sp = params.length // школа ученика (null-safe)
       let gateClause = '', passedClause = '', studentOrder = orderBy
       if (dripGate) {
-        const { playable, passed } = await playableLessonIds(userId, request.user.school_id ?? null)
+        const { playable, passed } = await playableLessonIds(userId, request.user.school_id ?? null, target)
         params.push([...playable]); const pl = params.length
         gateClause = `AND e.lesson_id = ANY($${pl}::int[])`
         params.push([...passed]); const pp = params.length
@@ -347,7 +347,7 @@ export async function exercisesRoutes(fastify) {
         ORDER BY l.id, e.type`
     } else {
       // Ученик видит готовые уроки СВОЕЙ школы (null-safe: без школы — как раньше, всё)
-      const { playable, needsSchedule } = await playableLessonIds(userId, request.user.school_id ?? null)
+      const { playable, needsSchedule } = await playableLessonIds(userId, request.user.school_id ?? null, target)
       needsScheduleCourses = needsSchedule
       params = [userId, today, target, request.user.school_id ?? null, [...playable]]
       query = `

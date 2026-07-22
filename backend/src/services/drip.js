@@ -57,13 +57,14 @@ export function unlockDateForIndex(startDate, weekdays, index) {
 // Правила: внекурсовые уроки/наборы (course_id NULL) — всегда доступны. Курсовые:
 //  • нет расписания по курсу → все закрыты, курс в needsSchedule (заставляем выбрать календарь);
 //  • есть расписание → открыт урок, если наступил учебный день И предыдущий пройден (цепочка).
-export async function playableLessonIds(userId, schoolId) {
+export async function playableLessonIds(userId, schoolId, targetLang = null) {
   const { rows } = await db.query(
     `SELECT l.id, l.course_id, l.is_set
      FROM lessons l
      WHERE l.status = 'done' AND ($1::int IS NULL OR l.school_id = $1)
+       AND ($2::text IS NULL OR l.target_lang = $2)
      ORDER BY l.course_id NULLS FIRST, l.lesson_number NULLS LAST, l.created_at`,
-    [schoolId ?? null])
+    [schoolId ?? null, targetLang])
   const playable = new Set()
   const needsSchedule = []
   const byCourse = new Map()
