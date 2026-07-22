@@ -390,16 +390,10 @@ export default function Dashboard() {
       <CameraWords mode="sentences" renderTrigger={(pick, busy) => (
         <button className="dl-fab dl-fab-camera" onClick={pick} disabled={busy}
           title="Сфотографировать — разбор слов"
-          style={{ bottom: `calc(var(--bottom-nav-h, 0px) + ${total > 0 ? 82 : 20}px)` }}>
+          style={{ bottom: `calc(var(--bottom-nav-h, 0px) + 20px)` }}>
           {busy ? '…' : <Camera size={20} />}
         </button>
       )} />
-      {total > 0 && (
-        <button className="dl-fab dl-fab-repeat" onClick={() => navigate('/exercise-session')}
-          style={{ bottom: 'calc(var(--bottom-nav-h, 0px) + 20px)' }}>
-          <Play size={16} /> {t.dashboard.repeatAll} <span>{total}</span>
-        </button>
-      )}
     </div>
   )
 }

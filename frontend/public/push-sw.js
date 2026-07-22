@@ -3,6 +3,10 @@
 self.addEventListener('push', (event) => {
   let data = {}
   try { data = event.data.json() } catch {}
+  // Красный кружок с числом на иконке (Badging API) — обновляем и при закрытом приложении
+  if (self.navigator && self.navigator.setAppBadge) {
+    self.navigator.setAppBadge(data.badge_count || 1).catch(() => {})
+  }
   event.waitUntil(
     self.registration.showNotification(data.title || '📚 Deutsch lernen', {
       body:    data.body  || 'Пора повторить слова!',

@@ -82,7 +82,19 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     if (!user) return
-    const poll = async () => { try { const data = await api.get('/chat/unread'); setUnreadChat(data.count || 0) } catch {} }
+    const poll = async () => {
+      try {
+        const data = await api.get('/chat/unread')
+        const n = data.count || 0
+        setUnreadChat(n)
+        // Красный кружок с числом на иконке приложения (как у мессенджеров) — Badging API.
+        // Работает в установленной PWA/TWA (Android, десктоп Chrome/Edge, iOS 16.4+).
+        if ('setAppBadge' in navigator) {
+          if (n > 0) navigator.setAppBadge(n).catch(() => {})
+          else navigator.clearAppBadge?.().catch(() => {})
+        }
+      } catch {}
+    }
     poll()
     const tid = setInterval(poll, 30_000)
     return () => clearInterval(tid)
