@@ -124,7 +124,7 @@ export default function Layout({ children }) {
     }
   }, [user, location.pathname])
   const startTour = () => { if (location.pathname !== '/') navigate('/'); setTimeout(() => setTourRun(true), location.pathname !== '/' ? 400 : 0) }
-  const endTour = () => { setTourRun(false); localStorage.setItem('tour_seen_v1', '1') }
+  const endTour = () => { setTourRun(false); setOpen(false); localStorage.setItem('tour_seen_v1', '1') }
 
   useEffect(() => {
     const measure = () => {
@@ -490,8 +490,8 @@ export default function Layout({ children }) {
         </button>
       </nav>
 
-      {/* Онбординг-тур — по кнопке 🧭 и раз при первом входе */}
-      {tourRun && <Tour onClose={endTour} />}
+      {/* Онбординг-тур — по кнопке 🧭 и раз при первом входе. onMenu — тур сам открывает меню для шагов по разделам */}
+      {tourRun && <Tour onClose={endTour} onMenu={setOpen} />}
     </div>
   )
 }
