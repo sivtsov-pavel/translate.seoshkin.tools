@@ -227,7 +227,7 @@ export async function lessonsRoutes(fastify) {
   }, async (request) => {
     const lessonId = parseInt(request.params.id)
     const { rows } = await db.query(
-      `SELECT DISTINCT ON (w.id) w.id, w.word_de, w.translation_ru,
+      `SELECT DISTINCT ON (w.id) w.id, w.word_de, w.translation_ru, w.source,
               COALESCE(w.translations, '{}') AS translations, w.example_sentence,
               COALESCE(w.image_url, e.image_url) AS image_url
        FROM exercises e

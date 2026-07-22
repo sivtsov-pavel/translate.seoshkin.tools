@@ -131,17 +131,23 @@ export default function ExerciseSession() {
     return (
       <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
+          {/* «Урок пройден» — только когда сделаны ВСЕ упражнения (или сдан зачёт).
+              Пока есть ещё упражнения — говорим про УПРАЖНЕНИЯ, не про урок. */}
           <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone ? '🏆' : '🎉'}</div>
           <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-            {lessonDone ? (t.exercise.lessonPassed || 'Урок пройден!') : (t.exercise.batchDone || 'Отлично! Партия готова')}
+            {lessonDone
+              ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден') : (t.exercise.allDoneToday || 'Отлично! На сегодня всё'))
+              : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
           </div>
           <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 22px' }}>
-            {lessonDone ? (t.exercise.lessonPassedSub || 'Все упражнения на сегодня сделаны. Так держать!') : (t.exercise.batchDoneSub || 'Продолжим следующую партию — до зачёта по уроку.')}
+            {lessonDone
+              ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉') : (t.exercise.allDoneTodaySub || 'Все упражнения на сегодня сделаны.'))
+              : (t.exercise.batchDoneSub || 'Продолжим — по этому уроку есть ещё упражнения.')}
           </p>
           {!lessonDone && (
             <button onClick={continuePractice} disabled={continuing}
               style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-              {continuing ? '…' : `${t.exercise.continue || 'Продолжить'} →`}
+              {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'} →`}
             </button>
           )}
           <button onClick={goHome}

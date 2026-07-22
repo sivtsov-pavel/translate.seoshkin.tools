@@ -310,30 +310,38 @@ export default function Dashboard() {
 
       {/* ---------- ПУТЬ УРОКОВ (нитка) ---------- */}
       <section className="dl-screen2">
-        {/* Тумблеры: все уроки / текущий · наборы вкл-выкл */}
+        {/* Тумблеры слева (справа их перекрывала бы плавающая камера): все уроки/текущий + наборы */}
         {(books.length > 0 || setsAll.length > 0) && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
             {books.length > 0 && (
               <button onClick={toggleAllLessons} style={ribbonBtn(showAllLessons)}>
                 {showAllLessons ? `📚 ${t.dashboard.allLessons || 'Все уроки'}` : `📍 ${t.dashboard.currentLesson || 'Текущий урок'}`}
               </button>
             )}
-            <button onClick={toggleSets} style={ribbonBtn(showSets)}>
-              🗂 {t.nav.sets || 'Наборы'}: {showSets ? (t.dashboard.on || 'вкл') : (t.dashboard.off || 'выкл')}
-            </button>
+            {setsAll.length > 0 && (
+              <button onClick={toggleSets} style={ribbonBtn(showSets)}>
+                🗂 {t.nav.sets || 'Наборы'}: {showSets ? (t.dashboard.on || 'вкл') : (t.dashboard.off || 'выкл')}
+              </button>
+            )}
           </div>
         )}
-        {books.length > 0 && (
+        {books.length > 0 && (() => {
+          // «Текущий урок» = показываем только текущий (реальный эффект и для ученика);
+          // если всё пройдено (нет current) — показываем весь путь.
+          const currentOnly = pathLessons.filter(l => l.status === 'current')
+          const shownPath = showAllLessons || !currentOnly.length ? pathLessons : currentOnly
+          return (
           <>
             <div className="dl-section-head">
               <span className="dl-eyebrow">{t.dashboard.lessonPath || 'Путь урока'}</span>
               <span className="dl-stripe-thin" style={{ background: `linear-gradient(90deg, ${course.stripe.join(',')})` }} />
             </div>
-            <LessonPath lessons={showAllLessons ? pathLessons : pathLessons.filter(l => l.status !== 'upcoming')}
+            <LessonPath lessons={shownPath}
               selectedId={selectedId ?? current?.lesson_id}
               onSelect={id => setSelectedId(id === (selectedId ?? current?.lesson_id) ? null : id)} lang={lang} />
           </>
-        )}
+          )
+        })()}
 
         {selLesson && <LessonDetailCard key={selLesson.lesson_id} lesson={selLesson} navigate={navigate} onReset={repeatLesson} />}
 
@@ -581,6 +589,10 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
             const tr = getTranslation(w.translations, lang, w.translation_ru)
             return (
               <div key={w.id} className="dl-word-row">
+                {/* Источник слова: 📖 из учебника (в зачёте), ✏️ из тетради (доп., не в зачёте) */}
+                <span title={w.source === 'extra' ? 'Из тетради (доп.)' : 'Из учебника'} style={{ fontSize: 12, flexShrink: 0 }}>
+                  {w.source === 'extra' ? '✏️' : '📖'}
+                </span>
                 <b>{w.word_de}</b>
                 <SpeakButton text={w.word_de} size={13} appendText={tr} />
                 <span className="dl-word-dash">—</span> {tr}
