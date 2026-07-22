@@ -46,6 +46,7 @@ export default function Dashboard() {
   const [courses, setCourses] = useState([])
   const [activeCourse, setActiveCourse] = useState(() => localStorage.getItem('active_course') || '')
   const [selectedId, setSelectedId] = useState(null)   // выбранный урок в «нитке»
+  const [selectedSetId, setSelectedSetId] = useState(null) // раскрытый набор (аккордеон на месте)
   const [pickSchedCourse, setPickSchedCourse] = useState('')
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
@@ -324,19 +325,26 @@ export default function Dashboard() {
         {(showSets || q) && setsAll.length > 0 && (
           <div className="dl-sets-list">
             {setsAll.map(s => (
-              <div key={s.lesson_id} className="dl-set-card" onClick={() => setSelectedId(s.lesson_id)}>
-                <span>{getLessonTitle(s.lesson_title, s.lesson_title_translations, lang) || `#${s.lesson_id}`}</span>
-                <span className="dl-set-count">{s.words_count || s.total}</span>
+              <div key={s.lesson_id}>
+                <div className="dl-set-card" onClick={() => setSelectedSetId(v => v === s.lesson_id ? null : s.lesson_id)}>
+                  <span>{getLessonTitle(s.lesson_title, s.lesson_title_translations, lang) || `#${s.lesson_id}`}</span>
+                  <span className="dl-set-count">
+                    {s.words_count || s.total}
+                    {selectedSetId === s.lesson_id ? <ChevronUp size={15} className="dl-inline-icon" style={{ marginLeft: 6 }} /> : <ChevronDown size={15} className="dl-inline-icon" style={{ marginLeft: 6 }} />}
+                  </span>
+                </div>
+                {/* Раскрытие набора НА МЕСТЕ (аккордеон) — не улетает в низ экрана */}
+                {selectedSetId === s.lesson_id && (
+                  <div style={{ marginTop: 8 }}>
+                    <LessonDetailCard key={'set' + s.lesson_id} lesson={{ ...s, status: 'current' }} navigate={navigate} onReset={repeatLesson} />
+                  </div>
+                )}
               </div>
             ))}
             <button className="dl-set-add" onClick={() => navigate('/vocabulary')}>
               <SquarePen size={15} /> {t.dashboard.createSetTitle}
             </button>
           </div>
-        )}
-        {/* Выбранный набор — та же карточка-деталь */}
-        {selectedId && setsAll.some(s => s.lesson_id === selectedId) && (
-          <LessonDetailCard key={'set' + selectedId} lesson={{ ...setsAll.find(s => s.lesson_id === selectedId), status: 'current' }} navigate={navigate} onReset={repeatLesson} />
         )}
       </section>
 
