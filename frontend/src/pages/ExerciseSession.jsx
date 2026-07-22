@@ -30,6 +30,9 @@ export default function ExerciseSession() {
   // Смещение счётчика для практики по типу: сколько упражнений этого типа уже сделано СЕГОДНЯ.
   // Позволяет продолжать «34 / 100» после выхода/возврата, а не начинать заново с «1».
   const [doneOffset, setDoneOffset] = useState(0)
+  const [finished, setFinished]   = useState(false) // сессия закончилась — экран «Продолжить/Готово»
+  const [continuing, setContinuing] = useState(false)
+  const [lessonDone, setLessonDone] = useState(false) // упражнений на сегодня больше нет — урок пройден
   const [starred, setStarred]     = useState(() => new Set()) // слова, помеченные «в изучение»
   // Быстрый тумблер озвучки/видео-реакции тренера (тот же флаг, что в Настройках).
   // Выкл — чтобы аватар не проговаривал «Sehr gut» (в т.ч. чтобы микрофон не ловил свою же речь).
@@ -54,35 +57,33 @@ export default function ExerciseSession() {
     } catch (e) { console.error('mark learning', e) }
   }
   const lessonId                  = searchParams.get('lesson_id')
+  const type                      = searchParams.get('type')
 
-  useEffect(() => {
-    const type      = searchParams.get('type')
-    const lesson_id = searchParams.get('lesson_id')
+  // Загрузка упражнений «на сегодня» (по уроку/типу). Возвращает массив (для «Продолжить»).
+  const loadExercises = () => {
     const qs = new URLSearchParams()
     if (type)      qs.set('type', type)
-    if (lesson_id) qs.set('lesson_id', lesson_id)
+    if (lessonId)  qs.set('lesson_id', lessonId)
     const url = `/exercises/today${qs.toString() ? '?' + qs : ''}`
+    const loadOffline = () => getOfflineExercises({ lessonId, type })
+    return (isOnline() ? api.get(url).catch(loadOffline) : loadOffline())
+      .then(exs => {
+        const dictation = exs.filter(e => e.type === 'dictation') // диктант последним
+        const rest      = exs.filter(e => e.type !== 'dictation')
+        const ordered   = [...rest, ...dictation]
+        setExercises(ordered)
+        setCurrent(0)
+        return ordered
+      })
+  }
 
-    // Практика по типу (без конкретного урока): узнаём, сколько этого типа уже сделано сегодня,
-    // чтобы счётчик продолжался с места, а не сбрасывался при повторном входе.
-    if (type && !lesson_id && isOnline()) {
+  useEffect(() => {
+    // Практика по типу (без урока): продолжаем счётчик с места (сколько сделано сегодня).
+    if (type && !lessonId && isOnline()) {
       api.get(`/exercises/done-today?type=${encodeURIComponent(type)}`)
         .then(r => setDoneOffset(r?.done || 0)).catch(() => {})
     }
-
-    // Без сети (или сервер недоступен) — упражнения из локальной базы (офлайн-ядро)
-    const loadOffline = () => getOfflineExercises({ lessonId: lesson_id, type })
-    const load = isOnline() ? api.get(url).catch(loadOffline) : loadOffline()
-
-    load
-      .then(exs => {
-        // Диктант всегда последним
-        const dictation = exs.filter(e => e.type === 'dictation')
-        const rest      = exs.filter(e => e.type !== 'dictation')
-        setExercises([...rest, ...dictation])
-        setCurrent(0)
-      })
-      .finally(() => setLoading(false))
+    loadExercises().finally(() => setLoading(false))
   }, [])
 
   const handleAnswer = async (quality, userAnswer = '') => {
@@ -92,7 +93,6 @@ export default function ExerciseSession() {
         if (!isOnline()) throw new Error('offline')
         await api.post(`/exercises/${ex.id}/attempt`, { userAnswer: String(userAnswer), quality, lang })
       } catch (e) {
-        // Нет сети — ответ в локальную очередь + SM-2 локально, отправится при появлении сети
         try { await answerOffline(ex, quality, String(userAnswer)) }
         catch (e2) { console.error('Ошибка сохранения попытки:', e2) }
       }
@@ -100,14 +100,56 @@ export default function ExerciseSession() {
 
     const next = current + 1
     if (next >= exercises.length) {
-      navigate('/')
+      // Сессия закончилась — не выкидываем на главную, показываем экран «Продолжить»
+      setDoneOffset(o => o + exercises.length)
+      setFinished(true)
     } else {
       setCurrent(next)
     }
   }
 
+  // «На главную» — со скроллом к своему уроку на дашборде
+  const goHome = () => navigate('/', { state: lessonId ? { scrollToLesson: Number(lessonId) } : undefined })
+
+  // «Продолжить» — догрузить следующие упражнения; пусто → урок пройден
+  const continuePractice = async () => {
+    setContinuing(true)
+    let more = []
+    try { more = await loadExercises() } catch { more = [] }
+    setContinuing(false)
+    if (more && more.length) setFinished(false)
+    else setLessonDone(true)
+  }
+
   if (loading) return <p>{t.exercise.loading}</p>
-  if (exercises.length === 0) { navigate('/'); return null }
+  if (exercises.length === 0 && !finished) { navigate('/'); return null }
+
+  // Экран завершения сессии — «Продолжить до зачёта» или «Урок пройден»
+  if (finished) {
+    return (
+      <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone ? '🏆' : '🎉'}</div>
+          <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+            {lessonDone ? (t.exercise.lessonPassed || 'Урок пройден!') : (t.exercise.batchDone || 'Отлично! Партия готова')}
+          </div>
+          <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 22px' }}>
+            {lessonDone ? (t.exercise.lessonPassedSub || 'Все упражнения на сегодня сделаны. Так держать!') : (t.exercise.batchDoneSub || 'Продолжим следующую партию — до зачёта по уроку.')}
+          </p>
+          {!lessonDone && (
+            <button onClick={continuePractice} disabled={continuing}
+              style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              {continuing ? '…' : `${t.exercise.continue || 'Продолжить'} →`}
+            </button>
+          )}
+          <button onClick={goHome}
+            style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+            {t.exercise.toHome || 'На главную'}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   const ex = exercises[current]
   const lessonTitle = getLessonTitle(ex.lesson_title, ex.lesson_title_translations, lang)

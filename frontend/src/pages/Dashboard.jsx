@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   BookOpenText, Zap, Flame, Play, CheckCircle2, Layers, Puzzle, SquarePen,
   Gamepad2, Search, Volume2, RotateCcw, Pencil, ChevronUp, ChevronDown, Check,
@@ -35,6 +35,14 @@ const TYPE_ICON = {
 
 const ts = (d) => { const t = new Date(d).getTime(); return isNaN(t) ? 0 : t }
 
+// Пилюля-тумблер (лента над путём уроков)
+const ribbonBtn = (active) => ({
+  padding: '7px 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+  border: `1px solid ${active ? 'var(--blue)' : 'var(--line)'}`,
+  background: active ? 'rgba(62,127,193,0.12)' : 'var(--surface)',
+  color: active ? 'var(--blue)' : 'var(--ink-soft)',
+})
+
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [progress, setProgress] = useState(null)
@@ -43,14 +51,30 @@ export default function Dashboard() {
   const [completed, setCompleted] = useState([])
   const [lessonQuery, setLessonQuery] = useState('')
   const [showSets, setShowSets] = useState(() => localStorage.getItem('dash_show_sets') === '1')
+  const [showAllLessons, setShowAllLessons] = useState(() => localStorage.getItem('dash_all_lessons') !== '0')
+  const toggleAllLessons = () => setShowAllLessons(v => { localStorage.setItem('dash_all_lessons', v ? '0' : '1'); return !v })
   const [courses, setCourses] = useState([])
   const [activeCourse, setActiveCourse] = useState(() => localStorage.getItem('active_course') || '')
   const [selectedId, setSelectedId] = useState(null)   // выбранный урок в «нитке»
   const [selectedSetId, setSelectedSetId] = useState(null) // раскрытый набор (аккордеон на месте)
   const [pickSchedCourse, setPickSchedCourse] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
+
+  // Пришли с упражнений («На главную») → раскрыть свой урок и плавно проскроллить к нему
+  useEffect(() => {
+    const id = location.state?.scrollToLesson
+    if (!id || loading) return
+    setSelectedId(id)
+    const tid = setTimeout(() => {
+      const el = document.querySelector(`[data-node-lesson="${id}"]`) || document.querySelector('.dl-detail-card')
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      window.history.replaceState({}, '') // очистить state — не скроллить повторно
+    }, 350)
+    return () => clearTimeout(tid)
+  }, [loading, location.state])
   const target = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
   const course = LANGS[target] || LANGS.de
 
@@ -286,13 +310,27 @@ export default function Dashboard() {
 
       {/* ---------- ПУТЬ УРОКОВ (нитка) ---------- */}
       <section className="dl-screen2">
+        {/* Тумблеры: все уроки / текущий · наборы вкл-выкл */}
+        {(books.length > 0 || setsAll.length > 0) && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+            {books.length > 0 && (
+              <button onClick={toggleAllLessons} style={ribbonBtn(showAllLessons)}>
+                {showAllLessons ? `📚 ${t.dashboard.allLessons || 'Все уроки'}` : `📍 ${t.dashboard.currentLesson || 'Текущий урок'}`}
+              </button>
+            )}
+            <button onClick={toggleSets} style={ribbonBtn(showSets)}>
+              🗂 {t.nav.sets || 'Наборы'}: {showSets ? (t.dashboard.on || 'вкл') : (t.dashboard.off || 'выкл')}
+            </button>
+          </div>
+        )}
         {books.length > 0 && (
           <>
             <div className="dl-section-head">
               <span className="dl-eyebrow">{t.dashboard.lessonPath || 'Путь урока'}</span>
               <span className="dl-stripe-thin" style={{ background: `linear-gradient(90deg, ${course.stripe.join(',')})` }} />
             </div>
-            <LessonPath lessons={pathLessons} selectedId={selectedId ?? current?.lesson_id}
+            <LessonPath lessons={showAllLessons ? pathLessons : pathLessons.filter(l => l.status !== 'upcoming')}
+              selectedId={selectedId ?? current?.lesson_id}
               onSelect={id => setSelectedId(id === (selectedId ?? current?.lesson_id) ? null : id)} lang={lang} />
           </>
         )}
@@ -305,19 +343,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ---------- Наборы ---------- */}
-        {(setsAll.length > 0 || q) && (
-          <div className="dl-sets-toggle-row">
-            <div>
-              <div className="dl-sets-toggle-title">{t.nav.sets || 'Наборы'}</div>
-              <div className="dl-sets-toggle-sub">{t.dashboard.setsSub || 'Твои подборки слов для тренировки'}</div>
-            </div>
-            <label className="dl-switch">
-              <input type="checkbox" checked={showSets} onChange={toggleSets} />
-              <span className="dl-switch-track"><span className="dl-switch-thumb" /></span>
-            </label>
-          </div>
-        )}
+        {/* ---------- Наборы (тумблер — в ленте вверху) ---------- */}
         {(showSets || q) && setsAll.length > 0 && (
           <div className="dl-sets-list">
             {setsAll.map(s => (
@@ -423,7 +449,7 @@ function LessonPath({ lessons, selectedId, onSelect, lang }) {
           style={{ strokeDasharray: 2000, strokeDashoffset: 2000 - (2000 * (doneCount + 0.5)) / points.length }} />
       </svg>
       {points.map(p => (
-        <button key={p.lesson_id}
+        <button key={p.lesson_id} data-node-lesson={p.lesson_id}
           className={`dl-node dl-node--${p.status}` + (p.lesson_id === selectedId ? ' dl-node--selected' : '')}
           style={{ left: p.x - NODE / 2, top: p.y - NODE / 2, width: NODE, height: NODE }}
           onClick={() => onSelect(p.lesson_id)}
