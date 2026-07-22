@@ -102,8 +102,10 @@ export default function ExerciseSession() {
 
     const next = current + 1
     if (next >= exercises.length) {
-      // Сессия закончилась — не выкидываем на главную, показываем экран «Продолжить»
       setDoneOffset(o => o + exercises.length)
+      // Сессия конкретного урока грузит ВСЕ его упражнения → пройдены все, «Продолжить» не нужно
+      // (иначе перезапрос вернёт те же). Практика по типу без урока — SRS-партиями, с «Продолжить».
+      if (lessonId) setLessonDone(true)
       setFinished(true)
     } else {
       setCurrent(next)
@@ -133,16 +135,18 @@ export default function ExerciseSession() {
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
           {/* «Урок пройден» — только когда сделаны ВСЕ упражнения (или сдан зачёт).
               Пока есть ещё упражнения — говорим про УПРАЖНЕНИЯ, не про урок. */}
-          <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone ? '🏆' : '🎉'}</div>
+          <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone && (exam || !type) ? '🏆' : '🎉'}</div>
           <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
             {lessonDone
-              ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден') : (t.exercise.allDoneToday || 'Отлично! На сегодня всё'))
+              ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
+                 : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
               : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
           </div>
           <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 22px' }}>
             {lessonDone
-              ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉') : (t.exercise.allDoneTodaySub || 'Все упражнения на сегодня сделаны.'))
-              : (t.exercise.batchDoneSub || 'Продолжим — по этому уроку есть ещё упражнения.')}
+              ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉')
+                 : (type ? (t.exercise.exercisesDoneSub || 'Все упражнения этого типа сделаны.') : (t.exercise.lessonPassedSub || 'Ты прошёл все упражнения урока! 🎉')))
+              : (t.exercise.batchDoneSub || 'Продолжим следующую партию.')}
           </p>
           {!lessonDone && (
             <button onClick={continuePractice} disabled={continuing}

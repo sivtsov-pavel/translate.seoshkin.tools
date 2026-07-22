@@ -136,7 +136,7 @@ export async function exercisesRoutes(fastify) {
         ownerOrder = `(e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
       }
       query = SELECT + `
-        WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
+        WHERE ${lesson_id ? 'TRUE' : 'COALESCE(uep.next_review_date, CURRENT_DATE) <= $2'}
           AND l.target_lang = $${tp}
           ${passedClause}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
@@ -173,7 +173,7 @@ export async function exercisesRoutes(fastify) {
           AND ($${sp}::int IS NULL OR l.school_id = $${sp})
           ${gateClause}
           ${passedClause}
-          AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
+          ${lesson_id ? '' : 'AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2'}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
           ${examClause}
