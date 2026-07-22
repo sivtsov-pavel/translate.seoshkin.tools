@@ -390,7 +390,7 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
             </span>
           ) : (
             <button
-              onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
+              onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}&exam=1`)}
               style={{ fontSize: 13, padding: '6px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}>
               ✅ {isOwner ? 'Открыть' : 'Начать'}
             </button>

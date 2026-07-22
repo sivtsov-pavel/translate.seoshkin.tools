@@ -58,12 +58,14 @@ export default function ExerciseSession() {
   }
   const lessonId                  = searchParams.get('lesson_id')
   const type                      = searchParams.get('type')
+  const exam                      = searchParams.get('exam')
 
   // Загрузка упражнений «на сегодня» (по уроку/типу). Возвращает массив (для «Продолжить»).
   const loadExercises = () => {
     const qs = new URLSearchParams()
     if (type)      qs.set('type', type)
     if (lessonId)  qs.set('lesson_id', lessonId)
+    if (exam)      qs.set('exam', '1')
     const url = `/exercises/today${qs.toString() ? '?' + qs : ''}`
     const loadOffline = () => getOfflineExercises({ lessonId, type })
     return (isOnline() ? api.get(url).catch(loadOffline) : loadOffline())

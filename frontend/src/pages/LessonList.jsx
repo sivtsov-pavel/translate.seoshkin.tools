@@ -447,7 +447,7 @@ export default function LessonList() {
                     {/* Действия */}
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
                       {user?.role !== 'owner' && status === 'done' && (
-                        <button onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}`)}
+                        <button onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}&exam=1`)}
                           style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
                           ▶ Начать
                         </button>

@@ -76,8 +76,12 @@ export async function exercisesRoutes(fastify) {
   }, async (request) => {
     const { id: userId, role } = request.user
     const today = new Date().toISOString().slice(0, 10)
-    const { type, lesson_id } = request.query
+    const { type, lesson_id, exam } = request.query
     const dailyLimit = await getUserDailyLimit(userId)
+    // Зачёт по уроку (полная сессия без type): только слова учебника (source='textbook'/NULL) —
+    // тетрадные слова (source='extra') раздувают зачёт, сдать его нереально (см. IDEAS.md).
+    // Общие упражнения без word_id (напр. диктант по фразе) в зачёт всегда включаем.
+    const examClause = exam ? `AND (e.word_id IS NULL OR w.source IS NULL OR w.source = 'textbook')` : ''
 
     const SELECT = `
         SELECT e.*,
@@ -137,6 +141,7 @@ export async function exercisesRoutes(fastify) {
           ${passedClause}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
+          ${examClause}
         ORDER BY ${ownerOrder} LIMIT ${limit}`
     } else {
       // Две дорожки прогресса:
@@ -171,6 +176,7 @@ export async function exercisesRoutes(fastify) {
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
+          ${examClause}
         ORDER BY ${studentOrder} LIMIT ${limit}`
     }
 

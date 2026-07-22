@@ -552,7 +552,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
               </button>
             )}
           </div>
-          <button className="dl-pass-btn" onClick={() => navigate(`/exercise-session?lesson_id=${id}`)}>
+          <button className="dl-pass-btn" onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}>
             <CheckCircle2 size={16} /> {t.dashboard.exam || 'Зачёт по уроку'}
           </button>
         </>
@@ -571,7 +571,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
             <button className="dl-ctrl-btn" onClick={() => window.open(`/print/${id}`, '_blank')}><Printer size={15} /></button>
           </>
         )}
-        <button className="dl-ctrl-pencil" onClick={() => navigate(`/exercise-session?lesson_id=${id}`)}>
+        <button className="dl-ctrl-pencil" onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}>
           <Pencil size={14} /> {lesson.total || 0}
         </button>
         <span className="dl-ctrl-words">{t.dashboard.lessonWords} <b>{wordsCount}</b></span>
