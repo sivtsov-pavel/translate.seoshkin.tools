@@ -18,7 +18,10 @@ export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, 
   // Чиним «двойной артикль» (Die die Arztvisite) на лету — см. utils/fillblank.js
   const payload = useMemo(() => normalizeFillBlank(rawPayload), [rawPayload])
 
-  const isCorrect = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
+  // Регистрозависимо — в немецком заглавная буква обязательна (тренируемся писать правильно)
+  const isCorrect = answer.trim() === payload.blank.trim()
+  // Верно по буквам, но перепутан регистр → подсказать про заглавную
+  const caseOnly = !isCorrect && answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
   const parts = payload.sentence.split('___')
   const beforeBlank = parts[0]
   const afterBlank  = parts[parts.length - 1]
@@ -40,7 +43,7 @@ export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!answer.trim()) return
-    const correct = answer.trim().toLowerCase() === payload.blank.trim().toLowerCase()
+    const correct = answer.trim() === payload.blank.trim()
     setSubmitted(true)
     setReaction(correct ? 'correct' : 'wrong')  // Pablo реагирует
     // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)
@@ -155,6 +158,11 @@ export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, 
               <p style={{ color: 'var(--red)', fontSize: 16, margin: '0 0 4px', fontWeight: 600 }}>
                 ✗ {t.exercise.wrong}
               </p>
+              {caseOnly && (
+                <div style={{ color: 'var(--gold-dark, #8C6D2F)', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                  ✍️ {t.exercise.checkCapital || 'Почти! Проверь заглавную букву'}
+                </div>
+              )}
               {/* Объяснение: что ты написал и что правильно */}
               <div style={{ fontSize: 14, color: 'var(--ink-soft)', marginBottom: 8 }}>
                 {t.exercise.yourAnswer}: <span style={{ color: 'var(--red)', fontWeight: 600 }}>{answer}</span>

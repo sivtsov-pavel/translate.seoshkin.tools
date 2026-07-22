@@ -126,6 +126,7 @@ export const uk = {
     next: 'Далі →',
     correct: 'Правильно! ✓',
     wrong: 'Неправильно. Правильна відповідь:',
+    checkCapital: 'Майже! Перевір велику літеру',
     enterWord: 'Введіть слово...',
     sentencePlaceholder: 'Напишіть речення німецькою...',
     sentenceExample: 'Приклад',

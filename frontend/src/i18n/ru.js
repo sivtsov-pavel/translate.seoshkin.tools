@@ -131,6 +131,7 @@ export const ru = {
     next: 'Далее →',
     correct: 'Верно! ✓',
     wrong: 'Неверно. Правильно:',
+    checkCapital: 'Почти! Проверь заглавную букву',
     enterWord: 'Введите слово...',
     sentencePlaceholder: 'Напишите предложение на немецком...',
     sentenceExample: 'Пример',

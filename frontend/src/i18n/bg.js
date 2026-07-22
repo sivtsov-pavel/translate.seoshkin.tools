@@ -126,6 +126,7 @@ export const bg = {
     next: 'Напред →',
     correct: 'Вярно! ✓',
     wrong: 'Грешно. Правилно:',
+    checkCapital: 'Почти! Провери главната буква',
     enterWord: 'Въведи думата...',
     sentencePlaceholder: 'Напиши изречение на немски...',
     sentenceExample: 'Пример',

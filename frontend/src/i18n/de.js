@@ -130,6 +130,7 @@ export const de = {
     next: 'Weiter →',
     correct: 'Richtig! ✓',
     wrong: 'Falsch. Richtige Antwort:',
+    checkCapital: 'Fast! Achte auf die Großschreibung',
     enterWord: 'Wort eingeben...',
     sentencePlaceholder: 'Schreibe einen Satz auf Deutsch...',
     sentenceExample: 'Beispiel',

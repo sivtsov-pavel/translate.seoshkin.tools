@@ -126,6 +126,7 @@ export const es = {
     next: 'Siguiente →',
     correct: '¡Correcto! ✓',
     wrong: 'Incorrecto. Correcto:',
+    checkCapital: '¡Casi! Revisa la mayúscula',
     enterWord: 'Escribe la palabra...',
     sentencePlaceholder: 'Escribe una frase en alemán...',
     sentenceExample: 'Ejemplo',

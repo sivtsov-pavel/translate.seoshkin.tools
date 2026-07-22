@@ -126,6 +126,7 @@ export const tr = {
     next: 'İleri →',
     correct: 'Doğru! ✓',
     wrong: 'Yanlış. Doğrusu:',
+    checkCapital: 'Neredeyse! Büyük harfe dikkat et',
     enterWord: 'Kelimeyi girin...',
     sentencePlaceholder: 'Almanca cümle yazın...',
     sentenceExample: 'Örnek',

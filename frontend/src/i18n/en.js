@@ -126,6 +126,7 @@ export const en = {
     next: 'Next →',
     correct: 'Correct! ✓',
     wrong: 'Wrong. Correct answer:',
+    checkCapital: 'Almost! Check the capital letter',
     enterWord: 'Enter word...',
     sentencePlaceholder: 'Write a sentence in German...',
     sentenceExample: 'Example',

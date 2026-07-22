@@ -126,6 +126,7 @@ export const sq = {
     next: 'Tjetër →',
     correct: 'Saktë! ✓',
     wrong: 'Gabim. Saktë:',
+    checkCapital: 'Gati! Kontrollo shkronjën e madhe',
     enterWord: 'Shkruaj fjalën...',
     sentencePlaceholder: 'Shkruaj fjali në gjermanisht...',
     sentenceExample: 'Shembull',

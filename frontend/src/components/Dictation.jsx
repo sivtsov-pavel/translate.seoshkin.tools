@@ -10,6 +10,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
   const [input, setInput]     = useState('')
   const [checked, setChecked] = useState(false)
   const [correct, setCorrect] = useState(false)
+  const [caseHint, setCaseHint] = useState(false) // ответ верный, но перепутан регистр (заглавная)
   const inputRef              = useRef(null)
   const { t, lang }           = useI18nStore()
 
@@ -24,18 +25,20 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
     setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
   }, [word_de])
 
-  // Нормализация ответа диктанта: регистр не важен + срезаем хвост-подсказку в скобках
-  // («zum Beispiel (z.B.)» → «zum beispiel», «das Wort (Wörter)» → «das wort»),
-  // схлопываем повторные пробелы. Артикль и основа слова при этом остаются обязательными.
-  const norm = (s) => (s || '')
-    .toLowerCase()
-    .replace(/\s*\([^)]*\)\s*/g, ' ') // убрать «(z.B.)», «(Wörter)» и т.п.
+  // Чистим ответ: срезаем хвост-подсказку в скобках («(z.B.)», «(Wörter)») и лишние пробелы.
+  // Регистр НЕ понижаем — в немецком заглавная буква обязательна (существительные с большой),
+  // тренируемся писать правильно. Регистрозависимое сравнение.
+  const clean = (s) => (s || '')
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
   const check = () => {
-    const isCorrect = norm(input) === norm(word_de)
-    setCorrect(isCorrect)
+    const a = clean(input), b = clean(word_de)
+    const exact = a === b
+    // Ответ верный по буквам, но перепутан регистр → не засчитываем, но подсказываем про заглавную
+    setCaseHint(!exact && a.toLowerCase() === b.toLowerCase())
+    setCorrect(exact)
     setChecked(true)
     // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)
   }
@@ -100,6 +103,11 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
           ) : (
             <div style={{ textAlign: 'center', padding: '12px', background: 'var(--surface-2)', borderRadius: 12 }}>
               <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 14, marginBottom: 6 }}>✗ {t.exercise.wrong}</div>
+              {caseHint && (
+                <div style={{ color: 'var(--gold-dark, #8C6D2F)', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                  ✍️ {t.exercise.checkCapital || 'Почти! Проверь заглавную букву'}
+                </div>
+              )}
               <div style={{ color: 'var(--ink)', fontSize: 22, fontWeight: 700, fontFamily: 'Georgia,serif' }}>{word_de}</div>
             </div>
           )}

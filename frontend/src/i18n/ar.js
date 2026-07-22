@@ -128,6 +128,7 @@ export const ar = {
     next: 'التالي →',
     correct: 'صحيح! ✓',
     wrong: 'خطأ. الصحيح:',
+    checkCapital: 'تقريبًا! تحقق من الحرف الكبير',
     enterWord: 'أدخل الكلمة...',
     sentencePlaceholder: 'اكتب جملة بالألمانية...',
     sentenceExample: 'مثال',

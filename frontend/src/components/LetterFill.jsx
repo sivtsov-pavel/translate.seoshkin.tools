@@ -21,7 +21,8 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
 
   const handleSubmit = () => {
     if (!input.trim() || submitted) return
-    const isCorrect = input.trim().toLowerCase() === payload.answer.trim().toLowerCase()
+    // Регистрозависимо — заглавная буква обязательна (немецкие существительные с большой)
+    const isCorrect = input.trim() === payload.answer.trim()
     setCorrect(isCorrect)
     setSubmitted(true)
     setReaction(isCorrect ? 'correct' : 'wrong')  // Pablo реагирует клипом

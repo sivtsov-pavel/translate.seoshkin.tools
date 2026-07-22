@@ -126,6 +126,7 @@ export const fr = {
     next: 'Suivant →',
     correct: 'Correct ! ✓',
     wrong: 'Incorrect. Correct :',
+    checkCapital: 'Presque ! Vérifie la majuscule',
     enterWord: 'Entrez le mot...',
     sentencePlaceholder: 'Écris une phrase en allemand...',
     sentenceExample: 'Exemple',
