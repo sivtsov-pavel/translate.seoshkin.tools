@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Globe, Volume2, VolumeX, Star, MessageCircle } from 'lucide-react'
 import { api } from '../api/client.js'
 import { isOnline, getOfflineExercises, answerOffline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -117,46 +118,46 @@ export default function ExerciseSession() {
     <div className="full-page-layout exercise-session-page">
       {/* Мини-бейдж типа упражнения */}
       <div className="exercise-session-type">
-        <span style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 8, padding: '2px 9px', fontWeight: 700, fontSize: 12, marginRight: 8 }}>
+        <span style={{ background: 'rgba(62,127,193,0.12)', color: 'var(--blue)', borderRadius: 8, padding: '2px 9px', fontWeight: 700, fontSize: 12, marginRight: 8 }}>
           {doneOffset + current + 1} / {doneOffset + exercises.length}
         </span>
         <span>{typeLabel}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Учитель: глобус — показать перевод слова на локали ученика (проверка) */}
           {user?.role === 'owner' && (
             <button onClick={toggleOrigView}
               title={showOriginal ? 'Перевод показан — нажми, чтобы скрыть' : 'Показать перевод слова на локали ученика (не отвечая)'}
-              style={{ padding: '3px 9px', borderRadius: 8, cursor: 'pointer', fontSize: 13, lineHeight: 1, fontWeight: 700,
-                border: `1px solid ${showOriginal ? 'var(--accent)' : 'var(--line)'}`,
-                background: showOriginal ? 'var(--accent-soft)' : 'var(--surface-2)',
-                color: showOriginal ? 'var(--accent)' : 'var(--ink-soft)' }}>
-              🌐
+              style={{ ...hdrBtn, display: 'flex', alignItems: 'center',
+                border: `1px solid ${showOriginal ? 'var(--blue)' : 'var(--line)'}`,
+                background: showOriginal ? 'rgba(62,127,193,0.12)' : 'var(--surface-2)',
+                color: showOriginal ? 'var(--blue)' : 'var(--ink-soft)' }}>
+              <Globe size={16} />
             </button>
           )}
-          {/* Быстрый тумблер озвучки тренера — выкл заменяет голос аватара короткими звуками */}
+          {/* Быстрый тумблер озвучки тренера */}
           <button onClick={toggleReactions}
-            title={reactionsOn ? 'Тренер озвучивает — нажми, чтобы выключить (останутся короткие звуки верно/неверно)' : 'Озвучка выключена — нажми, чтобы включить голос тренера'}
-            style={{ padding: '3px 9px', borderRadius: 8, cursor: 'pointer', fontSize: 14, lineHeight: 1,
-              border: `1px solid ${reactionsOn ? 'var(--accent)' : 'var(--line)'}`,
-              background: reactionsOn ? 'var(--accent-soft)' : 'var(--surface-2)',
-              color: reactionsOn ? 'var(--accent)' : 'var(--ink-soft)' }}>
-            {reactionsOn ? '🔊' : '🔇'}
+            title={reactionsOn ? 'Тренер озвучивает — нажми, чтобы выключить' : 'Озвучка выключена — нажми, чтобы включить голос тренера'}
+            style={{ ...hdrBtn, display: 'flex', alignItems: 'center',
+              border: `1px solid ${reactionsOn ? 'var(--blue)' : 'var(--line)'}`,
+              background: reactionsOn ? 'rgba(62,127,193,0.12)' : 'var(--surface-2)',
+              color: reactionsOn ? 'var(--blue)' : 'var(--ink-soft)' }}>
+            {reactionsOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
           {ex.word_id && (
             <button onClick={() => markLearning(ex.word_id)} disabled={starred.has(ex.word_id)}
               title="Добавить слово в изучение (учить/повторять)"
-              style={{ padding: '3px 10px', borderRadius: 8, cursor: starred.has(ex.word_id) ? 'default' : 'pointer', fontSize: 12, fontWeight: 600, textTransform: 'none', letterSpacing: 0,
-                border: `1px solid ${starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
-                background: starred.has(ex.word_id) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent-soft)',
-                color: starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--accent)' }}>
-              {starred.has(ex.word_id) ? '★ В изучении' : '⭐ В изучение'}
+              style={{ padding: '4px 10px', borderRadius: 8, cursor: starred.has(ex.word_id) ? 'default' : 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5,
+                border: `1px solid ${starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--gold)'}`,
+                background: starred.has(ex.word_id) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--yellow-soft)',
+                color: starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--gold-dark)' }}>
+              <Star size={13} fill={starred.has(ex.word_id) ? 'currentColor' : 'none'} /> {starred.has(ex.word_id) ? 'В изучении' : 'В изучение'}
             </button>
           )}
           {lessonId && (
             <button onClick={() => navigate(`/ai-trainer?lesson_id=${lessonId}`)}
               title="Поговорить с AI-тренером по словам этого урока"
-              style={{ padding: '3px 10px', borderRadius: 8, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', cursor: 'pointer', fontSize: 12, fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>
-              🗣️ Тренер
+              style={{ padding: '4px 10px', borderRadius: 8, border: '1px solid var(--blue)', background: 'rgba(62,127,193,0.12)', color: 'var(--blue)', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <MessageCircle size={13} /> Тренер
             </button>
           )}
         </div>
@@ -175,3 +176,5 @@ export default function ExerciseSession() {
     </div>
   )
 }
+
+const hdrBtn = { padding: '5px 8px', borderRadius: 8, cursor: 'pointer', lineHeight: 1 }
