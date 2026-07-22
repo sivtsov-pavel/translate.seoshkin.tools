@@ -142,19 +142,15 @@ export default function Dashboard() {
 
   return (
     <div className="dl-root">
-      {/* ---------- Шапка курса ---------- */}
-      <div className="dl-course-bar">
-        <div className="dl-course-label">
-          <span>{course.flag}</span> {course.name}
-          <span className="dl-stripe-mini" style={{ background: `linear-gradient(90deg, ${course.stripe.join(',')})` }} />
-        </div>
-        {courses.length >= 2 && (
+      {/* Заголовок курса (флаг+название+полоска) теперь в топбаре — тут только выбор курса */}
+      {courses.length >= 2 && (
+        <div className="dl-course-bar" style={{ justifyContent: 'flex-end' }}>
           <select className="dl-switch-course" value={activeCourse} onChange={e => changeCourse(e.target.value)}>
             <option value="">{t.dashboard.allCourses}</option>
             {courses.map(c => <option key={c.id} value={String(c.id)}>{c.title}</option>)}
           </select>
-        )}
-      </div>
+        </div>
+      )}
 
       {needsScheduleBanner}
 

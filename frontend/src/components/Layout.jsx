@@ -6,8 +6,10 @@ import {
   NotebookPen, PlusCircle, UserPlus, MessagesSquare, Settings, Star, HelpCircle,
   ShieldCheck, Sun, Moon, Share2, LogOut, Link2, Image as ImageIcon, Sparkles,
   Languages, FileText, AudioLines, Heading, RotateCcw, Bell, Hourglass,
-  CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Menu, MoreVertical, X, Printer,
+  CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Menu, MoreVertical, X,
+  ArrowLeft, Compass,
 } from 'lucide-react'
+import Tour from './Tour.jsx'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 import { ex } from '../utils/extraI18n.js'
@@ -26,9 +28,12 @@ const SIDEBAR_W = 220
 
 // Флаг + название активного изучаемого языка (для верхней панели)
 const TARGET_META = {
-  de: { flag: '🇩🇪', name: 'Немецкий' }, es: { flag: '🇪🇸', name: 'Испанский' },
-  fr: { flag: '🇫🇷', name: 'Французский' }, it: { flag: '🇮🇹', name: 'Итальянский' },
-  en: { flag: '🇬🇧', name: 'Английский' }, pt: { flag: '🇵🇹', name: 'Португальский' },
+  de: { flag: '🇩🇪', name: 'Немецкий',    stripe: ['#1a1a1a', '#dd0000', '#ffce00'] },
+  es: { flag: '🇪🇸', name: 'Испанский',   stripe: ['#AA151B', '#F1BF00', '#AA151B'] },
+  fr: { flag: '🇫🇷', name: 'Французский', stripe: ['#0055A4', '#ffffff', '#EF4135'] },
+  it: { flag: '🇮🇹', name: 'Итальянский', stripe: ['#008C45', '#ffffff', '#CD212A'] },
+  en: { flag: '🇬🇧', name: 'Английский',  stripe: ['#012169', '#ffffff', '#C8102E'] },
+  pt: { flag: '🇵🇹', name: 'Португальский', stripe: ['#006600', '#ffffff', '#FF0000'] },
 }
 function targetMeta() { return TARGET_META[localStorage.getItem('target_lang') || 'de'] || TARGET_META.de }
 
@@ -50,6 +55,7 @@ export default function Layout({ children }) {
   const [open, setOpen] = useState(false)
   const [adminExpanded, setAdminExpanded] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [tourRun, setTourRun] = useState(false)   // онбординг-тур (кнопка + авто при первом входе)
   const [unreadChat, setUnreadChat] = useState(0)
   const [pushMsg, setPushMsg] = useState('')
   const [pushSending, setPushSending] = useState(false)
@@ -109,6 +115,16 @@ export default function Layout({ children }) {
   ] : []
 
   useEffect(() => { setOpen(false); setProfileOpen(false); window.scrollTo(0, 0) }, [location.pathname])
+
+  // Тур: авто-запуск ОДИН раз при первом входе (только на главной), дальше — по кнопке 🧭
+  useEffect(() => {
+    if (user && location.pathname === '/' && !localStorage.getItem('tour_seen_v1')) {
+      const tid = setTimeout(() => setTourRun(true), 700)
+      return () => clearTimeout(tid)
+    }
+  }, [user, location.pathname])
+  const startTour = () => { if (location.pathname !== '/') navigate('/'); setTimeout(() => setTourRun(true), location.pathname !== '/' ? 400 : 0) }
+  const endTour = () => { setTourRun(false); localStorage.setItem('tour_seen_v1', '1') }
 
   useEffect(() => {
     const measure = () => {
@@ -345,15 +361,23 @@ export default function Layout({ children }) {
       </nav>
 
       {/* Мобильный/планшетный топбар */}
-      <header className="layout-topbar" style={{ position: 'fixed', top: 3, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', background: 'var(--bg)', borderBottom: '1px solid var(--line)', minHeight: 50 }}>
-        <button onClick={() => setOpen(v => !v)} className="layout-hamburger" style={iconBtn} aria-label="Меню"><Menu size={20} /></button>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--ink)', fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 18 }} title={`Изучаемый язык: ${tgt.name}`}>
-          {tgt.flag} {tgt.name}
-        </Link>
+      <header className="layout-topbar" style={{ position: 'fixed', top: 3, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg)', borderBottom: '1px solid var(--line)', minHeight: 52 }}>
+        {/* Слева: меню + назад */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={() => setOpen(v => !v)} className="layout-hamburger" style={iconBtn} aria-label="Меню"><Menu size={20} /></button>
           {location.pathname !== '/' && (
-            <button onClick={() => navigate(-1)} style={{ ...iconBtn, fontSize: 13, fontWeight: 700, color: 'var(--blue)', padding: '0 8px', width: 'auto', gap: 4 }}>← Назад</button>
+            <button onClick={() => navigate(-1)} style={iconBtn} aria-label="Назад" title="Назад"><ArrowLeft size={20} color="var(--blue)" /></button>
           )}
+        </div>
+        {/* Центр: заголовок с флагом + немецкая полоска (как в макете) */}
+        <Link to="/" title={`Изучаемый язык: ${tgt.name}`}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
+          <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, whiteSpace: 'nowrap' }}>{tgt.flag} {tgt.name}</span>
+          <span style={{ display: 'block', height: 3, width: 40, borderRadius: 2, background: `linear-gradient(90deg, ${(tgt.stripe || TARGET_META.de.stripe).join(',')})` }} />
+        </Link>
+        {/* Справа: тур + профиль */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={startTour} style={iconBtn} aria-label="Тур" title="Тур по приложению"><Compass size={19} color="var(--blue)" /></button>
           {user && (
             <button onClick={() => setProfileOpen(v => !v)} aria-label="Профиль"
               style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid var(--surface)', background: 'var(--gold)', color: '#fff', fontWeight: 700, fontSize: /\p{Emoji}/u.test(avatarChar) ? 20 : 15, cursor: 'pointer', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
@@ -364,7 +388,7 @@ export default function Layout({ children }) {
       </header>
 
       {!online && (
-        <div style={{ position: 'fixed', top: 'calc(var(--topbar-h, 56px) - 10px)', left: 0, right: 0, zIndex: 90, background: '#8a6d1a', color: '#fff', textAlign: 'center', padding: '5px 12px', fontSize: 12, fontWeight: 600 }}>
+        <div style={{ position: 'fixed', top: 'var(--topbar-h, 56px)', left: 0, right: 0, zIndex: 90, background: '#8a6d1a', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
           📴 {t.offlineMode?.badge || 'Офлайн — словарь и упражнения работают, прогресс отправится при появлении сети'}
         </div>
       )}
@@ -427,13 +451,15 @@ export default function Layout({ children }) {
             <>
               <div onClick={() => setProfileOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 230 }} />
               <div style={{ position: 'fixed', right: 12, top: 'calc(var(--topbar-h, 56px) + 4px)', zIndex: 231, width: 232, background: 'var(--surface)', borderRadius: 16, boxShadow: '0 16px 40px rgba(0,0,0,0.25)', border: '1px solid var(--line)', padding: 14 }}>
-                <Link to="/profile" onClick={() => setProfileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 10, marginBottom: 8, borderBottom: '1px solid var(--line)', textDecoration: 'none' }}>
+                {/* Профиль = настройки (объединено): шапка ведёт в единый экран аккаунта */}
+                <Link to="/settings" onClick={() => setProfileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 10, marginBottom: 8, borderBottom: '1px solid var(--line)', textDecoration: 'none' }}>
                   <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: /\p{Emoji}/u.test(avatarChar) ? 20 : 15 }}>{avatarChar}</div>
-                  <div><div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{displayName}</div><div style={{ fontSize: 10.5, color: 'var(--ink-soft)' }}>{user.role === 'owner' ? t.nav.teacher : t.nav.student}</div></div>
+                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{displayName}</div><div style={{ fontSize: 10.5, color: 'var(--ink-soft)' }}>{user.role === 'owner' ? t.nav.teacher : t.nav.student}</div></div>
+                  <Settings size={16} color="var(--ink-soft)" />
                 </Link>
                 <button onClick={() => { toggleTheme() }} style={popRow}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />} {theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}</button>
                 <div style={{ ...popRow, cursor: 'default' }}><Globe size={16} /> <span style={{ flex: 1 }}>Язык интерфейса</span><LangSwitcher pill dropUp /></div>
-                <Link to="/settings" onClick={() => setProfileOpen(false)} style={{ ...popRow, textDecoration: 'none' }}><Settings size={16} /> {E.navSettings}</Link>
+                <button onClick={() => { setProfileOpen(false); startTour() }} style={popRow}><Compass size={16} /> Тур по приложению</button>
                 <button onClick={handleLogout} style={{ ...popRow, color: '#C0392B' }}><LogOut size={16} /> {t.nav.logout}</button>
               </div>
             </>
@@ -463,6 +489,9 @@ export default function Layout({ children }) {
           <span>{t.nav.more}</span>
         </button>
       </nav>
+
+      {/* Онбординг-тур — по кнопке 🧭 и раз при первом входе */}
+      {tourRun && <Tour onClose={endTour} />}
     </div>
   )
 }
