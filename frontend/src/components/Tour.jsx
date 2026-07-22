@@ -7,10 +7,13 @@ import { useI18nStore } from '../store/i18n.js'
 
 // Первый ВИДИМЫЙ элемент из списка селекторов (пропускаем скрытые копии: сайдбар/шторка/полоса)
 function visibleEl(sels) {
+  const W = window.innerWidth, H = window.innerHeight
   for (const sel of (sels || [])) {
     for (const el of document.querySelectorAll(sel)) {
       const r = el.getBoundingClientRect()
-      if (el.offsetParent !== null && r.width > 4 && r.height > 4) return el
+      const onScreen = r.width > 4 && r.height > 4 && r.right > 4 && r.left < W - 4 && r.bottom > 0 && r.top < H
+      const cs = getComputedStyle(el)
+      if (onScreen && cs.visibility !== 'hidden' && cs.display !== 'none' && el.offsetParent !== null) return el
     }
   }
   return null
@@ -20,19 +23,22 @@ export default function Tour({ onClose, onMenu }) {
   const { t } = useI18nStore()
   const T = t.tour || {}
 
+  // Селектор пункта МЕНЮ строго внутри шторки/сайдбара (а не одноимённой ссылки в топбаре/нижней панели)
+  const M = (href) => [`.layout-drawer a[href="${href}"]`, `.layout-sidebar a[href="${href}"]`]
+
   // menu:true — шаг по разделу (тур сам откроет меню). center:true — карточка по центру без подсветки.
   const steps = [
     { center: true, title: T.welcomeTitle || 'Привет! 👋', text: T.welcomeText || 'Давай я за минутку покажу, где что находится. Ничего сложного — просто нажимай «Далее».' },
     { sels: ['.layout-hamburger', '.layout-sidebar'], title: T.menuTitle || 'Главное меню', text: T.menuText || 'Отсюда открываются все разделы. На телефоне — кнопка с тремя палочками ☰ слева вверху. Нажал — выехало меню.' },
-    { menu: true, sels: ['a[href="/"]'], title: T.todayTitle || '🏠 Сегодня', text: T.todayText || 'Главная страница. Тут твои уроки и задания на сегодня — с чего начинать, видно сразу.' },
-    { menu: true, sels: ['a[href="/sets"]'], title: T.setsNavTitle || '🎒 Наборы', text: T.setsNavText || 'Тематические подборки слов — еда, город, дом и другие темы. Удобно, когда хочешь потренировать что-то одно.' },
-    { menu: true, sels: ['a[href="/vocabulary"]'], title: T.vocabTitle || '📖 Словарь', text: T.vocabText || 'Все слова, которые ты учишь. Можно послушать, как они звучат, и повторить.' },
-    { menu: true, sels: ['a[href="/ai-trainer"]'], title: T.trainerTitle || '🤖 AI-тренер Pablo', text: T.trainerText || 'Твой личный помощник Pablo. Говори с ним голосом или пиши — он ответит по-немецки и мягко поправит, если ошибся. Как живой учитель, только всегда рядом.' },
-    { menu: true, sels: ['a[href="/reader"]'], title: T.readerTitle || '👓 Читалка', text: T.readerText || 'Читай тексты на изучаемом языке. Не понял слово? Просто нажми на него пальцем — покажет перевод и озвучит.' },
-    { menu: true, sels: ['a[href="/books"]'], title: T.booksTitle || '📚 Книги', text: T.booksText || 'Книги, которые дал учитель. Приложение запоминает, где ты остановился — вернёшься и продолжишь с того же места.' },
-    { menu: true, sels: ['a[href="/phrasebook"]'], title: T.phraseTitle || '💬 Разговорник', text: T.phraseText || 'Готовые полезные фразы на каждый день — чтобы сразу заговорить, а не искать слова.' },
-    { menu: true, sels: ['a[href="/grammar"]'], title: T.grammarTitle || '🎓 Грамматика', text: T.grammarText || 'Правила языка — простыми словами и с цветными табличками. Понятно даже без учителя.' },
-    { menu: true, sels: ['a[href="/love"]'], title: T.loveTitle || '❤️ Любовь к детям', text: T.loveText || 'Тёплые, ласковые фразы, чтобы говорить своим детям добрые слова на новом языке.' },
+    { menu: true, sels: M('/'), title: T.todayTitle || '🏠 Сегодня', text: T.todayText || 'Главная страница. Тут твои уроки и задания на сегодня — с чего начинать, видно сразу.' },
+    { menu: true, sels: M('/sets'), title: T.setsNavTitle || '🎒 Наборы', text: T.setsNavText || 'Тематические подборки слов — еда, город, дом и другие темы. Удобно, когда хочешь потренировать что-то одно.' },
+    { menu: true, sels: M('/vocabulary'), title: T.vocabTitle || '📖 Словарь', text: T.vocabText || 'Все слова, которые ты учишь. Можно послушать, как они звучат, и повторить.' },
+    { menu: true, sels: M('/ai-trainer'), title: T.trainerTitle || '🤖 AI-тренер Pablo', text: T.trainerText || 'Твой личный помощник Pablo. Говори с ним голосом или пиши — он ответит по-немецки и мягко поправит, если ошибся. Как живой учитель, только всегда рядом.' },
+    { menu: true, sels: M('/reader'), title: T.readerTitle || '👓 Читалка', text: T.readerText || 'Читай тексты на изучаемом языке. Не понял слово? Просто нажми на него пальцем — покажет перевод и озвучит.' },
+    { menu: true, sels: M('/books'), title: T.booksTitle || '📚 Книги', text: T.booksText || 'Книги, которые дал учитель. Приложение запоминает, где ты остановился — вернёшься и продолжишь с того же места.' },
+    { menu: true, sels: M('/phrasebook'), title: T.phraseTitle || '💬 Разговорник', text: T.phraseText || 'Готовые полезные фразы на каждый день — чтобы сразу заговорить, а не искать слова.' },
+    { menu: true, sels: M('/grammar'), title: T.grammarTitle || '🎓 Грамматика', text: T.grammarText || 'Правила языка — простыми словами и с цветными табличками. Понятно даже без учителя.' },
+    { menu: true, sels: M('/love'), title: T.loveTitle || '❤️ Любовь к детям', text: T.loveText || 'Тёплые, ласковые фразы, чтобы говорить своим детям добрые слова на новом языке.' },
     { sels: ['.dl-metrics'], title: T.progressTitle || '📈 Твой прогресс', text: T.progressText || 'Тут видно, сколько уроков ты прошёл и сколько слов выучил. Полоски растут каждый день — приятно наблюдать!' },
     { sels: ['.dl-path'], title: T.pathTitle || '🧵 Путь уроков', text: T.pathText || 'Уроки идут дорожкой, как тропинка в парке. Нажми на кружок — откроется урок с заданиями. Пройдёшь — загорится галочка ✓.' },
     { sels: ['.dl-features'], title: T.gamesTitle || '🎮 Игры и тренер', text: T.gamesText || 'Учиться можно играя: выбери ответ, карточки, кроссворд, найди пару. Так слова запоминаются легче.' },
