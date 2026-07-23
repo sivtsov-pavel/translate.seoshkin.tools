@@ -1,6 +1,12 @@
 export const ru = {
   // Навигация
   nav: {
+    interfaceLang: 'Язык интерфейса',
+    tourApp: 'Тур по приложению',
+    changeCourse: 'Сменить курс',
+    chooseLanguage: 'Выбери язык',
+    whichCourse: 'Какой курс продолжим?',
+    courseHint: 'Курс всегда можно сменить кнопкой сверху',
     translations: 'Переводы',
     report: 'Отчёт',
     school: 'Школа',
@@ -44,6 +50,14 @@ export const ru = {
   },
   // Дашборд
   dashboard: {
+    greeting: 'Привет',
+    allLessons: 'Все уроки',
+    currentLesson: 'Текущий урок',
+    allLessonsSub: 'Показан весь путь уроков',
+    currentLessonSub: 'Показан только текущий урок',
+    setsSub: 'Твои подборки слов для тренировки',
+    on: 'вкл',
+    off: 'выкл',
     analyticsDesc: 'Прогресс учеников, точность, трудные слова',
     trainerDesc: 'Поговорим — голосом или текстом',
     loveTitle: 'Любовь к детям',
@@ -114,6 +128,15 @@ export const ru = {
   },
   // Упражнения
   exercise: {
+    batchDone: 'Молодец! Упражнения пройдены',
+    continueEx: 'Продолжить упражнения',
+    lessonPassed: 'Урок пройден!',
+    examPassed: 'Зачёт сдан! Урок пройден',
+    exercisesDone: 'Упражнения пройдены!',
+    tailsTitle: 'Почти! Остались хвосты',
+    doTails: 'Пройти хвосты',
+    skip: 'Пропустить',
+    toHome: 'На главную',
     flashcard: 'Флеш-карта',
     fillBlank: 'Заполни пропуск',
     multipleChoice: 'Выбери ответ',

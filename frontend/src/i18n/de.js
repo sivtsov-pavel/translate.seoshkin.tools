@@ -1,6 +1,12 @@
 export const de = {
   // Navigation
   nav: {
+    interfaceLang: 'Oberflächensprache',
+    tourApp: 'App-Tour',
+    changeCourse: 'Kurs wechseln',
+    chooseLanguage: 'Sprache wählen',
+    whichCourse: 'Welchen Kurs setzen wir fort?',
+    courseHint: 'Kurs jederzeit über die obere Taste wechselbar',
     translations: 'Übersetzungen',
     report: 'Bericht',
     school: 'Schule',
@@ -44,6 +50,14 @@ export const de = {
   },
   // Dashboard
   dashboard: {
+    greeting: 'Hallo',
+    allLessons: 'Alle Lektionen',
+    currentLesson: 'Aktuelle Lektion',
+    allLessonsSub: 'Ganzer Lernpfad angezeigt',
+    currentLessonSub: 'Nur aktuelle Lektion',
+    setsSub: 'Deine Wortsammlungen zum Üben',
+    on: 'an',
+    off: 'aus',
     analyticsDesc: 'Fortschritt, Genauigkeit, schwierige Wörter',
     trainerDesc: 'Sprechen wir — per Stimme oder Text',
     loveTitle: 'Liebe für Kinder',
@@ -114,6 +128,15 @@ export const de = {
   },
   // Übungen
   exercise: {
+    batchDone: 'Super! Übungen erledigt',
+    continueEx: 'Übungen fortsetzen',
+    lessonPassed: 'Lektion geschafft!',
+    examPassed: 'Test bestanden! Lektion fertig',
+    exercisesDone: 'Übungen erledigt!',
+    tailsTitle: 'Fast! Reste übrig',
+    doTails: 'Reste machen',
+    skip: 'Überspringen',
+    toHome: 'Zur Startseite',
     flashcard: 'Lernkarte',
     fillBlank: 'Lückentext',
     multipleChoice: 'Wähle die Antwort',

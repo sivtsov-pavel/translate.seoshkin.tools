@@ -34,6 +34,18 @@ export async function coursesRoutes(fastify) {
     return rows
   })
 
+  // Доступные изучаемые ЯЗЫКИ (для гейта выбора языка на входе / кнопки «Сменить курс»).
+  // owner — языки его курсов; student — языки, где есть готовые уроки.
+  fastify.get('/api/courses/languages', { preHandler: [fastify.authenticate] }, async (request) => {
+    const rows = request.user.role === 'owner'
+      ? (await db.query('SELECT DISTINCT target_lang FROM courses WHERE owner_id = $1 ORDER BY target_lang', [request.user.id])).rows
+      : (await db.query(
+          `SELECT DISTINCT c.target_lang FROM courses c
+           WHERE EXISTS (SELECT 1 FROM lessons l WHERE l.course_id = c.id AND l.status = 'done')
+           ORDER BY c.target_lang`)).rows
+    return rows.map(r => r.target_lang)
+  })
+
   // Уроки внутри курса. Для ученика с расписанием (дрип) добавляем lock-статус и дату открытия.
   fastify.get('/api/courses/:id/lessons', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const courseId = parseInt(request.params.id)

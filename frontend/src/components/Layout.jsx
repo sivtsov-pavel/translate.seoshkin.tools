@@ -10,6 +10,7 @@ import {
   ArrowLeft, Compass,
 } from 'lucide-react'
 import Tour from './Tour.jsx'
+import CourseGate from './CourseGate.jsx'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 import { ex } from '../utils/extraI18n.js'
@@ -56,6 +57,8 @@ export default function Layout({ children }) {
   const [adminExpanded, setAdminExpanded] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [tourRun, setTourRun] = useState(false)   // онбординг-тур (кнопка + авто при первом входе)
+  const [gateLangs, setGateLangs] = useState(null) // доступные языки изучения (для гейта)
+  const [gateOpen, setGateOpen] = useState(false)  // окно выбора языка (первый вход / «Сменить курс»)
   const [unreadChat, setUnreadChat] = useState(0)
   const [pushMsg, setPushMsg] = useState('')
   const [pushSending, setPushSending] = useState(false)
@@ -67,6 +70,15 @@ export default function Layout({ children }) {
   useEffect(() => {
     fetchSettings(); refreshUser()
     api.get('/platform/public-config').then(c => { if (c?.menu) setMenuCfg({ hidden: c.menu.hidden || [], custom: c.menu.custom || [] }) }).catch(() => {})
+    // Доступные языки изучения + окно выбора при ПЕРВОМ входе (язык не выбран осознанно)
+    api.get('/courses/languages').then(langs => {
+      const list = Array.isArray(langs) ? langs : []
+      setGateLangs(list)
+      if (!localStorage.getItem('lang_chosen')) {
+        if (list.length >= 2) setGateOpen(true)
+        else if (list.length === 1) { localStorage.setItem('target_lang', list[0]); localStorage.setItem('lang_chosen', '1') }
+      }
+    }).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [online, setOnline] = useState(isOnline())
@@ -389,6 +401,9 @@ export default function Layout({ children }) {
         </Link>
         {/* Справа: тур + профиль */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {gateLangs && gateLangs.length >= 2 && (
+            <button onClick={() => setGateOpen(true)} style={iconBtn} aria-label={t.nav.changeCourse || 'Сменить курс'} title={t.nav.changeCourse || 'Сменить курс'}><Languages size={19} color="var(--gold-dark)" /></button>
+          )}
           <button onClick={startTour} style={iconBtn} aria-label="Тур" title="Тур по приложению"><Compass size={19} color="var(--blue)" /></button>
           {user && (
             <button onClick={() => setProfileOpen(v => !v)} aria-label="Профиль"
@@ -470,8 +485,8 @@ export default function Layout({ children }) {
                   <Settings size={16} color="var(--ink-soft)" />
                 </Link>
                 <button onClick={() => { toggleTheme() }} style={popRow}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />} {theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}</button>
-                <div style={{ ...popRow, cursor: 'default' }}><Globe size={16} /> <span style={{ flex: 1 }}>Язык интерфейса</span><LangSwitcher pill dropUp /></div>
-                <button onClick={() => { setProfileOpen(false); startTour() }} style={popRow}><Compass size={16} /> Тур по приложению</button>
+                <div style={{ ...popRow, cursor: 'default' }}><Globe size={16} /> <span style={{ flex: 1 }}>{t.nav.interfaceLang || 'Язык интерфейса'}</span><LangSwitcher pill dropUp /></div>
+                <button onClick={() => { setProfileOpen(false); startTour() }} style={popRow}><Compass size={16} /> {t.nav.tourApp || 'Тур по приложению'}</button>
                 <button onClick={handleLogout} style={{ ...popRow, color: '#C0392B' }}><LogOut size={16} /> {t.nav.logout}</button>
               </div>
             </>
@@ -504,6 +519,9 @@ export default function Layout({ children }) {
 
       {/* Онбординг-тур — по кнопке 🧭 и раз при первом входе. onMenu — тур сам открывает меню для шагов по разделам */}
       {tourRun && <Tour onClose={endTour} onMenu={setOpen} />}
+
+      {/* Окно выбора языка изучения — при первом входе и по кнопке «Сменить курс» */}
+      {gateOpen && <CourseGate langs={gateLangs} onClose={() => { localStorage.setItem('lang_chosen', '1'); setGateOpen(false) }} />}
     </div>
   )
 }
