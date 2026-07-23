@@ -52,7 +52,9 @@ export default function Dashboard() {
   const [tailsCount, setTailsCount] = useState(0) // «хвосты» курса — пропущенные упражнения
   const [lessonQuery, setLessonQuery] = useState('')
   const [showSets, setShowSets] = useState(() => localStorage.getItem('dash_show_sets') === '1')
-  const [showAllLessons, setShowAllLessons] = useState(() => localStorage.getItem('dash_all_lessons') !== '0')
+  // По умолчанию тумблер ВЫКЛ: показываем только пройденные уроки + текущий (у Пабло это 2 кружка).
+  // Вся карта курса (включая закрытые впереди) открывается ТОЛЬКО по клику «Показать все уроки».
+  const [showAllLessons, setShowAllLessons] = useState(() => localStorage.getItem('dash_all_lessons') === '1')
   const toggleAllLessons = () => setShowAllLessons(v => { localStorage.setItem('dash_all_lessons', v ? '0' : '1'); return !v })
   const [courses, setCourses] = useState([])
   const [activeCourse, setActiveCourse] = useState(() => localStorage.getItem('active_course') || '')
@@ -341,9 +343,9 @@ export default function Dashboard() {
             {/* Тумблер «Все уроки/Текущий» — под полоской пути, над первым кружком */}
             <div className="dl-sets-toggle-row" style={{ marginBottom: 10 }}>
               <div>
-                <div className="dl-sets-toggle-title">📚 {t.dashboard.allLessons || 'Все уроки'}</div>
+                <div className="dl-sets-toggle-title">📚 {t.dashboard.allLessons || 'Показать все уроки'}</div>
                 <div className="dl-sets-toggle-sub">
-                  {showAllLessons ? (t.dashboard.allLessonsSub || 'Показан весь путь уроков') : (t.dashboard.currentLessonSub || 'Показан только текущий урок')}
+                  {showAllLessons ? (t.dashboard.allLessonsSub || 'Показана вся карта курса') : (t.dashboard.currentLessonSub || 'Показан пройденный путь и текущий урок')}
                 </div>
               </div>
               <label className="dl-switch">

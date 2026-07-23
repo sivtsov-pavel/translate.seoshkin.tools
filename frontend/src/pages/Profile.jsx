@@ -29,6 +29,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg]     = useState(null)
   const [pwdMsg, setPwdMsg] = useState(null)
+  const [genPwd, setGenPwd] = useState('')       // сгенерированный пароль (показываем открыто, чтобы скопировать)
   // Мои сложные слова + личный набор для тренировки
   const [hard, setHard]   = useState(null)     // { words:[], set:{id,status} }
   const [building, setBuilding] = useState(false)
@@ -74,6 +75,22 @@ export default function Profile() {
     } finally {
       setSaving(false)
     }
+  }
+
+  // Генерация надёжного пароля: 16 символов, гарантированно есть строчная/заглавная/цифра/символ.
+  const generatePassword = () => {
+    const lower = 'abcdefghijkmnpqrstuvwxyz', upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+    const digits = '23456789', symbols = '!@#$%&*?-_+'
+    const all = lower + upper + digits + symbols
+    const rnd = (set) => set[Math.floor(Math.random() * set.length)]
+    let chars = [rnd(lower), rnd(upper), rnd(digits), rnd(symbols)]
+    for (let i = chars.length; i < 16; i++) chars.push(rnd(all))
+    // перемешиваем (Фишер-Йейтс), чтобы обязательные символы не стояли в начале
+    for (let i = chars.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [chars[i], chars[j]] = [chars[j], chars[i]] }
+    const p = chars.join('')
+    setPwd(prev => ({ ...prev, next: p, confirm: p }))
+    setGenPwd(p)
+    setPwdMsg(null)
   }
 
   const changePassword = async () => {
@@ -220,9 +237,28 @@ export default function Profile() {
       <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 24 }}>
         <h2 style={{ fontSize: 16, marginBottom: 16 }}>{t.settings.changePasswordTitle}</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Field label={t.settings.newPasswordLabel}    value={pwd.next}    onChange={v => setPwd(p => ({ ...p, next: v }))}    type="password" placeholder={t.settings.minCharsPlaceholder} />
-          <Field label={t.settings.confirmPasswordLabel} value={pwd.confirm} onChange={v => setPwd(p => ({ ...p, confirm: v }))} type="password" placeholder={t.settings.repeatPasswordPlaceholder} />
+          <Field label={t.settings.newPasswordLabel}    value={pwd.next}    onChange={v => { setPwd(p => ({ ...p, next: v })); setGenPwd('') }}    type="password" placeholder={t.settings.minCharsPlaceholder} />
+          <Field label={t.settings.confirmPasswordLabel} value={pwd.confirm} onChange={v => { setPwd(p => ({ ...p, confirm: v })); setGenPwd('') }} type="password" placeholder={t.settings.repeatPasswordPlaceholder} />
         </div>
+        {/* Генератор надёжного пароля */}
+        <button type="button" onClick={generatePassword}
+          style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', background: 'rgba(62,127,193,0.10)', color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+          🎲 {t.settings.generatePasswordBtn || 'Сгенерировать надёжный пароль'}
+        </button>
+        {genPwd && (
+          <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 10, background: 'var(--surface-2)', border: '1px dashed var(--gold)' }}>
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>
+              {t.settings.generatedPasswordHint || 'Скопируй и сохрани — увидеть его снова будет нельзя:'}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <code style={{ fontSize: 18, fontWeight: 700, letterSpacing: 1, color: 'var(--ink)', fontFamily: 'monospace', wordBreak: 'break-all' }}>{genPwd}</code>
+              <button type="button" onClick={() => { navigator.clipboard?.writeText(genPwd); setPwdMsg({ ok: true, text: t.settings.passwordCopied || 'Пароль скопирован' }) }}
+                style={{ padding: '6px 12px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                📋 {t.settings.copyBtn || 'Скопировать'}
+              </button>
+            </div>
+          </div>
+        )}
         {pwdMsg && (
           <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, fontSize: 14, fontWeight: 600, background: pwdMsg.ok ? 'rgba(78,154,110,0.12)' : 'rgba(179,56,44,0.12)', color: pwdMsg.ok ? 'var(--good)' : 'var(--red)' }}>
             {pwdMsg.text}
