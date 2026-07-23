@@ -46,6 +46,17 @@ export async function coursesRoutes(fastify) {
     return rows.map(r => r.target_lang)
   })
 
+  // Все курсы владельца на ВСЕХ изучаемых языках (не только активный target_lang) — для мест,
+  // где учитель выбирает СВОЙ курс вне контекста текущего языка (напр. каталог учебников:
+  // «Поделиться своим курсом» — иначе не видно английский/испанский, если сверху выбран немецкий).
+  fastify.get('/api/courses/mine-all-langs', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const { rows } = await db.query(
+      'SELECT id, title, target_lang FROM courses WHERE owner_id = $1 ORDER BY target_lang, sort_order, created_at',
+      [request.user.id])
+    return rows
+  })
+
   // Уроки внутри курса. Для ученика с расписанием (дрип) добавляем lock-статус и дату открытия.
   fastify.get('/api/courses/:id/lessons', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const courseId = parseInt(request.params.id)

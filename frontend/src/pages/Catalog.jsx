@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 
+// Флаг языка — чтобы в списке «мои курсы» было видно, какой курс на каком языке
+// (курсы приходят СРАЗУ на всех изучаемых языках, не только на активном сверху).
+const LANG_FLAG = { de: '🇩🇪', en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', it: '🇮🇹', pt: '🇵🇹' }
+
 // 📚 Каталог учебников: подключить готовый учебник (без регенерации) или опубликовать свой курс.
 export default function Catalog() {
   const { user } = useAuthStore()
@@ -15,7 +19,8 @@ export default function Catalog() {
   const load = () => api.get('/catalog').then(setBooks).catch(e => setErr(e.message))
   useEffect(() => {
     load()
-    api.get('/courses').then(setCourses).catch(() => {})
+    // Все курсы владельца на всех языках (не только активный) — иначе не видно английский/испанский
+    api.get('/courses/mine-all-langs').then(setCourses).catch(() => {})
   }, [])
 
   if (user?.role !== 'owner') return (
@@ -60,7 +65,7 @@ export default function Catalog() {
           <select value={publishId} onChange={e => setPublishId(e.target.value)}
             style={{ padding: '8px 10px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 14 }}>
             <option value="">— выбери курс —</option>
-            {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+            {courses.map(c => <option key={c.id} value={c.id}>{LANG_FLAG[c.target_lang] || ''} {c.title}</option>)}
           </select>
           <button onClick={publish} disabled={!publishId || busy === 'publish'} style={{
             padding: '8px 16px', borderRadius: 9, border: 'none', cursor: 'pointer',
