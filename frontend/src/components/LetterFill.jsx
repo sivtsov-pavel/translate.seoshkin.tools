@@ -4,6 +4,20 @@ import { speakAuto, speak, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 
+// Строим массив символов слова, скрывая ~40% букв под пропуски ('_'). Детерминированно
+// (одно и то же слово → одна и та же маска), первую букву не прячем, пробелы/дефисы не трогаем.
+function buildMask(answer) {
+  const chars = [...(answer || '')]
+  const maskable = []
+  for (let i = 1; i < chars.length; i++) if (/\p{L}/u.test(chars[i])) maskable.push(i)
+  if (!maskable.length) return chars
+  const count = Math.max(1, Math.round(maskable.length * 0.4))
+  const hide = new Set()
+  const step = maskable.length / count
+  for (let k = 0; k < count; k++) hide.add(maskable[Math.min(maskable.length - 1, Math.floor(k * step + step / 2))])
+  return chars.map((c, i) => (hide.has(i) ? '_' : c))
+}
+
 export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, showOriginal }) {
   const [input, setInput]       = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -32,10 +46,12 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
 
   const handleKey = (e) => { if (e.key === 'Enter') handleSubmit() }
 
-  // masked и answer одинаковой длины и выровнены по индексу: masked[i]==='_' → буква скрыта.
-  // Рендерим ПОСИМВОЛЬНО, каждую скрытую букву — отдельной клеткой с зазором, чтобы было
-  // однозначно видно, СКОЛЬКО букв вставлять (раньше подчёркивания сливались в одну черту).
-  const chars = [...(payload.masked || '')]
+  // Подсказку (какие буквы скрыты) строим ДЕТЕРМИНИРОВАННО из ответа, а не из payload.masked:
+  // модель иногда генерировала битый masked (напр. "l_n_m" для "langsam" — разная длина, нерешаемо).
+  // Ученик всё равно вводит слово целиком (проверка по answer), поэтому masked — только визуальная
+  // подсказка, и её безопасно пересобрать в коде: ровно, выровнено по индексу, каждая клетка — буква.
+  const answer = (payload.answer || '').trim()
+  const chars = buildMask(answer)
   const resultColor = submitted ? (correct ? 'var(--good)' : 'var(--red)') : 'var(--accent)'
 
   return (
@@ -60,7 +76,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
             ch === '_'
               // Скрытая буква — отдельная клетка с подчёркиванием и зазором (видно, сколько букв)
               ? <span key={i} style={{ color: resultColor, borderBottom: `3px solid ${submitted ? resultColor : 'var(--accent)'}`, width: 26, display: 'inline-block', textAlign: 'center' }}>
-                  {submitted ? (payload.answer?.[i] || '') : ''}
+                  {submitted ? (answer[i] || '') : ''}
                 </span>
               : <span key={i} style={{ color: 'var(--ink)' }}>{ch}</span>
           ))}
