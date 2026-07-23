@@ -13,6 +13,7 @@ import SentenceWrite from '../components/SentenceWrite.jsx'
 import LetterFill from '../components/LetterFill.jsx'
 import Dictation from '../components/Dictation.jsx'
 import SpeechExercise from '../components/SpeechExercise.jsx'
+import ExerciseErrorBoundary from '../components/ExerciseErrorBoundary.jsx'
 
 // Порядок типов упражнений в уроке (педагогический, по просьбе Павла):
 // вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение → проговори → диктант
@@ -293,6 +294,7 @@ export default function ExerciseSession() {
 
       {/* Контент упражнения — заполняет оставшееся место */}
       <div className="exercise-session-content" ref={contentRef}>
+      <ExerciseErrorBoundary resetKey={ex.id} onSkip={() => { const n = current + 1; if (n >= exercises.length) endSession(); else setCurrent(n) }}>
         {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} />}
         {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} payloadTranslations={ex.payload_translations} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
         {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} showOriginal={showOriginal} />}
@@ -300,6 +302,7 @@ export default function ExerciseSession() {
         {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} />}
         {ex.type === 'dictation'       && <Dictation       key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
         {ex.type === 'speech'          && <SpeechExercise  key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
+      </ExerciseErrorBoundary>
       </div>
     </div>
   )

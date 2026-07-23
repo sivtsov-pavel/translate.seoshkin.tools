@@ -327,10 +327,11 @@ export default function Dashboard() {
       {/* ---------- ПУТЬ УРОКОВ (нитка) ---------- */}
       <section className="dl-screen2">
         {books.length > 0 && (() => {
-          // «Текущий урок» = показываем только текущий (реальный эффект и для ученика);
-          // если всё пройдено (нет current) — показываем весь путь.
-          const currentOnly = pathLessons.filter(l => l.status === 'current')
-          const shownPath = showAllLessons || !currentOnly.length ? pathLessons : currentOnly
+          // «Все уроки» ВЫКЛ = показываем путь вперёд (текущий + ещё не пройденные), скрываем
+          // только уже пройденные — чтобы после первого урока не оставался один кружок, а был
+          // виден весь оставшийся путь. «Все уроки» ВКЛ = показываем и пройденные тоже.
+          const forward = pathLessons.filter(l => l.status === 'current' || l.status === 'upcoming' || l.status === 'locked')
+          const shownPath = showAllLessons || !forward.length ? pathLessons : forward
           return (
           <>
             <div className="dl-section-head">
