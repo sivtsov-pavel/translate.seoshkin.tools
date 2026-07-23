@@ -337,6 +337,19 @@ export default function Dashboard() {
               <span className="dl-eyebrow">{t.dashboard.lessonPath || 'Путь урока'}</span>
               <span className="dl-stripe-thin" style={{ background: `linear-gradient(90deg, ${course.stripe.join(',')})` }} />
             </div>
+            {/* Тумблер «Все уроки/Текущий» — под полоской пути, над первым кружком */}
+            <div className="dl-sets-toggle-row" style={{ marginBottom: 10 }}>
+              <div>
+                <div className="dl-sets-toggle-title">📚 {t.dashboard.allLessons || 'Все уроки'}</div>
+                <div className="dl-sets-toggle-sub">
+                  {showAllLessons ? (t.dashboard.allLessonsSub || 'Показан весь путь уроков') : (t.dashboard.currentLessonSub || 'Показан только текущий урок')}
+                </div>
+              </div>
+              <label className="dl-switch">
+                <input type="checkbox" checked={showAllLessons} onChange={toggleAllLessons} />
+                <span className="dl-switch-track"><span className="dl-switch-thumb" /></span>
+              </label>
+            </div>
             <LessonPath lessons={shownPath}
               selectedId={selectedId ?? current?.lesson_id}
               onSelect={id => {
@@ -351,21 +364,7 @@ export default function Dashboard() {
 
         {selLesson && <LessonDetailCard key={selLesson.lesson_id} lesson={selLesson} navigate={navigate} onReset={repeatLesson} />}
 
-        {/* Тумблеры — под уроком, перед наборами (блоки-переключатели, как в макете) */}
-        {books.length > 0 && (
-          <div className="dl-sets-toggle-row" style={{ marginBottom: 8 }}>
-            <div>
-              <div className="dl-sets-toggle-title">📚 {t.dashboard.allLessons || 'Все уроки'}</div>
-              <div className="dl-sets-toggle-sub">
-                {showAllLessons ? (t.dashboard.allLessonsSub || 'Показан весь путь уроков') : (t.dashboard.currentLessonSub || 'Показан только текущий урок')}
-              </div>
-            </div>
-            <label className="dl-switch">
-              <input type="checkbox" checked={showAllLessons} onChange={toggleAllLessons} />
-              <span className="dl-switch-track"><span className="dl-switch-thumb" /></span>
-            </label>
-          </div>
-        )}
+        {/* Тумблер «Наборы» — под уроком, перед списком наборов */}
         {setsAll.length > 0 && (
           <div className="dl-sets-toggle-row" style={{ marginBottom: 8 }}>
             <div>
