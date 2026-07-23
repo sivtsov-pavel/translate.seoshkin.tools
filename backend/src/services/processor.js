@@ -402,6 +402,125 @@ export async function regenerateExercisesFromDb(lessonId) {
   }
 }
 
+// Шаг 1 превью (#5, создание урока): извлечь+смёржить ТОЛЬКО необработанные фото урока
+// и вернуть учителю на правку — БЕЗ вставки слов/упражнений в БД (только пометка фото
+// processed+raw_extraction, как в processNewMedia, чтобы не гонять vision дважды).
+export async function extractLessonPreview(lessonId) {
+  const { rows: media } = await db.query(
+    "SELECT * FROM lesson_media WHERE lesson_id=$1 AND type='photo' AND processed=false ORDER BY id", [lessonId])
+  if (!media.length) return { words: [], sentences: [], grammar_points: [] }
+  const { rows: lrow } = await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])
+  const ownerId = lrow[0]?.owner_id
+  const targetLang = lrow[0]?.target_lang || 'de'
+  const client = await getOwnerClient(ownerId)
+  await db.query("UPDATE lessons SET status='processing', progress=$1 WHERE id=$2", [`Распознаю ${media.length} фото...`, lessonId])
+
+  const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
+  const existingWords = existRows.map(r => r.word_de)
+
+  const words = []
+  const sentences = []
+  const grammarPoints = []
+  try {
+    for (const src of ['textbook', 'extra']) {
+      const list = media.filter(m => (m.source === 'extra' ? 'extra' : 'textbook') === src)
+      if (!list.length) continue
+      const pairs = []
+      for (const photo of list) {
+        try {
+          const extraction = await extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client)
+          pairs.push({ mediaId: photo.id, extraction })
+          await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
+        } catch (e) { console.error('extractLessonPreview extract', e.message) }
+      }
+      if (!pairs.length) continue
+      // Сверяем с уже имеющимися словами урока (тетрадь после учебника — не дублируем)
+      const cons = await mergeLesson(pairs.map(p => p.extraction), null, existingWords, targetLang, client)
+      for (const w of (cons.words || [])) {
+        const mediaId = mediaIdForWord(w.word_de, pairs) // с какого скана слово
+        words.push({ word_de: w.word_de, translation_ru: w.translation_ru || '', example_sentence: w.example_sentence || null, source: src, media_id: mediaId })
+        existingWords.push(w.word_de) // между textbook/extra в одном превью тоже не дублировать
+      }
+      for (const s of (cons.sentences || [])) {
+        const text = (typeof s === 'string' ? s : s?.text || '').trim()
+        if (text) sentences.push({ text, translation_ru: (typeof s === 'object' && s ? s.translation_ru : null) || null, source: src })
+      }
+      if (Array.isArray(cons.grammar_points)) grammarPoints.push(...cons.grammar_points)
+    }
+    await db.query("UPDATE lessons SET status='pending', progress=$1 WHERE id=$2",
+      [`Превью готово: слов ${words.length}, предложений ${sentences.length}`, lessonId])
+  } catch (err) {
+    await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 150), lessonId])
+    throw err
+  }
+  return { words, sentences, grammar_points: grammarPoints }
+}
+
+// Шаг 2 превью: учитель отметил галочками/дописал слова и предложения — коммитим
+// ТОЛЬКО их (INSERT слов/предложений/грамматики), генерируем упражнения для новых слов,
+// затем enrichLesson (переводы/картинки на все языки). Идёт в фоне, статус — как обычно.
+export async function commitLessonWords(lessonId, words = [], sentences = [], grammarPoints = []) {
+  try {
+    const { rows: lrow } = await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])
+    const ownerId = lrow[0]?.owner_id
+    const targetLang = lrow[0]?.target_lang || 'de'
+    if (!ownerId) throw new Error('Урок не найден')
+    const client = await getOwnerClient(ownerId)
+    await setProgress(lessonId, 'Сохраняю урок...')
+
+    for (const w of (words || [])) {
+      if (!w?.word_de) continue
+      const source = w.source === 'extra' ? 'extra' : 'textbook'
+      await db.query(
+        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
+         DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
+                       media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
+        [lessonId, ownerId, String(w.word_de).trim(), (w.translation_ru || '').trim() || null,
+         w.example_sentence || null, source, w.media_id || null])
+    }
+
+    const bySource = { textbook: [], extra: [] }
+    for (const s of (sentences || [])) {
+      const src = s?.source === 'extra' ? 'extra' : 'textbook'
+      bySource[src].push(s)
+    }
+    for (const src of ['textbook', 'extra']) {
+      if (bySource[src].length) await saveSentences(lessonId, bySource[src], src)
+    }
+
+    for (const gp of (grammarPoints || [])) {
+      if (!gp?.description) continue
+      await db.query('INSERT INTO grammar_points (lesson_id, description, example) VALUES ($1, $2, $3)', [lessonId, gp.description, gp.example || null])
+    }
+
+    // Упражнения ТОЛЬКО для слов урока без упражнений (новые) — без дублей
+    const { rows: wordRows } = await db.query(
+      `SELECT w.id, w.word_de, w.translation_ru, w.example_sentence FROM words w
+       WHERE w.lesson_id=$1 AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id=w.id AND e.lesson_id=$1)`, [lessonId])
+    if (wordRows.length) {
+      await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} слов...`)
+      const exercises = await generateExercises(wordRows, grammarPoints, targetLang, await getLessonSentences(lessonId), client)
+      const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+      for (const ex of exercises) {
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+          [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+      }
+      for (const w of wordRows) {
+        const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', p])
+      }
+    }
+
+    await enrichLesson(lessonId)
+    await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
+  } catch (err) {
+    console.error('commitLessonWords:', err.message)
+    await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 150), lessonId])
+  }
+}
+
 // Обработать ТОЛЬКО новые (необработанные) фото урока: извлечь слова + упражнения
 // для новых слов (без пересоздания существующих). Возвращает число обработанных фото.
 export async function processNewMedia(lessonId) {

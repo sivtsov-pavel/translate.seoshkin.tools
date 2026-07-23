@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { generateLetterFill } from '../services/claude.js'
-import { regenerateExercisesFromDb, processNewMedia, enrichLesson } from '../services/processor.js'
+import { regenerateExercisesFromDb } from '../services/processor.js'
 import { ownerHasOwnKey } from '../services/openaiClient.js'
 import { pdfToImages } from '../services/pdf.js'
 import { unlink } from 'node:fs/promises'
@@ -397,26 +397,11 @@ export async function lessonsRoutes(fastify) {
       savedFiles.push({ mediaId: rows[0].id, filename, type: mediaType })
     }
 
-    // Авто-обработка загруженного: «отправил на загрузку» = «обработалось».
-    // Обрабатываем новые фото (новые слова тетради/доски + упражнения) и дополняем.
-    // Только учитель — обработка тратит токены. Идёт в фоне, статус можно поллить.
-    const hasPhotos = savedFiles.some(f => f.type === 'photo')
-    const autoProcess = hasPhotos && request.user.role === 'owner'
-    if (autoProcess) {
-      await db.query("UPDATE lessons SET status='processing', progress='Обрабатываю загруженное...' WHERE id=$1", [lessonId])
-      ;(async () => {
-        try {
-          const n = await processNewMedia(lessonId)
-          await enrichLesson(lessonId)
-          await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Обработано новых фото: ${n}.`, lessonId])
-        } catch (err) {
-          fastify.log.error({ lessonId, err }, 'Ошибка авто-обработки загруженных медиа')
-          await db.query("UPDATE lessons SET status='done', progress='Готово (с ошибками при обработке).' WHERE id=$1", [lessonId])
-        }
-      })()
-    }
-
-    return reply.status(201).send({ files: savedFiles, processing: autoProcess })
+    // Загрузка сама по себе больше НЕ запускает обработку (раньше — «вслепую», часть слов
+    // терялась незаметно). Разбор — через явное превью: POST /extract-preview → учитель
+    // проверяет/правит → POST /confirm. Для добавления фото к готовому уроку — как раньше,
+    // кнопка «✨ Обработать всё» (эндпоинт /enrich, processNewMedia остаётся для неё).
+    return reply.status(201).send({ files: savedFiles, processing: false })
   })
 
   // Удалить одно загруженное медиа урока (фото/аудио) — чтобы переделать урок с нужными страницами.

@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson, distributeWordsToSets } from '../services/processor.js'
+import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson, distributeWordsToSets, extractLessonPreview, commitLessonWords } from '../services/processor.js'
 import { ownerHasOwnKey } from '../services/openaiClient.js'
 import { config } from '../config.js'
 
@@ -78,6 +78,46 @@ export async function processRoutes(fastify) {
     generateCustomSet(lessonId, word_ids.map(Number).filter(Boolean)).catch(err =>
       fastify.log.error({ lessonId, err }, 'Ошибка генерации своего набора'))
     return { lessonId, started: true }
+  })
+
+  // Превью распознанного ПЕРЕД созданием урока (#5): извлечь+смёржить фото урока
+  // (учебник+тетрадь, дедуп), вернуть учителю на правку — слова/предложения в БД ещё
+  // НЕ вставлены. Vision-разбор идёт здесь и только здесь (один раз). Синхронный ответ —
+  // nginx proxy_read_timeout 900s, нескольких фото хватает с запасом.
+  fastify.post('/api/lessons/:id/extract-preview', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (!(await canUpload(request, reply))) return
+    const lessonId = parseInt(request.params.id)
+    const { rows } = await db.query('SELECT status FROM lessons WHERE id = $1', [lessonId])
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    if (rows[0].status === 'processing') return reply.status(409).send({ error: 'Уже обрабатывается' })
+    try {
+      return await extractLessonPreview(lessonId)
+    } catch (err) {
+      fastify.log.error({ lessonId, err }, 'Ошибка превью распознавания')
+      return reply.status(500).send({ error: 'Не удалось распознать фото: ' + err.message })
+    }
+  })
+
+  // Подтверждение превью (#5): коммитит только отмеченные учителем + добавленные вручную
+  // слова/предложения. Vision уже отработал на превью — здесь только текст (gpt-4o-mini) и картинки.
+  fastify.post('/api/lessons/:id/confirm', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    if (!(await canUpload(request, reply))) return
+    const lessonId = parseInt(request.params.id)
+    const { words, sentences, grammar_points } = request.body || {}
+    const { rows } = await db.query('SELECT status FROM lessons WHERE id = $1', [lessonId])
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    if (rows[0].status === 'processing') return reply.status(409).send({ error: 'Уже обрабатывается' })
+
+    await db.query("UPDATE lessons SET status='processing', progress='Сохраняю урок...' WHERE id=$1", [lessonId])
+    commitLessonWords(lessonId, words, sentences, grammar_points).catch(err =>
+      fastify.log.error({ lessonId, err }, 'Ошибка подтверждения урока'))
+    return { started: true, lessonId }
   })
 
   // Запуск обработки — возвращает сразу, обработка идёт в фоне

@@ -6,16 +6,26 @@ import { useI18nStore } from '../store/i18n.js'
 
 // Локальные строки новых полей (10 языков) — чтобы не трогать общий i18n
 const NSTR = {
-  ru: { word: 'Урок', descLabel: 'Описание (необязательно)', descHint: 'Кратко: о чём урок, что тренируем…', book: '📘 Учебник', bookHint: 'Фото страниц учебника', tetrad: '✏️ Тетрадь / доска', tetradHint: 'Свои слова с доски или тетради', selected: (n) => `Выбрано: ${n}` },
-  uk: { word: 'Урок', descLabel: 'Опис (необов\'язково)', descHint: 'Коротко: про що урок, що тренуємо…', book: '📘 Підручник', bookHint: 'Фото сторінок підручника', tetrad: '✏️ Зошит / дошка', tetradHint: 'Свої слова з дошки або зошита', selected: (n) => `Обрано: ${n}` },
-  en: { word: 'Lesson', descLabel: 'Description (optional)', descHint: 'Briefly: what the lesson is about…', book: '📘 Textbook', bookHint: 'Photos of textbook pages', tetrad: '✏️ Notebook / board', tetradHint: 'Your own words from the board or notebook', selected: (n) => `Selected: ${n}` },
-  de: { word: 'Lektion', descLabel: 'Beschreibung (optional)', descHint: 'Kurz: worum es geht…', book: '📘 Lehrbuch', bookHint: 'Fotos der Lehrbuchseiten', tetrad: '✏️ Heft / Tafel', tetradHint: 'Eigene Wörter von Tafel oder Heft', selected: (n) => `Ausgewählt: ${n}` },
-  bg: { word: 'Урок', descLabel: 'Описание (по избор)', descHint: 'Накратко: за какво е урокът…', book: '📘 Учебник', bookHint: 'Снимки на страници', tetrad: '✏️ Тетрадка / дъска', tetradHint: 'Свои думи от дъската или тетрадката', selected: (n) => `Избрани: ${n}` },
-  tr: { word: 'Ders', descLabel: 'Açıklama (isteğe bağlı)', descHint: 'Kısaca: ders ne hakkında…', book: '📘 Ders kitabı', bookHint: 'Ders kitabı sayfaları', tetrad: '✏️ Defter / tahta', tetradHint: 'Tahtadan veya defterden kendi kelimeleriniz', selected: (n) => `Seçildi: ${n}` },
-  ar: { word: 'درس', descLabel: 'وصف (اختياري)', descHint: 'باختصار: عن ماذا الدرس…', book: '📘 الكتاب', bookHint: 'صور صفحات الكتاب', tetrad: '✏️ الدفتر / السبورة', tetradHint: 'كلماتك من السبورة أو الدفتر', selected: (n) => `المحدد: ${n}` },
-  es: { word: 'Lección', descLabel: 'Descripción (opcional)', descHint: 'Breve: de qué trata la lección…', book: '📘 Libro', bookHint: 'Fotos de las páginas del libro', tetrad: '✏️ Cuaderno / pizarra', tetradHint: 'Tus palabras de la pizarra o el cuaderno', selected: (n) => `Seleccionadas: ${n}` },
-  fr: { word: 'Leçon', descLabel: 'Description (facultatif)', descHint: 'Brièvement : de quoi parle la leçon…', book: '📘 Manuel', bookHint: 'Photos des pages du manuel', tetrad: '✏️ Cahier / tableau', tetradHint: 'Tes propres mots du tableau ou du cahier', selected: (n) => `Sélectionnées : ${n}` },
-  sq: { word: 'Mësimi', descLabel: 'Përshkrimi (opsional)', descHint: 'Shkurt: për çfarë është mësimi…', book: '📘 Libri', bookHint: 'Foto të faqeve të librit', tetrad: '✏️ Fletore / dërrasë', tetradHint: 'Fjalët e tua nga dërrasa ose fletorja', selected: (n) => `Zgjedhur: ${n}` },
+  ru: { word: 'Урок', descLabel: 'Описание (необязательно)', descHint: 'Кратко: о чём урок, что тренируем…', book: '📘 Учебник', bookHint: 'Фото страниц учебника', tetrad: '✏️ Тетрадь / доска', tetradHint: 'Свои слова с доски или тетради', selected: (n) => `Выбрано: ${n}`,
+    pv: { title: '👀 Проверь, что распознал ИИ', hint: 'Сними галочку с лишнего, дострой то, что пропустил ИИ. Урок создастся только из отмеченного.', words: '📖 Слова', sentences: '💬 Предложения', noWords: 'Слов не распознано.', noSentences: 'Предложений не распознано.', wordPh: 'слово', trPh: 'перевод', addWord: '+ добавить слово', sentPh: 'предложение', addSent: '+ добавить', cancel: 'Отмена', confirm: 'Подтвердить разбор →', fromBook: 'Учебник', fromExtra: 'Тетрадь/доска', cancelConfirm: 'Отменить создание урока? Загруженные фото и распознанное будут удалены.' } },
+  uk: { word: 'Урок', descLabel: 'Опис (необов\'язково)', descHint: 'Коротко: про що урок, що тренуємо…', book: '📘 Підручник', bookHint: 'Фото сторінок підручника', tetrad: '✏️ Зошит / дошка', tetradHint: 'Свої слова з дошки або зошита', selected: (n) => `Обрано: ${n}`,
+    pv: { title: '👀 Перевір, що розпізнав ШІ', hint: 'Зніми галочку із зайвого, допиши те, що пропустив ШІ. Урок створиться лише з відміченого.', words: '📖 Слова', sentences: '💬 Речення', noWords: 'Слів не розпізнано.', noSentences: 'Речень не розпізнано.', wordPh: 'слово', trPh: 'переклад', addWord: '+ додати слово', sentPh: 'речення', addSent: '+ додати', cancel: 'Скасувати', confirm: 'Підтвердити розбір →', fromBook: 'Підручник', fromExtra: 'Зошит/дошка', cancelConfirm: 'Скасувати створення уроку? Завантажені фото і розпізнане будуть видалені.' } },
+  en: { word: 'Lesson', descLabel: 'Description (optional)', descHint: 'Briefly: what the lesson is about…', book: '📘 Textbook', bookHint: 'Photos of textbook pages', tetrad: '✏️ Notebook / board', tetradHint: 'Your own words from the board or notebook', selected: (n) => `Selected: ${n}`,
+    pv: { title: '👀 Review what the AI recognized', hint: 'Uncheck anything wrong, add what the AI missed. The lesson will be created only from checked items.', words: '📖 Words', sentences: '💬 Sentences', noWords: 'No words recognized.', noSentences: 'No sentences recognized.', wordPh: 'word', trPh: 'translation', addWord: '+ add word', sentPh: 'sentence', addSent: '+ add', cancel: 'Cancel', confirm: 'Confirm →', fromBook: 'Textbook', fromExtra: 'Notebook/board', cancelConfirm: 'Cancel lesson creation? Uploaded photos and recognized data will be deleted.' } },
+  de: { word: 'Lektion', descLabel: 'Beschreibung (optional)', descHint: 'Kurz: worum es geht…', book: '📘 Lehrbuch', bookHint: 'Fotos der Lehrbuchseiten', tetrad: '✏️ Heft / Tafel', tetradHint: 'Eigene Wörter von Tafel oder Heft', selected: (n) => `Ausgewählt: ${n}`,
+    pv: { title: '👀 Überprüfe, was die KI erkannt hat', hint: 'Hake Falsches ab, ergänze, was die KI übersehen hat. Die Lektion wird nur aus dem Markierten erstellt.', words: '📖 Wörter', sentences: '💬 Sätze', noWords: 'Keine Wörter erkannt.', noSentences: 'Keine Sätze erkannt.', wordPh: 'Wort', trPh: 'Übersetzung', addWord: '+ Wort hinzufügen', sentPh: 'Satz', addSent: '+ hinzufügen', cancel: 'Abbrechen', confirm: 'Bestätigen →', fromBook: 'Lehrbuch', fromExtra: 'Heft/Tafel', cancelConfirm: 'Lektionserstellung abbrechen? Hochgeladene Fotos und Erkanntes werden gelöscht.' } },
+  bg: { word: 'Урок', descLabel: 'Описание (по избор)', descHint: 'Накратко: за какво е урокът…', book: '📘 Учебник', bookHint: 'Снимки на страници', tetrad: '✏️ Тетрадка / дъска', tetradHint: 'Свои думи от дъската или тетрадката', selected: (n) => `Избрани: ${n}`,
+    pv: { title: '👀 Провери какво разпозна ИИ', hint: 'Махни отметката от грешното, добави каквото ИИ е пропуснал. Урокът ще се създаде само от отметнатото.', words: '📖 Думи', sentences: '💬 Изречения', noWords: 'Не са разпознати думи.', noSentences: 'Не са разпознати изречения.', wordPh: 'дума', trPh: 'превод', addWord: '+ добави дума', sentPh: 'изречение', addSent: '+ добави', cancel: 'Отказ', confirm: 'Потвърди →', fromBook: 'Учебник', fromExtra: 'Тетрадка/дъска', cancelConfirm: 'Да се отмени ли създаването на урока? Качените снимки и разпознатото ще бъдат изтрити.' } },
+  tr: { word: 'Ders', descLabel: 'Açıklama (isteğe bağlı)', descHint: 'Kısaca: ders ne hakkında…', book: '📘 Ders kitabı', bookHint: 'Ders kitabı sayfaları', tetrad: '✏️ Defter / tahta', tetradHint: 'Tahtadan veya defterden kendi kelimeleriniz', selected: (n) => `Seçildi: ${n}`,
+    pv: { title: '👀 Yapay zekânın tanıdığını kontrol et', hint: 'Yanlış olanın işaretini kaldır, yapay zekânın atladığını ekle. Ders yalnızca işaretlenenlerden oluşturulacak.', words: '📖 Kelimeler', sentences: '💬 Cümleler', noWords: 'Kelime tanınmadı.', noSentences: 'Cümle tanınmadı.', wordPh: 'kelime', trPh: 'çeviri', addWord: '+ kelime ekle', sentPh: 'cümle', addSent: '+ ekle', cancel: 'İptal', confirm: 'Onayla →', fromBook: 'Ders kitabı', fromExtra: 'Defter/tahta', cancelConfirm: 'Ders oluşturma iptal edilsin mi? Yüklenen fotoğraflar ve tanınan veriler silinecek.' } },
+  ar: { word: 'درس', descLabel: 'وصف (اختياري)', descHint: 'باختصار: عن ماذا الدرس…', book: '📘 الكتاب', bookHint: 'صور صفحات الكتاب', tetrad: '✏️ الدفتر / السبورة', tetradHint: 'كلماتك من السبورة أو الدفتر', selected: (n) => `المحدد: ${n}`,
+    pv: { title: '👀 راجع ما تعرف عليه الذكاء الاصطناعي', hint: 'ألغِ تحديد الخاطئ، وأضف ما فاته الذكاء الاصطناعي. سيُنشأ الدرس فقط مما هو محدد.', words: '📖 الكلمات', sentences: '💬 الجمل', noWords: 'لم يتم التعرف على كلمات.', noSentences: 'لم يتم التعرف على جمل.', wordPh: 'كلمة', trPh: 'ترجمة', addWord: '+ إضافة كلمة', sentPh: 'جملة', addSent: '+ إضافة', cancel: 'إلغاء', confirm: 'تأكيد ←', fromBook: 'الكتاب', fromExtra: 'الدفتر/السبورة', cancelConfirm: 'هل تريد إلغاء إنشاء الدرس؟ سيتم حذف الصور المرفوعة والبيانات المتعرف عليها.' } },
+  es: { word: 'Lección', descLabel: 'Descripción (opcional)', descHint: 'Breve: de qué trata la lección…', book: '📘 Libro', bookHint: 'Fotos de las páginas del libro', tetrad: '✏️ Cuaderno / pizarra', tetradHint: 'Tus palabras de la pizarra o el cuaderno', selected: (n) => `Seleccionadas: ${n}`,
+    pv: { title: '👀 Revisa lo que reconoció la IA', hint: 'Desmarca lo incorrecto, añade lo que la IA se saltó. La lección se creará solo con lo marcado.', words: '📖 Palabras', sentences: '💬 Frases', noWords: 'No se reconocieron palabras.', noSentences: 'No se reconocieron frases.', wordPh: 'palabra', trPh: 'traducción', addWord: '+ añadir palabra', sentPh: 'frase', addSent: '+ añadir', cancel: 'Cancelar', confirm: 'Confirmar →', fromBook: 'Libro', fromExtra: 'Cuaderno/pizarra', cancelConfirm: '¿Cancelar la creación de la lección? Las fotos subidas y lo reconocido se eliminarán.' } },
+  fr: { word: 'Leçon', descLabel: 'Description (facultatif)', descHint: 'Brièvement : de quoi parle la leçon…', book: '📘 Manuel', bookHint: 'Photos des pages du manuel', tetrad: '✏️ Cahier / tableau', tetradHint: 'Tes propres mots du tableau ou du cahier', selected: (n) => `Sélectionnées : ${n}`,
+    pv: { title: '👀 Vérifie ce que l\'IA a reconnu', hint: 'Décoche ce qui est faux, ajoute ce que l\'IA a manqué. La leçon sera créée uniquement avec ce qui est coché.', words: '📖 Mots', sentences: '💬 Phrases', noWords: 'Aucun mot reconnu.', noSentences: 'Aucune phrase reconnue.', wordPh: 'mot', trPh: 'traduction', addWord: '+ ajouter un mot', sentPh: 'phrase', addSent: '+ ajouter', cancel: 'Annuler', confirm: 'Confirmer →', fromBook: 'Manuel', fromExtra: 'Cahier/tableau', cancelConfirm: 'Annuler la création de la leçon ? Les photos téléchargées et les données reconnues seront supprimées.' } },
+  sq: { word: 'Mësimi', descLabel: 'Përshkrimi (opsional)', descHint: 'Shkurt: për çfarë është mësimi…', book: '📘 Libri', bookHint: 'Foto të faqeve të librit', tetrad: '✏️ Fletore / dërrasë', tetradHint: 'Fjalët e tua nga dërrasa ose fletorja', selected: (n) => `Zgjedhur: ${n}`,
+    pv: { title: '👀 Kontrollo çfarë njohu AI-ja', hint: 'Hiq shenjën nga ajo që s\'është e saktë, shto çfarë AI-ja anashkaloi. Mësimi do të krijohet vetëm nga të shënuarat.', words: '📖 Fjalët', sentences: '💬 Fjalitë', noWords: 'Nuk u njohën fjalë.', noSentences: 'Nuk u njohën fjali.', wordPh: 'fjalë', trPh: 'përkthim', addWord: '+ shto fjalë', sentPh: 'fjali', addSent: '+ shto', cancel: 'Anulo', confirm: 'Konfirmo →', fromBook: 'Libri', fromExtra: 'Fletore/dërrasë', cancelConfirm: 'Të anulohet krijimi i mësimit? Fotot e ngarkuara dhe të dhënat e njohura do të fshihen.' } },
 }
 
 // Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
@@ -36,6 +46,11 @@ function NewLessonInner() {
   const [progress, setProgress] = useState('')
   const [error, setError]   = useState('')
   const [nextNumber, setNextNumber] = useState(null) // автономер следующего урока
+  const [lessonId, setLessonId] = useState(null)     // урок уже создан, ждёт превью/подтверждения
+  const [preview, setPreview] = useState(null)        // { words:[{...,checked}], sentences:[{...,checked}], grammar_points }
+  const [newWordDe, setNewWordDe] = useState('')
+  const [newWordTr, setNewWordTr] = useState('')
+  const [newSentence, setNewSentence] = useState('')
   const navigate  = useNavigate()
   const [searchParams] = useSearchParams()
   const courseId  = searchParams.get('course_id')
@@ -131,6 +146,7 @@ function NewLessonInner() {
         course_id: selectedCourse ? parseInt(selectedCourse) : null,
         lesson_number: nextNumber || null,
       })
+      setLessonId(lesson.id)
       setStatus('uploading')
       const totalFiles = photos.length + extraPhotos.length + audios.length
       setProgress(`0 / ${totalFiles} файлов`)
@@ -149,10 +165,25 @@ function NewLessonInner() {
         audios.forEach(a => fd.append('files', a.file))
         await uploadFiles(`/lessons/${lesson.id}/media`, fd)
       }
-      setStatus('processing')
-      setProgress('Запускаем...')
-      await api.post(`/lessons/${lesson.id}/process`, {})
-      startPolling(lesson.id)
+
+      if (photos.length > 0 || extraPhotos.length > 0) {
+        // Есть фото — показываем превью распознанного, коммит только после подтверждения учителя
+        setStatus('extracting')
+        setProgress('Распознаю фото...')
+        const data = await api.post(`/lessons/${lesson.id}/extract-preview`, {})
+        setPreview({
+          words: (data.words || []).map(w => ({ ...w, checked: true })),
+          sentences: (data.sentences || []).map(s => ({ ...s, checked: true })),
+          grammar_points: data.grammar_points || [],
+        })
+        setStatus('preview')
+      } else {
+        // Только аудио/без медиа — как раньше, разбор без превью (текст+транскрипция)
+        setStatus('processing')
+        setProgress('Запускаем...')
+        await api.post(`/lessons/${lesson.id}/process`, {})
+        startPolling(lesson.id)
+      }
     } catch (err) {
       setError(err.message)
       setStatus('error')
@@ -160,14 +191,81 @@ function NewLessonInner() {
     }
   }
 
-  const isProcessing = status !== 'idle' && status !== 'error'
+  const confirmPreview = async () => {
+    setError('')
+    try {
+      setStatus('processing')
+      setProgress('Сохраняю урок...')
+      const words = preview.words.filter(w => w.checked).map(({ checked, ...w }) => w)
+      const sentences = preview.sentences.filter(s => s.checked).map(({ checked, ...s }) => s)
+      await api.post(`/lessons/${lessonId}/confirm`, { words, sentences, grammar_points: preview.grammar_points })
+      setPreview(null)
+      startPolling(lessonId)
+    } catch (err) {
+      setError(err.message)
+      setStatus('error')
+    }
+  }
+
+  const cancelPreview = async () => {
+    if (!window.confirm(N.pv.cancelConfirm)) return
+    try { await api.delete(`/lessons/${lessonId}`) } catch { /* уже мог быть удалён */ }
+    photos.forEach(p => URL.revokeObjectURL(p.preview))
+    extraPhotos.forEach(p => URL.revokeObjectURL(p.preview))
+    setPreview(null)
+    setLessonId(null)
+    setPhotos([])
+    setExtraPhotos([])
+    setAudios([])
+    setStatus('idle')
+    setProgress('')
+  }
+
+  const toggleWord = (idx) => setPreview(p => ({ ...p, words: p.words.map((w, i) => i === idx ? { ...w, checked: !w.checked } : w) }))
+  const toggleSentence = (idx) => setPreview(p => ({ ...p, sentences: p.sentences.map((s, i) => i === idx ? { ...s, checked: !s.checked } : s) }))
+
+  const addManualWord = () => {
+    const de = newWordDe.trim()
+    if (!de) return
+    setPreview(p => ({ ...p, words: [...p.words, { word_de: de, translation_ru: newWordTr.trim(), example_sentence: null, source: 'textbook', media_id: null, checked: true }] }))
+    setNewWordDe(''); setNewWordTr('')
+  }
+
+  const addManualSentence = () => {
+    const text = newSentence.trim()
+    if (!text) return
+    setPreview(p => ({ ...p, sentences: [...p.sentences, { text, translation_ru: null, source: 'textbook', checked: true }] }))
+    setNewSentence('')
+  }
+
+  const isProcessing = status !== 'idle' && status !== 'error' && status !== 'preview'
 
   const statusLabel = {
     creating:   '⏳ Создаём урок...',
     uploading:  '⏳ Загружаем файлы...',
-    processing: `⏳ Claude обрабатывает...`,
+    extracting: '⏳ Распознаём фото...',
+    processing: `⏳ Обрабатываем...`,
     done:       '✅ Готово!',
   }[status] || ''
+
+  if (status === 'preview' && preview) {
+    return (
+      <PreviewScreen
+        preview={preview}
+        error={error}
+        N={N.pv}
+        onToggleWord={toggleWord}
+        onToggleSentence={toggleSentence}
+        newWordDe={newWordDe} setNewWordDe={setNewWordDe}
+        newWordTr={newWordTr} setNewWordTr={setNewWordTr}
+        onAddWord={addManualWord}
+        newSentence={newSentence} setNewSentence={setNewSentence}
+        onAddSentence={addManualSentence}
+        onConfirm={confirmPreview}
+        onCancel={cancelPreview}
+      />
+    )
+  }
 
   return (
     <div>
@@ -266,6 +364,86 @@ function NewLessonInner() {
       </form>
 
       <style>{`@keyframes pulse-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }`}</style>
+    </div>
+  )
+}
+
+// Превью распознанного ПЕРЕД созданием урока (#5): учитель видит, что нашёл ИИ на фото,
+// снимает галочки с ненужного и дописывает вручную то, что не распозналось — и только
+// тогда данные попадают в урок (упражнения генерятся после подтверждения).
+function PreviewScreen({ preview, error, N, onToggleWord, onToggleSentence, newWordDe, setNewWordDe, newWordTr, setNewWordTr, onAddWord, newSentence, setNewSentence, onAddSentence, onConfirm, onCancel }) {
+  const wordsChecked = preview.words.filter(w => w.checked).length
+  const sentChecked = preview.sentences.filter(s => s.checked).length
+  const srcTag = s => s === 'extra' ? '✏️' : '📘'
+  return (
+    <div>
+      <h1 style={{ marginBottom: 6 }}>{N.title}</h1>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 20 }}>{N.hint}</p>
+
+      {error && (
+        <div style={{ marginBottom: 16, padding: '12px 16px', background: 'rgba(179,56,44,0.1)', borderRadius: 8, border: '1px solid rgba(179,56,44,0.3)', color: 'var(--red)' }}>
+          {error}
+        </div>
+      )}
+
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontWeight: 700, marginBottom: 10 }}>{N.words} ({wordsChecked} / {preview.words.length})</div>
+        <div style={{ border: '1px solid var(--line)', borderRadius: 12, background: 'var(--surface)', maxHeight: 360, overflowY: 'auto' }}>
+          {preview.words.map((w, idx) => (
+            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderBottom: idx < preview.words.length - 1 ? '1px solid var(--line)' : 'none', opacity: w.checked ? 1 : 0.45, cursor: 'pointer' }}>
+              <input type="checkbox" checked={w.checked} onChange={() => onToggleWord(idx)} style={{ width: 17, height: 17, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, flexShrink: 0 }} title={w.source === 'extra' ? N.fromExtra : N.fromBook}>{srcTag(w.source)}</span>
+              <span style={{ fontWeight: 600 }}>{w.word_de}</span>
+              <span style={{ color: 'var(--ink-soft)' }}>— {w.translation_ru || '…'}</span>
+            </label>
+          ))}
+          {!preview.words.length && <div style={{ padding: 14, color: 'var(--ink-soft)', fontSize: 14 }}>{N.noWords}</div>}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+          <input value={newWordDe} onChange={e => setNewWordDe(e.target.value)} placeholder={N.wordPh} style={{ flex: '1 1 140px' }} />
+          <input value={newWordTr} onChange={e => setNewWordTr(e.target.value)} placeholder={N.trPh} style={{ flex: '1 1 140px' }} />
+          <button type="button" onClick={onAddWord} disabled={!newWordDe.trim()}
+            style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: newWordDe.trim() ? 'pointer' : 'not-allowed' }}>
+            {N.addWord}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontWeight: 700, marginBottom: 10 }}>{N.sentences} ({sentChecked} / {preview.sentences.length})</div>
+        <div style={{ border: '1px solid var(--line)', borderRadius: 12, background: 'var(--surface)', maxHeight: 260, overflowY: 'auto' }}>
+          {preview.sentences.map((s, idx) => (
+            <label key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 14px', borderBottom: idx < preview.sentences.length - 1 ? '1px solid var(--line)' : 'none', opacity: s.checked ? 1 : 0.45, cursor: 'pointer' }}>
+              <input type="checkbox" checked={s.checked} onChange={() => onToggleSentence(idx)} style={{ width: 17, height: 17, flexShrink: 0, marginTop: 2 }} />
+              <span style={{ fontSize: 13, flexShrink: 0 }} title={s.source === 'extra' ? N.fromExtra : N.fromBook}>{srcTag(s.source)}</span>
+              <span>
+                <div>{s.text}</div>
+                {s.translation_ru && <div style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{s.translation_ru}</div>}
+              </span>
+            </label>
+          ))}
+          {!preview.sentences.length && <div style={{ padding: 14, color: 'var(--ink-soft)', fontSize: 14 }}>{N.noSentences}</div>}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <input value={newSentence} onChange={e => setNewSentence(e.target.value)} placeholder={N.sentPh} style={{ flex: 1 }} />
+          <button type="button" onClick={onAddSentence} disabled={!newSentence.trim()}
+            style={{ padding: '8px 16px', borderRadius: 9, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: newSentence.trim() ? 'pointer' : 'not-allowed' }}>
+            {N.addSent}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button type="button" onClick={onCancel}
+          style={{ padding: '13px 20px', borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+          {N.cancel}
+        </button>
+        <button type="button" onClick={onConfirm} disabled={wordsChecked === 0}
+          style={{ flex: 1, padding: '13px 20px', borderRadius: 12, border: 'none', fontWeight: 700, fontSize: 16, cursor: wordsChecked === 0 ? 'not-allowed' : 'pointer',
+            background: wordsChecked === 0 ? 'var(--surface-2)' : 'var(--accent)', color: wordsChecked === 0 ? 'var(--ink-soft)' : 'var(--accent-ink)' }}>
+          {N.confirm}
+        </button>
+      </div>
     </div>
   )
 }
