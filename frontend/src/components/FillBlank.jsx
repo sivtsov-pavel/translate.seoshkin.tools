@@ -198,7 +198,7 @@ export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, 
           <button
             onClick={() => onAnswer(isCorrect ? 5 : 1, answer)}
             style={{ marginTop: 10, padding: '12px 28px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>
-            {t.exercise.next} →
+            {t.exercise.next}
           </button>
         </div>
       )}
