@@ -563,7 +563,9 @@ export default function Landing() {
             (две длинные надписи ломали вёрстку на телефоне) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LangSwitcher />
-          <Link to="/login" style={{ ...navBtn, background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)', whiteSpace: 'nowrap' }}>
+          {/* Шапка лендинга тёмная (rgba(10,10,10,.85)) — кнопка входа СВЕТЛАЯ, не по теме,
+              иначе в светлой теме буквы чёрные на чёрном (были невидимы). */}
+          <Link to="/login" style={{ ...navBtn, background: 'rgba(255,255,255,0.10)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>
             {t?.auth?.login || 'Войти'}
           </Link>
         </div>

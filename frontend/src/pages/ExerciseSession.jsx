@@ -103,6 +103,14 @@ export default function ExerciseSession() {
   })
 
   useEffect(() => {
+    // Сессия «хвостов» по всему курсу (?tails=1) — все пропущенные упражнения активного языка
+    if (searchParams.get('tails')) {
+      api.get('/exercises/deferred?all=1').then(exs => {
+        const ordered = [...(exs || [])].sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
+        setExercises(ordered); setCurrent(0); setInTails(true)
+      }).catch(() => {}).finally(() => setLoading(false))
+      return
+    }
     // Практика по типу (без урока): продолжаем счётчик с места (сколько сделано сегодня).
     if (type && !lessonId && isOnline()) {
       api.get(`/exercises/done-today?type=${encodeURIComponent(type)}`)
@@ -131,11 +139,13 @@ export default function ExerciseSession() {
   // Завершение сессии: для урока считаем «хвосты» (пропущенные) — урок пройден, только если их нет.
   const endSession = async () => {
     setDoneOffset(o => o + exercises.length)
-    if (lessonId) {
+    if (lessonId && !inTails) {
       let n = 0
       try { const d = await api.get(`/exercises/deferred?lesson_id=${lessonId}`); n = Array.isArray(d) ? d.length : 0 } catch {}
       setTails(n)
       setLessonDone(true) // урок «пройден» по упражнениям; если n>0 — предложим добить хвосты
+    } else if (lessonId || inTails) {
+      setLessonDone(true) // хвосты пройдены / тип урока
     }
     setFinished(true)
   }

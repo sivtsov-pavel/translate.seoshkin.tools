@@ -656,7 +656,9 @@ export async function exercisesRoutes(fastify) {
   fastify.get('/api/exercises/deferred', { preHandler: [fastify.authenticate] }, async (request) => {
     const userId = request.user.id
     const lessonId = request.query?.lesson_id ? parseInt(request.query.lesson_id) : null
-    if (lessonId) {
+    const all = request.query?.all // все хвосты одной сессией (по всему курсу активного языка)
+    if (lessonId || all) {
+      const target = request.headers['x-target-lang'] || 'de'
       const { rows } = await db.query(
         `SELECT e.id, e.lesson_id, e.word_id, e.type, e.payload, e.payload_translations, e.image_url,
                 w.translations, w.translation_ru, l.title AS lesson_title, l.title_translations AS lesson_title_translations
@@ -664,8 +666,8 @@ export async function exercisesRoutes(fastify) {
          JOIN exercises e ON e.id = d.exercise_id
          JOIN lessons l ON l.id = e.lesson_id
          LEFT JOIN words w ON w.id = e.word_id
-         WHERE d.user_id = $1 AND e.lesson_id = $2
-         ORDER BY e.id`, [userId, lessonId])
+         WHERE d.user_id = $1 AND (${lessonId ? 'e.lesson_id = $2' : 'l.target_lang = $2'})
+         ORDER BY e.lesson_id, e.id`, [userId, lessonId || target])
       return rows
     }
     const { rows } = await db.query(

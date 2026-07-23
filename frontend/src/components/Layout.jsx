@@ -142,11 +142,14 @@ export default function Layout({ children }) {
 
   // Тур: авто-запуск ОДИН раз при первом входе (только на главной), дальше — по кнопке 🧭
   useEffect(() => {
-    if (user && location.pathname === '/' && !localStorage.getItem('tour_seen_v1')) {
-      const tid = setTimeout(() => setTourRun(true), 700)
+    // Тур: первый вход (нет tour_seen_v1) ИЛИ сразу после выбора языка в гейте (run_tour_after).
+    // Не запускаем, пока открыто окно выбора языка.
+    if (user && location.pathname === '/' && !gateOpen && (!localStorage.getItem('tour_seen_v1') || localStorage.getItem('run_tour_after'))) {
+      localStorage.removeItem('run_tour_after')
+      const tid = setTimeout(() => setTourRun(true), 800)
       return () => clearTimeout(tid)
     }
-  }, [user, location.pathname])
+  }, [user, location.pathname, gateOpen])
   const startTour = () => { if (location.pathname !== '/') navigate('/'); setTimeout(() => setTourRun(true), location.pathname !== '/' ? 400 : 0) }
   const endTour = () => { setTourRun(false); setOpen(false); localStorage.setItem('tour_seen_v1', '1') }
 
@@ -521,7 +524,7 @@ export default function Layout({ children }) {
       {tourRun && <Tour onClose={endTour} onMenu={setOpen} />}
 
       {/* Окно выбора языка изучения — при первом входе и по кнопке «Сменить курс» */}
-      {gateOpen && <CourseGate langs={gateLangs} onClose={() => { localStorage.setItem('lang_chosen', '1'); setGateOpen(false) }} />}
+      {gateOpen && <CourseGate langs={gateLangs} runTourAfter={!localStorage.getItem('lang_chosen')} onClose={() => { localStorage.setItem('lang_chosen', '1'); setGateOpen(false) }} />}
     </div>
   )
 }

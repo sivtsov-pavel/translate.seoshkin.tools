@@ -11,7 +11,7 @@ const META = {
   pt: { flag: '🇵🇹', stripe: ['#006600', '#ffffff', '#FF0000'] },
 }
 
-export default function CourseGate({ langs, onClose }) {
+export default function CourseGate({ langs, onClose, runTourAfter }) {
   const { t, lang } = useI18nStore()
   const list = (langs && langs.length ? langs : ['de']).filter(c => META[c])
   let dn = null
@@ -21,6 +21,8 @@ export default function CourseGate({ langs, onClose }) {
   const pick = (code) => {
     localStorage.setItem('target_lang', code)
     localStorage.setItem('lang_chosen', '1')
+    // Первый вход: после выбора языка — запустить тур (флаг переживёт reload)
+    if (runTourAfter) { localStorage.removeItem('tour_seen_v1'); localStorage.setItem('run_tour_after', '1') }
     window.location.reload() // весь контент переключится на выбранный язык
   }
 

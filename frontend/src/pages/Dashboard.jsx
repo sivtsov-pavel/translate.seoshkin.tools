@@ -49,6 +49,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [games, setGames] = useState([])
   const [completed, setCompleted] = useState([])
+  const [tailsCount, setTailsCount] = useState(0) // «хвосты» курса — пропущенные упражнения
   const [lessonQuery, setLessonQuery] = useState('')
   const [showSets, setShowSets] = useState(() => localStorage.getItem('dash_show_sets') === '1')
   const [showAllLessons, setShowAllLessons] = useState(() => localStorage.getItem('dash_all_lessons') !== '0')
@@ -86,6 +87,7 @@ export default function Dashboard() {
     load.then(setStats).catch(console.error).finally(() => setLoading(false))
     api.get('/exercises/completed-lessons').then(setCompleted).catch(() => {})
     if (isOnline()) api.get('/exercises/progress').then(setProgress).catch(() => {})
+    if (isOnline()) api.get('/exercises/deferred').then(rows => setTailsCount((rows || []).reduce((s, r) => s + (r.cnt || 0), 0))).catch(() => {})
   }
   useEffect(() => {
     reloadStats()
@@ -180,6 +182,17 @@ export default function Dashboard() {
       )}
 
       {needsScheduleBanner}
+
+      {/* 🧩 Хвосты курса — пропущенные упражнения (проговори/диктант). Нужно добить для финиша. */}
+      {tailsCount > 0 && (
+        <div className="dl-banner dl-banner--accent" style={{ cursor: 'pointer' }} onClick={() => navigate('/exercise-session?tails=1')}>
+          <span style={{ fontSize: 26 }}>🧩</span>
+          <div className="dl-banner-text">
+            <div className="dl-banner-title">{t.dashboard.tailsBanner || 'Доделать хвосты'} ({tailsCount})</div>
+            <div className="dl-banner-sub">{t.dashboard.tailsBannerSub || 'Пропущенные упражнения — пройди для финиша курса'}</div>
+          </div>
+        </div>
+      )}
 
       {/* ---------- HERO / метрики ---------- */}
       <section className="dl-hero">
@@ -353,7 +366,12 @@ export default function Dashboard() {
             </div>
             <LessonPath lessons={shownPath}
               selectedId={selectedId ?? current?.lesson_id}
-              onSelect={id => setSelectedId(id === (selectedId ?? current?.lesson_id) ? null : id)} lang={lang} />
+              onSelect={id => {
+                const nid = id === (selectedId ?? current?.lesson_id) ? null : id
+                setSelectedId(nid)
+                // Клик по уроку на карте → плавно скроллим вниз к раскрытой карточке урока
+                if (nid) setTimeout(() => document.querySelector('.dl-detail-card')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120)
+              }} lang={lang} />
           </>
           )
         })()}
