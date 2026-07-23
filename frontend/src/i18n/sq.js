@@ -1,6 +1,6 @@
 export const sq = {
   nav: {
-    interfaceLang: 'Gjuha e ndërfaqes',
+    interfaceLang: 'Gjuha jote',
     tourApp: 'Turi i aplikacionit',
     changeCourse: 'Ndrysho kursin',
     chooseLanguage: 'Zgjidh një gjuhë',

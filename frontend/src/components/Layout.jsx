@@ -48,6 +48,10 @@ export default function Layout({ children }) {
   const tgt = targetMeta()
   const { t, lang } = useI18nStore()
   const E = ex(lang)
+  // Название изучаемого языка НА ЯЗЫКЕ ИНТЕРФЕЙСА (Intl), а не хардкод «Немецкий»
+  const tgtCode = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
+  let tgtName = tgt.name
+  try { const n = new Intl.DisplayNames([lang || 'ru'], { type: 'language' }).of(tgtCode); if (n) tgtName = n.charAt(0).toUpperCase() + n.slice(1) } catch { /* фолбэк */ }
   const { theme, toggle: toggleTheme } = useThemeStore()
   const adminOp = useAdminOpStore()
   const { fetchSettings } = useSettingsStore()
@@ -263,7 +267,7 @@ export default function Layout({ children }) {
         <div style={{ padding: '16px 16px 14px', flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span>{tgt.flag}</span> {tgt.name}
+              <span>{tgt.flag}</span> {tgtName}
               <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.5, marginLeft: 2 }}>{typeof __BUILD_TS__ !== 'undefined' ? __BUILD_TS__ : ''}</span>
             </span>
             {inDrawer && (
@@ -397,9 +401,9 @@ export default function Layout({ children }) {
           )}
         </div>
         {/* Центр: заголовок с флагом + немецкая полоска (как в макете) */}
-        <Link to="/" title={`Изучаемый язык: ${tgt.name}`}
+        <Link to="/" title={`Изучаемый язык: ${tgtName}`}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
-          <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, whiteSpace: 'nowrap' }}>{tgt.flag} {tgt.name}</span>
+          <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, whiteSpace: 'nowrap' }}>{tgt.flag} {tgtName}</span>
           <span style={{ display: 'block', height: 3, width: 40, borderRadius: 2, background: `linear-gradient(90deg, ${(tgt.stripe || TARGET_META.de.stripe).join(',')})` }} />
         </Link>
         {/* Справа: тур + профиль */}
@@ -468,7 +472,7 @@ export default function Layout({ children }) {
         {location.pathname !== '/' ? (
           <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--blue)', fontWeight: 700, fontSize: 14, padding: '6px 10px', borderRadius: 8 }}>← Назад</button>
         ) : (
-          <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{tgt.flag} {tgt.name}</span>
+          <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{tgt.flag} {tgtName}</span>
         )}
       </header>
 

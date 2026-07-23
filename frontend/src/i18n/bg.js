@@ -1,6 +1,6 @@
 export const bg = {
   nav: {
-    interfaceLang: 'Език на интерфейса',
+    interfaceLang: 'Твоят език',
     tourApp: 'Обиколка на приложението',
     changeCourse: 'Смени курса',
     chooseLanguage: 'Избери език',

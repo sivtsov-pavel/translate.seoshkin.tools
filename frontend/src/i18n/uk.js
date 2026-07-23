@@ -1,6 +1,6 @@
 export const uk = {
   nav: {
-    interfaceLang: 'Мова інтерфейсу',
+    interfaceLang: 'Твоя мова',
     tourApp: 'Тур застосунком',
     changeCourse: 'Змінити курс',
     chooseLanguage: 'Обери мову',

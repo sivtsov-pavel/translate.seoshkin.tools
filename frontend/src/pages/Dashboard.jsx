@@ -326,7 +326,32 @@ export default function Dashboard() {
 
       {/* ---------- ПУТЬ УРОКОВ (нитка) ---------- */}
       <section className="dl-screen2">
-        {/* Тумблеры — блоки с переключателем (как в макете): все уроки/текущий + наборы */}
+        {books.length > 0 && (() => {
+          // «Текущий урок» = показываем только текущий (реальный эффект и для ученика);
+          // если всё пройдено (нет current) — показываем весь путь.
+          const currentOnly = pathLessons.filter(l => l.status === 'current')
+          const shownPath = showAllLessons || !currentOnly.length ? pathLessons : currentOnly
+          return (
+          <>
+            <div className="dl-section-head">
+              <span className="dl-eyebrow">{t.dashboard.lessonPath || 'Путь урока'}</span>
+              <span className="dl-stripe-thin" style={{ background: `linear-gradient(90deg, ${course.stripe.join(',')})` }} />
+            </div>
+            <LessonPath lessons={shownPath}
+              selectedId={selectedId ?? current?.lesson_id}
+              onSelect={id => {
+                const nid = id === (selectedId ?? current?.lesson_id) ? null : id
+                setSelectedId(nid)
+                // Клик по уроку на карте → плавно скроллим вниз к раскрытой карточке урока
+                if (nid) setTimeout(() => document.querySelector('.dl-detail-card')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120)
+              }} lang={lang} />
+          </>
+          )
+        })()}
+
+        {selLesson && <LessonDetailCard key={selLesson.lesson_id} lesson={selLesson} navigate={navigate} onReset={repeatLesson} />}
+
+        {/* Тумблеры — под уроком, перед наборами (блоки-переключатели, как в макете) */}
         {books.length > 0 && (
           <div className="dl-sets-toggle-row" style={{ marginBottom: 8 }}>
             <div>
@@ -353,30 +378,6 @@ export default function Dashboard() {
             </label>
           </div>
         )}
-        {books.length > 0 && (() => {
-          // «Текущий урок» = показываем только текущий (реальный эффект и для ученика);
-          // если всё пройдено (нет current) — показываем весь путь.
-          const currentOnly = pathLessons.filter(l => l.status === 'current')
-          const shownPath = showAllLessons || !currentOnly.length ? pathLessons : currentOnly
-          return (
-          <>
-            <div className="dl-section-head">
-              <span className="dl-eyebrow">{t.dashboard.lessonPath || 'Путь урока'}</span>
-              <span className="dl-stripe-thin" style={{ background: `linear-gradient(90deg, ${course.stripe.join(',')})` }} />
-            </div>
-            <LessonPath lessons={shownPath}
-              selectedId={selectedId ?? current?.lesson_id}
-              onSelect={id => {
-                const nid = id === (selectedId ?? current?.lesson_id) ? null : id
-                setSelectedId(nid)
-                // Клик по уроку на карте → плавно скроллим вниз к раскрытой карточке урока
-                if (nid) setTimeout(() => document.querySelector('.dl-detail-card')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120)
-              }} lang={lang} />
-          </>
-          )
-        })()}
-
-        {selLesson && <LessonDetailCard key={selLesson.lesson_id} lesson={selLesson} navigate={navigate} onReset={repeatLesson} />}
 
         {!books.length && !q && (
           <div style={{ padding: '30px 8px', textAlign: 'center', color: 'var(--ink-soft)' }}>

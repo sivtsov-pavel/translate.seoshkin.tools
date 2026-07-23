@@ -2,7 +2,7 @@
 export const ar = {
   dir: 'rtl',
   nav: {
-    interfaceLang: 'لغة الواجهة',
+    interfaceLang: 'لغتك',
     tourApp: 'جولة في التطبيق',
     changeCourse: 'تغيير الدورة',
     chooseLanguage: 'اختر لغة',

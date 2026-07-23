@@ -1,7 +1,7 @@
 export const ru = {
   // Навигация
   nav: {
-    interfaceLang: 'Язык интерфейса',
+    interfaceLang: 'Ваш язык',
     tourApp: 'Тур по приложению',
     changeCourse: 'Сменить курс',
     chooseLanguage: 'Выбери язык',

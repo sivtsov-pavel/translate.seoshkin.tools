@@ -1,6 +1,6 @@
 export const es = {
   nav: {
-    interfaceLang: 'Idioma de la interfaz',
+    interfaceLang: 'Tu idioma',
     tourApp: 'Recorrido por la app',
     changeCourse: 'Cambiar curso',
     chooseLanguage: 'Elige un idioma',

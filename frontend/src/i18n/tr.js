@@ -1,6 +1,6 @@
 export const tr = {
   nav: {
-    interfaceLang: 'Arayüz dili',
+    interfaceLang: 'Dilin',
     tourApp: 'Uygulama turu',
     changeCourse: 'Kursu değiştir',
     chooseLanguage: 'Bir dil seç',

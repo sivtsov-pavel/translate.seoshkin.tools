@@ -1,7 +1,7 @@
 export const de = {
   // Navigation
   nav: {
-    interfaceLang: 'Oberflächensprache',
+    interfaceLang: 'Deine Sprache',
     tourApp: 'App-Tour',
     changeCourse: 'Kurs wechseln',
     chooseLanguage: 'Sprache wählen',
