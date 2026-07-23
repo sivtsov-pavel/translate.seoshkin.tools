@@ -4,19 +4,20 @@ import { useAuthStore } from '../store/auth.js'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 
-const PRESET_AVATARS = [
-  { emoji: '🦈', name: 'Акула' },
-  { emoji: '👽', name: 'Инопланетянин' },
-  { emoji: '🤠', name: 'Незнайка' },
-  { emoji: '👧', name: 'Девочка' },
-  { emoji: '👦', name: 'Мальчик' },
-  { emoji: '🐼', name: 'Панда' },
-  { emoji: '🦊', name: 'Лиса' },
-  { emoji: '🐸', name: 'Лягушка' },
-  { emoji: '🦁', name: 'Лев' },
-  { emoji: '🤖', name: 'Робот' },
-  { emoji: '🧙', name: 'Волшебник' },
-  { emoji: '🚀', name: 'Ракета' },
+// name — ключ в t.settings.avatar* (не текст напрямую, локализуется функцией PRESET_AVATARS(t))
+const PRESET_AVATARS = (t) => [
+  { emoji: '🦈', name: t.settings.avatarShark },
+  { emoji: '👽', name: t.settings.avatarAlien },
+  { emoji: '🤠', name: t.settings.avatarDunno },
+  { emoji: '👧', name: t.settings.avatarGirl },
+  { emoji: '👦', name: t.settings.avatarBoy },
+  { emoji: '🐼', name: t.settings.avatarPanda },
+  { emoji: '🦊', name: t.settings.avatarFox },
+  { emoji: '🐸', name: t.settings.avatarFrog },
+  { emoji: '🦁', name: t.settings.avatarLion },
+  { emoji: '🤖', name: t.settings.avatarRobot },
+  { emoji: '🧙', name: t.settings.avatarWizard },
+  { emoji: '🚀', name: t.settings.avatarRocket },
 ]
 
 export default function Profile() {
@@ -56,7 +57,7 @@ export default function Profile() {
       const res = await api.post('/analytics/my-hard-words/make-set', {})
       navigate(`/exercise-session?lesson_id=${res.lessonId}`)
     } catch (e) {
-      setBuildMsg(e?.message || 'Не удалось собрать набор')
+      setBuildMsg(e?.message || t.settings.buildSetFailedMsg)
       setBuilding(false)
     }
   }
@@ -67,25 +68,25 @@ export default function Profile() {
     try {
       const data = await api.put('/profile', form)
       login(token, { ...user, ...data })
-      setMsg({ ok: true, text: 'Сохранено!' })
+      setMsg({ ok: true, text: t.settings.profileSavedMsg })
     } catch {
-      setMsg({ ok: false, text: 'Ошибка при сохранении' })
+      setMsg({ ok: false, text: t.settings.profileSaveErrMsg })
     } finally {
       setSaving(false)
     }
   }
 
   const changePassword = async () => {
-    if (pwd.next !== pwd.confirm) { setPwdMsg({ ok: false, text: 'Пароли не совпадают' }); return }
-    if (pwd.next.length < 6) { setPwdMsg({ ok: false, text: 'Минимум 6 символов' }); return }
+    if (pwd.next !== pwd.confirm) { setPwdMsg({ ok: false, text: t.settings.pwdMismatch }); return }
+    if (pwd.next.length < 6) { setPwdMsg({ ok: false, text: t.settings.pwdTooShort }); return }
     setSaving(true)
     setPwdMsg(null)
     try {
       await api.put('/profile', { password: pwd.next })
       setPwd({ current: '', next: '', confirm: '' })
-      setPwdMsg({ ok: true, text: 'Пароль изменён!' })
+      setPwdMsg({ ok: true, text: t.settings.pwdChangedMsg })
     } catch {
-      setPwdMsg({ ok: false, text: 'Ошибка' })
+      setPwdMsg({ ok: false, text: t.settings.pwdErrorMsg })
     } finally {
       setSaving(false)
     }
@@ -99,7 +100,7 @@ export default function Profile() {
     <div>
       {/* Аватар */}
       <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 16, marginBottom: 16 }}>Аватар</h2>
+        <h2 style={{ fontSize: 16, marginBottom: 16 }}>{t.settings.avatarTitle}</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
@@ -120,7 +121,7 @@ export default function Profile() {
           {/* Буква по умолчанию */}
           <button
             onClick={() => setForm(f => ({ ...f, avatar: '' }))}
-            title="Первая буква имени"
+            title={t.settings.firstLetterTitle}
             style={{
               width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', fontSize: 18, fontWeight: 700,
               background: !form.avatar ? 'var(--accent)' : 'var(--surface-2)',
@@ -129,7 +130,7 @@ export default function Profile() {
             }}>
             {displayName[0]?.toUpperCase()}
           </button>
-          {PRESET_AVATARS.map(a => (
+          {PRESET_AVATARS(t).map(a => (
             <button
               key={a.emoji}
               onClick={() => setForm(f => ({ ...f, avatar: a.emoji }))}
@@ -147,11 +148,11 @@ export default function Profile() {
 
       {/* Основные данные */}
       <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 16, marginBottom: 16 }}>Личные данные</h2>
+        <h2 style={{ fontSize: 16, marginBottom: 16 }}>{t.settings.personalDataTitle}</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Field label="Имя" value={form.full_name}  onChange={v => setForm(f => ({ ...f, full_name: v }))}  placeholder="Как тебя зовут?" />
-          <Field label="Профессия" value={form.profession} onChange={v => setForm(f => ({ ...f, profession: v }))} placeholder="Студент, инженер, врач..." />
-          <Field label="Телефон"   value={form.phone}      onChange={v => setForm(f => ({ ...f, phone: v }))}      placeholder="+49 151 23456789" />
+          <Field label={t.settings.nameLabel} value={form.full_name}  onChange={v => setForm(f => ({ ...f, full_name: v }))}  placeholder={t.settings.namePlaceholder} />
+          <Field label={t.settings.professionLabel} value={form.profession} onChange={v => setForm(f => ({ ...f, profession: v }))} placeholder={t.settings.professionPlaceholder} />
+          <Field label={t.settings.phoneLabel}   value={form.phone}      onChange={v => setForm(f => ({ ...f, phone: v }))}      placeholder="+49 151 23456789" />
           <Field label="Telegram"  value={form.telegram}   onChange={v => setForm(f => ({ ...f, telegram: v }))}   placeholder="@username" />
           <Field label="WhatsApp"  value={form.whatsapp}   onChange={v => setForm(f => ({ ...f, whatsapp: v }))}   placeholder="+49 151 23456789" />
         </div>
@@ -162,22 +163,22 @@ export default function Profile() {
         )}
         <button onClick={save} disabled={saving}
           style={{ marginTop: 16, padding: '12px 28px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
-          {saving ? 'Сохранение...' : 'Сохранить'}
+          {saving ? t.settings.savingBtn : (t.nav.save || t.settings.profileSavedMsg)}
         </button>
       </section>
 
       {/* Мои сложные слова */}
       <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 16, marginBottom: 6 }}>🔥 Мои сложные слова</h2>
+        <h2 style={{ fontSize: 16, marginBottom: 6 }}>{t.settings.hardWordsTitle}</h2>
         <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 16 }}>
-          Слова, в которых ты чаще всего ошибаешься в упражнениях. Собери из них набор и выучи как следует.
+          {t.settings.hardWordsDesc}
         </div>
 
-        {!hard && <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>}
+        {!hard && <div style={{ color: 'var(--ink-soft)' }}>{t.common.loading}</div>}
 
         {hard && hard.words.length === 0 && (
           <div style={{ padding: '18px 16px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 12, border: '1px dashed var(--line)' }}>
-            Сложных слов пока нет — порешай побольше упражнений, и они появятся здесь.
+            {t.settings.noHardWords}
           </div>
         )}
 
@@ -185,7 +186,7 @@ export default function Profile() {
           <>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
               {hard.words.map((w, i) => (
-                <div key={i} title={`${w.wrong} ошибок из ${w.attempts}`} style={{
+                <div key={i} title={t.settings.wrongOutOf(w.wrong, w.attempts)} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px',
                   background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 999, fontSize: 13,
                 }}>
@@ -204,11 +205,11 @@ export default function Profile() {
 
             <button onClick={buildHardSet} disabled={building}
               style={{ padding: '12px 28px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 15, opacity: building ? 0.6 : 1 }}>
-              {building ? 'Собираю набор…' : hard.set ? '🔄 Пересобрать и тренировать' : '✨ Собрать набор и тренировать'}
+              {building ? t.settings.buildingBtn : hard.set ? t.settings.rebuildSetBtn : t.settings.buildSetBtn}
             </button>
             {building && (
               <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-soft)' }}>
-                Генерирую упражнения из {hard.words.length} слов — это займёт до минуты…
+                {t.settings.generatingHint(hard.words.length)}
               </div>
             )}
           </>
@@ -217,10 +218,10 @@ export default function Profile() {
 
       {/* Смена пароля */}
       <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 24 }}>
-        <h2 style={{ fontSize: 16, marginBottom: 16 }}>Смена пароля</h2>
+        <h2 style={{ fontSize: 16, marginBottom: 16 }}>{t.settings.changePasswordTitle}</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Field label="Новый пароль"    value={pwd.next}    onChange={v => setPwd(p => ({ ...p, next: v }))}    type="password" placeholder="Минимум 6 символов" />
-          <Field label="Повторить пароль" value={pwd.confirm} onChange={v => setPwd(p => ({ ...p, confirm: v }))} type="password" placeholder="Повторите пароль" />
+          <Field label={t.settings.newPasswordLabel}    value={pwd.next}    onChange={v => setPwd(p => ({ ...p, next: v }))}    type="password" placeholder={t.settings.minCharsPlaceholder} />
+          <Field label={t.settings.confirmPasswordLabel} value={pwd.confirm} onChange={v => setPwd(p => ({ ...p, confirm: v }))} type="password" placeholder={t.settings.repeatPasswordPlaceholder} />
         </div>
         {pwdMsg && (
           <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, fontSize: 14, fontWeight: 600, background: pwdMsg.ok ? 'rgba(78,154,110,0.12)' : 'rgba(179,56,44,0.12)', color: pwdMsg.ok ? 'var(--good)' : 'var(--red)' }}>
@@ -229,7 +230,7 @@ export default function Profile() {
         )}
         <button onClick={changePassword} disabled={saving || !pwd.next}
           style={{ marginTop: 16, padding: '12px 28px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 15, opacity: pwd.next ? 1 : 0.5 }}>
-          Изменить пароль
+          {t.settings.changePasswordBtn}
         </button>
       </section>
     </div>

@@ -20,6 +20,7 @@ const VOICE_KEY = 'de_voice_name'
 // onSave — коллбек от родителя: досылает ПОЛНЫЙ visual-блок на сервер (PATCH заменяет колонку целиком,
 // частичный объект стёр бы соседние поля вроде zoom/fontFamily).
 function TrainerReactionsRow({ onSave }) {
+  const { t } = useI18nStore()
   const [on, setOn] = useState(() => localStorage.getItem('trainer_reactions') !== 'false')
   const toggle = () => {
     const next = !on
@@ -30,8 +31,8 @@ function TrainerReactionsRow({ onSave }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderTop: '1px solid var(--line)', marginTop: 8 }}>
       <div>
-        <div style={{ fontWeight: 600, fontSize: 14 }}>🗣️ Тренер в упражнениях</div>
-        <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Pablo реагирует видео на ответ (верно/неверно). Выключи — только текст.</div>
+        <div style={{ fontWeight: 600, fontSize: 14 }}>{t.settings.trainerTitle}</div>
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.settings.trainerDesc}</div>
       </div>
       <button onClick={toggle} style={{
         flexShrink: 0, width: 52, height: 30, borderRadius: 999, border: 'none', cursor: 'pointer', position: 'relative',
@@ -45,6 +46,7 @@ function TrainerReactionsRow({ onSave }) {
 
 // onSave — тот же коллбек, что и у TrainerReactionsRow (см. выше) — досылает полный visual-блок.
 function VoicePicker({ onSave }) {
+  const { t } = useI18nStore()
   const [voices, setVoices] = useState([])
   const [selected, setSelected] = useState(() => localStorage.getItem(VOICE_KEY) || '')
   const [preview, setPreview] = useState(null)
@@ -82,15 +84,15 @@ function VoicePicker({ onSave }) {
 
   if (!voices.length) return (
     <div style={{ fontSize: 13, color: 'var(--ink-soft)', padding: '8px 0' }}>
-      Голоса не найдены. На Android может быть доступен только один голос — установите «Google TTS» из Play Market.
+      {t.settings.voiceNotFound}
     </div>
   )
 
   return (
     <div>
-      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Голос для немецкого</div>
+      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{t.settings.voiceTitle}</div>
       <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 12 }}>
-        Нажми — услышишь пример произношения
+        {t.settings.voiceHint}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {voices.map(v => {
@@ -105,44 +107,45 @@ function VoicePicker({ onSave }) {
               <span style={{ fontSize: 18 }}>{active ? '🔊' : '🔈'}</span>
               <div>
                 <div style={{ fontWeight: active ? 700 : 400, fontSize: 14, color: 'var(--ink)' }}>{v.name}</div>
-                <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{v.lang} {v.localService ? '· локальный' : '· онлайн'}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{v.lang} {v.localService ? t.settings.voiceLocal : t.settings.voiceOnline}</div>
               </div>
-              {active && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>активен</span>}
+              {active && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>{t.settings.voiceActive}</span>}
             </button>
           )
         })}
       </div>
       <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 10 }}>
-        💡 По умолчанию — Google Deutsch. На iPhone голосов мало, установите iOS 17+ для лучших вариантов.
+        {t.settings.voiceTip}
       </div>
     </div>
   )
 }
 
-const FONTS = [
-  { id: 'Roboto',       label: 'Roboto',       sample: 'Стандартный шрифт приложения' },
-  { id: 'Inter',        label: 'Inter',         sample: 'Чёткий современный шрифт' },
-  { id: 'Georgia',      label: 'Georgia',       sample: 'Классический с засечками' },
-  { id: 'Merriweather', label: 'Merriweather',  sample: 'Читабельный с засечками' },
-  { id: 'Nunito',       label: 'Nunito',        sample: 'Округлый, дружелюбный' },
+// FONTS/ZOOM_LEVELS/ACCENT_PRESETS — функции от t (не компоненты, локализуем через параметр)
+const FONTS = (t) => [
+  { id: 'Roboto',       label: 'Roboto',       sample: t.settings.fontSampleRoboto },
+  { id: 'Inter',        label: 'Inter',         sample: t.settings.fontSampleInter },
+  { id: 'Georgia',      label: 'Georgia',       sample: t.settings.fontSampleGeorgia },
+  { id: 'Merriweather', label: 'Merriweather',  sample: t.settings.fontSampleMerriweather },
+  { id: 'Nunito',       label: 'Nunito',        sample: t.settings.fontSampleNunito },
 ]
 
-const ZOOM_LEVELS = [
-  { value: 0.85, label: 'Мелкий' },
-  { value: 1.0,  label: 'Обычный' },
-  { value: 1.15, label: 'Крупный' },
-  { value: 1.3,  label: 'Очень крупный' },
+const ZOOM_LEVELS = (t) => [
+  { value: 0.85, label: t.settings.sizeSmall },
+  { value: 1.0,  label: t.settings.sizeNormal },
+  { value: 1.15, label: t.settings.sizeLarge },
+  { value: 1.3,  label: t.settings.sizeXLarge },
 ]
 
-const ACCENT_PRESETS = [
-  { color: '',        label: 'По умолчанию (золото)' },
-  { color: '#C9A54A', label: 'Золото' },
-  { color: '#4f46e5', label: 'Индиго' },
-  { color: '#0ea5e9', label: 'Синий' },
-  { color: '#10b981', label: 'Зелёный' },
-  { color: '#f97316', label: 'Оранжевый' },
-  { color: '#e11d48', label: 'Красный' },
-  { color: '#8b5cf6', label: 'Фиолетовый' },
+const ACCENT_PRESETS = (t) => [
+  { color: '',        label: t.settings.accentDefault },
+  { color: '#C9A54A', label: t.settings.accentGold },
+  { color: '#4f46e5', label: t.settings.accentIndigo },
+  { color: '#0ea5e9', label: t.settings.accentBlue },
+  { color: '#10b981', label: t.settings.accentGreen },
+  { color: '#f97316', label: t.settings.accentOrange },
+  { color: '#e11d48', label: t.settings.accentRed },
+  { color: '#8b5cf6', label: t.settings.accentViolet },
 ]
 
 function Section({ icon, title, children }) {
@@ -289,36 +292,36 @@ export default function Settings() {
 
   // Проверить ключ OpenAI: если в поле введён новый — проверяем его, иначе сохранённый.
   const handleTestKey = async () => {
-    setKeyBusy(true); setKeyMsg({ kind: 'info', text: 'Проверяю ключ…' })
+    setKeyBusy(true); setKeyMsg({ kind: 'info', text: t.settings.keyMsgTesting })
     try {
       const res = await store.testOpenaiKey(keyDraft.trim())
-      setKeyMsg(res.ok ? { kind: 'ok', text: '✓ Ключ работает' } : { kind: 'err', text: res.error || 'Ключ не прошёл проверку' })
+      setKeyMsg(res.ok ? { kind: 'ok', text: t.settings.keyMsgWorks } : { kind: 'err', text: res.error || t.settings.keyMsgFailed })
     } catch (e) {
-      setKeyMsg({ kind: 'err', text: e?.message || 'Ошибка проверки' })
+      setKeyMsg({ kind: 'err', text: e?.message || t.settings.keyMsgTestError })
     } finally { setKeyBusy(false) }
   }
 
   // Сохранить введённый ключ (шифруется на сервере). Пустой ввод не сохраняем — для очистки есть «Удалить».
   const handleSaveKey = async () => {
     const k = keyDraft.trim()
-    if (!k) { setKeyMsg({ kind: 'err', text: 'Введите ключ' }); return }
-    setKeyBusy(true); setKeyMsg({ kind: 'info', text: 'Сохраняю…' })
+    if (!k) { setKeyMsg({ kind: 'err', text: t.settings.keyMsgEnterKey }); return }
+    setKeyBusy(true); setKeyMsg({ kind: 'info', text: t.settings.keyMsgSaving })
     try {
       await store.saveOpenaiKey(k)
-      setKeyDraft(''); setKeyMsg({ kind: 'ok', text: '✓ Ключ сохранён' })
+      setKeyDraft(''); setKeyMsg({ kind: 'ok', text: t.settings.keyMsgSaved })
     } catch (e) {
-      setKeyMsg({ kind: 'err', text: e?.message || 'Ошибка сохранения' })
+      setKeyMsg({ kind: 'err', text: e?.message || t.settings.keyMsgSaveError })
     } finally { setKeyBusy(false) }
   }
 
   // Удалить сохранённый ключ (вернуться на ключ сервера).
   const handleClearKey = async () => {
-    setKeyBusy(true); setKeyMsg({ kind: 'info', text: 'Удаляю…' })
+    setKeyBusy(true); setKeyMsg({ kind: 'info', text: t.settings.keyMsgDeleting })
     try {
       await store.saveOpenaiKey('')
-      setKeyDraft(''); setKeyMsg({ kind: 'info', text: 'Ключ удалён — используется ключ сервера' })
+      setKeyDraft(''); setKeyMsg({ kind: 'info', text: t.settings.keyMsgDeleted })
     } catch (e) {
-      setKeyMsg({ kind: 'err', text: e?.message || 'Ошибка' })
+      setKeyMsg({ kind: 'err', text: e?.message || t.settings.keyMsgError })
     } finally { setKeyBusy(false) }
   }
 
@@ -333,9 +336,9 @@ export default function Settings() {
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 80 }}>
-      <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>Аккаунт</h1>
+      <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>{t.settings.pageTitle}</h1>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 20px' }}>
-        Профиль и персональные настройки — применяются только для вашего аккаунта
+        {t.settings.pageSubtitle}
       </p>
 
       {/* Вкладки */}
@@ -356,10 +359,10 @@ export default function Settings() {
 
       {tab === 1 && <>
       {/* ── Обучение ── */}
-      <Section icon="🎯" title="Обучение">
+      <Section icon="🎯" title={t.settings.sectionLearning}>
         <Row
-          label="Упражнений в день"
-          hint={`Максимум упражнений за одну сессию «Сегодня». Сейчас: ${draft.daily_limit}`}
+          label={t.settings.dailyLimitLabel}
+          hint={t.settings.dailyLimitHint(draft.daily_limit)}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <input
@@ -391,16 +394,16 @@ export default function Settings() {
             ))}
           </div>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 6 }}>
-            💡 Для детей 20–50 упражнений оптимально. Для взрослых — 50–100.
+            {t.settings.dailyLimitTip}
           </div>
         </Row>
       </Section>
 
       {/* ── Внешний вид ── */}
-      <Section icon="🎨" title="Внешний вид">
-        <Row label="Размер текста" hint="Масштаб всей страницы">
+      <Section icon="🎨" title={t.settings.sectionAppearance}>
+        <Row label={t.settings.textSizeLabel} hint={t.settings.textSizeHint}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {ZOOM_LEVELS.map(({ value, label }) => (
+            {ZOOM_LEVELS(t).map(({ value, label }, i) => (
               <button key={value} onClick={() => update('zoom', value)}
                 style={{
                   padding: '8px 16px', borderRadius: 10, cursor: 'pointer',
@@ -409,15 +412,15 @@ export default function Settings() {
                   color: draft.zoom === value ? 'var(--accent-ink)' : 'var(--ink)',
                   fontWeight: draft.zoom === value ? 700 : 400,
                 }}>
-                <span style={{ fontSize: 12 + (ZOOM_LEVELS.indexOf({ value, label }) * 2) }}>{label}</span>
+                <span style={{ fontSize: 12 + (i * 2) }}>{label}</span>
               </button>
             ))}
           </div>
         </Row>
 
-        <Row label="Шрифт">
+        <Row label={t.settings.fontLabel}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {FONTS.map(f => (
+            {FONTS(t).map(f => (
               <button key={f.id} onClick={() => update('fontFamily', f.id)}
                 style={{
                   padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
@@ -434,9 +437,9 @@ export default function Settings() {
           </div>
         </Row>
 
-        <Row label="Шрифт заголовков">
+        <Row label={t.settings.headingFontLabel}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {[{ id: 'body', label: 'Как основной текст', sample: 'Совпадает с выбранным шрифтом' }, ...FONTS].map(f => (
+            {[{ id: 'body', label: t.settings.headingFontBody, sample: t.settings.headingFontBodySample }, ...FONTS(t)].map(f => (
               <button key={f.id} onClick={() => update('headingFont', f.id)}
                 style={{
                   padding: '10px 14px', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
@@ -453,14 +456,14 @@ export default function Settings() {
           </div>
         </Row>
 
-        <Row label="Размер заголовков">
+        <Row label={t.settings.headingSizeLabel}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[
-              { value: 18, label: 'Мелкий' },
-              { value: 20, label: 'Средний' },
-              { value: 22, label: 'Обычный' },
-              { value: 26, label: 'Крупный' },
-              { value: 30, label: 'Очень крупный' },
+              { value: 18, label: t.settings.sizeSmall },
+              { value: 20, label: t.settings.sizeMedium },
+              { value: 22, label: t.settings.sizeNormal },
+              { value: 26, label: t.settings.sizeLarge },
+              { value: 30, label: t.settings.sizeXLarge },
             ].map(({ value, label }) => (
               <button key={value} onClick={() => update('headingSize', value)}
                 style={{
@@ -476,9 +479,9 @@ export default function Settings() {
           </div>
         </Row>
 
-        <Row label="Акцентный цвет">
+        <Row label={t.settings.accentColorLabel}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            {ACCENT_PRESETS.map(({ color, label }) => (
+            {ACCENT_PRESETS(t).map(({ color, label }) => (
               <button key={color} onClick={() => update('accentColor', color)}
                 title={label}
                 style={{
@@ -495,19 +498,19 @@ export default function Settings() {
                 onChange={e => update('accentColor', e.target.value)}
                 style={{ width: 36, height: 36, padding: 2, borderRadius: '50%', cursor: 'pointer', border: '2px solid var(--line)', background: 'none' }}
               />
-              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Свой цвет</span>
+              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.settings.accentCustom}</span>
             </div>
           </div>
         </Row>
       </Section>
 
       {/* ── Навигация ── */}
-      <Section icon="📱" title="Мобильная навигация">
-        <Row label="Тип меню на телефоне" hint="Влияет только на мобиль (≤640px). На планшете — всегда иконки. На ПК — всегда полный сайдбар.">
+      <Section icon="📱" title={t.settings.sectionMobileNav}>
+        <Row label={t.settings.mobileLayoutLabel} hint={t.settings.mobileLayoutHint}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[
-              { id: 'bottom', label: '⬇ Нижняя панель', desc: 'Сегодня, Словарь, Читалка, Разговорник' },
-              { id: 'strip',  label: '◀ Боковая полоска', desc: 'Иконки слева, как на планшете' },
+              { id: 'bottom', label: t.settings.mobileLayoutBottom, desc: t.settings.mobileLayoutBottomDesc },
+              { id: 'strip',  label: t.settings.mobileLayoutStrip, desc: t.settings.mobileLayoutStripDesc },
             ].map(({ id, label, desc }) => (
               <button key={id} onClick={() => update('mobileLayout', id)}
                 style={{
@@ -524,17 +527,17 @@ export default function Settings() {
       </Section>
 
       {/* ── Голос ── */}
-      <Section icon="🔊" title="Голос">
-        <Row label="Скорость произношения" hint={`Текущая: ${draft.voiceRate.toFixed(1)}x`}>
+      <Section icon="🔊" title={t.settings.sectionVoice}>
+        <Row label={t.settings.voiceRateLabel} hint={t.settings.voiceRateHint(draft.voiceRate.toFixed(1))}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Медленно</span>
+            <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.settings.voiceRateSlow}</span>
             <input
               type="range" min={0.5} max={1.5} step={0.1}
               value={draft.voiceRate}
               onChange={e => update('voiceRate', parseFloat(e.target.value))}
               style={{ flex: 1, accentColor: 'var(--accent)' }}
             />
-            <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Быстро</span>
+            <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.settings.voiceRateFast}</span>
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
             {[0.6, 0.8, 0.9, 1.0, 1.2].map(v => (
@@ -550,7 +553,7 @@ export default function Settings() {
             ))}
           </div>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 6 }}>
-            💡 Для начинающих рекомендуется 0.7–0.8, для опытных — 1.0–1.2
+            {t.settings.voiceRateTip}
           </div>
         </Row>
 
@@ -560,13 +563,13 @@ export default function Settings() {
 
       {/* ── Видео-аватар (платная опция D-ID) ── */}
       {isOwner && (
-        <Section icon="🎥" title="Видео-аватар тренера (платно)">
+        <Section icon="🎥" title={t.settings.sectionVideoAvatar}>
           <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.65 }}>
-            В AI-тренере Pablo может <b>по-настоящему оживать</b> (движение губ) через сервис <b>D-ID</b> — это <b>платная</b> опция (тариф ~€79/мес или пакет кредитов). Каждая уникальная произнесённая фраза = 1 кредит.
+            {t.settings.videoAvatarP1}
             <div style={{ height: 10 }} />
-            🟢 <b>Голосовой режим ✨ и готовые видео-клипы</b> (приветствие, «верно/неверно», «правильно так») работают <b>бесплатно и безлимитно</b> — кредиты D-ID не тратятся.
+            {t.settings.videoAvatarP2}
             <div style={{ height: 10 }} />
-            Кнопка 🎥 «оживить» в тренере появляется, только когда на балансе D-ID остались кредиты. Пока генерировать видео может только учитель; тонкие лимиты по ученикам и тарифам — в отдельном спринте.
+            {t.settings.videoAvatarP3}
           </div>
         </Section>
       )}
@@ -574,14 +577,14 @@ export default function Settings() {
 
       {tab === 2 && <>
       {/* ── Интеграции ── */}
-      <Section icon="🔑" title="Интеграции">
-        <Row label="OpenAI API Key" hint="Свой ключ — обработка фото уроков, картинки, переводы и упражнения идут за ваш счёт. Хранится зашифрованным, на клиент не отдаётся.">
+      <Section icon="🔑" title={t.settings.sectionIntegrations}>
+        <Row label={t.settings.openaiKeyLabel} hint={t.settings.openaiKeyHint}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
               type={keyVisible ? 'text' : 'password'}
               value={keyDraft}
               onChange={e => { setKeyDraft(e.target.value); setKeyMsg(null) }}
-              placeholder={store.openai_key_set ? 'Ключ задан — введите новый, чтобы заменить' : 'sk-...'}
+              placeholder={store.openai_key_set ? t.settings.openaiKeyPlaceholderSet : 'sk-...'}
               autoComplete="off"
               style={{ flex: 1, fontFamily: 'monospace', fontSize: 13 }}
             />
@@ -594,16 +597,16 @@ export default function Settings() {
           <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <button onClick={handleTestKey} disabled={keyBusy}
               style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: keyBusy ? 'default' : 'pointer', fontSize: 13, opacity: keyBusy ? 0.6 : 1 }}>
-              🔍 Проверить
+              {t.settings.testBtn}
             </button>
             <button onClick={handleSaveKey} disabled={keyBusy || !keyDraft.trim()}
               style={{ padding: '8px 14px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', cursor: (keyBusy || !keyDraft.trim()) ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, opacity: (keyBusy || !keyDraft.trim()) ? 0.5 : 1 }}>
-              💾 Сохранить ключ
+              {t.settings.saveKeyBtn}
             </button>
             {store.openai_key_set && (
               <button onClick={handleClearKey} disabled={keyBusy}
                 style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'transparent', color: 'var(--red)', cursor: keyBusy ? 'default' : 'pointer', fontSize: 13, opacity: keyBusy ? 0.6 : 1 }}>
-                Удалить
+                {t.settings.deleteBtn}
               </button>
             )}
           </div>
@@ -614,49 +617,49 @@ export default function Settings() {
             </div>
           )}
           {store.openai_key_set && !keyMsg && (
-            <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 8 }}>✓ Ключ задан{store.openai_key_mask ? ` (${store.openai_key_mask})` : ''}</div>
+            <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 8 }}>{t.settings.keySetMsg}{store.openai_key_mask ? ` (${store.openai_key_mask})` : ''}</div>
           )}
           {!store.openai_key_set && !keyMsg && (
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>Если не задан — используется ключ сервера. Получить: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a></div>
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>{t.settings.openaiKeyNotSetMsg} <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com/api-keys</a></div>
           )}
         </Row>
 
         {/* SMTP — только для owner */}
         {isOwner && (
-          <Row label="Email уведомления (SMTP)"
-            hint="Уведомления о новых сообщениях чата отправляются на sivtsov.pavel@gmail.com">
+          <Row label={t.settings.smtpLabel}
+            hint={t.settings.smtpHint}>
             <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 16px', marginBottom: 8 }}>
               <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'var(--accent)' }}>
-                📧 Как получить Gmail App Password:
+                {t.settings.smtpHowToTitle}
               </div>
               <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--ink-soft)', lineHeight: 1.8 }}>
-                <li>Открой <b>myaccount.google.com</b> → Безопасность</li>
-                <li>Включи двухэтапную аутентификацию (если не включена)</li>
-                <li>Перейди в <b>Безопасность → Пароли приложений</b></li>
-                <li>Создай новый: «Другое приложение» → «Deutsch.lernen»</li>
-                <li>Скопируй 16-символьный пароль — вставь ниже</li>
+                <li>{t.settings.smtpStep1}</li>
+                <li>{t.settings.smtpStep2}</li>
+                <li>{t.settings.smtpStep3}</li>
+                <li>{t.settings.smtpStep4}</li>
+                <li>{t.settings.smtpStep5}</li>
               </ol>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 2 }}>
-                  <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>SMTP хост</label>
+                  <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>{t.settings.smtpHostLabel}</label>
                   <input value={draft.smtp_host} onChange={e => update('smtp_host', e.target.value)}
                     placeholder="smtp.gmail.com" style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>Порт</label>
+                  <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>{t.settings.smtpPortLabel}</label>
                   <input type="number" value={draft.smtp_port} onChange={e => update('smtp_port', parseInt(e.target.value))}
                     placeholder="587" style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>Email (логин)</label>
+                <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>{t.settings.smtpEmailLabel}</label>
                 <input type="email" value={draft.smtp_user} onChange={e => update('smtp_user', e.target.value)}
                   placeholder="sivtsov.pavel@gmail.com" style={{ width: '100%', fontSize: 13 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>App Password (не обычный пароль!)</label>
+                <label style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'block', marginBottom: 3 }}>{t.settings.smtpAppPasswordLabel}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input type={smtpPassVisible ? 'text' : 'password'} value={draft.smtp_pass}
                     onChange={e => update('smtp_pass', e.target.value)}
@@ -670,12 +673,12 @@ export default function Settings() {
               </div>
               {draft.smtp_host && draft.smtp_user && draft.smtp_pass && (
                 <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 2 }}>
-                  ✓ SMTP настроен — письма будут отправляться при новых сообщениях в чате
+                  {t.settings.smtpConfigured}
                 </div>
               )}
               {(!draft.smtp_host || !draft.smtp_user || !draft.smtp_pass) && (
                 <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
-                  Пока не настроен — уведомления только в Telegram
+                  {t.settings.smtpNotConfigured}
                 </div>
               )}
             </div>
@@ -702,7 +705,7 @@ export default function Settings() {
           fontSize: 16, fontWeight: 700,
           transition: 'background .3s',
         }}>
-        {saved ? '✓ Сохранено!' : 'Сохранить настройки'}
+        {saved ? t.settings.savedExclaim : (t.nav.saveSettings || 'Сохранить настройки')}
       </button>
       )}
     </div>
@@ -710,6 +713,7 @@ export default function Settings() {
 }
 
 function PushSection() {
+  const { t } = useI18nStore()
   const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications()
   const [msg, setMsg] = useState('')
   const [testing, setTesting] = useState(false)
@@ -719,10 +723,10 @@ function PushSection() {
   const handleToggle = async () => {
     if (subscribed) {
       await unsubscribe()
-      setMsg('Уведомления отключены')
+      setMsg(t.settings.pushDisabledMsg)
     } else {
       const ok = await subscribe()
-      setMsg(ok ? '✓ Уведомления включены! Напоминания придут по твоему времени (настрой ниже).' : 'Доступ к уведомлениям запрещён в настройках браузера.')
+      setMsg(ok ? t.settings.pushEnabledMsg : t.settings.pushDeniedMsg)
     }
     setTimeout(() => setMsg(''), 4000)
   }
@@ -732,9 +736,9 @@ function PushSection() {
     setTesting(true)
     try {
       const r = await api.post('/push/test', {})
-      setMsg(`✓ Отправлено на ${r?.devices ?? 0} устройств(о). Если не пришло на телефон — проверь разрешение уведомлений и экономию батареи для приложения/Chrome.`)
+      setMsg(t.settings.pushTestSentMsg(r?.devices ?? 0))
     } catch (e) {
-      setMsg('Не удалось отправить: ' + (e?.message || 'ошибка'))
+      setMsg(t.settings.pushTestFailedMsg + (e?.message || 'error'))
     } finally {
       setTesting(false)
       setTimeout(() => setMsg(''), 7000)
@@ -747,17 +751,16 @@ function PushSection() {
     }}>
       <div style={{ padding: '14px 18px 10px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--line)' }}>
         <span style={{ fontSize: 18 }}>🔔</span>
-        <span style={{ fontWeight: 700, fontSize: 15 }}>Напоминания</span>
+        <span style={{ fontWeight: 700, fontSize: 15 }}>{t.nav.tabReminders}</span>
       </div>
       <div style={{ padding: '14px 18px' }}>
         <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
-          Напоминание придёт в выбранное тобой время (по твоей таймзоне), если есть что
-          повторить и ты не заходил. Работает даже когда сайт закрыт.
+          {t.settings.remindersDesc}
         </p>
 
         {permission === 'denied' ? (
           <div style={{ fontSize: 13, color: 'var(--red)', padding: '10px 14px', background: 'rgba(239,68,68,.1)', borderRadius: 8 }}>
-            ⚠️ Уведомления заблокированы в браузере. Разреши их в настройках браузера для этого сайта.
+            {t.settings.notifBlocked}
           </div>
         ) : (
           <button onClick={handleToggle} disabled={loading} style={{
@@ -768,9 +771,9 @@ function PushSection() {
             display: 'flex', alignItems: 'center', gap: 8,
           }}>
             {loading ? '…' : subscribed ? (
-              <><i className="bi bi-bell-slash" /> Отключить</>
+              <><i className="bi bi-bell-slash" /> {t.settings.disableBtn}</>
             ) : (
-              <><i className="bi bi-bell-fill" /> Включить уведомления</>
+              <><i className="bi bi-bell-fill" /> {t.settings.enableNotifBtn}</>
             )}
           </button>
         )}
@@ -782,7 +785,7 @@ function PushSection() {
             background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13,
             display: 'flex', alignItems: 'center', gap: 8,
           }}>
-            {testing ? '…' : <><i className="bi bi-send" /> Отправить тестовый push себе</>}
+            {testing ? '…' : <><i className="bi bi-send" /> {t.settings.testPushBtn}</>}
           </button>
         )}
 
@@ -816,6 +819,7 @@ function ToggleSwitch({ on, onChange }) {
 // Время в ЛОКАЛЬНОЙ таймзоне юзера (определяется автоматически, показываем какая).
 function NotifyPrefsSection() {
   const DEFAULTS = { morning: { on: true, time: '09:00' }, evening: { on: true, time: '21:30' }, milestones: { on: true } }
+  const { t } = useI18nStore()
   const user = useAuthStore(s => s.user)
   const [prefs, setPrefs] = useState(() => ({ ...DEFAULTS, ...(user?.notify_prefs || {}) }))
   const [saving, setSaving] = useState(false)
@@ -865,34 +869,34 @@ function NotifyPrefsSection() {
     <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, marginBottom: 16, overflow: 'hidden' }}>
       <div style={{ padding: '14px 18px 10px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--line)' }}>
         <span style={{ fontSize: 18 }}>⏰</span>
-        <span style={{ fontWeight: 700, fontSize: 15 }}>Когда напоминать</span>
+        <span style={{ fontWeight: 700, fontSize: 15 }}>{t.settings.whenRemindTitle}</span>
       </div>
       <div style={{ padding: '4px 18px 14px' }}>
         {/* Утро */}
         {cardRow(
-          'Утреннее напоминание',
-          'Новый урок, что повторить сегодня',
+          t.nav.morningReminder,
+          t.settings.morningHint,
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{timeInput('morning')}<ToggleSwitch on={prefs.morning.on} onChange={v => setSlot('morning', { on: v })} /></div>
         )}
         {/* Вечер */}
         {cardRow(
-          'Вечернее напоминание',
-          'Не потеряй серию 🔥, если не занимался',
+          t.nav.eveningReminder,
+          t.settings.eveningHint,
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{timeInput('evening')}<ToggleSwitch on={prefs.evening.on} onChange={v => setSlot('evening', { on: v })} /></div>
         )}
         {/* Вехи */}
         {cardRow(
-          'Поздравления с достижениями',
-          'Вехи по словам и урокам 🏆',
+          t.nav.milestones,
+          t.settings.milestonesHint,
           <ToggleSwitch on={prefs.milestones.on} onChange={v => setSlot('milestones', { on: v })} />
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
           <button onClick={save} disabled={saving}
             style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1 }}>
-            {saving ? '…' : 'Сохранить'}
+            {saving ? '…' : (t.nav.save || t.settings.savedMsg)}
           </button>
-          {saved && <span style={{ fontSize: 13, color: 'var(--good)' }}>✓ Сохранено</span>}
-          <span style={{ fontSize: 12, color: 'var(--ink-soft)', marginLeft: 'auto' }}>Твоя таймзона: {tz}</span>
+          {saved && <span style={{ fontSize: 13, color: 'var(--good)' }}>{t.settings.savedMsg}</span>}
+          <span style={{ fontSize: 12, color: 'var(--ink-soft)', marginLeft: 'auto' }}>{t.settings.yourTimezone} {tz}</span>
         </div>
       </div>
     </div>
