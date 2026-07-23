@@ -500,7 +500,11 @@ export async function exercisesRoutes(fastify) {
     // СВОЕЙ школы (мультиарендность; null-safe: без школы — как раньше, всё).
     // Мульти-таргет: только слова активного изучаемого языка (l.target_lang).
     let lessonFilter
-    if (role === 'owner') {
+    if (userId === 1) {
+      // Супер-админ (user 1) видит ВСЕ слова системы активного языка (все владельцы/школы) —
+      // для контроля общего пула, чтобы чужие «левые» данные были на виду.
+      lessonFilter = 'l.target_lang = $2'
+    } else if (role === 'owner') {
       lessonFilter = 'l.owner_id = $1 AND l.target_lang = $2'
     } else {
       params.push(request.user.school_id ?? null) // $3
