@@ -17,6 +17,7 @@ import { ex } from '../utils/extraI18n.js'
 import { useThemeStore } from '../store/theme.js'
 import { useAdminOpStore } from '../store/adminOp.js'
 import { useSettingsStore } from '../store/settings.js'
+import { useCourseGateStore } from '../store/courseGate.js'
 import ProcessingBadge from './ProcessingBadge.jsx'
 import { api } from '../api/client.js'
 import LangSwitcher from './LangSwitcher.jsx'
@@ -62,7 +63,9 @@ export default function Layout({ children }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [tourRun, setTourRun] = useState(false)   // онбординг-тур (кнопка + авто при первом входе)
   const [gateLangs, setGateLangs] = useState(null) // доступные языки изучения (для гейта)
-  const [gateOpen, setGateOpen] = useState(false)  // окно выбора языка (первый вход / «Сменить курс»)
+  // Окно выбора языка (первый вход / «Сменить курс») — общий стор: кнопка-триггер теперь
+  // на странице «Сегодня» (у приветствия), а не в этом меню, но модалку рендерим по-прежнему тут.
+  const { open: gateOpen, setOpen: setGateOpen } = useCourseGateStore()
   const [unreadChat, setUnreadChat] = useState(0)
   const [pushMsg, setPushMsg] = useState('')
   const [pushSending, setPushSending] = useState(false)
@@ -300,13 +303,6 @@ export default function Layout({ children }) {
             </Link>
           )}
           <div style={{ marginTop: 12 }}><TargetSwitcher /></div>
-          {/* Сменить курс (язык изучения) — доступно и на десктопе, не только в топбаре */}
-          {gateLangs && gateLangs.length >= 2 && (
-            <button onClick={() => { close?.(); setGateOpen(true) }}
-              style={{ marginTop: 10, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px 12px', borderRadius: 11, border: '1px solid var(--gold)', background: 'rgba(185,151,91,0.10)', color: 'var(--gold-dark)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              <Languages size={16} /> {t.nav.changeCourse || 'Сменить курс'}
-            </button>
-          )}
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>

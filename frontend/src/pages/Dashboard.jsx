@@ -4,12 +4,13 @@ import {
   BookOpenText, Zap, Flame, Play, CheckCircle2, Layers, Puzzle, SquarePen,
   Gamepad2, Search, Volume2, RotateCcw, Pencil, ChevronUp, ChevronDown, Check,
   Star, Sparkles, MessageCircle, Heart, ArrowRight, Mic, BarChart3, Printer,
-  Camera, GraduationCap, Lock,
+  Camera, GraduationCap, Lock, Languages,
 } from 'lucide-react'
 import { api } from '../api/client.js'
 import { getOfflineLessonWords, getOfflineStats, isOnline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
+import { useCourseGateStore } from '../store/courseGate.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation, getLessonTitle, getLessonDesc } from '../utils/translation.js'
 import AdSlot from '../components/AdSlot.jsx'
@@ -65,6 +66,12 @@ export default function Dashboard() {
   const location = useLocation()
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
+  const [gateLangs, setGateLangs] = useState(null) // доступные языки изучения — кнопка «Сменить курс» видна, если их ≥2
+  const setGateOpen = useCourseGateStore(s => s.setOpen) // модалка выбора языка рендерится в Layout
+
+  useEffect(() => {
+    api.get('/courses/languages').then(langs => setGateLangs(Array.isArray(langs) ? langs : [])).catch(() => {})
+  }, [])
 
   // Пришли с упражнений («На главную») → раскрыть свой урок и плавно проскроллить к нему
   useEffect(() => {
@@ -198,7 +205,15 @@ export default function Dashboard() {
 
       {/* ---------- HERO / метрики ---------- */}
       <section className="dl-hero">
-        <div className="dl-greeting">{greeting}{name ? `, ${name}` : ''} <span className="dl-wave">👋</span></div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+          <div className="dl-greeting">{greeting}{name ? `, ${name}` : ''} <span className="dl-wave">👋</span></div>
+          {gateLangs && gateLangs.length >= 2 && (
+            <button onClick={() => setGateOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 11, border: '1px solid var(--gold)', background: 'rgba(185,151,91,0.10)', color: 'var(--gold-dark)', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+              <Languages size={16} /> {t.nav.changeCourse || 'Сменить курс'}
+            </button>
+          )}
+        </div>
         <p className="dl-greeting-sub">{t.dashboard.exercisesWaiting(total)}</p>
 
         {progress && (
