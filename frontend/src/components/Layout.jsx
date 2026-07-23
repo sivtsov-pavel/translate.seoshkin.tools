@@ -284,6 +284,13 @@ export default function Layout({ children }) {
             </Link>
           )}
           <div style={{ marginTop: 12 }}><TargetSwitcher /></div>
+          {/* Сменить курс (язык изучения) — доступно и на десктопе, не только в топбаре */}
+          {gateLangs && gateLangs.length >= 2 && (
+            <button onClick={() => { close?.(); setGateOpen(true) }}
+              style={{ marginTop: 10, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px 12px', borderRadius: 11, border: '1px solid var(--gold)', background: 'rgba(185,151,91,0.10)', color: 'var(--gold-dark)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <Languages size={16} /> {t.nav.changeCourse || 'Сменить курс'}
+            </button>
+          )}
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
