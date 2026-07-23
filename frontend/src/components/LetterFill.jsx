@@ -23,6 +23,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
   const [vals, setVals]         = useState({})      // {индекс_буквы: введённый символ}
   const [submitted, setSubmitted] = useState(false)
   const [correct, setCorrect]   = useState(false)
+  const [caseHint, setCaseHint] = useState('')      // подсказка про регистр (перепутал большую/маленькую)
   const [reaction, setReaction] = useState(null)
   const refs = useRef({})
   const { t, lang } = useI18nStore()
@@ -62,6 +63,16 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
     // Собираем слово: видимые буквы + вписанные в пропуски. Регистрозависимо (нем. заглавные).
     const built = chars.map((c, i) => (c === '_' ? (vals[i] || '') : c)).join('')
     const isCorrect = built.trim() === answer
+    // Перепутан ТОЛЬКО регистр (буквы верные) → объясняем правило, а не просто «неверно».
+    let ch = ''
+    if (!isCorrect && built.trim().toLowerCase() === answer.toLowerCase()) {
+      const bad = blanks.find(i => (vals[i] || '') !== answer[i] && (vals[i] || '').toLowerCase() === (answer[i] || '').toLowerCase())
+      const correctIsUpper = bad != null && answer[bad] === (answer[bad] || '').toUpperCase()
+      ch = correctIsUpper
+        ? (t.exercise.caseShouldUpper || 'Здесь буква ЗАГЛАВНАЯ: в немецком существительные и вежливое «Sie» пишутся с большой.')
+        : (t.exercise.caseShouldLower || 'Здесь буква строчная: с большой пишутся только существительные и «Sie», а не середина слова.')
+    }
+    setCaseHint(ch)
     setCorrect(isCorrect)
     setSubmitted(true)
     setReaction(isCorrect ? 'correct' : 'wrong')
@@ -94,13 +105,19 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
         <div style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 4, fontSize: 34, fontWeight: 700 }} dir="ltr">
           {chars.map((ch, i) => (
             ch === '_'
+              // Показываем то, что ВВЁЛ ученик (даже после проверки) — чтобы он видел свою букву
+              // и понял ошибку (в т.ч. регистр). Автозаглавную клавиатуры выключаем.
               ? <input key={i}
                   ref={el => { refs.current[i] = el }}
-                  value={submitted ? (answer[i] || '') : (vals[i] || '')}
+                  value={vals[i] || ''}
                   onChange={e => setChar(i, e.target.value)}
                   onKeyDown={e => handleKey(i, e)}
                   disabled={submitted}
                   maxLength={1}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  inputMode="text"
                   aria-label="пропущенная буква"
                   style={{
                     width: 34, height: 46, padding: 0, textAlign: 'center',
@@ -110,7 +127,10 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
                     borderRadius: 0, outline: 'none',
                   }}
                 />
-              : <span key={i} style={{ color: 'var(--ink)', lineHeight: '46px' }}>{ch}</span>
+              : ch === ' '
+                // Зазор между словами (в многословных ответах пробел был слишком узким)
+                ? <span key={i} style={{ display: 'inline-block', width: 16 }} />
+                : <span key={i} style={{ color: 'var(--ink)', lineHeight: '46px' }}>{ch}</span>
           ))}
           <SpeakButton text={payload.word_de} size={22} style={{ marginLeft: 10 }} />
         </div>
@@ -126,9 +146,14 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
         </div>
       ) : (
         <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: 14, fontSize: 16, fontWeight: 700, color: resultColor }}>
+          <div style={{ marginBottom: caseHint ? 8 : 14, fontSize: 16, fontWeight: 700, color: resultColor }}>
             {correct ? `✓ ${t.exercise.correct} ${answer}` : `✗ ${t.exercise.wrong} ${answer}`}
           </div>
+          {caseHint && (
+            <div style={{ marginBottom: 14, fontSize: 13.5, color: 'var(--gold-dark)', background: 'var(--yellow-soft)', borderRadius: 10, padding: '8px 12px' }}>
+              ✍️ {caseHint}
+            </div>
+          )}
           <button onClick={() => onAnswer(correct ? 5 : 1, answer)}
             style={{ padding: '13px 36px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 16, fontWeight: 700 }}>
             {t.exercise.next}
