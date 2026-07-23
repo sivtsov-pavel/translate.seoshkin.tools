@@ -6,6 +6,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 import { cardUrl, shareLink } from '../utils/share.js'
+import { numberWord } from '../utils/numberWords.js'
 
 // Название изучаемого языка — для плейсхолдера поиска (какой словарь)
 const TARGET_LANG_NAME = { de: 'немецкий', es: 'испанский', fr: 'французский', it: 'итальянский', en: 'английский', pt: 'португальский' }
@@ -702,6 +703,7 @@ const TENS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
 function GermanNumbers() {
   const [active, setActive] = useState(null)
+  const { lang } = useI18nStore()
 
   const playNum = (num) => {
     speak(num.de, 'de-DE')
@@ -746,7 +748,7 @@ function GermanNumbers() {
                 </span>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', lineHeight: 1.2 }}>{num.de}</div>
-                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 1 }}>{num.ru}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 1 }}>{numberWord(num.n, lang, num.ru)}</div>
                 </div>
                 <span style={{ marginLeft: 'auto', fontSize: 16, opacity: 0.5 }}>🔊</span>
               </button>

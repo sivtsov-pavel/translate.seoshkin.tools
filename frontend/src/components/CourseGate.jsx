@@ -38,8 +38,10 @@ export default function CourseGate({ langs, onClose, runTourAfter }) {
         <div style={{ display: 'grid', gridTemplateColumns: list.length > 1 ? '1fr 1fr' : '1fr', gap: 12 }}>
           {list.map(code => (
             <button key={code} onClick={() => pick(code)}
-              style={{ background: 'var(--surface)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '22px 14px', cursor: 'pointer', boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 44, lineHeight: 1 }}>{META[code].flag}</span>
+              style={{ background: 'var(--surface)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '14px 14px 18px', cursor: 'pointer', boxShadow: 'var(--card-shadow)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <img src={`/uploads/lang-cards/${code}.webp`} alt="" onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block' }}
+                style={{ width: '100%', aspectRatio: '3/2', objectFit: 'cover', borderRadius: 12 }} />
+              <span style={{ fontSize: 40, lineHeight: 1, display: 'none' }}>{META[code].flag}</span>
               <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>{nameOf(code)}</span>
               <span style={{ display: 'block', height: 4, width: 44, borderRadius: 3, background: `linear-gradient(90deg, ${META[code].stripe.join(',')})` }} />
             </button>

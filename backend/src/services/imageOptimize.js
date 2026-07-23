@@ -58,3 +58,20 @@ export async function saveBookCover(buffer, bookId) {
     .toFile(join(dir, filename))
   return `/uploads/book-covers/${filename}`
 }
+
+// Карточка языка на экране выбора курса (CourseGate) — прямоугольная, как флаг (3:2),
+// заменяет эмодзи-флаг мультяшной иллюстрацией. Имя по коду языка (de/es/en/fr/it/pt),
+// файлов всего 6, статические (не привязаны к записи в БД, отдаются напрямую по коду).
+const LANG_CARD_WIDTH = 480
+const LANG_CARD_HEIGHT = 320
+
+export async function saveLangCard(buffer, code) {
+  const dir = join(config.uploadDir, 'lang-cards')
+  mkdirSync(dir, { recursive: true })
+  const filename = `${code}.webp`
+  await sharp(buffer)
+    .resize(LANG_CARD_WIDTH, LANG_CARD_HEIGHT, { fit: 'cover' })
+    .webp({ quality: 85 })
+    .toFile(join(dir, filename))
+  return `/uploads/lang-cards/${filename}`
+}
