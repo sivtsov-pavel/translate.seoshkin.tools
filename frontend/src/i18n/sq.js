@@ -1,5 +1,14 @@
 export const sq = {
   nav: {
+    tabProfile: 'Profili',
+    tabSettings: 'Cilësimet',
+    tabIntegrations: 'Integrimet',
+    tabReminders: 'Kujtesat',
+    save: 'Ruaj',
+    saveSettings: 'Ruaj cilësimet',
+    morningReminder: 'Kujtesa e mëngjesit',
+    eveningReminder: 'Kujtesa e mbrëmjes',
+    milestones: 'Urime për arritjet',
     interfaceLang: 'Gjuha jote',
     tourApp: 'Turi i aplikacionit',
     changeCourse: 'Ndrysho kursin',

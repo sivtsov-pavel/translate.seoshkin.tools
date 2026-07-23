@@ -492,7 +492,7 @@ export default function Layout({ children }) {
                   <Settings size={16} color="var(--ink-soft)" />
                 </Link>
                 <button onClick={() => { toggleTheme() }} style={popRow}>{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />} {theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}</button>
-                <div style={{ ...popRow, cursor: 'default' }}><Globe size={16} /> <span style={{ flex: 1 }}>{t.nav.interfaceLang || 'Язык интерфейса'}</span><LangSwitcher pill dropUp /></div>
+                <div style={{ ...popRow, cursor: 'default' }}><Globe size={16} /> <span style={{ flex: 1 }}>{t.nav.interfaceLang || 'Ваш язык'}</span><LangSwitcher pill /></div>
                 <button onClick={() => { setProfileOpen(false); startTour() }} style={popRow}><Compass size={16} /> {t.nav.tourApp || 'Тур по приложению'}</button>
                 <button onClick={handleLogout} style={{ ...popRow, color: '#C0392B' }}><LogOut size={16} /> {t.nav.logout}</button>
               </div>

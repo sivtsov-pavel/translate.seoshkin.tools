@@ -1,5 +1,14 @@
 export const es = {
   nav: {
+    tabProfile: 'Perfil',
+    tabSettings: 'Ajustes',
+    tabIntegrations: 'Integraciones',
+    tabReminders: 'Recordatorios',
+    save: 'Guardar',
+    saveSettings: 'Guardar ajustes',
+    morningReminder: 'Recordatorio matutino',
+    eveningReminder: 'Recordatorio nocturno',
+    milestones: 'Felicitaciones por logros',
     interfaceLang: 'Tu idioma',
     tourApp: 'Recorrido por la app',
     changeCourse: 'Cambiar curso',

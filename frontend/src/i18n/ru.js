@@ -1,6 +1,15 @@
 export const ru = {
   // Навигация
   nav: {
+    tabProfile: 'Профиль',
+    tabSettings: 'Настройки',
+    tabIntegrations: 'Интеграции',
+    tabReminders: 'Напоминания',
+    save: 'Сохранить',
+    saveSettings: 'Сохранить настройки',
+    morningReminder: 'Утреннее напоминание',
+    eveningReminder: 'Вечернее напоминание',
+    milestones: 'Поздравления с достижениями',
     interfaceLang: 'Ваш язык',
     tourApp: 'Тур по приложению',
     changeCourse: 'Сменить курс',

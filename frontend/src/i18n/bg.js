@@ -1,5 +1,14 @@
 export const bg = {
   nav: {
+    tabProfile: 'Профил',
+    tabSettings: 'Настройки',
+    tabIntegrations: 'Интеграции',
+    tabReminders: 'Напомняния',
+    save: 'Запази',
+    saveSettings: 'Запази настройките',
+    morningReminder: 'Сутрешно напомняне',
+    eveningReminder: 'Вечерно напомняне',
+    milestones: 'Поздравления за постижения',
     interfaceLang: 'Твоят език',
     tourApp: 'Обиколка на приложението',
     changeCourse: 'Смени курса',

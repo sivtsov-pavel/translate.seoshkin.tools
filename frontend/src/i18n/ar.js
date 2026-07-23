@@ -2,6 +2,15 @@
 export const ar = {
   dir: 'rtl',
   nav: {
+    tabProfile: 'الملف',
+    tabSettings: 'الإعدادات',
+    tabIntegrations: 'التكاملات',
+    tabReminders: 'التذكيرات',
+    save: 'حفظ',
+    saveSettings: 'حفظ الإعدادات',
+    morningReminder: 'تذكير صباحي',
+    eveningReminder: 'تذكير مسائي',
+    milestones: 'تهاني الإنجازات',
     interfaceLang: 'لغتك',
     tourApp: 'جولة في التطبيق',
     changeCourse: 'تغيير الدورة',

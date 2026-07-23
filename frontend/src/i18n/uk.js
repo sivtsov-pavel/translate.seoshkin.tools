@@ -1,5 +1,14 @@
 export const uk = {
   nav: {
+    tabProfile: 'Профіль',
+    tabSettings: 'Налаштування',
+    tabIntegrations: 'Інтеграції',
+    tabReminders: 'Нагадування',
+    save: 'Зберегти',
+    saveSettings: 'Зберегти налаштування',
+    morningReminder: 'Ранкове нагадування',
+    eveningReminder: 'Вечірнє нагадування',
+    milestones: 'Вітання з досягненнями',
     interfaceLang: 'Твоя мова',
     tourApp: 'Тур застосунком',
     changeCourse: 'Змінити курс',

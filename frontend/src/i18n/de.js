@@ -1,6 +1,15 @@
 export const de = {
   // Navigation
   nav: {
+    tabProfile: 'Profil',
+    tabSettings: 'Einstellungen',
+    tabIntegrations: 'Integrationen',
+    tabReminders: 'Erinnerungen',
+    save: 'Speichern',
+    saveSettings: 'Einstellungen speichern',
+    morningReminder: 'Morgen-Erinnerung',
+    eveningReminder: 'Abend-Erinnerung',
+    milestones: 'Glückwünsche zu Erfolgen',
     interfaceLang: 'Deine Sprache',
     tourApp: 'App-Tour',
     changeCourse: 'Kurs wechseln',

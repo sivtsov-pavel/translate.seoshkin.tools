@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSettingsStore, applyVisual } from '../store/settings.js'
 import { useAuthStore } from '../store/auth.js'
+import { useI18nStore } from '../store/i18n.js'
 import { usePushNotifications } from '../hooks/usePushNotifications.jsx'
 import { api } from '../api/client.js'
 import ProfileTab from './Profile.jsx'
 
 const TABS = [
-  { id: 'profile',      label: '👤 Профиль' },
-  { id: 'settings',     label: '⚙️ Настройки' },
-  { id: 'integrations', label: '🔑 Интеграции' },
-  { id: 'reminders',    label: '⏰ Напоминания' },
+  { id: 'profile',      emoji: '👤', key: 'tabProfile' },
+  { id: 'settings',     emoji: '⚙️', key: 'tabSettings' },
+  { id: 'integrations', emoji: '🔑', key: 'tabIntegrations' },
+  { id: 'reminders',    emoji: '⏰', key: 'tabReminders' },
 ]
 
 const VOICE_KEY = 'de_voice_name'
@@ -169,8 +170,9 @@ export default function Settings() {
   const store = useSettingsStore()
   const { user } = useAuthStore()
   const isOwner = user?.role === 'owner'
+  const { t } = useI18nStore()
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialTab = TABS.findIndex(t => t.id === searchParams.get('tab'))
+  const initialTab = TABS.findIndex(tb => tb.id === searchParams.get('tab'))
   const [tab, setTab] = useState(initialTab >= 0 ? initialTab : 0)
   const selectTab = (i) => { setTab(i); setSearchParams(prev => { prev.set('tab', TABS[i].id); return prev }, { replace: true }) }
   const [saved, setSaved] = useState(false)
@@ -345,7 +347,7 @@ export default function Settings() {
             cursor: 'pointer', background: tab === i ? 'var(--surface)' : 'transparent',
             color: tab === i ? 'var(--blue)' : 'var(--ink-soft)',
           }}>
-            {tb.label}
+            {tb.emoji} {t.nav?.[tb.key] || tb.id}
           </button>
         ))}
       </div>

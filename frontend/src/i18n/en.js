@@ -1,5 +1,14 @@
 export const en = {
   nav: {
+    tabProfile: 'Profile',
+    tabSettings: 'Settings',
+    tabIntegrations: 'Integrations',
+    tabReminders: 'Reminders',
+    save: 'Save',
+    saveSettings: 'Save settings',
+    morningReminder: 'Morning reminder',
+    eveningReminder: 'Evening reminder',
+    milestones: 'Achievement congrats',
     interfaceLang: 'Your language',
     tourApp: 'App tour',
     changeCourse: 'Change course',

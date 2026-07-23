@@ -1,5 +1,14 @@
 export const tr = {
   nav: {
+    tabProfile: 'Profil',
+    tabSettings: 'Ayarlar',
+    tabIntegrations: 'Entegrasyonlar',
+    tabReminders: 'Hatırlatmalar',
+    save: 'Kaydet',
+    saveSettings: 'Ayarları kaydet',
+    morningReminder: 'Sabah hatırlatması',
+    eveningReminder: 'Akşam hatırlatması',
+    milestones: 'Başarı kutlamaları',
     interfaceLang: 'Dilin',
     tourApp: 'Uygulama turu',
     changeCourse: 'Kursu değiştir',
