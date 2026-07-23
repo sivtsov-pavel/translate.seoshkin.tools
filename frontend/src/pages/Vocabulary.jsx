@@ -727,7 +727,7 @@ function GermanNumbers() {
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
             {group.label}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+          <div className="vocab-numbers-grid">
             {group.items.map(num => (
               <button key={num.n} onClick={() => playNum(num)}
                 style={{

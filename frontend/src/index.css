@@ -291,6 +291,18 @@ html.offline-mode .main-content { padding-top: 80px; }
   html.layout-mode-strip .full-page-layout { left: 60px; bottom: 0; }
 }
 
+/* ── Сетка карточек чисел в Словаре (раздел «Цифры и числа») ── */
+/* Раньше auto-fill(minmax(140px,1fr)) на широком десктопе (main-content без max-width)
+   растягивался до 9+ карточек в ряд — слишком узко/мелко. Фиксируем 6 в ряд на десктопе,
+   меньше на планшете/мобиле, где ширина и так ограничена. */
+.vocab-numbers-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+@media (max-width: 640px) {
+  .vocab-numbers-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .vocab-numbers-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
 /* ── Полноэкранная сессия упражнений ── */
 
 /* Обёртка: full-page-layout уже даёт position:fixed, добавляем flex */
