@@ -327,11 +327,11 @@ export default function Dashboard() {
       {/* ---------- ПУТЬ УРОКОВ (нитка) ---------- */}
       <section className="dl-screen2">
         {books.length > 0 && (() => {
-          // «Все уроки» ВЫКЛ = показываем путь вперёд (текущий + ещё не пройденные), скрываем
-          // только уже пройденные — чтобы после первого урока не оставался один кружок, а был
-          // виден весь оставшийся путь. «Все уроки» ВКЛ = показываем и пройденные тоже.
-          const forward = pathLessons.filter(l => l.status === 'current' || l.status === 'upcoming' || l.status === 'locked')
-          const shownPath = showAllLessons || !forward.length ? pathLessons : forward
+          // «Все уроки» ВЫКЛ = показываем ПРОЙДЕННЫЙ путь (пройденные уроки + текущий) — трейл,
+          // который ученик уже прошёл, с текущим уроком в конце. «Все уроки» ВКЛ = весь путь курса
+          // целиком (включая ещё закрытые впереди). Просьба Павла: по умолчанию — пройденный путь.
+          const traveled = pathLessons.filter(l => l.status === 'done' || l.status === 'current')
+          const shownPath = showAllLessons || !traveled.length ? pathLessons : traveled
           return (
           <>
             <div className="dl-section-head">
@@ -354,10 +354,10 @@ export default function Dashboard() {
             <LessonPath lessons={shownPath}
               selectedId={selectedId ?? current?.lesson_id}
               onSelect={id => {
-                const nid = id === (selectedId ?? current?.lesson_id) ? null : id
-                setSelectedId(nid)
-                // Клик по уроку на карте → плавно скроллим вниз к раскрытой карточке урока
-                if (nid) setTimeout(() => document.querySelector('.dl-detail-card')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120)
+                // Клик по уроку на карте → ВСЕГДА выбираем его и плавно скроллим вниз к карточке
+                // урока (даже если это текущий урок, выбранный по умолчанию — не «схлопываем» его).
+                setSelectedId(id)
+                setTimeout(() => document.querySelector('.dl-detail-card')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120)
               }} lang={lang} />
           </>
           )
