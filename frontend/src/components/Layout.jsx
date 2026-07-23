@@ -144,6 +144,22 @@ export default function Layout({ children }) {
 
   useEffect(() => { setOpen(false); setProfileOpen(false); window.scrollTo(0, 0) }, [location.pathname])
 
+  // Клавиатура на телефоне: меряем, сколько закрывает виртуальная клавиатура (visualViewport),
+  // и ужимаем полноэкранную область (--keyboard-inset), чтобы карточку упражнения можно было
+  // прокрутить и прочитать её верх, не пряча клавиатуру. (Логика вернулась после переписи Layout.)
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      const inset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))
+      document.documentElement.style.setProperty('--keyboard-inset', inset + 'px')
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+  }, [])
+
   // Тур: авто-запуск ОДИН раз при первом входе (только на главной), дальше — по кнопке 🧭
   useEffect(() => {
     // Тур: первый вход (нет tour_seen_v1) ИЛИ сразу после выбора языка в гейте (run_tour_after).

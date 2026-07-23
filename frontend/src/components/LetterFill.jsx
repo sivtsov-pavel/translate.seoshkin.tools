@@ -32,22 +32,10 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
 
   const handleKey = (e) => { if (e.key === 'Enter') handleSubmit() }
 
-  const parts = []
-  let buf = ''
-  let inBlank = false
-  for (const ch of payload.masked) {
-    if (ch === '_') {
-      if (!inBlank && buf) { parts.push({ text: buf, blank: false }); buf = '' }
-      inBlank = true
-      buf += '_'
-    } else {
-      if (inBlank && buf) { parts.push({ text: buf, blank: true }); buf = '' }
-      inBlank = false
-      buf += ch
-    }
-  }
-  if (buf) parts.push({ text: buf, blank: inBlank })
-
+  // masked и answer одинаковой длины и выровнены по индексу: masked[i]==='_' → буква скрыта.
+  // Рендерим ПОСИМВОЛЬНО, каждую скрытую букву — отдельной клеткой с зазором, чтобы было
+  // однозначно видно, СКОЛЬКО букв вставлять (раньше подчёркивания сливались в одну черту).
+  const chars = [...(payload.masked || '')]
   const resultColor = submitted ? (correct ? 'var(--good)' : 'var(--red)') : 'var(--accent)'
 
   return (
@@ -67,15 +55,14 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
       </p>
 
       <div style={{ textAlign: 'center', marginBottom: 20 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 0, fontSize: 38, fontWeight: 700, letterSpacing: 2 }} dir="ltr">
-          {parts.map((part, i) => (
-            part.blank
-              ? <span key={i} style={{ color: 'var(--accent)', borderBottom: '3px solid var(--accent)', minWidth: part.text.length * 22, display: 'inline-block', textAlign: 'center', opacity: 0.6 }}>
-                  {submitted ? (
-                    <span style={{ color: resultColor }}>{payload.answer.slice(payload.masked.indexOf('_'), payload.masked.indexOf('_') + part.text.length) || '?'}</span>
-                  ) : part.text}
+        <div style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 3, fontSize: 38, fontWeight: 700 }} dir="ltr">
+          {chars.map((ch, i) => (
+            ch === '_'
+              // Скрытая буква — отдельная клетка с подчёркиванием и зазором (видно, сколько букв)
+              ? <span key={i} style={{ color: resultColor, borderBottom: `3px solid ${submitted ? resultColor : 'var(--accent)'}`, width: 26, display: 'inline-block', textAlign: 'center' }}>
+                  {submitted ? (payload.answer?.[i] || '') : ''}
                 </span>
-              : <span key={i} style={{ color: 'var(--ink)' }}>{part.text}</span>
+              : <span key={i} style={{ color: 'var(--ink)' }}>{ch}</span>
           ))}
           <SpeakButton text={payload.word_de} size={22} style={{ marginLeft: 10 }} />
         </div>

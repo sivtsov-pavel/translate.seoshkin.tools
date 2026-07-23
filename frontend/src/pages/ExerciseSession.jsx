@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Globe, Volume2, VolumeX, Star, MessageCircle, Moon, SkipForward } from 'lucide-react'
+import { Globe, Volume2, VolumeX, Star, Moon, SkipForward } from 'lucide-react'
 import { api } from '../api/client.js'
 import { isOnline, getOfflineExercises, answerOffline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -280,13 +280,6 @@ export default function ExerciseSession() {
                 background: starred.has(ex.word_id) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--yellow-soft)',
                 color: starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--gold-dark)' }}>
               <Star size={13} fill={starred.has(ex.word_id) ? 'currentColor' : 'none'} /> {starred.has(ex.word_id) ? 'В изучении' : 'В изучение'}
-            </button>
-          )}
-          {lessonId && (
-            <button onClick={() => navigate(`/ai-trainer?lesson_id=${lessonId}`)}
-              title="Поговорить с AI-тренером по словам этого урока"
-              style={{ padding: '4px 10px', borderRadius: 8, border: '1px solid var(--blue)', background: 'rgba(62,127,193,0.12)', color: 'var(--blue)', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <MessageCircle size={13} /> Тренер
             </button>
           )}
         </div>
