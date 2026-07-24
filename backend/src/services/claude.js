@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
+import { fixFillBlankConjugation } from './germanConjugator.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
 // принимают необязательный параметр `client`, чтобы работать на ключе владельца урока
@@ -51,12 +52,33 @@ function parseJson(text) {
   }
 }
 
+// Учёт расхода токенов OpenAI — чтобы точно показывать стоимость операций (правило −70$).
+// Разовые скрипты (перегенерация) сбрасывают счётчик, гоняют, читают и печатают цену.
+export const usage = { calls: 0, promptTokens: 0, completionTokens: 0, byModel: {} }
+export function resetUsage() { usage.calls = 0; usage.promptTokens = 0; usage.completionTokens = 0; usage.byModel = {} }
+// Цены за 1M токенов (USD), актуально для gpt-4o-mini / gpt-4o.
+const PRICE = { 'gpt-4o-mini': { in: 0.15, out: 0.60 }, 'gpt-4o': { in: 2.50, out: 10.00 } }
+export function usageCostUSD() {
+  let usd = 0
+  for (const [m, u] of Object.entries(usage.byModel)) {
+    const p = PRICE[m] || { in: 0, out: 0 }
+    usd += (u.promptTokens / 1e6) * p.in + (u.completionTokens / 1e6) * p.out
+  }
+  return usd
+}
+
 async function ask(prompt, { model = 'gpt-4o-mini', max_tokens = 4096, client = platformClient } = {}) {
   const res = await client.chat.completions.create({
     model,
     max_tokens,
     messages: [{ role: 'user', content: prompt }],
   })
+  const u = res.usage || {}
+  usage.calls++
+  usage.promptTokens += u.prompt_tokens || 0
+  usage.completionTokens += u.completion_tokens || 0
+  const bm = usage.byModel[model] || (usage.byModel[model] = { calls: 0, promptTokens: 0, completionTokens: 0 })
+  bm.calls++; bm.promptTokens += u.prompt_tokens || 0; bm.completionTokens += u.completion_tokens || 0
   return res.choices[0].message.content
 }
 
@@ -416,6 +438,13 @@ export async function generateExercises(words, grammar_points, targetLang = 'de'
     const input = JSON.stringify({ words: batch, grammar_points, sentences: realSentences }, null, 2)
     const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192, client })
     allExercises.push(...parseJson(text).map(shuffleOptions))
+  }
+  // Для немецкого — детерминированно чиним спряжение в fill_blank (GPT нередко кладёт
+  // инфинитив: «Ich fragen» → «Ich frage»). Правило-based, без доп. вызовов OpenAI.
+  if (targetLang === 'de') {
+    for (const ex of allExercises) {
+      if (ex?.type === 'fill_blank') ex.payload = fixFillBlankConjugation(ex.payload).payload
+    }
   }
   return allExercises
 }
