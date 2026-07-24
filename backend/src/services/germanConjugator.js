@@ -117,62 +117,7 @@ export function conjugatePresent(infinitiveRaw) {
   return forms
 }
 
-// Похоже ли слово на немецкий инфинитив глагола (для эвристики фикса fill_blank).
-// ВАЖНО: только со СТРОЧНОЙ буквы — в немецком глаголы строчные, а существительные с
-// заглавной. Иначе плюрал-существительное на -en («Namen», «Katzen») ложно «спрягалось» бы.
-export function looksLikeInfinitive(w) {
-  const s = String(w || '').trim()
-  return /^[a-zäöüß]+e?n$/.test(s) && s.length >= 3
-}
-
-// Определить лицо по подлежащему в предложении с пропуском.
-// Ищем местоимение рядом с ___ (обычно перед ним) или в начале.
-const PRONOUN_TO_PERSON = {
-  ich: 'ich', du: 'du', er: 'er', sie: 'sie', es: 'er', wir: 'wir', ihr: 'ihr',
-}
-export function detectPerson(sentence) {
-  const s = String(sentence || '')
-  // Слово непосредственно перед пропуском ___
-  const m = s.match(/([A-Za-zÄÖÜäöüß]+)\s+_+/)
-  if (m) {
-    const w = m[1].toLowerCase()
-    // «sie/Sie» неоднозначно (она ед. → слот er, или они/Вы → слот sie). По умолчанию слот sie
-    // (вежливое «Sie» и «они» частотнее в A1), а форма глагола там = инфинитиву, т.е. безопасно.
-    if (w === 'sie') return 'sie'
-    if (PRONOUN_TO_PERSON[w]) return PRONOUN_TO_PERSON[w] // ich/du/er/es/wir/ihr
-    // Существительное с заглавной в ед.ч. (Der Hund ___) → слот er
-    if (/^[A-ZÄÖÜ]/.test(m[1])) return 'er'
-  }
-  // Местоимение в начале предложения
-  const first = s.trim().split(/\s+/)[0]?.toLowerCase()
-  if (first === 'sie') return 'sie'
-  if (first && PRONOUN_TO_PERSON[first]) return PRONOUN_TO_PERSON[first]
-  return null
-}
-
-// Починить payload fill_blank: если правильный ответ (blank) — инфинитив глагола, а по
-// подлежащему нужна спряжённая форма, заменяем blank и соответствующий вариант в options.
-// Возвращает { payload, changed }.
-export function fixFillBlankConjugation(payload) {
-  if (!payload || typeof payload !== 'object') return { payload, changed: false }
-  const { sentence, blank, options } = payload
-  if (!sentence || !blank || !looksLikeInfinitive(blank)) return { payload, changed: false }
-
-  const person = detectPerson(sentence)
-  if (!person) return { payload, changed: false }
-
-  const forms = conjugatePresent(blank)
-  if (!forms) return { payload, changed: false }
-  const correct = forms[person]
-  if (!correct || correct.toLowerCase() === String(blank).toLowerCase()) {
-    return { payload, changed: false } // форма совпала с инфинитивом (напр. wir/sie) — ок
-  }
-
-  const next = { ...payload, blank: correct }
-  if (Array.isArray(options)) {
-    next.options = options.map(o =>
-      String(o).toLowerCase() === String(blank).toLowerCase() ? correct : o
-    )
-  }
-  return { payload: next, changed: true }
-}
+// ПРИМЕЧАНИЕ: авто-правку fill_blank по эвристике («угадать, что это глагол, и спрягать»)
+// НЕ делаем — она ненадёжна (не отличает глагол от неглагола, не понимает модальный+инфинитив
+// «Ich kann singen»). Конъюгатор используется ТОЛЬКО там, где инфинитив известен точно —
+// в упражнении-склонении (мы сами подаём глагол из курируемого списка).

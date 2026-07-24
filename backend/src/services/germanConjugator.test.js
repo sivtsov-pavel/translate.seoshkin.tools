@@ -1,5 +1,5 @@
 // Тест конъюгатора Präsens. Запуск: node backend/src/services/germanConjugator.test.js
-import { conjugatePresent, fixFillBlankConjugation, detectPerson } from './germanConjugator.js'
+import { conjugatePresent } from './germanConjugator.js'
 
 let pass = 0, fail = 0
 const eq = (got, exp, name) => {
@@ -35,25 +35,6 @@ eq(conjugatePresent('nehmen'), { ich: 'nehme', du: 'nimmst', er: 'nimmt', wir: '
 
 // -eln
 eq(conjugatePresent('sammeln'), { ich: 'sammle', du: 'sammelst', er: 'sammelt', wir: 'sammeln', ihr: 'sammelt', sie: 'sammeln' }, 'sammeln')
-
-// detectPerson
-eq(detectPerson('Ich ___ den Lehrer.'), 'ich', 'detect ich')
-eq(detectPerson('Wir ___ nach Hause.'), 'wir', 'detect wir')
-eq(detectPerson('Der Hund ___ schnell.'), 'er', 'detect Der Hund → er')
-
-// Главный баг №1: «Ich fragen den Lehrer» → «Ich frage den Lehrer»
-const fixed = fixFillBlankConjugation({ sentence: 'Ich ___ den Lehrer.', blank: 'fragen', options: ['fragen', 'antworten', 'sehen'] })
-eq(fixed.changed, true, 'fill_blank changed')
-eq(fixed.payload.blank, 'frage', 'fill_blank blank frage')
-eq(fixed.payload.options, ['frage', 'antworten', 'sehen'], 'fill_blank options fixed')
-
-// wir + инфинитив-совпадение → НЕ меняем (wir fragen = инфинитив)
-const noChange = fixFillBlankConjugation({ sentence: 'Wir ___ den Lehrer.', blank: 'fragen', options: ['fragen', 'x', 'y'] })
-eq(noChange.changed, false, 'wir fragen no change')
-
-// Существительное-плюрал на -en с заглавной → НЕ трогаем (не глагол)
-const noun = fixFillBlankConjugation({ sentence: 'Die ___ trinken Milch.', blank: 'Katzen', options: ['Katzen', 'Hunde', 'Vögel'] })
-eq(noun.changed, false, 'Katzen (noun) no change')
 
 console.log(`\n${fail === 0 ? '✅ ВСЕ ТЕСТЫ ПРОШЛИ' : '❌ ЕСТЬ ПАДЕНИЯ'}: ${pass} pass, ${fail} fail`)
 process.exit(fail === 0 ? 0 : 1)

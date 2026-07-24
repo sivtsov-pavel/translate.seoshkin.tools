@@ -1,6 +1,5 @@
 import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
-import { fixFillBlankConjugation } from './germanConjugator.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
 // принимают необязательный параметр `client`, чтобы работать на ключе владельца урока
@@ -438,13 +437,6 @@ export async function generateExercises(words, grammar_points, targetLang = 'de'
     const input = JSON.stringify({ words: batch, grammar_points, sentences: realSentences }, null, 2)
     const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192, client })
     allExercises.push(...parseJson(text).map(shuffleOptions))
-  }
-  // Для немецкого — детерминированно чиним спряжение в fill_blank (GPT нередко кладёт
-  // инфинитив: «Ich fragen» → «Ich frage»). Правило-based, без доп. вызовов OpenAI.
-  if (targetLang === 'de') {
-    for (const ex of allExercises) {
-      if (ex?.type === 'fill_blank') ex.payload = fixFillBlankConjugation(ex.payload).payload
-    }
   }
   return allExercises
 }
