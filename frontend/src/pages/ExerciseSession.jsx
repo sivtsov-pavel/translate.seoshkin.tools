@@ -42,6 +42,7 @@ export default function ExerciseSession() {
   const [lessonDone, setLessonDone] = useState(false) // упражнений на сегодня больше нет — урок пройден
   const [tails, setTails]         = useState(0)     // «хвосты» — пропущенные упражнения этого урока
   const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
+  const [lessonFlow, setLessonFlow] = useState(null) // позиция в курсе + следующий урок (финиш-экран)
   const [quiet, setQuiet]         = useState(() => localStorage.getItem('quiet_mode') === '1') // тихий режим
   const toggleQuiet = () => setQuiet(v => { localStorage.setItem('quiet_mode', v ? '0' : '1'); return !v })
   const [starred, setStarred]     = useState(() => new Set()) // слова, помеченные «в изучение»
@@ -160,8 +161,17 @@ export default function ExerciseSession() {
     else setCurrent(next)
   }
 
+  // Финиш-экран урока: подтягиваем позицию в курсе + следующий урок (для «Следующий урок →»)
+  useEffect(() => {
+    if (finished && lessonDone && lessonId && !exam && !inTails) {
+      api.get(`/exercises/lesson-flow/${lessonId}`).then(setLessonFlow).catch(() => {})
+    }
+  }, [finished, lessonDone, lessonId, exam, inTails])
+
   // «На главную» — со скроллом к своему уроку на дашборде
   const goHome = () => navigate('/', { state: lessonId ? { scrollToLesson: Number(lessonId) } : undefined })
+  // Перейти к следующему уроку курса — полная перезагрузка (сессия пересоберётся под новый lesson_id)
+  const goNextLesson = (nid) => { window.location.href = `/exercise-session?lesson_id=${nid}` }
 
   // «Продолжить» — догрузить следующие упражнения; пусто → урок пройден
   const continuePractice = async () => {
@@ -176,43 +186,92 @@ export default function ExerciseSession() {
   if (loading) return <p>{t.exercise.loading}</p>
   if (exercises.length === 0 && !finished) { navigate('/'); return null }
 
-  // Экран завершения сессии — «Продолжить до зачёта» или «Урок пройден»
+  // Экран завершения сессии — «веер», а не тупик: следующий урок, прогресс курса, тренер, хвосты
   if (finished) {
+    const hasTails = lessonDone && tails > 0 && !exam           // остались пропущенные (хвосты)
+    // «Полный финиш урока» — показываем веер продолжения. Не для практики по типу и не для зачёт-режима.
+    const showFan = lessonDone && !exam && !type
+    const next = lessonFlow?.next
+    const total = lessonFlow?.total || 0
+    const pct = total ? Math.round((lessonFlow.passed / total) * 100) : 0
+    const openDateStr = next?.open_date ? new Date(next.open_date).toLocaleDateString(lang) : null
     return (
       <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
-          {(() => {
-            const hasTails = lessonDone && tails > 0 && !exam // остались пропущенные (хвосты)
-            return (<>
-              <div style={{ fontSize: 52, marginBottom: 10 }}>{hasTails ? '🧩' : (lessonDone && (exam || !type) ? '🏆' : '🎉')}</div>
-              <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-                {hasTails ? (t.exercise.tailsTitle || 'Почти! Остались хвосты')
-                  : lessonDone
-                    ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
-                       : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
-                    : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
+          <div style={{ fontSize: 52, marginBottom: 10 }}>{hasTails ? '🧩' : (lessonDone && (exam || !type) ? '🏆' : '🎉')}</div>
+          <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+            {hasTails ? (t.exercise.tailsTitle || 'Почти! Остались хвосты')
+              : lessonDone
+                ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
+                   : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
+                : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
+          </div>
+          <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 20px' }}>
+            {hasTails ? (t.exercise.tailsSub ? t.exercise.tailsSub(tails) : `Ты пропустил ${tails} упр. (проговори/диктант). Пройди их для полного финиша урока.`)
+              : lessonDone
+                ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉')
+                   : (type ? (t.exercise.exercisesDoneSub || 'Все упражнения этого типа сделаны.') : (t.exercise.lessonPassedSub || 'Ты прошёл все упражнения урока! 🎉')))
+                : (t.exercise.batchDoneSub || 'Продолжим следующую партию.')}
+          </p>
+
+          {/* Прогресс по курсу — «Урок X из N · Y%» + полоса. Мотивирует идти дальше. */}
+          {showFan && total > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 6, fontWeight: 600 }}>
+                {(t.exercise.courseProgress ? t.exercise.courseProgress(lessonFlow.position, total) : `Урок ${lessonFlow.position} из ${total}`)} · {pct}%
               </div>
-              <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 22px' }}>
-                {hasTails ? (t.exercise.tailsSub ? t.exercise.tailsSub(tails) : `Ты пропустил ${tails} упр. (проговори/диктант). Пройди их для полного финиша урока.`)
-                  : lessonDone
-                    ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉')
-                       : (type ? (t.exercise.exercisesDoneSub || 'Все упражнения этого типа сделаны.') : (t.exercise.lessonPassedSub || 'Ты прошёл все упражнения урока! 🎉')))
-                    : (t.exercise.batchDoneSub || 'Продолжим следующую партию.')}
-              </p>
-              {hasTails && (
-                <button onClick={() => loadTails()}
-                  style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--gold)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-                  🧩 {t.exercise.doTails || 'Пройти хвосты'} ({tails})
-                </button>
-              )}
-              {!lessonDone && (
-                <button onClick={continuePractice} disabled={continuing}
-                  style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-                  {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'} →`}
-                </button>
-              )}
-            </>)
-          })()}
+              <div style={{ height: 8, borderRadius: 6, background: 'var(--surface-2)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: 'var(--good)', borderRadius: 6, transition: 'width .4s' }} />
+              </div>
+            </div>
+          )}
+
+          {/* Хвосты — вперёд всего: доделать пропущенное для полного финиша */}
+          {hasTails && (
+            <button onClick={() => loadTails()}
+              style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--gold)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              🧩 {t.exercise.doTails || 'Пройти хвосты'} ({tails})
+            </button>
+          )}
+
+          {/* Практика по типу не завершена — догрузить следующую партию */}
+          {!lessonDone && (
+            <button onClick={continuePractice} disabled={continuing}
+              style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'} →`}
+            </button>
+          )}
+
+          {/* ГЛАВНАЯ кнопка веера: следующий урок курса. Только когда хвостов нет (сначала доделать их). */}
+          {showFan && !hasTails && next && next.playable && (
+            <button onClick={() => goNextLesson(next.id)}
+              style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              {t.exercise.nextLesson || 'Следующий урок'} → {getLessonTitle(next.title, next.title_translations, lang)}
+            </button>
+          )}
+          {/* Следующий урок ещё закрыт (расписание) — показываем, когда откроется */}
+          {showFan && !hasTails && next && !next.playable && (
+            <div style={{ padding: '12px', borderRadius: 12, background: 'var(--surface-2)', color: 'var(--ink-soft)', fontSize: 13.5, marginBottom: 10 }}>
+              🔒 {openDateStr
+                ? (t.exercise.nextLessonLocked ? t.exercise.nextLessonLocked(openDateStr) : `Следующий урок откроется ${openDateStr}`)
+                : (t.exercise.nextLessonSoon || 'Следующий урок откроется по расписанию')}
+            </div>
+          )}
+          {/* Это был последний урок курса — поздравляем */}
+          {showFan && !hasTails && !next && total > 0 && (
+            <div style={{ padding: '12px', borderRadius: 12, background: 'var(--good-soft, rgba(34,197,94,.12))', color: 'var(--good)', fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
+              🎓 {t.exercise.courseDone || 'Это последний урок курса — поздравляю!'}
+            </div>
+          )}
+
+          {/* Закрепить слова урока с ИИ-тренером (живой разговор по словам этого урока) */}
+          {showFan && lessonId && (
+            <button onClick={() => navigate(`/ai-trainer?lesson_id=${lessonId}`)}
+              style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid var(--blue)', background: 'rgba(62,127,193,0.10)', color: 'var(--blue)', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              💬 {t.exercise.trainWords || 'Тренер по словам урока'}
+            </button>
+          )}
+
           <button onClick={goHome}
             style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
             {t.exercise.toHome || 'На главную'}

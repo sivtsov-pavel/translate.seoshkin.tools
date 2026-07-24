@@ -326,6 +326,58 @@ export async function exercisesRoutes(fastify) {
     return rows
   })
 
+  // Поток урока: позиция урока в курсе + следующий урок (для финиш-экрана «Следующий урок →»).
+  // Возвращает { position, total, passed, next: { id, title, title_translations, playable, open_date } | null }
+  fastify.get('/api/exercises/lesson-flow/:id', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const { id: userId, role } = request.user
+    const lessonId = parseInt(request.params.id)
+    const target = request.headers['x-target-lang'] || 'de'
+
+    const { rows: lr } = await db.query('SELECT course_id FROM lessons WHERE id=$1', [lessonId])
+    const courseId = lr[0]?.course_id
+    if (!courseId) return { position: 0, total: 0, passed: 0, next: null }
+
+    const doneFilter = role === 'owner' ? '' : "AND status='done'"
+    const { rows: lessons } = await db.query(
+      `SELECT id, title, COALESCE(title_translations,'{}') AS title_translations, date
+       FROM lessons WHERE course_id=$1 AND is_set=false ${doneFilter}
+       ORDER BY lesson_number ASC NULLS LAST, date ASC, id ASC`, [courseId])
+    const total = lessons.length
+    const idx = lessons.findIndex(l => l.id === lessonId)
+    const nextLesson = idx >= 0 ? lessons[idx + 1] : null
+
+    // Сколько уроков курса пройдено (для % прогресса)
+    const { rows: pr } = await db.query(
+      `SELECT l.id FROM lessons l JOIN exercises e ON e.lesson_id=l.id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id=e.id AND uep.user_id=$1
+       WHERE l.course_id=$2 AND l.is_set=false
+       GROUP BY l.id HAVING ${LESSON_PASSED_HAVING}`, [userId, courseId])
+    const passed = pr.length
+
+    let playable = true
+    let openDate = null
+    if (nextLesson && role !== 'owner') {
+      const { playable: playSet } = await playableLessonIds(userId, request.user.school_id ?? null, target)
+      playable = playSet.has(nextLesson.id)
+      if (!playable) {
+        const { rows: sr } = await db.query(
+          'SELECT open_date FROM lesson_schedule WHERE user_id=$1 AND lesson_id=$2', [userId, nextLesson.id]).catch(() => ({ rows: [] }))
+        openDate = sr[0]?.open_date || null
+      }
+    }
+
+    return {
+      position: idx + 1, total, passed,
+      next: nextLesson ? {
+        id: nextLesson.id, title: nextLesson.title,
+        title_translations: nextLesson.title_translations,
+        playable, open_date: openDate,
+      } : null,
+    }
+  })
+
   // Статистика для дашборда — по урокам и типам, per-user
   fastify.get('/api/exercises/stats', {
     preHandler: [fastify.authenticate],
