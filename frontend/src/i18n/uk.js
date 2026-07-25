@@ -172,6 +172,12 @@ export const uk = {
     listenAgain: 'Слухати ще раз',
     rememberWord: 'Згадай німецьке слово:',
     writeWordFull: 'Напиши слово повністю...',
+    nextLesson: 'Наступний урок',
+    courseProgress: (pos, total) => `Урок ${pos} з ${total}`,
+    nextLessonLocked: (date) => `Наступний урок відкриється ${date}`,
+    nextLessonSoon: 'Наступний урок відкриється за розкладом',
+    courseDone: 'Це останній урок курсу — вітаю!',
+    trainWords: 'Тренер слів уроку',
   },
   lessons: {
     title: 'Уроки',

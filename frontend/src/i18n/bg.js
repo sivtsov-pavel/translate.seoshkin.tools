@@ -172,6 +172,12 @@ export const bg = {
     listenAgain: 'Слушай отново',
     rememberWord: 'Спомни си немската дума:',
     writeWordFull: 'Напиши цялата дума...',
+    nextLesson: 'Следващ урок',
+    courseProgress: (pos, total) => `Урок ${pos} от ${total}`,
+    nextLessonLocked: (date) => `Следващият урок ще се отвори на ${date}`,
+    nextLessonSoon: 'Следващият урок ще се отвори по график',
+    courseDone: 'Това е последният урок от курса — поздравления!',
+    trainWords: 'Треньор по думи за урока',
   },
   lessons: {
     title: 'Уроци',

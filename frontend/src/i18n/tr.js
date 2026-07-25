@@ -172,6 +172,12 @@ export const tr = {
     listenAgain: 'Tekrar dinle',
     rememberWord: 'Almanca kelimeyi hatırla:',
     writeWordFull: 'Kelimenin tamamını yaz...',
+    nextLesson: 'Sonraki ders',
+    courseProgress: (pos, total) => `Ders ${pos} / ${total}`,
+    nextLessonLocked: (date) => `Sonraki ders ${date} tarihinde açılacak`,
+    nextLessonSoon: 'Sonraki ders takvime göre açılacak',
+    courseDone: 'Bu, kursun son dersi — tebrikler!',
+    trainWords: 'Ders kelimeleri antrenörü',
   },
   lessons: {
     title: 'Dersler',

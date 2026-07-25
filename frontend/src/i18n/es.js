@@ -172,6 +172,12 @@ export const es = {
     listenAgain: 'Escuchar de nuevo',
     rememberWord: 'Recuerda la palabra alemana:',
     writeWordFull: 'Escribe la palabra completa...',
+    nextLesson: 'Siguiente lección',
+    courseProgress: (pos, total) => `Lección ${pos} de ${total}`,
+    nextLessonLocked: (date) => `La siguiente lección se abrirá el ${date}`,
+    nextLessonSoon: 'La siguiente lección se abrirá según el calendario',
+    courseDone: '¡Esta es la última lección del curso — felicidades!',
+    trainWords: 'Entrenador de palabras de la lección',
   },
   lessons: {
     title: 'Lecciones',

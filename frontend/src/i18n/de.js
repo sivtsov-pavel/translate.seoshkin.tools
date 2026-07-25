@@ -176,6 +176,12 @@ export const de = {
     writeWordFull: "Schreibe das ganze Wort...",
     translationLabel: "Übersetzung",
     listenAgain: "Nochmal anhören",
+    nextLesson: "Nächste Lektion",
+    courseProgress: (pos, total) => `Lektion ${pos} von ${total}`,
+    nextLessonLocked: (date) => `Die nächste Lektion öffnet am ${date}`,
+    nextLessonSoon: "Die nächste Lektion öffnet nach Zeitplan",
+    courseDone: "Das ist die letzte Lektion des Kurses — herzlichen Glückwunsch!",
+    trainWords: "Wörtertrainer zur Lektion",
   },
   // Lektionen
   lessons: {

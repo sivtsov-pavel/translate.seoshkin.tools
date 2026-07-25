@@ -177,6 +177,12 @@ export const ru = {
     writeWordFull: 'Напиши слово целиком...',
     translationLabel: 'Перевод',
     listenAgain: 'Слушать ещё раз',
+    nextLesson: 'Следующий урок',
+    courseProgress: (pos, total) => `Урок ${pos} из ${total}`,
+    nextLessonLocked: (date) => `Следующий урок откроется ${date}`,
+    nextLessonSoon: 'Следующий урок откроется по расписанию',
+    courseDone: 'Это последний урок курса — поздравляю!',
+    trainWords: 'Тренер по словам урока',
   },
   // Уроки
   lessons: {

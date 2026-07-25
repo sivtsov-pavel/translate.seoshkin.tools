@@ -174,6 +174,12 @@ export const ar = {
     listenAgain: 'استمع مرة أخرى',
     rememberWord: 'تذكر الكلمة الألمانية:',
     writeWordFull: 'اكتب الكلمة كاملة...',
+    nextLesson: 'الدرس التالي',
+    courseProgress: (pos, total) => `الدرس ${pos} من ${total}`,
+    nextLessonLocked: (date) => `سيُفتح الدرس التالي في ${date}`,
+    nextLessonSoon: 'سيُفتح الدرس التالي حسب الجدول',
+    courseDone: 'هذا هو آخر درس في الدورة — تهانينا!',
+    trainWords: 'مدرّب كلمات الدرس',
   },
   lessons: {
     title: 'الدروس',

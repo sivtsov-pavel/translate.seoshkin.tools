@@ -172,6 +172,12 @@ export const sq = {
     writeWordFull: 'Shkruaj fjalën plotësisht...',
     translationLabel: 'Përkthimi',
     listenAgain: 'Dëgjo sërish',
+    nextLesson: 'Mësimi tjetër',
+    courseProgress: (pos, total) => `Mësimi ${pos} nga ${total}`,
+    nextLessonLocked: (date) => `Mësimi tjetër do të hapet më ${date}`,
+    nextLessonSoon: 'Mësimi tjetër do të hapet sipas orarit',
+    courseDone: 'Ky është mësimi i fundit i kursit — urime!',
+    trainWords: 'Stërvitësi i fjalëve të mësimit',
   },
   lessons: {
     title: 'Mësimet',
