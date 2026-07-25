@@ -402,6 +402,74 @@ export async function regenerateExercisesFromDb(lessonId) {
   }
 }
 
+// БЕЗОПАСНАЯ перегенерация: обновляет контент упражнений НЕ теряя прогресс ученика.
+// В отличие от regenerateExercisesFromDb (DELETE+INSERT → новые ID → сирые attempts/SRS),
+// здесь сопоставляем новые упражнения со старыми по ключу `word_id|type` и UPDATE-им payload
+// на месте (ID сохраняется → история попыток и расписание SRS целы). Недостающее добавляем,
+// лишнее НЕ удаляем. Возвращает { updated, inserted }.
+export async function regenerateExercisesSafe(lessonId) {
+  const { rows: wordRows } = await db.query(
+    `SELECT id, word_de, translation_ru, example_sentence FROM words WHERE lesson_id = $1 ORDER BY id`,
+    [lessonId]
+  )
+  if (!wordRows.length) throw new Error('Нет слов для этого урока')
+  const lrow = (await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]
+  const targetLang = lrow?.target_lang || 'de'
+  const client = await getOwnerClient(lrow?.owner_id)
+  const words = wordRows.map(w => ({ word_de: w.word_de, translation_ru: w.translation_ru, example_sentence: w.example_sentence }))
+  const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+
+  // Пул существующих упражнений: очередь ID по ключу `word_id|type` — берём по одному под каждое новое.
+  const { rows: existing } = await db.query(
+    'SELECT id, word_id, type FROM exercises WHERE lesson_id = $1 ORDER BY id', [lessonId]
+  )
+  const pool = new Map()
+  for (const e of existing) {
+    const k = `${e.word_id}|${e.type}`
+    if (!pool.has(k)) pool.set(k, [])
+    pool.get(k).push(e.id)
+  }
+  const takeId = (wordId, type) => {
+    const q = pool.get(`${wordId}|${type}`)
+    return q && q.length ? q.shift() : null
+  }
+
+  await setProgress(lessonId, `Обновляю упражнения (без потери прогресса) для ${words.length} слов...`)
+
+  // Генерируем свежие GPT-упражнения (карточка/пропуск/выбор/предложение/буквы)
+  const generated = await generateExercises(words, [], targetLang, await getLessonSentences(lessonId), client)
+
+  let updated = 0, inserted = 0
+  for (const ex of generated) {
+    const wordId = wordMap[ex.word_de] || null
+    const reuseId = takeId(wordId, ex.type)
+    if (reuseId) {
+      await db.query('UPDATE exercises SET payload = $1 WHERE id = $2', [JSON.stringify(ex.payload), reuseId])
+      updated++
+    } else {
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        [lessonId, wordId, ex.type, JSON.stringify(ex.payload)])
+      inserted++
+    }
+  }
+
+  // Диктант/speech — детерминированные, по одному на слово. Существующие оставляем (ID целы),
+  // добавляем только тем словам, у кого их ещё нет.
+  for (const w of wordRows) {
+    const payload = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
+    for (const t of ['dictation', 'speech']) {
+      if (takeId(w.id, t)) continue // уже есть — не трогаем
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        [lessonId, w.id, t, payload])
+      inserted++
+    }
+  }
+
+  await db.query("UPDATE lessons SET status = 'done', progress = $1 WHERE id = $2",
+    [`Обновлено: ${updated}, добавлено: ${inserted} (прогресс сохранён)`, lessonId])
+  return { lessonId, updated, inserted }
+}
+
 // Шаг 1 превью (#5, создание урока): извлечь+смёржить ТОЛЬКО необработанные фото урока
 // и вернуть учителю на правку — БЕЗ вставки слов/упражнений в БД (только пометка фото
 // processed+raw_extraction, как в processNewMedia, чтобы не гонять vision дважды).
