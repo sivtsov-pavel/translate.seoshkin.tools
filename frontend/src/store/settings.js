@@ -4,7 +4,7 @@ import { api } from '../api/client.js'
 const LS_KEY = 'app_visual_settings'
 
 const VISUAL_DEFAULTS = {
-  zoom: 1.0,          // обычный масштаб (1.3 был слишком крупным — не помещалось на простых телефонах)
+  zoom: 1.15,         // крупный по умолчанию (1.3 был слишком крупным — не помещалось на простых телефонах)
   fontFamily: 'Roboto',
   headingFont: 'Roboto',
   headingSize: 22,
