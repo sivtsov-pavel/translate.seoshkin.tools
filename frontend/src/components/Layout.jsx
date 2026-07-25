@@ -81,9 +81,16 @@ export default function Layout({ children }) {
     api.get('/courses/languages').then(langs => {
       const list = Array.isArray(langs) ? langs : []
       setGateLangs(list)
+      const cur = localStorage.getItem('target_lang')
       if (!localStorage.getItem('lang_chosen')) {
         if (list.length >= 2) setGateOpen(true)
         else if (list.length === 1) { localStorage.setItem('target_lang', list[0]); localStorage.setItem('lang_chosen', '1') }
+      } else if (list.length && cur && !list.includes(cur)) {
+        // Текущий изучаемый язык недоступен этому пользователю (напр. супер-админ зашёл под
+        // учеником с другим языком) — переключаем на доступный и перезагружаем, чтобы словарь/
+        // уроки/цифры подтянулись. После reload cur уже в списке — петли нет.
+        localStorage.setItem('target_lang', list[0])
+        window.location.reload()
       }
     }).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

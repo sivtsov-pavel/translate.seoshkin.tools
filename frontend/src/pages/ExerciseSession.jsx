@@ -17,7 +17,9 @@ import ExerciseErrorBoundary from '../components/ExerciseErrorBoundary.jsx'
 
 // Порядок типов упражнений в уроке (педагогический, по просьбе Павла):
 // вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение → проговори → диктант
-const TYPE_SEQ = { multiple_choice: 0, flashcard: 1, letter_fill: 2, fill_blank: 3, sentence_write: 4, speech: 5, dictation: 6 }
+// Педагогический порядок прохождения (по логике Павла): карточка(разогрев) → выбери ответ →
+// добавь букву → заполни пропуск → напиши предложение → проговори → склонение → диктант.
+const TYPE_SEQ = { flashcard: 0, multiple_choice: 1, letter_fill: 2, fill_blank: 3, sentence_write: 4, speech: 5, conjugation: 6, dictation: 7 }
 // Голосовые/на слух типы — их можно пропустить в «хвосты» (напр. ночью неудобно говорить)
 const VOICE_TYPES = new Set(['speech', 'dictation'])
 

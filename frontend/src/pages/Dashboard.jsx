@@ -348,7 +348,9 @@ export default function Dashboard() {
           // который ученик уже прошёл, с текущим уроком в конце. «Все уроки» ВКЛ = весь путь курса
           // целиком (включая ещё закрытые впереди). Просьба Павла: по умолчанию — пройденный путь.
           const traveled = pathLessons.filter(l => l.status === 'done' || l.status === 'current')
-          const shownPath = showAllLessons || !traveled.length ? pathLessons : traveled
+          // ВКЛ — вся карта курса; ВЫКЛ — пройденный путь (а если ещё ничего не пройдено, как в
+          // свежем es/en — показываем хотя бы первый урок, чтобы тумблер реально переключал).
+          const shownPath = showAllLessons ? pathLessons : (traveled.length ? traveled : pathLessons.slice(0, 1))
           return (
           <>
             <div className="dl-section-head">
