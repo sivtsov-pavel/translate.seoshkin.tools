@@ -4,6 +4,7 @@ import { useSpeechRecognition, speechSimilarity, isSpeechRecognitionSupported } 
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import WordImage, { PabloCircle } from './WordImage.jsx'
+import { playCorrect, playWrong } from '../utils/sound.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 
@@ -305,8 +306,13 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
     const { quality, label, color } = scoreResult(sim)
     setResult({ transcript, sim, quality, label, color })
     setPhase('result')
-    // Pablo оживает и реагирует голосом+видео (клип со своей озвучкой «Sehr gut!» / «Nicht ganz»)
-    setReactionClip(quality >= 3 ? '/avatar/clips/correct.mp4' : '/avatar/clips/wrong.mp4')
+    // Pablo оживает и реагирует голосом+видео (клип со своей озвучкой «Sehr gut!» / «Nicht ganz»).
+    // Реакции выключены (тумблер 🔊 в сессии / Настройки) — короткий звук вместо голоса аватара.
+    if (localStorage.getItem('trainer_reactions') === 'false') {
+      if (quality >= 3) playCorrect(); else playWrong()
+    } else {
+      setReactionClip(quality >= 3 ? '/avatar/clips/correct.mp4' : '/avatar/clips/wrong.mp4')
+    }
   }, [word_de])
 
   const { start, listening, isSupported, error } = useSpeechRecognition({

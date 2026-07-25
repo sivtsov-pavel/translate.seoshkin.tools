@@ -428,15 +428,52 @@ ${list}`
     .map(it => ({ de: String(it.de).trim(), tr: String(it.tr || '').trim(), theme: CANON_THEMES.includes(it.theme) ? it.theme : 'Разное' }))
 }
 
+// Core-типы, которые генерирует EXERCISES_PROMPT (по одному на слово)
+export const CORE_EXERCISE_TYPES = ['flashcard', 'fill_blank', 'multiple_choice', 'sentence_write', 'letter_fill']
+// Батч генерации упражнений: 8 слов × 5 типов = 40 объектов — влезает в max_tokens без усечения
+// (при 15 словах модель регулярно обрезала хвост батча → у части слов не хватало типов)
+const EX_BATCH = 8
+const exWordKey = (s) => String(s || '').toLowerCase().replace(/^(der|die|das|ein|eine|el|la|los|las|the)\s+/, '').trim()
+
 export async function generateExercises(words, grammar_points, targetLang = 'de', sentences = [], client = platformClient) {
   const allExercises = []
   // Реальные предложения урока — приоритетный источник для fill_blank/sentence_write
   const realSentences = (sentences || []).map(s => (typeof s === 'string' ? s : s?.text)).filter(Boolean).slice(0, 40)
-  for (let i = 0; i < words.length; i += BATCH_SIZE) {
-    const batch = words.slice(i, i + BATCH_SIZE)
+  const gen = async (batch) => {
     const input = JSON.stringify({ words: batch, grammar_points, sentences: realSentences }, null, 2)
     const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192, client })
-    allExercises.push(...parseJson(text).map(shuffleOptions))
+    return parseJson(text).map(shuffleOptions)
+  }
+  for (let i = 0; i < words.length; i += EX_BATCH) {
+    allExercises.push(...await gen(words.slice(i, i + EX_BATCH)))
+  }
+  // Контроль покрытия: у КАЖДОГО слова должны быть все core-типы. Модель может пропустить/усечь —
+  // до двух добивочных проходов маленькими батчами только по недобранным словам.
+  for (let pass = 0; pass < 2; pass++) {
+    const have = new Map() // ключ слова -> Set(типов)
+    for (const ex of allExercises) {
+      const k = exWordKey(ex.word_de)
+      if (!have.has(k)) have.set(k, new Set())
+      have.get(k).add(ex.type)
+    }
+    const missing = words.filter(w => {
+      const set = have.get(exWordKey(w.word_de)) || new Set()
+      return CORE_EXERCISE_TYPES.some(t => !set.has(t))
+    })
+    if (!missing.length) break
+    for (let i = 0; i < missing.length; i += 5) {
+      try {
+        const extra = await gen(missing.slice(i, i + 5))
+        for (const ex of extra) {
+          const k = exWordKey(ex.word_de)
+          const set = have.get(k) || new Set()
+          if (set.has(ex.type)) continue // дубликаты не добавляем
+          allExercises.push(ex)
+          set.add(ex.type)
+          have.set(k, set)
+        }
+      } catch (e) { console.error('generateExercises top-up:', e.message) }
+    }
   }
   return allExercises
 }

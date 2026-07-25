@@ -279,6 +279,8 @@ export const sq = {
     errCardSub: 'E dimë tashmë për problemin. Mund ta kapërcesh dhe të vazhdosh.',
     errCardSkip: 'Kapërce →',
     errCardDetails: 'Shfaq gabimin teknik',
+    continueBtn: 'Vazhdo',
+    pickOtherLesson: 'Zgjidh një mësim tjetër',
   },
   lessons: {
     title: 'Mësimet',

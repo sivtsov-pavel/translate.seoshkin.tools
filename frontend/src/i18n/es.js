@@ -279,6 +279,8 @@ export const es = {
     errCardSub: 'Ya sabemos del problema. Puedes saltarlo y continuar.',
     errCardSkip: 'Saltar →',
     errCardDetails: 'Mostrar el error técnico',
+    continueBtn: 'Continuar',
+    pickOtherLesson: 'Elegir otra lección',
   },
   lessons: {
     title: 'Lecciones',

@@ -281,6 +281,8 @@ export const ar = {
     errCardSub: 'نحن على علم بالمشكلة. يمكنك التخطي والمتابعة.',
     errCardSkip: 'تخطٍّ ←',
     errCardDetails: 'إظهار الخطأ التقني',
+    continueBtn: 'استمر',
+    pickOtherLesson: 'اختر درسًا آخر',
   },
   lessons: {
     title: 'الدروس',

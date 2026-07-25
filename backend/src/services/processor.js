@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme, classifyWordsToThemes } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme, classifyWordsToThemes, CORE_EXERCISE_TYPES } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
@@ -256,6 +256,51 @@ export async function enrichLesson(lessonId) {
       }
     }
   } catch (e) { console.error('enrichLesson word-langs:', e.message) }
+
+  // 3.5) Добивка недостающих упражнений: у КАЖДОГО слова урока должны быть все core-типы +
+  // диктант/произношение. Старые уроки страдали от усечения батча генерации («20 слов из
+  // учебника, а в типе меньше») — «✨ Обработать всё» теперь чинит это. Вставляем только
+  // недостающие (слово, тип) — без дублей; новые упражнения переведутся шагом 4 ниже.
+  try {
+    const wKey = (s) => String(s || '').toLowerCase().replace(/^(der|die|das|ein|eine|el|la|los|las|the)\s+/, '').trim()
+    const { rows: wRows } = await db.query(
+      'SELECT id, word_de, translation_ru, example_sentence FROM words WHERE lesson_id=$1 ORDER BY id', [lessonId])
+    const { rows: exRows } = await db.query('SELECT word_id, type FROM exercises WHERE lesson_id=$1', [lessonId])
+    const have = new Map() // word_id -> Set(типов)
+    for (const r of exRows) {
+      if (!r.word_id) continue
+      if (!have.has(r.word_id)) have.set(r.word_id, new Set())
+      have.get(r.word_id).add(r.type)
+    }
+    // Диктант/произношение — детерминированно, без ИИ (payload = слово+перевод)
+    for (const w of wRows) {
+      const set = have.get(w.id) || new Set()
+      for (const type of ['dictation', 'speech']) {
+        if (set.has(type)) continue
+        const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, type, p])
+        set.add(type)
+      }
+      have.set(w.id, set)
+    }
+    // Core-типы — догенерация ИИ только для недобранных слов
+    const missing = wRows.filter(w => CORE_EXERCISE_TYPES.some(t => !(have.get(w.id)?.has(t))))
+    if (missing.length) {
+      await setProgress(lessonId, `Докидываю упражнения (${missing.length} слов)...`)
+      const generated = await generateExercises(missing, [], targetLang, await getLessonSentences(lessonId), client)
+      const idByWord = new Map(wRows.map(w => [wKey(w.word_de), w.id]))
+      for (const ex of generated) {
+        const wid = idByWord.get(wKey(ex.word_de))
+        if (!wid) continue
+        const set = have.get(wid) || new Set()
+        if (set.has(ex.type)) continue
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+          [lessonId, wid, ex.type, JSON.stringify(ex.payload)])
+        set.add(ex.type)
+        have.set(wid, set)
+      }
+    }
+  } catch (e) { console.error('enrichLesson ex-topup:', e.message) }
 
   // 4) Переводы упражнений (варианты/вопросы) на все языки
   try {

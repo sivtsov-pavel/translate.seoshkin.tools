@@ -278,6 +278,8 @@ export const tr = {
     errCardSub: 'Sorunun farkındayız. Atlayıp devam edebilirsin.',
     errCardSkip: 'Atla →',
     errCardDetails: 'Teknik hatayı göster',
+    continueBtn: 'Devam et',
+    pickOtherLesson: 'Başka bir dersi seç',
   },
   lessons: {
     title: 'Dersler',

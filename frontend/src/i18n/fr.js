@@ -278,6 +278,8 @@ export const fr = {
     errCardSub: 'Nous connaissons déjà le problème. Tu peux passer et continuer.',
     errCardSkip: 'Passer →',
     errCardDetails: "Afficher l'erreur technique",
+    continueBtn: 'Continuer',
+    pickOtherLesson: 'Choisir une autre leçon',
   },
   lessons: {
     title: 'Leçons',

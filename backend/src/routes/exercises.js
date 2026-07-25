@@ -368,11 +368,16 @@ export async function exercisesRoutes(fastify) {
        GROUP BY l.id HAVING ${LESSON_PASSED_HAVING}`, [userId, courseId])
     const passed = pr.length
 
+    // Доступность уроков ученику (дрип) — считаем один раз и для next, и для списка перескока
+    let playableSet = null
+    if (role !== 'owner') {
+      const { playable: playSet } = await playableLessonIds(userId, request.user.school_id ?? null, target)
+      playableSet = playSet
+    }
     let playable = true
     let openDate = null
-    if (nextLesson && role !== 'owner') {
-      const { playable: playSet } = await playableLessonIds(userId, request.user.school_id ?? null, target)
-      playable = playSet.has(nextLesson.id)
+    if (nextLesson && playableSet) {
+      playable = playableSet.has(nextLesson.id)
       if (!playable) {
         const { rows: sr } = await db.query(
           'SELECT open_date FROM lesson_schedule WHERE user_id=$1 AND lesson_id=$2', [userId, nextLesson.id]).catch(() => ({ rows: [] }))
@@ -387,6 +392,13 @@ export async function exercisesRoutes(fastify) {
         title_translations: nextLesson.title_translations,
         playable, open_date: openDate,
       } : null,
+      // Все уроки курса — для «Выбрать другой урок» на финише (перескок)
+      lessons: lessons.map((l, i) => ({
+        id: l.id, title: l.title,
+        title_translations: l.title_translations,
+        position: i + 1,
+        playable: playableSet ? playableSet.has(l.id) : true,
+      })),
     }
   })
 
@@ -728,8 +740,14 @@ export async function exercisesRoutes(fastify) {
     if (lessonId || all) {
       const target = request.headers['x-target-lang'] || 'de'
       const { rows } = await db.query(
-        `SELECT e.id, e.lesson_id, e.word_id, e.type, e.payload, e.payload_translations, e.image_url,
-                w.translations, w.translation_ru, l.title AS lesson_title, l.title_translations AS lesson_title_translations
+        `SELECT e.id, e.lesson_id, e.word_id, e.type, e.payload, e.payload_translations,
+                w.word_de, w.translations, w.translation_ru,
+                COALESCE(
+                  (SELECT w2.image_url FROM words w2
+                    WHERE lower(w2.word_de) = lower(w.word_de) AND w2.image_url IS NOT NULL
+                    ORDER BY w2.created_at DESC LIMIT 1),
+                  w.image_url, e.image_url) AS image_url,
+                l.title AS lesson_title, l.title_translations AS lesson_title_translations
          FROM exercise_deferrals d
          JOIN exercises e ON e.id = d.exercise_id
          JOIN lessons l ON l.id = e.lesson_id

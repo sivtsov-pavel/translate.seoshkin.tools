@@ -283,6 +283,8 @@ export const de = {
     errCardSub: 'Wir wissen bereits von dem Problem. Du kannst überspringen und weitermachen.',
     errCardSkip: 'Überspringen →',
     errCardDetails: 'Technische Fehlermeldung anzeigen',
+    continueBtn: 'Fortsetzen',
+    pickOtherLesson: 'Wähle eine andere Lektion',
   },
   // Lektionen
   lessons: {

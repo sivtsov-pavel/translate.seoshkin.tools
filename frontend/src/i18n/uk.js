@@ -278,6 +278,8 @@ export const uk = {
     errCardSub: 'Ми вже знаємо про проблему. Можна пропустити і продовжити.',
     errCardSkip: 'Пропустити →',
     errCardDetails: 'Показати технічну помилку',
+    continueBtn: 'Продовжити',
+    pickOtherLesson: 'Вибрати інший урок',
   },
   lessons: {
     title: 'Уроки',

@@ -274,6 +274,8 @@ export const bg = {
     errCardSub: 'Вече знаем за проблема. Може да пропуснеш и продължиш.',
     errCardSkip: 'Пропусни →',
     errCardDetails: 'Покажи техническата грешка',
+    continueBtn: 'Продължи',
+    pickOtherLesson: 'Избери друг урок',
   },
   lessons: {
     title: 'Уроци',

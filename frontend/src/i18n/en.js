@@ -279,6 +279,8 @@ export const en = {
     errCardSub: 'We already know about the issue. You can skip and continue.',
     errCardSkip: 'Skip →',
     errCardDetails: 'Show technical error',
+    continueBtn: 'Continue',
+    pickOtherLesson: 'Choose another lesson',
   },
   lessons: {
     title: 'Lessons',

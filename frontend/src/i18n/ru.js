@@ -225,6 +225,8 @@ export const ru = {
     conjChoose: 'Выбрать',
     conjType: 'Вписать руками',
     multiVariantHint: 'Здесь несколько форм — впиши все через «/» (как в ответе)',
+    continueBtn: 'Продолжить',
+    pickOtherLesson: 'Выбрать другой урок',
     fanNext: 'Дальше по логике',
     fanOtherType: 'Выбрать другой тип',
     fanProgress: (pos, total) => `Сделано ${pos} из ${total} в уроке`,

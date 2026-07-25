@@ -47,6 +47,7 @@ export default function ExerciseSession() {
   const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
   const [lessonFlow, setLessonFlow] = useState(null) // позиция в курсе + следующий урок (финиш-экран)
   const [betweenFan, setBetweenFan] = useState(false) // мини-веер после каждого упражнения (выбор: дальше/другой тип/тренер)
+  const [pickLessonOpen, setPickLessonOpen] = useState(false) // финиш: раскрыт ли список «Выбрать другой урок»
   const [fanTypesOpen, setFanTypesOpen] = useState(false) // раскрыт ли список «выбрать другой тип» в мини-веере
   const [quiet, setQuiet]         = useState(() => localStorage.getItem('quiet_mode') === '1') // тихий режим
   const toggleQuiet = () => setQuiet(v => { localStorage.setItem('quiet_mode', v ? '0' : '1'); return !v })
@@ -211,13 +212,12 @@ export default function ExerciseSession() {
     return (
       <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 52, marginBottom: 10 }}>{hasTails ? '🧩' : (lessonDone && (exam || !type) ? '🏆' : '🎉')}</div>
+          <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone && (exam || !type) ? '🏆' : '🎉'}</div>
           <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-            {hasTails ? (t.exercise.tailsTitle || 'Почти! Остались хвосты')
-              : lessonDone
-                ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
-                   : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
-                : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
+            {lessonDone
+              ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
+                 : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
+              : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
           </div>
           <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 20px' }}>
             {hasTails ? (t.exercise.tailsSub ? t.exercise.tailsSub(tails) : `Ты пропустил ${tails} упр. (проговори/диктант). Пройди их для полного финиша урока.`)
@@ -239,14 +239,6 @@ export default function ExerciseSession() {
             </div>
           )}
 
-          {/* Хвосты — вперёд всего: доделать пропущенное для полного финиша */}
-          {hasTails && (
-            <button onClick={() => loadTails()}
-              style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--gold)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-              🧩 {t.exercise.doTails || 'Пройти хвосты'} ({tails})
-            </button>
-          )}
-
           {/* Практика по типу не завершена — догрузить следующую партию */}
           {!lessonDone && (
             <button onClick={continuePractice} disabled={continuing}
@@ -255,15 +247,16 @@ export default function ExerciseSession() {
             </button>
           )}
 
-          {/* ГЛАВНАЯ кнопка веера: следующий урок курса. Только когда хвостов нет (сначала доделать их). */}
-          {showFan && !hasTails && next && next.playable && (
+          {/* ГЛАВНАЯ кнопка веера (Вариант А, решение Павла): «Продолжить» = следующий урок курса —
+              видна ВСЕГДА, даже когда остались хвосты. Хвосты — вторичная кнопка ниже. */}
+          {showFan && next && next.playable && (
             <button onClick={() => goNextLesson(next.id)}
               style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-              {t.exercise.nextLesson || 'Следующий урок'} → {getLessonTitle(next.title, next.title_translations, lang)}
+              ▶ {t.exercise.continueBtn || 'Продолжить'} → {getLessonTitle(next.title, next.title_translations, lang)}
             </button>
           )}
           {/* Следующий урок ещё закрыт (расписание) — показываем, когда откроется */}
-          {showFan && !hasTails && next && !next.playable && (
+          {showFan && next && !next.playable && (
             <div style={{ padding: '12px', borderRadius: 12, background: 'var(--surface-2)', color: 'var(--ink-soft)', fontSize: 13.5, marginBottom: 10 }}>
               🔒 {openDateStr
                 ? (t.exercise.nextLessonLocked ? t.exercise.nextLessonLocked(openDateStr) : `Следующий урок откроется ${openDateStr}`)
@@ -271,10 +264,39 @@ export default function ExerciseSession() {
             </div>
           )}
           {/* Это был последний урок курса — поздравляем */}
-          {showFan && !hasTails && !next && total > 0 && (
+          {showFan && !next && total > 0 && (
             <div style={{ padding: '12px', borderRadius: 12, background: 'var(--good-soft, rgba(34,197,94,.12))', color: 'var(--good)', fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
               🎓 {t.exercise.courseDone || 'Это последний урок курса — поздравляю!'}
             </div>
+          )}
+
+          {/* Хвосты — вторичная кнопка: доделать пропущенное для полного финиша */}
+          {hasTails && (
+            <button onClick={() => loadTails()}
+              style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid var(--gold)', background: 'var(--yellow-soft, rgba(201,165,74,.14))', color: 'var(--gold-dark, #8a6d1a)', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              🧩 {t.exercise.doTails || 'Пройти хвосты'} ({tails})
+            </button>
+          )}
+
+          {/* Выбрать другой урок курса — перескок (раскрывающийся список) */}
+          {showFan && (lessonFlow?.lessons?.length || 0) > 1 && (
+            <>
+              <button onClick={() => setPickLessonOpen(o => !o)}
+                style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: pickLessonOpen ? 6 : 10 }}>
+                📚 {t.exercise.pickOtherLesson || 'Выбрать другой урок'} {pickLessonOpen ? '▴' : '▾'}
+              </button>
+              {pickLessonOpen && (
+                <div style={{ marginBottom: 10, maxHeight: 220, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {lessonFlow.lessons.filter(l => l.id !== Number(lessonId)).map(l => (
+                    <button key={l.id} onClick={() => l.playable && goNextLesson(l.id)} disabled={!l.playable}
+                      style={{ width: '100%', padding: '11px 13px', borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface)', color: l.playable ? 'var(--ink)' : 'var(--ink-soft)', fontSize: 14, fontWeight: 600, cursor: l.playable ? 'pointer' : 'default', display: 'flex', justifyContent: 'space-between', gap: 8, opacity: l.playable ? 1 : 0.6 }}>
+                      <span style={{ textAlign: 'left' }}>{l.position}. {getLessonTitle(l.title, l.title_translations, lang) || `#${l.id}`}</span>
+                      {!l.playable && <span style={{ flexShrink: 0 }}>🔒</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {/* Закрепить слова урока с ИИ-тренером (живой разговор по словам этого урока) */}
