@@ -12,6 +12,9 @@ const STOP = new Set([
   'neben', 'oben', 'eben', 'sieben', 'gegen', 'wegen', 'denen', 'ihnen', 'innen', 'außen', 'unten',
   'hinten', 'morgen', 'eigen', 'offen', 'jeden', 'allen', 'seinen', 'meinen', 'deinen', 'keinen',
   'einen', 'ihren', 'unseren', 'diesen', 'welchen',
+  // наречия/прилагательные/причастия и мусор, замеченные в данных
+  'bisschen', 'draußen', 'drinnen', 'geschieden', 'gestern', 'vorgestern', 'übermorgen',
+  'zusammen', 'verboten', 'tausen',
   // причастия II (ge…en) — не инфинитивы
   'gestorben', 'geboren', 'gegessen', 'geschrieben', 'gesprochen', 'gefunden', 'geschlafen',
   'geblieben', 'geworden', 'gewesen', 'genommen', 'gewonnen', 'gesehen', 'gelesen', 'getrunken',
