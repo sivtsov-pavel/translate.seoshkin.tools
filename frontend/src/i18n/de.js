@@ -85,7 +85,7 @@ export const de = {
     trainer: 'Trainer',
     games: 'Spiele',
     newForTeacher: 'Neu für Lehrer',
-    searchLesson: '🔍 Lektion nach Thema suchen…',
+    searchLesson: 'Lektion nach Thema suchen…',
     nothingFound: 'Nichts gefunden',
     repeatDone: '🔄 Gelerntes wiederholen',
     statusNew: 'neu',
@@ -119,7 +119,7 @@ export const de = {
     pickCoursePlaceholder: '— Kurs wählen —',
     configureBtn: 'Einrichten →',
     passedBadge: '✓ bestanden',
-    progressLessons: '📘 Lernen nach Lektionen',
+    progressLessons: 'Lernen nach Lektionen',
     progressWords: '💪 Wissen festigen · Wörter',
     cardsToday: 'Karten heute',
     cardsAll: 'Karten insgesamt',
@@ -182,6 +182,9 @@ export const de = {
     nextLessonSoon: "Die nächste Lektion öffnet nach Zeitplan",
     courseDone: "Das ist die letzte Lektion des Kurses — herzlichen Glückwunsch!",
     trainWords: "Wörtertrainer zur Lektion",
+    fanNext: 'Der Reihe nach weiter',
+    fanOtherType: 'Anderen Typ wählen',
+    fanProgress: (pos, total) => `${pos} von ${total} in der Lektion`,
   },
   // Lektionen
   lessons: {

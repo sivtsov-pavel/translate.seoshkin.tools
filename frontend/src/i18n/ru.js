@@ -85,7 +85,7 @@ export const ru = {
     trainer: 'Тренер',
     games: 'Игры',
     newForTeacher: 'Новое для учителя',
-    searchLesson: '🔍 Поиск урока по теме…',
+    searchLesson: 'Поиск урока по теме…',
     nothingFound: 'Ничего не найдено',
     repeatDone: '🔄 Повторить пройденное',
     statusNew: 'новое',
@@ -119,7 +119,7 @@ export const ru = {
     pickCoursePlaceholder: '— Выбери курс —',
     configureBtn: 'Настроить →',
     passedBadge: '✓ пройдено',
-    progressLessons: '📘 Обучение по урокам',
+    progressLessons: 'Обучение по урокам',
     progressWords: '💪 Усиление знаний · слова',
     cardsToday: 'карточек сегодня',
     cardsAll: 'всего карточек',
@@ -183,6 +183,9 @@ export const ru = {
     nextLessonSoon: 'Следующий урок откроется по расписанию',
     courseDone: 'Это последний урок курса — поздравляю!',
     trainWords: 'Тренер по словам урока',
+    fanNext: 'Дальше по логике',
+    fanOtherType: 'Выбрать другой тип',
+    fanProgress: (pos, total) => `Сделано ${pos} из ${total} в уроке`,
   },
   // Уроки
   lessons: {

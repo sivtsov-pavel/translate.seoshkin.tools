@@ -43,6 +43,8 @@ export default function ExerciseSession() {
   const [tails, setTails]         = useState(0)     // «хвосты» — пропущенные упражнения этого урока
   const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
   const [lessonFlow, setLessonFlow] = useState(null) // позиция в курсе + следующий урок (финиш-экран)
+  const [betweenFan, setBetweenFan] = useState(false) // мини-веер после каждого упражнения (выбор: дальше/другой тип/тренер)
+  const [fanTypesOpen, setFanTypesOpen] = useState(false) // раскрыт ли список «выбрать другой тип» в мини-веере
   const [quiet, setQuiet]         = useState(() => localStorage.getItem('quiet_mode') === '1') // тихий режим
   const toggleQuiet = () => setQuiet(v => { localStorage.setItem('quiet_mode', v ? '0' : '1'); return !v })
   const [starred, setStarred]     = useState(() => new Set()) // слова, помеченные «в изучение»
@@ -134,8 +136,10 @@ export default function ExerciseSession() {
     }
 
     const next = current + 1
-    if (next >= exercises.length) endSession()
-    else setCurrent(next)
+    if (next >= exercises.length) { endSession(); return } // последнее — полный финиш-веер урока
+    if (exam || inTails) { setCurrent(next); return }       // зачёт/хвосты — без веера, сразу дальше
+    setFanTypesOpen(false)
+    setBetweenFan(true) // мини-веер: «дальше по логике / другой тип / тренер / на главную»
   }
 
   // Завершение сессии: для урока считаем «хвосты» (пропущенные) — урок пройден, только если их нет.
@@ -282,9 +286,73 @@ export default function ExerciseSession() {
   }
 
   const ex = exercises[current]
-  const lessonTitle = getLessonTitle(ex.lesson_title, ex.lesson_title_translations, lang)
+  // Подписи типов — для бейджа и мини-веера
+  const TYPE_LABELS = { flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation, speech: t.exercise.speech || 'Произношение' }
 
-  const typeLabel = { flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation, speech: t.exercise.speech || 'Произношение' }[ex.type]
+  // Мини-веер ПОСЛЕ каждого упражнения (в уроке): не гоним линейно, а даём выбор —
+  // дальше по логике / прыгнуть на другой тип урока / тренер по словам / на главную.
+  if (betweenFan) {
+    const doneN = doneOffset + current + 1
+    const totalN = doneOffset + exercises.length
+    // Типы, реально присутствующие в сессии урока: { type, first (индекс начала), count }
+    const typeAgg = []
+    exercises.forEach((e, i) => {
+      let row = typeAgg.find(r => r.type === e.type)
+      if (!row) typeAgg.push(row = { type: e.type, first: i, count: 0 })
+      row.count++
+    })
+    const goNext = () => { setBetweenFan(false); setCurrent(current + 1) }
+    const jumpToType = (first) => { setFanTypesOpen(false); setBetweenFan(false); setCurrent(first) }
+    return (
+      <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '28px 22px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 40, marginBottom: 6 }}>✅</div>
+          <div style={{ fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600, marginBottom: 18 }}>
+            {t.exercise.fanProgress ? t.exercise.fanProgress(doneN, totalN) : `Сделано ${doneN} из ${totalN} в уроке`}
+          </div>
+          {/* Главная — продолжить по педагогическому порядку */}
+          <button onClick={goNext}
+            style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+            {t.exercise.fanNext || 'Дальше по логике'} →
+          </button>
+          {/* Выбрать другой тип упражнения этого урока — без возврата на главную */}
+          {typeAgg.length > 1 && (
+            <>
+              <button onClick={() => setFanTypesOpen(o => !o)}
+                style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: fanTypesOpen ? 6 : 10 }}>
+                {t.exercise.fanOtherType || 'Выбрать другой тип'} {fanTypesOpen ? '▴' : '▾'}
+              </button>
+              {fanTypesOpen && (
+                <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {typeAgg.map(r => (
+                    <button key={r.type} onClick={() => jumpToType(r.first)}
+                      style={{ width: '100%', padding: '11px 13px', borderRadius: 12, border: '1px solid var(--line)', background: r.type === ex.type ? 'rgba(62,127,193,0.10)' : 'var(--surface)', color: 'var(--ink)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>{TYPE_LABELS[r.type] || r.type}</span>
+                      <span style={{ color: 'var(--ink-soft)' }}>{r.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {/* Закрепить слова урока с ИИ-тренером */}
+          {lessonId && (
+            <button onClick={() => navigate(`/ai-trainer?lesson_id=${lessonId}`)}
+              style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--blue)', background: 'rgba(62,127,193,0.10)', color: 'var(--blue)', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              💬 {t.exercise.trainWords || 'Тренер по словам урока'}
+            </button>
+          )}
+          <button onClick={goHome}
+            style={{ width: '100%', padding: '10px', borderRadius: 14, border: 'none', background: 'none', color: 'var(--ink-soft)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+            · {t.exercise.toHome || 'На главную'} ·
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const lessonTitle = getLessonTitle(ex.lesson_title, ex.lesson_title_translations, lang)
+  const typeLabel = TYPE_LABELS[ex.type]
 
   return (
     <div className="full-page-layout exercise-session-page">
