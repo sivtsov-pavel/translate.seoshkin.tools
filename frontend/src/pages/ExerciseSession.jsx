@@ -13,6 +13,7 @@ import SentenceWrite from '../components/SentenceWrite.jsx'
 import LetterFill from '../components/LetterFill.jsx'
 import Dictation from '../components/Dictation.jsx'
 import SpeechExercise from '../components/SpeechExercise.jsx'
+import Conjugation from '../components/Conjugation.jsx'
 import ExerciseErrorBoundary from '../components/ExerciseErrorBoundary.jsx'
 
 // Порядок типов упражнений в уроке (педагогический, по просьбе Павла):
@@ -295,7 +296,7 @@ export default function ExerciseSession() {
 
   const ex = exercises[current]
   // Подписи типов — для бейджа и мини-веера
-  const TYPE_LABELS = { flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation, speech: t.exercise.speech || 'Произношение' }
+  const TYPE_LABELS = { flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation, speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation || 'Склонение' }
 
   // Мини-веер ПОСЛЕ каждого упражнения (в уроке): не гоним линейно, а даём выбор —
   // дальше по логике / прыгнуть на другой тип урока / тренер по словам / на главную.
@@ -435,6 +436,7 @@ export default function ExerciseSession() {
         {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} payloadTranslations={ex.payload_translations} showOriginal={showOriginal} />}
         {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} />}
         {ex.type === 'dictation'       && <Dictation       key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
+        {ex.type === 'conjugation'     && <Conjugation     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} />}
         {ex.type === 'speech'          && <SpeechExercise  key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
       </ExerciseErrorBoundary>
       </div>
