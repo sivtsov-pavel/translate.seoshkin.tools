@@ -140,8 +140,14 @@ export default function ExerciseSession() {
     const next = current + 1
     if (next >= exercises.length) { endSession(); return } // последнее — полный финиш-веер урока
     if (exam || inTails) { setCurrent(next); return }       // зачёт/хвосты — без веера, сразу дальше
-    setFanTypesOpen(false)
-    setBetweenFan(true) // мини-веер: «дальше по логике / другой тип / тренер / на главную»
+    // Мини-веер показываем на ГРАНИЦЕ типа: прошёл все карточки типа (напр. все «выбери ответ») —
+    // получаешь выбор. Внутри одного типа идём подряд без веера.
+    if (exercises[next].type !== exercises[current].type) {
+      setFanTypesOpen(false)
+      setBetweenFan(true)
+    } else {
+      setCurrent(next)
+    }
   }
 
   // Завершение сессии: для урока считаем «хвосты» (пропущенные) — урок пройден, только если их нет.
@@ -300,8 +306,9 @@ export default function ExerciseSession() {
     const typeAgg = []
     exercises.forEach((e, i) => {
       let row = typeAgg.find(r => r.type === e.type)
-      if (!row) typeAgg.push(row = { type: e.type, first: i, count: 0 })
+      if (!row) typeAgg.push(row = { type: e.type, first: i, count: 0, done: 0 })
       row.count++
+      if (i <= current) row.done++ // карточки до текущей (включительно) уже пройдены
     })
     const goNext = () => { setBetweenFan(false); setCurrent(current + 1) }
     const jumpToType = (first) => { setFanTypesOpen(false); setBetweenFan(false); setCurrent(first) }
@@ -326,13 +333,18 @@ export default function ExerciseSession() {
               </button>
               {fanTypesOpen && (
                 <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {typeAgg.map(r => (
-                    <button key={r.type} onClick={() => jumpToType(r.first)}
-                      style={{ width: '100%', padding: '11px 13px', borderRadius: 12, border: '1px solid var(--line)', background: r.type === ex.type ? 'rgba(62,127,193,0.10)' : 'var(--surface)', color: 'var(--ink)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{TYPE_LABELS[r.type] || r.type}</span>
-                      <span style={{ color: 'var(--ink-soft)' }}>{r.count}</span>
-                    </button>
-                  ))}
+                  {typeAgg.map(r => {
+                    const finished = r.done >= r.count // тип пройден полностью
+                    return (
+                      <button key={r.type} onClick={() => jumpToType(r.first)}
+                        style={{ width: '100%', padding: '11px 13px', borderRadius: 12, border: '1px solid var(--line)', background: r.type === ex.type ? 'rgba(62,127,193,0.10)' : 'var(--surface)', color: finished ? 'var(--ink-soft)' : 'var(--ink)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                        <span>{finished ? '✓ ' : ''}{TYPE_LABELS[r.type] || r.type}</span>
+                        <span style={{ color: finished ? 'var(--good)' : 'var(--ink-soft)', flexShrink: 0 }}>
+                          {finished ? 'готово' : `${r.done}/${r.count}`}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </>
