@@ -115,7 +115,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
                   autoCorrect="off"
                   spellCheck={false}
                   inputMode="text"
-                  aria-label="пропущенная буква"
+                  aria-label={t.exercise.missingLetterAria}
                   style={{
                     width: 34, height: 46, padding: 0, textAlign: 'center',
                     fontSize: 30, fontWeight: 700, fontFamily: 'inherit',

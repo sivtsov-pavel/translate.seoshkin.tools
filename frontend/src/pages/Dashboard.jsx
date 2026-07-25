@@ -113,7 +113,7 @@ export default function Dashboard() {
   }, []) // eslint-disable-line
 
   const repeatLesson = async (id) => {
-    try { await api.post(`/exercises/reset-lesson/${id}`, {}); reloadStats() } catch (e) { alert('Ошибка: ' + e.message) }
+    try { await api.post(`/exercises/reset-lesson/${id}`, {}); reloadStats() } catch (e) { alert(t.common.error + ': ' + e.message) }
   }
 
   if (loading) return <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--ink-soft)' }}>{t.dashboard.loading}</div>
@@ -312,7 +312,7 @@ export default function Dashboard() {
               <div className="dl-game-row-title">{t.dashboard.classGameTitle}</div>
               <div className="dl-game-row-sub">{games.length ? t.dashboard.classGameReady : t.dashboard.classGameNot}</div>
             </div>
-            {games.length > 0 && <span className="dl-badge dl-badge--ready">ГОТОВА</span>}
+            {games.length > 0 && <span className="dl-badge dl-badge--ready">{t.dashboard.readyBadge}</span>}
           </button>
         </div>
       </section>
@@ -441,7 +441,7 @@ export default function Dashboard() {
       {/* ---------- Плавающие кнопки ---------- */}
       <CameraWords mode="sentences" renderTrigger={(pick, busy) => (
         <button className="dl-fab dl-fab-camera" onClick={pick} disabled={busy}
-          title="Сфотографировать — разбор слов"
+          title={t.dashboard.cameraTitle}
           style={{ bottom: `calc(var(--bottom-nav-h, 0px) + 20px)` }}>
           {busy ? '…' : <Camera size={20} />}
         </button>
@@ -558,7 +558,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
   }
   const handleReset = () => {
     if (navigator.onLine === false) { alert(t.offlineMode?.sectionTitle || 'Нужен интернет'); return }
-    if (window.confirm('Сбросить прогресс урока и пройти заново?')) onReset(id)
+    if (window.confirm(t.dashboard.resetConfirm)) onReset(id)
   }
 
   // Закрытый (дрип) урок — видно, но проходить нельзя. Слова можно посмотреть заранее.
@@ -591,7 +591,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
               const tr = getTranslation(w.translations, lang, w.translation_ru)
               return (
                 <div key={w.id} className="dl-word-row">
-                  <span title={w.source === 'extra' ? 'Из тетради' : 'Из учебника'} style={{ fontSize: 12, flexShrink: 0 }}>{w.source === 'extra' ? '✏️' : '📖'}</span>
+                  <span title={w.source === 'extra' ? t.dashboard.sourceExtra : t.dashboard.sourceBook} style={{ fontSize: 12, flexShrink: 0 }}>{w.source === 'extra' ? '✏️' : '📖'}</span>
                   <b>{w.word_de}</b>
                   <SpeakButton text={w.word_de} size={13} appendText={tr} />
                   <span className="dl-word-dash">—</span> {tr}
@@ -678,7 +678,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
             return (
               <div key={w.id} className="dl-word-row">
                 {/* Источник слова: 📖 из учебника (в зачёте), ✏️ из тетради (доп., не в зачёте) */}
-                <span title={w.source === 'extra' ? 'Из тетради (доп.)' : 'Из учебника'} style={{ fontSize: 12, flexShrink: 0 }}>
+                <span title={w.source === 'extra' ? t.dashboard.sourceExtraFull : t.dashboard.sourceBook} style={{ fontSize: 12, flexShrink: 0 }}>
                   {w.source === 'extra' ? '✏️' : '📖'}
                 </span>
                 <b>{w.word_de}</b>

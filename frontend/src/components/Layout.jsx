@@ -142,14 +142,14 @@ export default function Layout({ children }) {
   }
 
   const adminOps = user?.role === 'owner' ? [
-    { name: 'fetch-images',              C: ImageIcon,  label: 'Картинки',           hint: 'Скачивает картинки Unsplash для слов без фото',                endpoint: '/admin/fetch-images' },
-    { name: 'enrich-words',              C: Sparkles,   label: 'Словарь++',          hint: 'Добавляет примеры предложений через GPT',                      endpoint: '/admin/enrich-words' },
-    { name: 'translate-sentences',       C: Languages,  label: 'Фразы → RU',         hint: 'Переводит немецкие предложения на русский язык',               endpoint: '/admin/translate-sentences' },
-    { name: 'translate-words-all-langs', C: Globe,      label: 'Слова → 10 языков',  hint: 'Переводит слова словаря на все 10 языков интерфейса',           endpoint: '/admin/translate-words-all-langs' },
-    { name: 'translate-exercises',       C: FileText,   label: 'Упражнения → языки', hint: 'Переводит варианты и подсказки в упражнениях',                 endpoint: '/admin/translate-exercises' },
-    { name: 'add-speech-all',            C: AudioLines, label: 'Произношение',       hint: 'Добавляет упражнения на произношение ко всем урокам',          endpoint: '/admin/add-speech-all' },
-    { name: 'translate-lesson-titles',   C: Heading,    label: 'Названия → языки',   hint: 'Переводит названия уроков на все 10 языков',                   endpoint: '/admin/translate-lesson-titles' },
-    { name: 'regenerate-all',            C: RotateCcw,  label: 'Пересоздать всё',    hint: '⚠️ Удаляет прогресс и пересоздаёт упражнения для ВСЕХ уроков', endpoint: '/admin/regenerate-all' },
+    { name: 'fetch-images',              C: ImageIcon,  label: t.courses.opFetchImages,        hint: t.courses.opFetchImagesHint,        endpoint: '/admin/fetch-images' },
+    { name: 'enrich-words',              C: Sparkles,   label: t.courses.opEnrichWords,        hint: t.courses.opEnrichWordsHint,        endpoint: '/admin/enrich-words' },
+    { name: 'translate-sentences',       C: Languages,  label: t.courses.opTranslate,          hint: t.courses.opTranslateHint,          endpoint: '/admin/translate-sentences' },
+    { name: 'translate-words-all-langs', C: Globe,      label: t.courses.opTranslateAllLangs,  hint: t.courses.opTranslateAllLangsHint,  endpoint: '/admin/translate-words-all-langs' },
+    { name: 'translate-exercises',       C: FileText,   label: t.courses.opTranslateExercises, hint: t.courses.opTranslateExercisesHint, endpoint: '/admin/translate-exercises' },
+    { name: 'add-speech-all',            C: AudioLines, label: t.courses.opAddSpeech,          hint: t.courses.opAddSpeechHint,          endpoint: '/admin/add-speech-all' },
+    { name: 'translate-lesson-titles',   C: Heading,    label: t.courses.opTranslateTitles,    hint: t.courses.opTranslateTitlesHint,    endpoint: '/admin/translate-lesson-titles' },
+    { name: 'regenerate-all',            C: RotateCcw,  label: t.courses.opRegenerateAll,      hint: t.courses.opRegenerateAllHint,      endpoint: '/admin/regenerate-all' },
   ] : []
 
   useEffect(() => { setOpen(false); setProfileOpen(false); window.scrollTo(0, 0) }, [location.pathname])
@@ -214,7 +214,7 @@ export default function Layout({ children }) {
   const [shared, setShared] = useState(false)
   const shareApp = async () => {
     const url = window.location.origin
-    const data = { title: 'Deutsch Lernen', text: 'Учи немецкий — Deutsch Lernen 🇩🇪', url }
+    const data = { title: 'Deutsch Lernen', text: t.nav.shareText, url }
     try { if (navigator.share) { await navigator.share(data); return } } catch { return }
     try { await navigator.clipboard.writeText(url); setShared(true); setTimeout(() => setShared(false), 2000) } catch {}
   }
@@ -230,9 +230,9 @@ export default function Layout({ children }) {
     ...(user?.role === 'owner' ? [{ to: '/lessons', C: BookText, label: t.nav.lessons }] : []),
     { to: '/sets',       C: Backpack,       label: t.nav.sets },
     { to: '/vocabulary', C: BookOpen,       label: t.nav.vocabulary },
-    { to: '/ai-trainer', C: Bot,            label: 'AI тренер' },
+    { to: '/ai-trainer', C: Bot,            label: t.nav.aiTrainer },
     { to: '/reader',     C: Glasses,        label: t.nav.reader },
-    { to: '/books',      C: Library,        label: 'Книги' },
+    { to: '/books',      C: Library,        label: t.nav.books },
     { to: '/phrasebook', C: MessageCircle,  label: E.navPhrasebook },
     { to: '/grammar',    C: GraduationCap,  label: E.navGrammar },
     { to: '/love',       C: Heart,          label: E.navLove },
@@ -315,9 +315,9 @@ export default function Layout({ children }) {
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flexShrink: 0, padding: '8px' }}>
             <NavItem item={{ to: '/', C: Home, label: t.nav.today }} onClick={close} />
-            <SectionLabel label="Обучение" />
+            <SectionLabel label={t.nav.sectionLearning} />
             {navLearning.map(item => <NavItem key={item.to} item={item} onClick={close} />)}
-            {navClass.length > 0 && (<><SectionLabel label="Класс" />{navClass.map(item => <NavItem key={item.to} item={item} onClick={close} />)}</>)}
+            {navClass.length > 0 && (<><SectionLabel label={t.nav.sectionClass} />{navClass.map(item => <NavItem key={item.to} item={item} onClick={close} />)}</>)}
             {user?.id === 1 && (<><SectionLabel label="Платформа" /><NavItem item={{ to: '/admin', C: ShieldCheck, label: 'Супер-админ' }} onClick={close} /></>)}
 
             <div style={{ height: 1, background: 'var(--line)', margin: '8px 12px' }} />
@@ -366,17 +366,17 @@ export default function Layout({ children }) {
                     <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 6 }}><AlertCircle size={13} />{adminOp.error}</div>
                   )}
                   <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--line)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5, padding: '0 2px' }}>Push ученикам</div>
-                    <textarea value={pushMsg} onChange={e => { setPushMsg(e.target.value); setPushResult(null) }} placeholder="Сообщение..." rows={2}
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5, padding: '0 2px' }}>{t.nav.pushStudents}</div>
+                    <textarea value={pushMsg} onChange={e => { setPushMsg(e.target.value); setPushResult(null) }} placeholder={t.nav.pushPlaceholder} rows={2}
                       style={{ width: '100%', boxSizing: 'border-box', padding: '6px 8px', borderRadius: 8, fontSize: 12, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', resize: 'vertical', fontFamily: 'inherit' }} />
                     <button onClick={async () => {
                         if (!pushMsg.trim()) return
                         setPushSending(true); setPushResult(null)
-                        try { const res = await api.post('/push/send', { body: pushMsg.trim() }); setPushResult(`✓ Отправлено ${res.sent ?? 1} уч.`); setPushMsg('') }
-                        catch (e) { setPushResult('Ошибка: ' + e.message) } finally { setPushSending(false) }
+                        try { const res = await api.post('/push/send', { body: pushMsg.trim() }); setPushResult(t.nav.pushSent(res.sent ?? 1)); setPushMsg('') }
+                        catch (e) { setPushResult(t.common.error + ': ' + e.message) } finally { setPushSending(false) }
                       }} disabled={pushSending || !pushMsg.trim()}
                       style={{ marginTop: 4, width: '100%', padding: '7px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--blue)', color: '#fff', cursor: pushSending || !pushMsg.trim() ? 'default' : 'pointer', opacity: pushSending || !pushMsg.trim() ? 0.5 : 1 }}>
-                      <Bell size={14} /> {pushSending ? 'Отправка…' : 'Отправить всем'}
+                      <Bell size={14} /> {pushSending ? t.nav.pushSending : t.nav.pushSendAll}
                     </button>
                     {pushResult && <div style={{ fontSize: 11, color: pushResult.startsWith('✓') ? 'var(--good)' : 'var(--red)', marginTop: 4, textAlign: 'center' }}>{pushResult}</div>}
                   </div>
@@ -389,7 +389,7 @@ export default function Layout({ children }) {
         {/* Подвал: тема, поделиться, озвучка, язык, выход */}
         <div style={{ padding: '10px 12px', borderTop: '1px solid var(--line)', display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0 }}>
           <button onClick={toggleTheme} style={pill}>{theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />} {theme === 'dark' ? t.nav.themeLight : t.nav.themeDark}</button>
-          <button onClick={shareApp} style={pill} title="Поделиться приложением"><Share2 size={14} /> {shared ? 'Скопировано' : 'Поделиться'}</button>
+          <button onClick={shareApp} style={pill} title={t.nav.shareApp}><Share2 size={14} /> {shared ? t.nav.copied : t.nav.share}</button>
           <AutoSpeakToggle pill />
           <SpeakTranslationToggle />
           <LangSwitcher pill dropUp />
@@ -421,22 +421,22 @@ export default function Layout({ children }) {
       <header className="layout-topbar" style={{ position: 'fixed', top: 3, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg)', borderBottom: '1px solid var(--line)', minHeight: 52 }}>
         {/* Слева: меню + назад */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button onClick={() => setOpen(v => !v)} className="layout-hamburger" style={iconBtn} aria-label="Меню"><Menu size={20} /></button>
+          <button onClick={() => setOpen(v => !v)} className="layout-hamburger" style={iconBtn} aria-label={t.nav.menu}><Menu size={20} /></button>
           {location.pathname !== '/' && (
-            <button onClick={() => navigate(-1)} style={iconBtn} aria-label="Назад" title="Назад"><ArrowLeft size={20} color="var(--blue)" /></button>
+            <button onClick={() => navigate(-1)} style={iconBtn} aria-label={t.nav.back} title={t.nav.back}><ArrowLeft size={20} color="var(--blue)" /></button>
           )}
         </div>
         {/* Центр: заголовок с флагом + немецкая полоска (как в макете) */}
-        <Link to="/" title={`Изучаемый язык: ${tgtName}`}
+        <Link to="/" title={t.nav.targetLangTitle(tgtName)}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
           <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, whiteSpace: 'nowrap' }}>{tgt.flag} {tgtName}</span>
           <span style={{ display: 'block', height: 3, width: 40, borderRadius: 2, background: `linear-gradient(90deg, ${(tgt.stripe || TARGET_META.de.stripe).join(',')})` }} />
         </Link>
         {/* Справа: тур + профиль (кнопку смены курса убрали — она есть на «Сегодня» у приветствия) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button onClick={startTour} style={iconBtn} aria-label="Тур" title="Тур по приложению"><Compass size={19} color="var(--blue)" /></button>
+          <button onClick={startTour} style={iconBtn} aria-label={t.nav.tourApp} title={t.nav.tourApp}><Compass size={19} color="var(--blue)" /></button>
           {user && (
-            <button onClick={() => setProfileOpen(v => !v)} aria-label="Профиль"
+            <button onClick={() => setProfileOpen(v => !v)} aria-label={t.nav.tabProfile}
               style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid var(--surface)', background: 'var(--gold)', color: '#fff', fontWeight: 700, fontSize: /\p{Emoji}/u.test(avatarChar) ? 20 : 15, cursor: 'pointer', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
               {avatarChar}
             </button>
@@ -482,10 +482,10 @@ export default function Layout({ children }) {
           {unreadChat > 0 && <span style={{ position: 'absolute', top: 4, right: 4, background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '0 4px', fontSize: 9, fontWeight: 700, minWidth: 14, textAlign: 'center' }}>{unreadChat > 9 ? '9+' : unreadChat}</span>}
         </Link>
         <div style={{ flex: 1 }} />
-        <Link to="/settings" title="Настройки" style={{ width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: isActive('/settings') ? 'var(--blue)' : 'var(--ink-soft)', background: isActive('/settings') ? 'rgba(62,127,193,0.10)' : 'transparent' }}>
+        <Link to="/settings" title={t.nav.tabSettings} style={{ width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: isActive('/settings') ? 'var(--blue)' : 'var(--ink-soft)', background: isActive('/settings') ? 'rgba(62,127,193,0.10)' : 'transparent' }}>
           <Settings size={20} strokeWidth={1.8} />
         </Link>
-        <button onClick={() => setOpen(v => !v)} title="Меню" style={{ width: 44, height: 44, borderRadius: 12, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)' }}>
+        <button onClick={() => setOpen(v => !v)} title={t.nav.menu} style={{ width: 44, height: 44, borderRadius: 12, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)' }}>
           <MoreVertical size={20} />
         </button>
       </nav>
@@ -493,7 +493,7 @@ export default function Layout({ children }) {
       {/* Десктопный мини-хедер (≥1024px) */}
       <header className="layout-desktop-topbar">
         {location.pathname !== '/' ? (
-          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--blue)', fontWeight: 700, fontSize: 14, padding: '6px 10px', borderRadius: 8 }}>← Назад</button>
+          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--blue)', fontWeight: 700, fontSize: 14, padding: '6px 10px', borderRadius: 8 }}>← {t.nav.back}</button>
         ) : (
           <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{tgt.flag} {tgtName}</span>
         )}

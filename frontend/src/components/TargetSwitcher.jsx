@@ -8,7 +8,7 @@ const LANGS = [
 ]
 
 export default function TargetSwitcher() {
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const cur = localStorage.getItem('target_lang') || 'de'
   let dn = null
   try { dn = new Intl.DisplayNames([lang || 'ru'], { type: 'language' }) } catch { /* нет Intl — фолбэк на код */ }
@@ -23,7 +23,7 @@ export default function TargetSwitcher() {
   }
   return (
     <select value={cur} onChange={e => change(e.target.value)}
-      title="Какой язык учим"
+      title={t.nav.whichLangTitle}
       style={{
         width: '100%', padding: '8px 10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
         border: '1px solid var(--line)', background: 'var(--surface)',

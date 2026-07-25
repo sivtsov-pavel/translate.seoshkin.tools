@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
+import { useI18nStore } from '../store/i18n.js'
 
 // Фоновый индикатор обработки (правый верхний угол): видно, что уроки/файлы обрабатываются,
 // даже если уйти на другую страницу. Опрашивает статус, сам появляется/исчезает.
 // Только для учителя. При ошибках подсказывает повторить.
 export default function ProcessingBadge() {
   const { user } = useAuthStore()
+  const { t } = useI18nStore()
   const navigate = useNavigate()
   const [st, setSt] = useState(null)
   const [open, setOpen] = useState(false)
@@ -47,8 +49,8 @@ export default function ProcessingBadge() {
           cursor: 'pointer', fontSize: 13, fontWeight: 700, boxShadow: '0 4px 16px rgba(0,0,0,.12)',
         }}>
         {active > 0
-          ? <><span style={{ display: 'inline-block', animation: 'pbspin 1s linear infinite' }}>⏳</span> Обрабатывается {active}</>
-          : <>⚠️ Ошибок: {error}</>}
+          ? <><span style={{ display: 'inline-block', animation: 'pbspin 1s linear infinite' }}>⏳</span> {t.lessons.badgeProcessing(active)}</>
+          : <>{t.lessons.badgeErrors(error)}</>}
         <style>{`@keyframes pbspin { to { transform: rotate(360deg) } }`}</style>
       </button>
 
@@ -58,9 +60,9 @@ export default function ProcessingBadge() {
           background: 'var(--surface)', border: '1px solid var(--line)', boxShadow: '0 8px 30px rgba(0,0,0,.18)',
           fontSize: 13, color: 'var(--ink)',
         }}>
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>📚 Обработка уроков</div>
-          {processing > 0 && <div>⏳ Сейчас: {processing}</div>}
-          {pending > 0 && <div style={{ color: 'var(--ink-soft)' }}>⌛ В очереди: {pending}</div>}
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>{t.lessons.badgeTitle}</div>
+          {processing > 0 && <div>{t.lessons.badgeNow(processing)}</div>}
+          {pending > 0 && <div style={{ color: 'var(--ink-soft)' }}>{t.lessons.badgeQueued(pending)}</div>}
           {current && (
             <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-soft)' }}>
               «{current.title}»{current.progress ? ` — ${current.progress}` : ''}
@@ -68,16 +70,16 @@ export default function ProcessingBadge() {
           )}
           {error > 0 && (
             <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)', color: 'var(--red, #d64545)' }}>
-              ⚠️ С ошибкой: {error}. Открой урок и нажми «✨ Обработать всё» или «🎨», чтобы повторить.
+              {t.lessons.badgeWithError(error)}
             </div>
           )}
           <div style={{ marginTop: 10, fontSize: 12, color: 'var(--ink-soft)' }}>
-            Можно спокойно уйти на другую страницу — обработка идёт в фоне.
+            {t.lessons.badgeBackground}
           </div>
           {current?.course_id && (
             <button onClick={() => { setOpen(false); navigate(`/courses/${current.course_id}`) }}
               style={{ marginTop: 10, width: '100%', padding: '7px', borderRadius: 8, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>
-              Открыть курс
+              {t.lessons.badgeOpenCourse}
             </button>
           )}
         </div>

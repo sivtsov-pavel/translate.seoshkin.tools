@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { api } from '../api/client.js'
+import { useI18nStore } from '../store/i18n.js'
 
 export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctAnswer, isCorrect }) {
+  const { t } = useI18nStore()
   const [saved, setSaved]               = useState(false)
   const [grammarExp, setGrammarExp]     = useState('')
   const [grammarLoading, setGrammarLoading] = useState(false)
@@ -21,7 +23,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
       })
       setSaved(true)
     } catch (e) {
-      alert('Не удалось сохранить: ' + e.message)
+      alert(t.exercise.saveFailed + e.message)
     }
   }
 
@@ -34,7 +36,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
       })
       setGrammarExp(res.explanation)
     } catch {
-      setGrammarErr('Не удалось получить объяснение')
+      setGrammarErr(t.exercise.explainFailed)
     }
     setGrammarLoading(false)
   }
@@ -50,7 +52,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
       })
       setJustifyExp(res.explanation)
     } catch {
-      setJustifyErr('Не удалось получить обоснование')
+      setJustifyErr(t.exercise.justifyFailed)
     }
     setJustifyLoading(false)
   }
@@ -67,7 +69,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
             color: saved ? 'var(--good)' : 'var(--ink-soft)',
             fontWeight: 600,
           }}>
-          {saved ? '✓ В разговорнике' : '📖 В разговорник'}
+          {saved ? t.exercise.inPhrasebook : t.exercise.toPhrasebook}
         </button>
 
         {/* Почему ошибка — только при неверном ответе */}
@@ -78,7 +80,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
               border: '1px solid var(--line)', background: 'transparent',
               color: 'var(--red)', fontWeight: 600,
             }}>
-            {grammarLoading ? '⏳…' : '❓ Почему ошибка?'}
+            {grammarLoading ? '⏳…' : t.exercise.whyError}
           </button>
         )}
 
@@ -90,7 +92,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
             background: justifyExp ? 'var(--accent-soft)' : 'transparent',
             color: 'var(--accent)', fontWeight: 600,
           }}>
-          {justifyLoading ? '⏳ Думаю…' : justifyExp ? '💡 Обоснование ↓' : '💡 Обоснуй'}
+          {justifyLoading ? t.exercise.justifyThinking : justifyExp ? t.exercise.justifyOpen : t.exercise.justifyBtn}
         </button>
       </div>
 
@@ -102,7 +104,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
           color: grammarErr ? 'var(--red)' : 'var(--ink)',
           borderLeft: '3px solid var(--red)',
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--red)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Разбор ошибки</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--red)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t.exercise.errorAnalysis}</div>
           {grammarExp || grammarErr}
         </div>
       )}
@@ -115,7 +117,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
           color: justifyErr ? 'var(--red)' : 'var(--ink)',
           borderLeft: '3px solid var(--accent)',
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>💡 Почему именно это слово?</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t.exercise.whyThisWord}</div>
           {justifyExp || justifyErr}
         </div>
       )}
@@ -125,6 +127,7 @@ export function ExerciseActions({ de, ru, type, exerciseId, userAnswer, correctA
 
 // Кнопка «Обоснуй» до ответа — встраивается прямо в карточку упражнения
 export function JustifyHint({ wordDe, correctAnswer, type }) {
+  const { t } = useI18nStore()
   const [exp, setExp]       = useState('')
   const [loading, setLoading] = useState(false)
   const [open, setOpen]     = useState(false)
@@ -137,7 +140,7 @@ export function JustifyHint({ wordDe, correctAnswer, type }) {
       setExp(res.explanation)
       setOpen(true)
     } catch {
-      setExp('Не удалось получить подсказку')
+      setExp(t.exercise.hintFailed)
       setOpen(true)
     }
     setLoading(false)
@@ -151,7 +154,7 @@ export function JustifyHint({ wordDe, correctAnswer, type }) {
           border: '1px solid var(--accent)', background: 'transparent',
           color: 'var(--accent)', fontWeight: 600,
         }}>
-        {loading ? '⏳…' : '💡 Подсказка'}
+        {loading ? '⏳…' : t.exercise.hintBtn}
       </button>
       {open && exp && (
         <div style={{

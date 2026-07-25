@@ -223,10 +223,11 @@ function StressedWord({ word }) {
 
 // ── Оценка ─────────────────────────────────────────────────────────
 function scoreResult(sim) {
-  if (sim >= 0.90) return { quality: 5, label: '🎉 Превосходно!', color: 'var(--good)' }
-  if (sim >= 0.75) return { quality: 4, label: '✓ Хорошо!',       color: 'var(--good)' }
-  if (sim >= 0.55) return { quality: 3, label: '≈ Почти!',         color: 'var(--accent)' }
-  return { quality: 1, label: '✗ Попробуй ещё',                    color: 'var(--red)' }
+  const t = useI18nStore.getState().t
+  if (sim >= 0.90) return { quality: 5, label: t.exercise.speechPerfect, color: 'var(--good)' }
+  if (sim >= 0.75) return { quality: 4, label: t.exercise.speechGood,    color: 'var(--good)' }
+  if (sim >= 0.55) return { quality: 3, label: t.exercise.speechAlmost,  color: 'var(--accent)' }
+  return { quality: 1, label: t.exercise.speechTryAgain,                 color: 'var(--red)' }
 }
 
 // Нормализация для пофонемного сравнения (только буквы, включая умлауты/ß)
@@ -340,8 +341,8 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
         <WordImage imageUrl={imageUrl} wordDe={word_de} bleed />
         <div className="exercise-card-content" style={{ padding: 24, textAlign: 'center' }}>
           <p style={{ fontSize: 48, margin: '0 0 12px' }}>🎤</p>
-          <p style={{ color: 'var(--ink)', fontSize: 15 }}>Распознавание речи не поддерживается.</p>
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Используйте Google Chrome на Android или ПК.</p>
+          <p style={{ color: 'var(--ink)', fontSize: 15 }}>{t.exercise.speechNotSupported}</p>
+          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{t.exercise.speechUseChrome}</p>
           <button onClick={() => onAnswer(3)}
             style={{ marginTop: 16, padding: '12px 28px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>
             {t.exercise.next}
@@ -405,7 +406,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
 
           {/* Произношение кириллицей */}
           <div style={{ textAlign: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: 'var(--ink-soft)', marginRight: 4 }}>читать:</span>
+            <span style={{ fontSize: 11, color: 'var(--ink-soft)', marginRight: 4 }}>{t.exercise.speechReadLabel}</span>
             <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', fontStyle: 'italic', letterSpacing: 0.5 }}>
               {russianPhonetic}
             </span>
@@ -413,7 +414,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
 
           {/* Перевод — крупнее и контрастнее, чтобы не сливался с фоном (по образцу «читать:» выше) */}
           <div style={{ textAlign: 'center' }}>
-            <span style={{ fontSize: 11, color: 'var(--ink-soft)', marginRight: 4 }}>перевод:</span>
+            <span style={{ fontSize: 11, color: 'var(--ink-soft)', marginRight: 4 }}>{t.exercise.speechTranslationLabel}</span>
             <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>
               {displayTranslation}
             </span>
@@ -446,10 +447,10 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
           </button>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>
             {listening
-              ? '🎤 Слушаю... говорите!'
+              ? t.exercise.speechListening
               : phase === 'result'
-                ? 'Нажми чтобы повторить'
-                : 'Нажми и произнеси слово по-немецки'}
+                ? t.exercise.speechTapRepeat
+                : t.exercise.speechTapSay}
           </div>
         </div>
 

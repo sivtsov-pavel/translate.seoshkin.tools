@@ -341,7 +341,7 @@ export default function ExerciseSession() {
                         style={{ width: '100%', padding: '11px 13px', borderRadius: 12, border: '1px solid var(--line)', background: r.type === ex.type ? 'rgba(62,127,193,0.10)' : 'var(--surface)', color: finished ? 'var(--ink-soft)' : 'var(--ink)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                         <span>{finished ? '✓ ' : ''}{TYPE_LABELS[r.type] || r.type}</span>
                         <span style={{ color: finished ? 'var(--good)' : 'var(--ink-soft)', flexShrink: 0 }}>
-                          {finished ? 'готово' : `${r.done}/${r.count}`}
+                          {finished ? (t.exercise.fanTypeDone || 'готово') : `${r.done}/${r.count}`}
                         </span>
                       </button>
                     )
@@ -379,7 +379,7 @@ export default function ExerciseSession() {
         {/* Название типа теперь показывается внутри карточки упражнения (над 📚 lessonTitle) — здесь дубль убран */}
         {/* Пропустить голосовое (проговори/диктант) в хвосты — если не осознанный выбор типа */}
         {VOICE_TYPES.has(ex.type) && !exam && type !== ex.type && (
-          <button onClick={skipExercise} title="Пропустить в «хвосты» (пройдёшь позже)"
+          <button onClick={skipExercise} title={t.exercise.skipTitle}
             style={{ marginLeft: 10, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--gold)', background: 'var(--yellow-soft)', color: 'var(--gold-dark)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
             <SkipForward size={13} /> {t.exercise.skip || 'Пропустить'}
           </button>
@@ -388,7 +388,7 @@ export default function ExerciseSession() {
           {/* Учитель: глобус — показать перевод слова на локали ученика (проверка) */}
           {user?.role === 'owner' && (
             <button onClick={toggleOrigView}
-              title={showOriginal ? 'Перевод показан — нажми, чтобы скрыть' : 'Показать перевод слова на локали ученика (не отвечая)'}
+              title={showOriginal ? t.exercise.origViewOnTitle : t.exercise.origViewOffTitle}
               style={{ ...hdrBtn, display: 'flex', alignItems: 'center',
                 border: `1px solid ${showOriginal ? 'var(--blue)' : 'var(--line)'}`,
                 background: showOriginal ? 'rgba(62,127,193,0.12)' : 'var(--surface-2)',
@@ -398,7 +398,7 @@ export default function ExerciseSession() {
           )}
           {/* Быстрый тумблер озвучки тренера */}
           <button onClick={toggleReactions}
-            title={reactionsOn ? 'Тренер озвучивает — нажми, чтобы выключить' : 'Озвучка выключена — нажми, чтобы включить голос тренера'}
+            title={reactionsOn ? t.exercise.reactionsOnTitle : t.exercise.reactionsOffTitle}
             style={{ ...hdrBtn, display: 'flex', alignItems: 'center',
               border: `1px solid ${reactionsOn ? 'var(--blue)' : 'var(--line)'}`,
               background: reactionsOn ? 'rgba(62,127,193,0.12)' : 'var(--surface-2)',
@@ -407,7 +407,7 @@ export default function ExerciseSession() {
           </button>
           {/* 🌙 Тихий режим — авто-пропуск голосовых (проговори/диктант) в хвосты (для ночи) */}
           <button onClick={toggleQuiet}
-            title={quiet ? 'Тихий режим вкл — голосовые уходят в хвосты. Нажми, чтобы выключить' : 'Тихий режим — авто-пропуск «проговори/диктант» (удобно ночью)'}
+            title={quiet ? t.exercise.quietOnTitle : t.exercise.quietOffTitle}
             style={{ ...hdrBtn, display: 'flex', alignItems: 'center',
               border: `1px solid ${quiet ? 'var(--gold)' : 'var(--line)'}`,
               background: quiet ? 'var(--yellow-soft)' : 'var(--surface-2)',
@@ -416,12 +416,12 @@ export default function ExerciseSession() {
           </button>
           {ex.word_id && (
             <button onClick={() => markLearning(ex.word_id)} disabled={starred.has(ex.word_id)}
-              title="Добавить слово в изучение (учить/повторять)"
+              title={t.exercise.markLearningTitle}
               style={{ padding: '4px 10px', borderRadius: 8, cursor: starred.has(ex.word_id) ? 'default' : 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5,
                 border: `1px solid ${starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--gold)'}`,
                 background: starred.has(ex.word_id) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--yellow-soft)',
                 color: starred.has(ex.word_id) ? 'var(--good, #16a34a)' : 'var(--gold-dark)' }}>
-              <Star size={13} fill={starred.has(ex.word_id) ? 'currentColor' : 'none'} /> {starred.has(ex.word_id) ? 'В изучении' : 'В изучение'}
+              <Star size={13} fill={starred.has(ex.word_id) ? 'currentColor' : 'none'} /> {starred.has(ex.word_id) ? t.exercise.inLearning : t.exercise.toLearning}
             </button>
           )}
         </div>

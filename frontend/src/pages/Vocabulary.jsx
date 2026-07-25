@@ -8,9 +8,6 @@ import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 import { cardUrl, shareLink } from '../utils/share.js'
 import { numberWordAny, LARGE_NUMBERS, TTS_LOCALE } from '../utils/numberWords.js'
 
-// Название изучаемого языка — для плейсхолдера поиска (какой словарь)
-const TARGET_LANG_NAME = { de: 'немецкий', es: 'испанский', fr: 'французский', it: 'итальянский', en: 'английский', pt: 'португальский' }
-
 const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
 
 // Мобильный брейкпоинт (≤640px) — адаптация только для мобилки, на ПК всё как было
@@ -103,7 +100,7 @@ export default function Vocabulary() {
   const sendToReader = async () => {
     const sentences = filtered.map(w => w.example_sentence).filter(Boolean)
     if (!sentences.length) { alert(t.vocabulary.noExamples); return }
-    const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : t.vocabulary.title) + ' — примеры'
+    const title = lessonFilter || (statusFilter ? filterLabels[statusFilter] : t.vocabulary.title) + ' — ' + t.vocabulary.examplesSuffix
     setSending(true)
     try {
       await api.post('/phrase-sets', { title, content: sentences.join('\n') })
@@ -191,9 +188,9 @@ export default function Vocabulary() {
   // из всех отфильтрованных (старое поведение).
   const createSet = async () => {
     const ids = selectedIds.size ? [...selectedIds] : filtered.map(w => w.id)
-    if (!ids.length) { alert('Выберите слова галочками или задайте фильтр'); return }
-    const hint = selectedIds.size ? 'Мой набор' : (lessonFilter || (statusFilter ? filterLabels[statusFilter] : 'Мой набор'))
-    const title = window.prompt(`Свой набор упражнений из ${ids.length} слов. Название:`, `✏️ ${hint}`.trim())
+    if (!ids.length) { alert(t.vocabulary.selectWordsAlert); return }
+    const hint = selectedIds.size ? t.vocabulary.mySet : (lessonFilter || (statusFilter ? filterLabels[statusFilter] : t.vocabulary.mySet))
+    const title = window.prompt(t.vocabulary.setPromptTitle(ids.length), `✏️ ${hint}`.trim())
     if (title === null) return
     setCreatingSet(true)
     try {
@@ -204,11 +201,11 @@ export default function Vocabulary() {
           if (st.status !== 'processing') {
             clearInterval(poll); setCreatingSet(false); clearSelection()
             if (st.status === 'done') navigate(`/exercise-session?lesson_id=${res.lessonId}`)
-            else alert('Не удалось собрать набор: ' + (st.progress || ''))
+            else alert(t.vocabulary.setBuildFailed + (st.progress || ''))
           }
         } catch {}
       }, 2500)
-    } catch (e) { setCreatingSet(false); alert('Ошибка: ' + e.message) }
+    } catch (e) { setCreatingSet(false); alert(t.common.error + ': ' + e.message) }
   }
 
   // Админ: сколько слов вообще без картинки (для круглой кнопки-фильтра)
@@ -244,9 +241,9 @@ export default function Vocabulary() {
         <h1 style={{ margin: 0, fontSize: 22, flex: '0 0 auto' }}>{t.vocabulary.title}</h1>
         <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)', flex: '0 0 auto' }}>
           {[
-            { id: 'words',    emoji: '📚', label: 'Слова', count: words.length },
-            { id: 'alphabet', emoji: '🔤', label: 'Алфавит' },
-            { id: 'numbers',  emoji: '🔢', label: 'Цифры' },
+            { id: 'words',    emoji: '📚', label: t.vocabulary.tabWords, count: words.length },
+            { id: 'alphabet', emoji: '🔤', label: t.vocabulary.tabAlphabet },
+            { id: 'numbers',  emoji: '🔢', label: t.vocabulary.tabNumbers },
           ].map(tab => (
             <button key={tab.id} onClick={() => setView(tab.id)}
               style={{
@@ -272,21 +269,21 @@ export default function Vocabulary() {
         )}
         {view === 'words' && user?.role === 'owner' && (
           <button onClick={createSet} disabled={creatingSet}
-            title={selectedIds.size ? `Собрать набор из ${selectedIds.size} выбранных слов` : 'Собрать набор из отфильтрованных слов (или отметь галочками нужные)'}
+            title={selectedIds.size ? t.vocabulary.buildSetSelectedTitle(selectedIds.size) : t.vocabulary.buildSetFilteredTitle}
             style={{ padding: '7px 12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 13, cursor: 'pointer', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
-            {creatingSet ? '⏳ Собираю...' : (selectedIds.size ? `✏️ Набор (${selectedIds.size})` : '✏️ Набор')}
+            {creatingSet ? t.vocabulary.building : (selectedIds.size ? `${t.vocabulary.setBtn} (${selectedIds.size})` : t.vocabulary.setBtn)}
           </button>
         )}
         {view === 'words' && user?.role === 'owner' && selectedIds.size > 0 && (
-          <button onClick={clearSelection} title="Снять выделение со всех слов"
+          <button onClick={clearSelection} title={t.vocabulary.clearSelectionTitle}
             style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink-soft)', fontWeight: 600, fontSize: 13, cursor: 'pointer', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
-            ✕ Очистить
+            {t.vocabulary.clearBtn}
           </button>
         )}
         {/* Админ: круглая кнопка-тумблер «показать слова без картинки» + счётчик */}
         {view === 'words' && user?.role === 'owner' && noImageCount > 0 && (
           <button onClick={() => setNoImageFilter(v => !v)}
-            title={`Слова без картинки: ${noImageCount}`}
+            title={t.vocabulary.noImageTitle(noImageCount)}
             style={{
               position: 'relative', width: 36, height: 36, borderRadius: '50%', flex: '0 0 auto',
               border: `1.5px solid ${noImageFilter ? 'var(--accent)' : 'var(--line)'}`,
@@ -338,7 +335,7 @@ export default function Vocabulary() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={`Поиск: слово (${TARGET_LANG_NAME[localStorage.getItem('target_lang') || 'de'] || 'изучаемый язык'}) или перевод…`}
+              placeholder={t.vocabulary.searchPlaceholder(t.vocabulary.langNames[localStorage.getItem('target_lang') || 'de'] || t.vocabulary.targetLangFallback)}
               style={{ width: '100%', paddingRight: 34, boxSizing: 'border-box' }}
             />
             {search
@@ -347,7 +344,7 @@ export default function Vocabulary() {
             }
           </div>
           {isMobile && (
-            <button onClick={() => setFiltersOpen(v => !v)} title="Фильтры: курс, урок, часть речи"
+            <button onClick={() => setFiltersOpen(v => !v)} title={t.vocabulary.filtersTitle}
               style={{
                 padding: '0 13px', borderRadius: 8, flexShrink: 0,
                 border: `1.5px solid ${filtersOpen || advancedActive ? 'var(--accent)' : 'var(--line)'}`,
@@ -362,7 +359,7 @@ export default function Vocabulary() {
 
         {/* Статус — чипы, всегда под рукой (пустые скрыты) */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-          <span style={FILTER_LABEL}>Статус</span>
+          <span style={FILTER_LABEL}>{t.vocabulary.filterStatus}</span>
           <button style={chipStyle(statusFilter === '')} onClick={() => setStatusFilter('')}>
             {t.vocabulary.all} <span style={{ opacity: 0.6 }}>({words.length})</span>
           </button>
@@ -386,16 +383,16 @@ export default function Vocabulary() {
         {/* Курс + урок — на ПК всегда, на мобиле по шестерёнке */}
         {(!isMobile || filtersOpen) && (courseTitles.length > 0 || lessonTitles.length > 1) && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-            <span style={FILTER_LABEL}>Курс</span>
+            <span style={FILTER_LABEL}>{t.vocabulary.filterCourse}</span>
             {courseTitles.length > 0 && (
               <select value={courseFilter} onChange={e => { setCourseFilter(e.target.value); setLessonFilter('') }} style={SELECT_STYLE}>
-                <option value="">Все курсы</option>
+                <option value="">{t.vocabulary.allCourses}</option>
                 {courseTitles.map(ct => <option key={ct} value={ct}>{ct}</option>)}
               </select>
             )}
             {lessonTitles.length > 1 && (
               <select value={lessonFilter} onChange={e => setLessonFilter(e.target.value)} style={SELECT_STYLE}>
-                <option value="">Все уроки</option>
+                <option value="">{t.vocabulary.allLessons}</option>
                 {lessonTitles.map(lt => <option key={lt} value={lt}>{lt || t.vocabulary.noLesson}</option>)}
               </select>
             )}
@@ -405,13 +402,13 @@ export default function Vocabulary() {
         {/* Сканы (страницы учебника) выбранного урока — «слова именно с этой страницы» */}
         {(!isMobile || filtersOpen) && scanIds.length > 1 && (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-            <span style={FILTER_LABEL}>Скан</span>
+            <span style={FILTER_LABEL}>{t.vocabulary.filterScan}</span>
             <button style={chipStyle(scanFilter === '')} onClick={() => setScanFilter('')}>
               {t.vocabulary.all}
             </button>
             {scanIds.map(id => (
               <button key={id} style={chipStyle(scanFilter === id)} onClick={() => setScanFilter(scanFilter === id ? '' : id)}>
-                📄 Скан {scanNo[id]}
+                {t.vocabulary.scanChip(scanNo[id])}
               </button>
             ))}
           </div>
@@ -420,7 +417,7 @@ export default function Vocabulary() {
         {/* Буквы (алфавит) — фильтр слов по первой букве */}
         {(!isMobile || filtersOpen) && letters.length > 1 && (
           <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-            <span style={FILTER_LABEL}>Буква</span>
+            <span style={FILTER_LABEL}>{t.vocabulary.filterLetter}</span>
             <button style={chipStyle(letterFilter === '')} onClick={() => setLetterFilter('')}>
               {t.vocabulary.all}
             </button>
@@ -435,7 +432,7 @@ export default function Vocabulary() {
         {/* Часть речи — на ПК всегда, на мобиле по шестерёнке */}
         {(!isMobile || filtersOpen) && visiblePos.length > 1 && (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-            <span style={FILTER_LABEL}>Речь</span>
+            <span style={FILTER_LABEL}>{t.vocabulary.filterPos}</span>
             <button style={chipStyle(grammarFilter === '')} onClick={() => setGrammarFilter('')}>
               {t.vocabulary.all}
             </button>
@@ -449,7 +446,7 @@ export default function Vocabulary() {
 
         <p style={{ color: 'var(--ink-soft)', marginBottom: 12, fontSize: 13 }}>
           {t.vocabulary.wordsCount(filtered.length)}
-          {activeFilters > 0 && <span> · <button onClick={resetFilters} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 13, padding: 0 }}>сбросить фильтры</button></span>}
+          {activeFilters > 0 && <span> · <button onClick={resetFilters} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 13, padding: 0 }}>{t.vocabulary.resetFiltersBtn}</button></span>}
         </p>
 
         {Object.entries(grouped).map(([lessonTitle, lessonWords]) => (
@@ -458,7 +455,7 @@ export default function Vocabulary() {
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 📚 {lessonTitle}
               </span>
-              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{lessonWords.length} сл.</span>
+              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.vocabulary.wordsAbbrev(lessonWords.length)}</span>
             </div>
             {lessonWords.map(word => (
               <VocabWord key={word.id} word={word} statusLabels={statusLabels} onStatusChange={updateStatus}
@@ -470,7 +467,7 @@ export default function Vocabulary() {
         {words.length === 0 && (
           <div style={{ textAlign: 'center', marginTop: 60, color: 'var(--ink-soft)' }}>
             <p style={{ fontSize: 40 }}>📚</p>
-            <p>Слова появятся после обработки урока</p>
+            <p>{t.vocabulary.emptyHint}</p>
           </div>
         )}
       </div>}
@@ -513,20 +510,6 @@ const DE_ALPHABET = [
   { letter: 'ß', name: 'Eszett', ipa: '[ɛsˈtsɛt]',ru: 'эс-цэт',   word: 'Straße',    wordRu: 'улица',      umlaut: true },
 ]
 
-const DE_RULES = [
-  ['ch', 'после а, о, у, au — [х] (Bach), иначе — мягкий [хь] (ich)'],
-  ['sch', '[ш] — Schule, Schüler'],
-  ['ei', '[ай] — mein, Stein, drei'],
-  ['ie', '[ии] — lieben, Bier, viel'],
-  ['eu/äu', '[ой] — neu, Häuser'],
-  ['sp/st', '[шп]/[шт] в начале — Sport, Stadt'],
-  ['tion', '[цьон] — Nation, Situation'],
-  ['pf', '[пф] — Pferd, Apfel'],
-  ['v', 'чаще [ф] — Vogel, viel'],
-  ['w', 'всегда [в] — Wasser'],
-  ['z', 'всегда [ц] — Zeit, Zug'],
-  ['ß', '[с] острая — Straße, Fuß'],
-]
 
 // Испанский алфавит — 27 букв (включая Ñ). Название буквы + пример слова с переводом.
 const ES_ALPHABET = [
@@ -559,36 +542,30 @@ const ES_ALPHABET = [
   { letter: 'Z', name: 'zeta',  ru: 'сэта',   word: 'zapato',   wordRu: 'ботинок' },
 ]
 
-const ES_RULES = [
-  ['ll', '[й]/[ль] — llave (ключ), calle (улица)'],
-  ['ñ', '[нь] — niño, España'],
-  ['ce/ci', '[с]/[θ] — cine, cero (перед a/o/u — [к]: casa)'],
-  ['ge/gi', '[х] — gente, gigante (перед a/o/u — [г]: gato)'],
-  ['h', 'немая — hola, hora (не читается)'],
-  ['j', 'всегда [х] — jamón, rojo'],
-  ['qu', '[к] — queso, aquí'],
-  ['rr', 'раскатистое [рр] — perro, carro'],
-  ['z', '[с]/[θ] — zapato, luz'],
-  ['v', 'как [б] — vaca, vino'],
-]
-
 // Алфавиты по изучаемому языку. de — с умлаутами (отдельная секция); es — 27 букв в одной сетке.
-const ALPHABETS = {
-  de: { letters: DE_ALPHABET, rules: DE_RULES, intro: 'Немецкий алфавит — 26 букв + умлауты Ä Ö Ü и лигатура ß.', rulesTitle: '💡 Особенности немецкого произношения', specialTitle: 'Умлауты и ß' },
-  es: { letters: ES_ALPHABET, rules: ES_RULES, intro: 'Испанский алфавит — 27 букв, включая Ñ.', rulesTitle: '💡 Особенности испанского произношения' },
-}
+// Интро/заголовки/правила произношения — в локалях (t.vocabulary.alphabet*).
+const ALPHABETS = { de: DE_ALPHABET, es: ES_ALPHABET }
 
 function AlphabetTab() {
   const [active, setActive] = useState(null)
+  const { t } = useI18nStore()
   const target = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
-  const data = ALPHABETS[target]
+  const letters = ALPHABETS[target]
   const tts = TTS_LOCALE[target] || 'de-DE'
 
-  if (!data) return (
+  if (!letters) return (
     <div style={{ padding: '28px 14px', color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6 }}>
-      Алфавит для этого языка ещё готовим. 🙂 Сейчас есть немецкий и испанский.
+      {t.vocabulary.alphabetNotReady}
     </div>
   )
+
+  const data = {
+    letters,
+    rules: Object.entries(target === 'es' ? t.vocabulary.alphabetRulesEs : t.vocabulary.alphabetRulesDe),
+    intro: target === 'es' ? t.vocabulary.alphabetIntroEs : t.vocabulary.alphabetIntroDe,
+    rulesTitle: target === 'es' ? t.vocabulary.alphabetRulesTitleEs : t.vocabulary.alphabetRulesTitleDe,
+    specialTitle: t.vocabulary.alphabetSpecialTitle,
+  }
 
   const playLetter = (item, e) => { e.stopPropagation(); speak(item.name || item.letter, tts) }
   const playWord = (item, e) => { e.stopPropagation(); speak(item.word, tts) }
@@ -610,11 +587,11 @@ function AlphabetTab() {
   return (
     <div style={{ padding: '0 14px 24px' }}>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 18px', lineHeight: 1.6 }}>
-        {data.intro} Нажми 🔊 — услышишь название буквы, нажми на слово — услышишь пример.
+        {data.intro} {t.vocabulary.alphabetTapHint}
       </p>
 
       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
-        Алфавит
+        {t.vocabulary.tabAlphabet}
       </div>
       {grid(main)}
 
@@ -713,47 +690,11 @@ function LetterCard({ item, active, onSelect, onPlayLetter, onPlayWord }) {
   )
 }
 
-// ── Немецкие цифры 1–100 ──────────────────────────────────────────────────────
-
-const DE_NUMBERS = [
-  [1,'eins','один'],[2,'zwei','два'],[3,'drei','три'],[4,'vier','четыре'],
-  [5,'fünf','пять'],[6,'sechs','шесть'],[7,'sieben','семь'],[8,'acht','восемь'],
-  [9,'neun','девять'],[10,'zehn','десять'],[11,'elf','одиннадцать'],[12,'zwölf','двенадцать'],
-  [13,'dreizehn','тринадцать'],[14,'vierzehn','четырнадцать'],[15,'fünfzehn','пятнадцать'],
-  [16,'sechzehn','шестнадцать'],[17,'siebzehn','семнадцать'],[18,'achtzehn','восемнадцать'],
-  [19,'neunzehn','девятнадцать'],[20,'zwanzig','двадцать'],
-  [21,'einundzwanzig','двадцать один'],[22,'zweiundzwanzig','двадцать два'],
-  [23,'dreiundzwanzig','двадцать три'],[24,'vierundzwanzig','двадцать четыре'],
-  [25,'fünfundzwanzig','двадцать пять'],[26,'sechsundzwanzig','двадцать шесть'],
-  [27,'siebenundzwanzig','двадцать семь'],[28,'achtundzwanzig','двадцать восемь'],
-  [29,'neunundzwanzig','двадцать девять'],[30,'dreißig','тридцать'],
-  [31,'einunddreißig','тридцать один'],[32,'zweiunddreißig','тридцать два'],
-  [33,'dreiunddreißig','тридцать три'],[34,'vierunddreißig','тридцать четыре'],
-  [35,'fünfunddreißig','тридцать пять'],[36,'sechsunddreißig','тридцать шесть'],
-  [37,'siebenunddreißig','тридцать семь'],[38,'achtunddreißig','тридцать восемь'],
-  [39,'neununddreißig','тридцать девять'],[40,'vierzig','сорок'],
-  [41,'einundvierzig','сорок один'],[42,'zweiundvierzig','сорок два'],
-  [43,'dreiundvierzig','сорок три'],[44,'vierundvierzig','сорок четыре'],
-  [45,'fünfundvierzig','сорок пять'],[46,'sechsundvierzig','сорок шесть'],
-  [47,'siebenundvierzig','сорок семь'],[48,'achtundvierzig','сорок восемь'],
-  [49,'neunundvierzig','сорок девять'],[50,'fünfzig','пятьдесят'],
-  [51,'einundfünfzig','пятьдесят один'],[52,'zweiundFünfzig','пятьдесят два'],
-  [55,'fünfundfünfzig','пятьдесят пять'],[60,'sechzig','шестьдесят'],
-  [61,'einundsechzig','шестьдесят один'],[65,'fünfundsechzig','шестьдесят пять'],
-  [70,'siebzig','семьдесят'],[71,'einundsiebzig','семьдесят один'],
-  [75,'fünfundsiebzig','семьдесят пять'],[80,'achtzig','восемьдесят'],
-  [81,'einundachtzig','восемьдесят один'],[85,'fünfundachtzig','восемьдесят пять'],
-  [90,'neunzig','девяносто'],[91,'einundneunzig','девяносто один'],
-  [95,'fünfundneunzig','девяносто пять'],[99,'neunundneunzig','девяносто девять'],
-  [100,'hundert','сто'],
-].map(([n, de, ru]) => ({ n, de, ru }))
-
-// Десятки для группировки
-const TENS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+// ── Цифры 0–100 + крупные (слова строятся программно в utils/numberWords.js) ──
 
 function NumbersTab() {
   const [active, setActive] = useState(null)
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const target = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
   const tts = TTS_LOCALE[target] || 'de-DE'
   const trLang = lang === 'de' ? 'ru' : lang // немецкий интерфейс — перевод по-русски (как везде в приложении)
@@ -778,15 +719,15 @@ function NumbersTab() {
   const largeItems = LARGE_NUMBERS.filter(n => n > 100)
     .map(n => ({ n, word: numberWordAny(n, target), tr: numberWordAny(n, trLang) }))
     .filter(x => x.word)
-  if (largeItems.length) groups.push({ label: 'Крупные числа', items: largeItems })
+  if (largeItems.length) groups.push({ label: t.vocabulary.largeNumbers, items: largeItems })
 
-  const fmt = (n) => n.toLocaleString('ru-RU') // 100000 → «100 000»
+  const fmt = (n) => n.toLocaleString(lang) // 100000 → «100 000» (разделитель по локали интерфейса)
 
   return (
     <div style={{ padding: '0 14px 24px' }}>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 18px', lineHeight: 1.6 }}>
-        Числа от 0 до 100 и крупные — на языке твоего курса. Нажми на карточку — услышишь произношение.
-        {target === 'de' && <><br /><b>Правило:</b> от 21 до 99 сначала единицы, потом «und», потом десятки: <b>ein-und-zwanzig</b> (21).</>}
+        {t.vocabulary.numbersIntro}
+        {target === 'de' && <><br /><b>{t.vocabulary.numbersRuleLabel}</b> {t.vocabulary.numbersRuleDe} <b>ein-und-zwanzig</b> (21).</>}
       </p>
 
       {groups.map(group => (
@@ -824,12 +765,12 @@ function NumbersTab() {
 
       {target === 'de' && (
         <div style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent)', borderRadius: 14, padding: '14px 18px', marginTop: 8 }}>
-          <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 14 }}>📐 Как образуются числа 21–99</div>
+          <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 14 }}>{t.vocabulary.numbersHowTitle}</div>
           <div style={{ fontSize: 13, color: 'var(--ink)', lineHeight: 1.7 }}>
-            <b>Единицы + und + десятки</b>:
-            <br />→ <b>vier</b>-und-<b>zwanzig</b> = 24 (четыре-и-двадцать)
-            <br />→ <b>sieben</b>-und-<b>achtzig</b> = 87 (семь-и-восемьдесят)
-            <br />→ <b>drei</b>-und-<b>dreißig</b> = 33 (три-и-тридцать)
+            <b>{t.vocabulary.numbersHowRule}</b>:
+            <br />→ <b>vier</b>-und-<b>zwanzig</b> = 24 ({t.vocabulary.numbersGloss24})
+            <br />→ <b>sieben</b>-und-<b>achtzig</b> = 87 ({t.vocabulary.numbersGloss87})
+            <br />→ <b>drei</b>-und-<b>dreißig</b> = 33 ({t.vocabulary.numbersGloss33})
           </div>
         </div>
       )}
@@ -899,7 +840,7 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
       const res = await api.post(`/words/${word.id}/refresh-image`, {})
       setImageUrl(res.image_url)
     } catch (err) {
-      alert(err?.message || 'Не удалось найти картинку')
+      alert(err?.message || t.vocabulary.imageFindFailed)
     }
     setRefreshing(false)
   }
@@ -914,7 +855,7 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
       const res = await uploadFiles(`/words/${word.id}/upload-image`, fd)
       setImageUrl(res.image_url)
     } catch (err) {
-      alert(err?.message || 'Не удалось загрузить картинку')
+      alert(err?.message || t.vocabulary.imageUploadFailed)
     }
     setUploading(false)
     e.target.value = ''
@@ -930,7 +871,7 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
       {/* Учитель: галочка «взять слово в набор» */}
       {user?.role === 'owner' && onToggleSelect && (
         <input type="checkbox" checked={!!selected} onChange={onToggleSelect}
-          title="Выбрать слово для набора"
+          title={t.vocabulary.selectWordTitle}
           style={{ width: 20, height: 20, marginTop: 2, flexShrink: 0, cursor: 'pointer', accentColor: 'var(--accent)' }} />
       )}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0, width: 80 }}>
@@ -954,11 +895,11 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
         {isMobile && <StatusSelect style={{ width: '100%', padding: '3px 2px', fontSize: 11, textAlign: 'center' }} />}
         {user?.role === 'owner' && (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={refreshImage} disabled={refreshing} title="Обновить картинку (Unsplash)"
+            <button onClick={refreshImage} disabled={refreshing} title={t.vocabulary.refreshImageTitle}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
               {refreshing ? '⏳' : '🔄'}
             </button>
-            <button onClick={() => fileRef.current?.click()} disabled={uploading} title="Заменить картинку своей (загрузить файл)"
+            <button onClick={() => fileRef.current?.click()} disabled={uploading} title={t.vocabulary.uploadImageTitle}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--ink-soft)', padding: 0, lineHeight: 1 }}>
               {uploading ? '⏳' : '📷'}
             </button>
@@ -971,11 +912,11 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--ink)' }}>{word.word_de}</span>
           {word.source === 'extra' && (
-            <span title="Из тетради / с доски (дополнительное)" style={{ fontSize: 11, padding: '1px 6px', borderRadius: 6, background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>✏️</span>
+            <span title={t.vocabulary.extraSourceTitle} style={{ fontSize: 11, padding: '1px 6px', borderRadius: 6, background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>✏️</span>
           )}
           <SpeakButton text={word.word_de} appendText={translation} />
           <button onClick={() => shareLink({ title: word.word_de, text: `${word.word_de} — ${translation}`, url: cardUrl(word.id) })}
-            title="Поделиться карточкой"
+            title={t.vocabulary.shareCardTitle}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--ink-soft)', padding: '0 2px', lineHeight: 1 }}>
             <i className="bi bi-share-fill" />
           </button>
@@ -1002,7 +943,7 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
             <>
               <span style={{ color: 'var(--ink)', fontSize: 15 }}>{translation}</span>
               {user?.role === 'owner' && (
-                <button onClick={startEdit} title="Редактировать перевод"
+                <button onClick={startEdit} title={t.vocabulary.editTranslationTitle}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--ink-soft)', padding: '0 2px', lineHeight: 1 }}>
                   ✏️
                 </button>

@@ -10,7 +10,7 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 // кнопки на дашборде). Если не передана — рисуется стандартная кнопка «📷 Слова с фото».
 // mode: 'words' — просто разбор слов (Читалка); 'sentences' — абзац + перевод + разбор по словам (дашборд)
 export default function CameraWords({ renderTrigger, mode = 'words' }) {
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const isOwner = user?.role === 'owner'
   const fileRef = useRef(null)
@@ -53,8 +53,8 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
   // 🎯 Авто-разложить отмеченные слова по тематическим наборам (алгоритм сам разнесёт)
   const distribute = async () => {
     const chosen = collectChosen()
-    if (!chosen.length) { setDistMsg('Отметь слова галочками'); return }
-    setDistBusy(true); setDistMsg('Раскладываю по темам…')
+    if (!chosen.length) { setDistMsg(t.camera.selectWords); return }
+    setDistBusy(true); setDistMsg(t.camera.distributing)
     try {
       // В режиме предложений — отправляем и сами предложения (с их словами), чтобы они
       // сохранились в наборы и пошли в упражнения (fill_blank / «составь предложение»).
@@ -66,24 +66,24 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
         sentences: payloadSentences,
       })
       const themes = (res.themes || []).join(', ')
-      setDistMsg(`✓ Разложено: +${res.added} слов${themes ? ' → ' + themes : ''}${res.sentences ? `; предложений: ${res.sentences}` : ''}${res.duplicates ? `; дублей пропущено: ${res.duplicates}` : ''}. Картинки/упражнения дособерутся в фоне.`)
-    } catch (e) { setDistMsg('Ошибка: ' + e.message) }
+      setDistMsg(`${t.camera.distributeDone(res.added)}${themes ? ' → ' + themes : ''}${res.sentences ? `; ${t.camera.sentencesCount(res.sentences)}` : ''}${res.duplicates ? `; ${t.camera.duplicatesSkipped(res.duplicates)}` : ''}. ${t.camera.backgroundNote}`)
+    } catch (e) { setDistMsg(t.common.error + ': ' + e.message) }
     finally { setDistBusy(false) }
   }
 
   const saveToLesson = async () => {
     const chosen = collectChosen()
-    if (!chosen.length) { setLessonMsg('Отметь слова галочками'); return }
-    setLessonMsg('Сохраняю в урок…')
+    if (!chosen.length) { setLessonMsg(t.camera.selectWords); return }
+    setLessonMsg(t.camera.savingToLesson)
     try {
       const res = await api.post('/reader/save-to-lesson', {
         lesson_id: target || undefined,
-        title: target ? undefined : '📷 Слова с фото',
+        title: target ? undefined : t.camera.newSetTitle,
         course_id: (!target && saveCourse) ? saveCourse : undefined, // курс только для НОВОГО урока
         words: chosen.map(w => ({ de: w.de, tr: w.tr })),
       })
-      setLessonMsg(`✓ Отправлено в урок (упражнения создаются в фоне). Урок #${res.lesson_id}`)
-    } catch (e) { setLessonMsg('Ошибка: ' + e.message) }
+      setLessonMsg(t.camera.savedToLesson(res.lesson_id))
+    } catch (e) { setLessonMsg(t.common.error + ': ' + e.message) }
   }
 
   const pick = () => fileRef.current?.click()
@@ -107,7 +107,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
         const r = await uploadFiles(`/reader/camera?lang=${lang}`, fd)
         setWords((r.words || []).map(w => ({ ...w, _save: !w.inDict })))
       }
-    } catch (e) { setErr(e.message || 'Ошибка') }
+    } catch (e) { setErr(e.message || t.common.error) }
     finally { setBusy(false) }
   }
 
@@ -150,15 +150,15 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
           display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 10,
           border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)',
           fontWeight: 700, fontSize: 14, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
-        }}>📷 {busy ? 'Разбираю фото…' : 'Слова с фото'}</button>
+        }}>📷 {busy ? t.camera.busy : t.camera.btn}</button>
       )}
 
       {/* Явный индикатор обработки фото — на весь экран, чтобы было видно, что идёт разбор */}
       {busy && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 4500, background: 'rgba(0,0,0,.55)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, color: '#fff' }}>
           <div style={{ width: 54, height: 54, border: '5px solid rgba(255,255,255,.25)', borderTopColor: '#fff', borderRadius: '50%', animation: 'cwspin 0.8s linear infinite' }} />
-          <div style={{ fontSize: 16, fontWeight: 700 }}>📷 Разбираю фото…</div>
-          <div style={{ fontSize: 13, opacity: 0.8 }}>ИИ распознаёт слова, пара секунд</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>📷 {t.camera.busy}</div>
+          <div style={{ fontSize: 13, opacity: 0.8 }}>{t.camera.busyHint}</div>
           <style>{`@keyframes cwspin { to { transform: rotate(360deg) } }`}</style>
         </div>
       )}
@@ -173,7 +173,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom,0px))',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-              <h3 style={{ margin: 0, flex: 1 }}>📷 {sentences ? 'Разбор фото' : `Слова с фото (${words.length})`}</h3>
+              <h3 style={{ margin: 0, flex: 1 }}>📷 {sentences ? t.camera.titleParse : t.camera.titleWords(words.length)}</h3>
               <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
             </div>
 
@@ -188,7 +188,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                         <SpeakButton text={s.original} size={16} />
                         {/* Сохранить всё предложение в разговорник */}
                         <button onClick={() => saveSentenceToPhrasebook(s, si)} disabled={savedSentIdx.has(si)}
-                          title="Сохранить предложение в разговорник"
+                          title={t.camera.savePhraseTitle}
                           style={{ background: 'none', border: 'none', cursor: savedSentIdx.has(si) ? 'default' : 'pointer', fontSize: 15, flexShrink: 0, color: savedSentIdx.has(si) ? 'var(--good, #16a34a)' : 'var(--accent)', padding: 0 }}>
                           {savedSentIdx.has(si) ? '✓' : '➕💬'}
                         </button>
@@ -208,15 +208,15 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                   if (!flat.length) return null
                   return (
                     <div style={{ marginBottom: 4 }}>
-                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', fontWeight: 600, marginBottom: 4 }}>📚 Слова из текста ({flat.length})</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-soft)', fontWeight: 600, marginBottom: 4 }}>{t.camera.wordsFromText(flat.length)}</div>
                       {flat.map(({ w, si, wi }) => (
                         <div key={`${si}-${wi}`} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 2px', borderTop: '1px solid var(--line)' }}>
                           <input type="checkbox" checked={!!w._save} disabled={w.inDict} onChange={() => toggleSentWord(si, wi)} style={{ width: 17, height: 17, flexShrink: 0 }} />
                           <b dir="ltr" style={{ fontSize: 14 }}>{w.de}</b>
                           <SpeakButton text={w.de} size={14} />
                           {w.inDict
-                            ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>✓ в словаре</span>
-                            : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>🆕 новое</span>}
+                            ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>{t.camera.inDictBadge}</span>
+                            : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>{t.camera.newBadge}</span>}
                           <span style={{ fontSize: 13, color: 'var(--ink-soft)', marginLeft: 'auto', textAlign: 'right' }}>{w.tr}</span>
                         </div>
                       ))}
@@ -225,11 +225,11 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                 })()}
               </>
             )}
-            {sentences && sentences.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>Предложений не распознано. Попробуй чётче фото.</p>}
+            {sentences && sentences.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>{t.camera.noSentences}</p>}
 
             {/* Режим слов: плоский список */}
-            {!sentences && words && words.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>Немецких слов не распознано. Попробуй чётче фото.</p>}
-            {savedCount > 0 && <div style={{ color: 'var(--good, #16a34a)', marginBottom: 8 }}>✓ Сохранено в разговорник: {savedCount}</div>}
+            {!sentences && words && words.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>{t.camera.noWords}</p>}
+            {savedCount > 0 && <div style={{ color: 'var(--good, #16a34a)', marginBottom: 8 }}>{t.camera.savedToPhrasebook(savedCount)}</div>}
             {!sentences && words && words.map((w, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderBottom: '1px solid var(--line)' }}>
                 <input type="checkbox" checked={!!w._save} disabled={w.inDict} onChange={() => toggle(i)} style={{ width: 18, height: 18, flexShrink: 0 }} />
@@ -237,8 +237,8 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                   <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }} dir="ltr">
                     {w.de} <SpeakButton text={w.de} size={16} />
                     {w.inDict
-                      ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px' }}>✓ в словаре</span>
-                      : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px' }}>🆕 новое</span>}
+                      ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px' }}>{t.camera.inDictBadge}</span>
+                      : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px' }}>{t.camera.newBadge}</span>}
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{w.tr}</div>
                 </div>
@@ -248,7 +248,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
               <button onClick={saveSelected} style={{
                 marginTop: 14, width: '100%', padding: '12px', borderRadius: 10, border: 'none',
                 background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer',
-              }}>＋ Сохранить отмеченные в разговорник</button>
+              }}>{t.camera.saveSelectedBtn}</button>
             )}
 
             {/* Учитель: 🎯 авто-разложить по темам (алгоритм сам разнесёт по наборам, без свалки) */}
@@ -258,17 +258,17 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                   width: '100%', padding: '12px', borderRadius: 10, border: 'none', marginBottom: 6,
                   background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15,
                   cursor: distBusy ? 'default' : 'pointer', opacity: distBusy ? 0.6 : 1,
-                }}>🎯 {distBusy ? 'Раскладываю…' : 'Разложить по темам (авто)'}</button>
+                }}>🎯 {distBusy ? t.camera.distributeShort : t.camera.distributeBtn}</button>
                 {distMsg && <div style={{ fontSize: 12.5, color: distMsg.startsWith('✓') ? 'var(--good, #16a34a)' : 'var(--ink-soft)', marginBottom: 10 }}>{distMsg}</div>}
-                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>Или вручную в конкретный урок (группу):</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>{t.camera.manualHint}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <select value={target} onChange={e => setTarget(e.target.value)}
                     style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }}>
-                    <option value="">➕ Новый набор «📷 Слова с фото»</option>
+                    <option value="">{t.camera.newSetOption}</option>
                     {lessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
                   </select>
                   <button onClick={saveToLesson} style={{ padding: '10px 16px', borderRadius: 9, border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0 }}>
-                    В урок
+                    {t.camera.toLessonBtn}
                   </button>
                 </div>
                 {/* Новый урок → привязка к курсу, чтобы не остался «одиночкой» вне курса */}
@@ -276,10 +276,10 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
                   <div style={{ marginTop: 8 }}>
                     <select value={saveCourse} onChange={e => setSaveCourse(e.target.value)}
                       style={{ width: '100%', padding: '9px 10px', borderRadius: 9, fontSize: 13.5, background: 'var(--surface)', color: 'var(--ink)', border: `1px solid ${saveCourse ? 'var(--line)' : 'var(--accent)'}` }}>
-                      <option value="">📚 Без курса (отдельный урок)</option>
-                      {courses.map(c => <option key={c.id} value={c.id}>Привязать к курсу: {c.title}</option>)}
+                      <option value="">{t.camera.noCourseOption}</option>
+                      {courses.map(c => <option key={c.id} value={c.id}>{t.camera.bindCourseOption(c.title)}</option>)}
                     </select>
-                    {!saveCourse && <div style={{ fontSize: 11.5, color: 'var(--accent)', marginTop: 4 }}>💡 Лучше привязать к курсу — иначе урок повиснет отдельно в «Сегодня».</div>}
+                    {!saveCourse && <div style={{ fontSize: 11.5, color: 'var(--accent)', marginTop: 4 }}>{t.camera.courseTip}</div>}
                   </div>
                 )}
                 {lessonMsg && <div style={{ fontSize: 12, color: lessonMsg.startsWith('✓') ? 'var(--good, #16a34a)' : 'var(--ink-soft)', marginTop: 6 }}>{lessonMsg}</div>}

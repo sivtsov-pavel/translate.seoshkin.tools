@@ -6,7 +6,7 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 // Оборачивает немецкий текст: каждое слово кликабельно → перевод на локаль ученика
 // (из словаря, а нет — GPT-перевод) + возможность сохранить новое слово в разговорник.
 export default function TapText({ children, style }) {
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const [popup, setPopup] = useState(null) // { word, translation, inDict, loading, saved }
 
   const tap = async (token) => {
@@ -50,20 +50,20 @@ export default function TapText({ children, style }) {
               <button onClick={() => setPopup(null)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
             </div>
             {popup.loading ? (
-              <div style={{ color: 'var(--ink-soft)' }}>Перевожу…</div>
+              <div style={{ color: 'var(--ink-soft)' }}>{t.vocabulary.tapTranslating}</div>
             ) : (
               <>
                 <div style={{ fontSize: 17, color: 'var(--ink)' }}>{popup.translation || '—'}</div>
                 {popup.inDict ? (
-                  <div style={{ fontSize: 12, color: 'var(--good, #16a34a)', marginTop: 8 }}>✓ В твоём словаре</div>
+                  <div style={{ fontSize: 12, color: 'var(--good, #16a34a)', marginTop: 8 }}>{t.vocabulary.tapInDict}</div>
                 ) : (
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>Нового слова нет в словаре</span>
+                    <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.vocabulary.tapNotInDict}</span>
                     <button onClick={save} disabled={popup.saved} style={{
                       marginLeft: 'auto', padding: '7px 14px', borderRadius: 9, border: 'none', fontWeight: 700, fontSize: 13,
                       background: popup.saved ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent)',
                       color: popup.saved ? 'var(--good, #16a34a)' : 'var(--accent-ink)', cursor: popup.saved ? 'default' : 'pointer',
-                    }}>{popup.saved ? '✓ Сохранено' : '＋ В разговорник'}</button>
+                    }}>{popup.saved ? t.vocabulary.tapSaved : t.vocabulary.tapToPhrasebook}</button>
                   </div>
                 )}
               </>
