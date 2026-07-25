@@ -429,15 +429,13 @@ export default function Layout({ children }) {
         </div>
         {/* Центр: заголовок с флагом + немецкая полоска (как в макете) */}
         <Link to="/" title={`Изучаемый язык: ${tgtName}`}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
+          <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1 }}>{t.nav.iLearn}</span>
           <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, whiteSpace: 'nowrap' }}>{tgt.flag} {tgtName}</span>
           <span style={{ display: 'block', height: 3, width: 40, borderRadius: 2, background: `linear-gradient(90deg, ${(tgt.stripe || TARGET_META.de.stripe).join(',')})` }} />
         </Link>
-        {/* Справа: тур + профиль */}
+        {/* Справа: тур + профиль (кнопку смены курса убрали — она есть на «Сегодня» у приветствия) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {gateLangs && gateLangs.length >= 2 && (
-            <button onClick={() => setGateOpen(true)} style={iconBtn} aria-label={t.nav.changeCourse || 'Сменить курс'} title={t.nav.changeCourse || 'Сменить курс'}><Languages size={19} color="var(--gold-dark)" /></button>
-          )}
           <button onClick={startTour} style={iconBtn} aria-label="Тур" title="Тур по приложению"><Compass size={19} color="var(--blue)" /></button>
           {user && (
             <button onClick={() => setProfileOpen(v => !v)} aria-label="Профиль"

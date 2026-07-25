@@ -122,10 +122,9 @@ export default function Dashboard() {
   const allLessons = stats?.lessons ?? []
   const needsSchedule = stats?.needs_schedule ?? []
 
-  // Фильтр по активному курсу (пусто = все). Наборы/личные (без course_id) — всегда.
-  const filtered = activeCourse
-    ? allLessons.filter(l => String(l.course_id || '') === activeCourse || l.is_set)
-    : allLessons
+  // Выпадашку выбора курса убрали — показываем все уроки активного языка (курс меняется
+  // через «Сменить курс» у приветствия, который переключает язык целиком).
+  const filtered = allLessons
   const q = lessonQuery.trim().toLowerCase()
   const match = l => !q || (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || l.lesson_title || '').toLowerCase().includes(q)
   const shown = filtered.filter(match)
@@ -180,15 +179,7 @@ export default function Dashboard() {
 
   return (
     <div className="dl-root">
-      {/* Заголовок курса (флаг+название+полоска) теперь в топбаре — тут только выбор курса */}
-      {courses.length >= 2 && (
-        <div className="dl-course-bar" style={{ justifyContent: 'flex-end' }}>
-          <select className="dl-switch-course" value={activeCourse} onChange={e => changeCourse(e.target.value)}>
-            <option value="">{t.dashboard.allCourses}</option>
-            {courses.map(c => <option key={c.id} value={String(c.id)}>{c.title}</option>)}
-          </select>
-        </div>
-      )}
+      {/* Выпадашку выбора курса убрали (дублировала «Сменить курс» у приветствия и путала) */}
 
       {needsScheduleBanner}
 
