@@ -22,7 +22,7 @@ export default function Students() {
   const assignClass = async (studentId, classId) => {
     if (!classId) return
     try { await api.post(`/classes/${classId}/members`, { user_id: studentId }); reload() }
-    catch (e) { alert('Ошибка: ' + e.message) }
+    catch (e) { alert(t.common.error + ': ' + e.message) }
   }
   useEffect(() => { reload() }, [])
 
@@ -43,7 +43,7 @@ export default function Students() {
         }}>📊 Аналитика класса</button>
       </div>
       {students.length > 0 && (
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍 Поиск по имени, email, профессии…"
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder={t.students.searchPlaceholder}
           style={{ width: '100%', boxSizing: 'border-box', marginBottom: 16, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }} />
       )}
       {students.length === 0 ? (
@@ -51,7 +51,7 @@ export default function Students() {
           {s.empty}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'var(--ink-soft)', padding: 24 }}>Никого не найдено</div>
+        <div style={{ textAlign: 'center', color: 'var(--ink-soft)', padding: 24 }}>{t.students.nobodyFound}</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filtered.map(st => (
@@ -108,9 +108,9 @@ function StudentCard({ student: st, s, onEdit, classes = [], onAssign }) {
           {/* Класс ученика — назначить/переназначить */}
           {classes.length > 0 && (
             <select value={st.class_id || ''} onChange={e => onAssign?.(st.id, parseInt(e.target.value))}
-              title="Класс ученика"
+              title={t.students.classTitle}
               style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', fontSize: 12.5, maxWidth: 150 }}>
-              <option value="">🏫 Без класса</option>
+              <option value="">{t.students.noClass}</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
@@ -147,6 +147,7 @@ function StudentCard({ student: st, s, onEdit, classes = [], onAssign }) {
 }
 
 function EditModal({ student, onClose, onSaved }) {
+  const { t } = useI18nStore()
   const [form, setForm] = useState({
     full_name:  student.full_name  || '',
     avatar:     student.avatar     || '',
@@ -169,7 +170,7 @@ function EditModal({ student, onClose, onSaved }) {
       await api.patch(`/students/${student.id}`, body)
       onSaved()
     } catch {
-      setMsg('Ошибка при сохранении')
+      setMsg(t.students.saveError)
       setSaving(false)
     }
   }
@@ -220,20 +221,20 @@ function EditModal({ student, onClose, onSaved }) {
 
         {/* Поля */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-          <MField label="Имя"       value={form.full_name}  onChange={v => setForm(f => ({ ...f, full_name: v }))}  placeholder="Полное имя" />
-          <MField label="Профессия" value={form.profession} onChange={v => setForm(f => ({ ...f, profession: v }))} placeholder="Профессия" />
-          <MField label="Телефон"   value={form.phone}      onChange={v => setForm(f => ({ ...f, phone: v }))}      placeholder="+49 151 ..." />
+          <MField label={t.settings.nameLabel} value={form.full_name} onChange={v => setForm(f => ({ ...f, full_name: v }))} placeholder={t.students.fullNamePlaceholder} />
+          <MField label={t.settings.professionLabel} value={form.profession} onChange={v => setForm(f => ({ ...f, profession: v }))} placeholder={t.settings.professionLabel} />
+          <MField label={t.settings.phoneLabel} value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} placeholder="+49 151 ..." />
           <MField label="Telegram"  value={form.telegram}   onChange={v => setForm(f => ({ ...f, telegram: v }))}   placeholder="@username" />
           <MField label="WhatsApp"  value={form.whatsapp}   onChange={v => setForm(f => ({ ...f, whatsapp: v }))}   placeholder="+49 151 ..." />
         </div>
 
         {/* Новый пароль */}
         <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 8 }}>СМЕНИТЬ ПАРОЛЬ (оставь пустым чтобы не менять)</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 8 }}>{t.students.changePwdLabel}</div>
           <div style={{ position: 'relative' }}>
             <input type={showPwd ? 'text' : 'password'} value={newPwd} onChange={e => setNewPwd(e.target.value)}
-              placeholder="Новый пароль (мин. 6 символов)" style={{ width: '100%', boxSizing: 'border-box', paddingRight: 44 }} />
-            <button type="button" onClick={() => setShowPwd(v => !v)} title={showPwd ? 'Скрыть' : 'Показать'}
+              placeholder={t.students.newPwdPlaceholder} style={{ width: '100%', boxSizing: 'border-box', paddingRight: 44 }} />
+            <button type="button" onClick={() => setShowPwd(v => !v)} title={showPwd ? t.students.hide : t.students.show}
               style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)', padding: 4 }}>
               <i className={`bi ${showPwd ? 'bi-eye-slash' : 'bi-eye'}`} />
             </button>
@@ -245,7 +246,7 @@ function EditModal({ student, onClose, onSaved }) {
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={save} disabled={saving}
             style={{ flex: 1, padding: '12px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
-            {saving ? 'Сохранение...' : 'Сохранить'}
+            {saving ? t.settings.savingBtn : t.common.save}
           </button>
           <button onClick={onClose}
             style={{ padding: '12px 20px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 15 }}>

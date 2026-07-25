@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
+import { useI18nStore } from '../store/i18n.js'
 import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { useAdminOpStore } from '../store/adminOp.js'
 
@@ -43,6 +44,7 @@ function Row({ label, done, total, color }) {
 
 // Отчёты строятся сервером из попыток всех учеников — офлайн невозможны
 export default function Report() {
+  const t = useI18nStore(s => s.t)
   const online = useOnline()
   if (!online) return <OfflineNotice />
   return <ReportInner />
@@ -70,8 +72,8 @@ function ReportInner() {
     return () => clearInterval(t)
   }, [adminOp.status])
 
-  if (loading) return <div style={{ padding: 20, color: 'var(--ink-soft)' }}>Загрузка отчёта...</div>
-  if (!data) return <div style={{ padding: 20, color: 'var(--red)' }}>Нет данных (только для учителя)</div>
+  if (loading) return <div style={{ padding: 20, color: 'var(--ink-soft)' }}>{t.reports.loadingReport}</div>
+  if (!data) return <div style={{ padding: 20, color: 'var(--red)' }}>{t.reports.teacherOnlyData}</div>
 
   const { op } = data
 
@@ -108,8 +110,8 @@ function ReportInner() {
       )}
 
       {/* Уроки */}
-      <Section title="Уроки" icon="📚">
-        <Row label="Обработанные уроки (статус done)" done={data.lessons_done} total={data.lessons_total} />
+      <Section title={t.reports.secLessons} icon="📚">
+        <Row label={t.reports.rowLessonsDone} done={data.lessons_done} total={data.lessons_total} />
         {data.lessons_processing > 0 && (
           <div style={{ fontSize: 13, color: '#d97706' }}>
             ⏳ Обрабатываются прямо сейчас: {data.lessons_processing}
@@ -118,11 +120,11 @@ function ReportInner() {
       </Section>
 
       {/* Словарь */}
-      <Section title="Словарь" icon="📖">
-        <Row label="Слова с переводом на русский" done={data.words_with_ru} total={data.words_total} />
-        <Row label="Слова с картинкой (Unsplash)" done={data.words_with_images} total={data.words_total} color="#d97706" />
-        <Row label="Слова с примером предложения" done={data.words_with_example} total={data.words_total} color="#7c3aed" />
-        <Row label="Переводы на 7 языков (en/uk/fr/ar/bg/tr/es)" done={data.words_translated} total={data.words_total} color="#0891b2" />
+      <Section title={t.reports.secVocab} icon="📖">
+        <Row label={t.reports.rowWordsRu} done={data.words_with_ru} total={data.words_total} />
+        <Row label={t.reports.rowWordsImg} done={data.words_with_images} total={data.words_total} color="#d97706" />
+        <Row label={t.reports.rowWordsExample} done={data.words_with_example} total={data.words_total} color="#7c3aed" />
+        <Row label={t.reports.rowWordsTranslated} done={data.words_translated} total={data.words_total} color="#0891b2" />
         {data.words_translated < data.words_total && (
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: -6 }}>
             Нужно: Перевод на все языки → осталось {data.words_total - data.words_translated} слов
@@ -131,25 +133,25 @@ function ReportInner() {
       </Section>
 
       {/* Упражнения */}
-      <Section title="Упражнения" icon="✏️">
+      <Section title={t.reports.secExercises} icon="✏️">
         <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 10 }}>
           Флеш-карты: {data.fc_total} · Диктант: {data.dict_total}
         </div>
-        <Row label="Выбор ответа (multiple_choice)" done={data.mc_translated} total={data.mc_total} />
+        <Row label={t.reports.rowMc} done={data.mc_translated} total={data.mc_total} />
         {data.mc_translated < data.mc_total && (
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: -6 }}>
             Нужно: Перевод упражнений → осталось {data.mc_total - data.mc_translated}
           </div>
         )}
         <div style={{ marginTop: 8 }} />
-        <Row label="Заполни пропуск (fill_blank)" done={data.fb_translated} total={data.fb_total} />
+        <Row label={t.reports.rowFb} done={data.fb_translated} total={data.fb_total} />
         {data.fb_translated < data.fb_total && (
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: -6 }}>
             Нужно: Перевод упражнений → осталось {data.fb_total - data.fb_translated}
           </div>
         )}
         <div style={{ marginTop: 8 }} />
-        <Row label="Напиши предложение (sentence_write)" done={data.sw_translated} total={data.sw_total} />
+        <Row label={t.reports.rowSw} done={data.sw_translated} total={data.sw_total} />
         {data.sw_translated < data.sw_total && (
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: -6 }}>
             Нужно: Перевод упражнений → осталось {data.sw_total - data.sw_translated}

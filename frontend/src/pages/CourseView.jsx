@@ -50,19 +50,19 @@ export default function CourseView() {
   const handlePdfPick = () => pdfInputRef.current?.click()
   const handlePdfUpload = async (file) => {
     if (!file) return
-    const ans = window.prompt('Сколько страниц PDF на один урок? (1 = каждая страница отдельный урок; 4 = по 4 страницы)', '1')
+    const ans = window.prompt(c.pdfPagesPrompt, '1')
     if (ans === null) return
     const perLesson = Math.min(Math.max(parseInt(ans) || 1, 1), 10)
-    if (!window.confirm(`Загрузить курс из PDF по ${perLesson} стр. на урок? Каждый урок обработается ИИ (тратит токены OpenAI). Продолжить?`)) return
+    if (!window.confirm(c.pdfConfirm(perLesson))) return
     setUploadingPdf(true)
     try {
       const form = new FormData()
       form.append('file', file)
       const res = await uploadFiles(`/courses/${id}/upload-pdf?pages_per_lesson=${perLesson}`, form)
-      alert(`Создано уроков: ${res.lessons}. Обрабатываются в фоне — следи за индикатором ⏳ в правом верхнем углу.`)
+      alert(c.pdfCreated(res.lessons))
       setTimeout(load, 3000)
     } catch (e) {
-      alert('Ошибка: ' + e.message)
+      alert(t.common.error + ': ' + e.message)
     } finally {
       setUploadingPdf(false)
     }
@@ -73,19 +73,19 @@ export default function CourseView() {
     try {
       await api.put(`/courses/${id}/schedule`, { weekdays, start_date: startDate })
       await load()
-    } catch (e) { alert('Ошибка: ' + e.message) }
+    } catch (e) { alert(t.common.error + ': ' + e.message) }
   }
 
   // Ученик: «Сбросить достижения — начать заново» (удаляет весь прогресс по курсу → снова с 1-го урока)
   const [resetting, setResetting] = useState(false)
   const resetProgress = async () => {
-    if (!window.confirm('Сбросить все достижения по этому курсу и начать заново с первого урока? Прогресс будет удалён.')) return
+    if (!window.confirm(c.resetConfirm)) return
     setResetting(true)
     try {
       await api.post('/exercises/reset-all', { course_id: parseInt(id) })
       await load()
-      alert('Готово! Прогресс сброшен — начинай с первого урока.')
-    } catch (e) { alert('Ошибка: ' + e.message) }
+      alert(c.resetDone)
+    } catch (e) { alert(t.common.error + ': ' + e.message) }
     finally { setResetting(false) }
   }
 
@@ -98,7 +98,7 @@ export default function CourseView() {
       const updated = await uploadFiles(`/courses/${id}/cover`, form)
       setData(d => ({ ...d, course: { ...d.course, cover_image_url: updated.cover_image_url } }))
     } catch (e) {
-      alert('Ошибка загрузки: ' + e.message)
+      alert(t.lessons.uploadError + e.message)
     } finally {
       setUploadingCover(false)
     }
@@ -138,10 +138,10 @@ export default function CourseView() {
       {user?.role === 'owner' && (
         <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
           <button type="button" onClick={handleCoverPick} disabled={uploadingCover} style={btnSecondary}>
-            {course.cover_image_url ? '🖼 Сменить обложку' : '🖼 Загрузить обложку'}
+            {course.cover_image_url ? c.coverChange : c.coverUpload}
           </button>
           {course.cover_image_url && (
-            <button type="button" onClick={handleCoverRemove} style={btnSecondary}>Убрать обложку</button>
+            <button type="button" onClick={handleCoverRemove} style={btnSecondary}>{c.coverRemove}</button>
           )}
           <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }}
             onChange={e => handleCoverUpload(e.target.files[0])} />
@@ -181,40 +181,40 @@ export default function CourseView() {
           <input ref={pdfInputRef} type="file" accept="application/pdf" style={{ display: 'none' }}
             onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; handlePdfUpload(f) }} />
           <button onClick={handlePdfPick} disabled={uploadingPdf}
-            title="Загрузить весь курс одним PDF — каждая страница станет отдельным уроком"
+            title={c.pdfTitle}
             style={{ ...btnSecondary, cursor: uploadingPdf ? 'default' : 'pointer', opacity: uploadingPdf ? 0.6 : 1 }}>
-            {uploadingPdf ? '⏳ Загружаю…' : '📦 Загрузить курс (PDF)'}
+            {uploadingPdf ? c.pdfUploading : c.pdfBtn}
           </button>
           {/* Удалить все уроки курса (для чистой перезаливки PDF) */}
           {lessons.length > 0 && (
             <button onClick={async () => {
-              if (!window.confirm(`Удалить ВСЕ уроки курса (${lessons.length})? Слова и упражнения тоже удалятся. Сам курс останется.`)) return
-              if (window.prompt('Для подтверждения введи: УДАЛИТЬ') !== 'УДАЛИТЬ') { alert('Отменено'); return }
-              try { const r = await api.delete(`/courses/${id}/lessons`); alert(`Удалено уроков: ${r.deleted}`); load() }
-              catch (e) { alert('Ошибка: ' + e.message) }
+              if (!window.confirm(c.deleteAllConfirm(lessons.length))) return
+              if (window.prompt(c.deleteAllPrompt) !== c.deleteAllWord) { alert(c.cancelled); return }
+              try { const r = await api.delete(`/courses/${id}/lessons`); alert(c.deletedLessons(r.deleted)); load() }
+              catch (e) { alert(t.common.error + ': ' + e.message) }
             }} style={{ ...btnSecondary, borderColor: 'var(--red, #d64545)', color: 'var(--red, #d64545)' }}>
-              🗑 Удалить все уроки
+              {c.deleteAllBtn}
             </button>
           )}
           {/* Повтор ошибочных уроков (напр. после пополнения OpenAI) */}
           {lessons.some(l => l.status === 'error') && (
             <button onClick={async () => {
               const n = lessons.filter(l => l.status === 'error').length
-              if (!window.confirm(`Повторить обработку ${n} уроков с ошибкой? (нужна доступная квота OpenAI)`)) return
-              try { const r = await api.post(`/courses/${id}/retry-failed`); alert(`Отправлено на повтор: ${r.retry}. Идёт в фоне.`); setTimeout(load, 3000) }
-              catch (e) { alert('Ошибка: ' + e.message) }
+              if (!window.confirm(c.retryConfirm(n))) return
+              try { const r = await api.post(`/courses/${id}/retry-failed`); alert(c.retrySent(r.retry)); setTimeout(load, 3000) }
+              catch (e) { alert(t.common.error + ': ' + e.message) }
             }} style={{ ...btnSecondary, borderColor: 'var(--red, #d64545)', color: 'var(--red, #d64545)' }}>
-              🔁 Повторить ошибочные ({lessons.filter(l => l.status === 'error').length})
+              {c.retryBtn(lessons.filter(l => l.status === 'error').length)}
             </button>
           )}
           {allLessons.length > 0 && (
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <select value={attachId} onChange={e => setAttachId(e.target.value)} style={{ fontSize: 14, maxWidth: 280 }}>
-                <option value="">Прикрепить существующий урок...</option>
+                <option value="">{c.attachPlaceholder}</option>
                 {allLessons.map(l => (
                   <option key={l.id} value={l.id}>
-                    {l.title || `Урок от ${new Date(l.date).toLocaleDateString()}`}
-                    {l.course_id ? ' (из другого курса)' : ''}
+                    {l.title || c.lessonFrom(new Date(l.date).toLocaleDateString())}
+                    {l.course_id ? c.fromOtherCourse : ''}
                   </option>
                 ))}
               </select>
@@ -225,7 +225,7 @@ export default function CourseView() {
                   await Promise.all([load(), loadAllLessons()])
                 }}
                 style={{ ...btnPrimary, opacity: attachId ? 1 : 0.4, cursor: attachId ? 'pointer' : 'default' }}>
-                Прикрепить
+                {c.attachBtn}
               </button>
             </div>
           )}
@@ -240,9 +240,9 @@ export default function CourseView() {
           {/* «Начать заново» — сброс достижений по курсу (для перепрохождения) */}
           <div style={{ margin: '-8px 0 20px' }}>
             <button onClick={resetProgress} disabled={resetting}
-              title="Удалить прогресс по курсу и начать с первого урока"
+              title={c.resetTitle}
               style={{ fontSize: 12.5, padding: '7px 14px', background: 'var(--surface)', color: 'var(--red)', border: '1px solid rgba(179,56,44,0.4)', borderRadius: 9, cursor: resetting ? 'default' : 'pointer', fontWeight: 600, opacity: resetting ? 0.6 : 1 }}>
-              {resetting ? '…' : '🔄 Сбросить достижения — начать заново'}
+              {resetting ? '…' : c.resetBtn}
             </button>
           </div>
         </>
@@ -264,14 +264,15 @@ export default function CourseView() {
 }
 
 // Ученик выбирает удобные дни недели + дату старта → уроки открываются по одному в каждый учебный день
-const WEEKDAY_LABELS = [['1','Пн'],['2','Вт'],['3','Ср'],['4','Чт'],['5','Пт'],['6','Сб'],['7','Вс']]
 function SchedulePicker({ schedule, onSave, required }) {
+  const { t } = useI18nStore()
+  const WEEKDAY_LABELS = t.courses.weekdaysShort.map((lbl, i) => [String(i + 1), lbl])
   const [days, setDays] = useState(() => new Set((schedule?.weekdays || [1,3,5]).map(String)))
   const [start, setStart] = useState(() => (schedule?.start_date ? String(schedule.start_date).slice(0,10) : new Date().toISOString().slice(0,10)))
   const [saving, setSaving] = useState(false)
   const toggle = (d) => setDays(s => { const n = new Set(s); n.has(d) ? n.delete(d) : n.add(d); return n })
   const submit = async () => {
-    if (!days.size) { alert('Выбери хотя бы один день'); return }
+    if (!days.size) { alert(t.courses.pickOneDay); return }
     setSaving(true)
     await onSave([...days].map(Number).sort(), start)
     setSaving(false)
@@ -279,12 +280,10 @@ function SchedulePicker({ schedule, onSave, required }) {
   return (
     <div style={{ marginBottom: 20, padding: 16, background: required ? 'var(--accent-soft)' : 'var(--surface-2)', border: `${required ? 2 : 1}px solid ${required ? 'var(--accent)' : 'var(--line)'}`, borderRadius: 12 }}>
       <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
-        {required ? '📅 Выбери календарь обучения' : '🗓️ Моё расписание'}
+        {required ? `📅 ${t.dashboard.needsScheduleTitle}` : t.courses.mySchedule}
       </div>
       <div style={{ fontSize: 12.5, color: required ? 'var(--accent)' : 'var(--ink-soft)', marginBottom: 12, fontWeight: required ? 600 : 400 }}>
-        {required
-          ? 'Чтобы открыть уроки — выбери удобные дни недели. Уроки будут открываться по одному в каждый учебный день (и только после того, как пройдёшь предыдущий).'
-          : 'Выбери удобные дни — в каждый такой день будет открываться новый урок, придёт напоминание.'}
+        {required ? t.courses.scheduleRequired : t.courses.scheduleOptional}
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
         {WEEKDAY_LABELS.map(([d, lbl]) => (
@@ -298,13 +297,13 @@ function SchedulePicker({ schedule, onSave, required }) {
         ))}
       </div>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        <label style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Старт:
+        <label style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{t.courses.startLabel}
           <input type="date" value={start} onChange={e => setStart(e.target.value)}
             style={{ marginLeft: 6, padding: '5px 8px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }} />
         </label>
         <button onClick={submit} disabled={saving}
           style={{ padding: '8px 18px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 9, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
-          {saving ? '…' : (schedule ? 'Обновить' : 'Сохранить')}
+          {saving ? '…' : (schedule ? t.courses.updateBtn : t.common.save)}
         </button>
       </div>
     </div>
@@ -330,7 +329,7 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
   }
 
   const handleRegen = async () => {
-    if (!window.confirm(`Пересоздать упражнения для «${lesson.title}»? Старые упражнения будут удалены.`)) return
+    if (!window.confirm(t.lessons.regenConfirm(lesson.title))) return
     setRegen(true)
     try {
       await api.post(`/lessons/${lesson.id}/regenerate`, {})
@@ -356,7 +355,7 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
         {lesson.date && <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{new Date(lesson.date).toLocaleDateString()}</div>}
         {lesson.words_total > 0 && (
           <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
-            {lesson.words_total} слов · {lesson.exercises_total ?? '?'} упр.
+            {t.vocabulary.wordsCount(lesson.words_total)} · {lesson.exercises_total ?? '?'} {t.courses.exAbbrev}
           </div>
         )}
       </div>
@@ -372,28 +371,28 @@ function LessonRow({ lesson, c, courseId, isOwner, onUpdate }) {
           <button
             onClick={handleRegen}
             disabled={regen || lesson.status === 'processing'}
-            title="Пересоздать упражнения из существующих слов (без сканирования фото)"
+            title={t.courses.regenRowTitle}
             style={{ fontSize: 12, padding: '4px 10px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>
-            {regen ? '⏳' : '⚙️ Упражнения'}
+            {regen ? '⏳' : t.courses.regenRowBtn}
           </button>
         )}
         {/* Ученик/учитель: открыть готовый урок; для ученика с дрип-расписанием — замок до даты открытия */}
         {status === 'done' && lesson.words_total > 0 && (
           lesson.locked ? (
             <span style={{ fontSize: 12.5, padding: '6px 12px', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--ink-soft)', whiteSpace: 'nowrap', fontWeight: 600 }}
-              title={lesson.lock_reason === 'no_schedule' ? 'Сначала выбери календарь обучения выше'
-                : lesson.lock_reason === 'prev' ? 'Сначала пройди предыдущий урок' : 'Урок откроется по расписанию'}>
+              title={lesson.lock_reason === 'no_schedule' ? t.courses.lockNoSchedTitle
+                : lesson.lock_reason === 'prev' ? t.courses.lockPrevTitle : t.courses.lockDateTitle}>
               {lesson.lock_reason === 'no_schedule'
-                ? '🔒 выбери календарь'
+                ? t.courses.lockNoSched
                 : lesson.lock_reason === 'prev'
-                ? '🔒 пройди предыдущий'
-                : `🔒 ${lesson.unlock_date ? new Date(lesson.unlock_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : 'позже'}`}
+                ? t.courses.lockPrev
+                : `🔒 ${lesson.unlock_date ? new Date(lesson.unlock_date).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' }) : t.courses.lockLater}`}
             </span>
           ) : (
             <button
               onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}&exam=1`)}
               style={{ fontSize: 13, padding: '6px 14px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}>
-              ✅ {isOwner ? 'Открыть' : 'Начать'}
+              ✅ {isOwner ? t.courses.openBtn : t.dashboard.start}
             </button>
           )
         )}

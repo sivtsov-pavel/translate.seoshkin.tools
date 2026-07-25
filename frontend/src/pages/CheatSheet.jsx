@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useI18nStore } from '../store/i18n.js'
 import data from '../data/cheatsheetDe.json'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 
@@ -20,6 +21,7 @@ export default function CheatSheet() {
   const navigate = useNavigate()
   const [tab, setTab] = useState('verbs')
   const [q, setQ] = useState('')
+  const t = useI18nStore(s => s.t)
   const [learn, setLearn] = useState(false) // режим «учить формы» — прячем 2/3 форму
 
   const verbs = useMemo(() => {
@@ -33,13 +35,13 @@ export default function CheatSheet() {
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '8px 12px 60px' }}>
-      <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 14, marginBottom: 6 }}>← Назад</button>
-      <h1 style={{ margin: '0 0 4px', fontSize: 22 }}>🔖 Шпаргалки</h1>
-      <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>Самое нужное под рукой: неправильные глаголы и местоимения. Тапни 🔊 — послушать.</div>
+      <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 14, marginBottom: 6 }}>← {t.nav.back}</button>
+      <h1 style={{ margin: '0 0 4px', fontSize: 22 }}>{t.cheatsheet.title}</h1>
+      <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>{t.cheatsheet.subtitle}</div>
 
       {/* Вкладки */}
       <div style={{ display: 'flex', gap: 0, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)', marginBottom: 14, width: 'fit-content' }}>
-        {[['verbs', '⚡ Глаголы'], ['pronouns', '👤 Местоимения']].map(([id, lbl]) => (
+        {[['verbs', t.cheatsheet.tabVerbs], ['pronouns', t.cheatsheet.tabPronouns]].map(([id, lbl]) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ padding: '8px 16px', fontSize: 13, fontWeight: tab === id ? 700 : 500, cursor: 'pointer', border: 'none',
               background: tab === id ? 'var(--accent)' : 'var(--surface-2)', color: tab === id ? 'var(--accent-ink)' : 'var(--ink)' }}>
@@ -51,13 +53,13 @@ export default function CheatSheet() {
       {tab === 'verbs' && (
         <>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Поиск глагола…"
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder={t.cheatsheet.searchVerb}
               style={{ flex: 1, minWidth: 160, padding: '8px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14 }} />
             <button onClick={() => setLearn(v => !v)}
-              title="Спрятать 2-ю и 3-ю форму — вспоминай сам"
+              title={t.cheatsheet.learnTitle}
               style={{ padding: '8px 14px', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700,
                 border: `1px solid ${learn ? 'var(--accent)' : 'var(--line)'}`, background: learn ? 'var(--accent-soft)' : 'var(--surface-2)', color: learn ? 'var(--accent)' : 'var(--ink-soft)' }}>
-              🎯 {learn ? 'Учу формы' : 'Учить формы'}
+              🎯 {learn ? t.cheatsheet.learnOn : t.cheatsheet.learnOff}
             </button>
           </div>
 
@@ -74,10 +76,10 @@ export default function CheatSheet() {
                   </colgroup>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      <ColHead title="Перевод" sub="что значит" />
-                      <ColHead title="Infinitiv" sub="начальная" />
-                      <ColHead title="Präteritum" sub="прошедшее" />
-                      <ColHead title="Partizip II" sub="причастие" />
+                      <ColHead title={t.cheatsheet.colTranslation} sub={t.cheatsheet.colTranslationSub} />
+                      <ColHead title="Infinitiv" sub={t.cheatsheet.colInfinitivSub} />
+                      <ColHead title="Präteritum" sub={t.cheatsheet.colPrateritumSub} />
+                      <ColHead title="Partizip II" sub={t.cheatsheet.colPartizipSub} />
                     </tr>
                   </thead>
                   <tbody>
@@ -100,7 +102,7 @@ export default function CheatSheet() {
               </div>
             </div>
           ))}
-          {Object.keys(verbs).length === 0 && <div style={{ color: 'var(--ink-soft)', padding: 20, textAlign: 'center' }}>Ничего не найдено</div>}
+          {Object.keys(verbs).length === 0 && <div style={{ color: 'var(--ink-soft)', padding: 20, textAlign: 'center' }}>{t.dashboard.nothingFound}</div>}
         </>
       )}
 
@@ -115,10 +117,10 @@ export default function CheatSheet() {
             </colgroup>
             <thead>
               <tr style={{ background: 'var(--surface-2)' }}>
-                <ColHead title="Перевод" sub="кто" />
-                <ColHead title="Nominativ" sub="кто? (я)" />
-                <ColHead title="Akkusativ" sub="кого? (меня)" />
-                <ColHead title="Dativ" sub="кому? (мне)" />
+                <ColHead title={t.cheatsheet.colTranslation} sub={t.cheatsheet.colWhoSub} />
+                <ColHead title="Nominativ" sub={t.cheatsheet.colNomSub} />
+                <ColHead title="Akkusativ" sub={t.cheatsheet.colAkkSub} />
+                <ColHead title="Dativ" sub={t.cheatsheet.colDatSub} />
               </tr>
             </thead>
             <tbody>

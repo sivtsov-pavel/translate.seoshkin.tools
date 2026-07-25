@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
+import { useI18nStore } from '../store/i18n.js'
 
 // Раздел «📚 Книги» (для учителя): загрузка PDF/TXT + обложка. Ученики читают книги в Читалке.
 export default function Books() {
+  const { t } = useI18nStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
   const [books, setBooks]     = useState([])
@@ -24,7 +26,7 @@ export default function Books() {
 
   const submit = async (e) => {
     e.preventDefault()
-    if (!file) { setErr('Выбери файл книги (PDF или TXT)'); return }
+    if (!file) { setErr(t.reader.pickBookFile); return }
     setBusy(true); setErr('')
     try {
       const fd = new FormData()
@@ -35,12 +37,12 @@ export default function Books() {
       setTitle(''); setFile(null); setCover(null); setFormOpen(false)
       setLoading(true); load()
     } catch (e) {
-      setErr(e.message || 'Ошибка загрузки')
+      setErr(e.message || t.reader.uploadFailedShort)
     } finally { setBusy(false) }
   }
 
   const remove = async (b) => {
-    if (!window.confirm(`Удалить книгу «${b.title}»?`)) return
+    if (!window.confirm(t.reader.deleteBookConfirm(b.title))) return
     await api.delete(`/books/${b.id}`).catch(() => {})
     setBooks(prev => prev.filter(x => x.id !== b.id))
   }
@@ -53,24 +55,24 @@ export default function Books() {
         <h1 style={{ margin: 0 }}>📚 Книги</h1>
         {isOwner && (
           <button onClick={() => setFormOpen(v => !v)} style={btnPrimary}>
-            {formOpen ? 'Отмена' : '+ Добавить книгу'}
+            {formOpen ? t.common.cancel : t.reader.addBookBtn}
           </button>
         )}
       </div>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 24px' }}>
-        Загрузи книгу (PDF или TXT) — ученики смогут читать её в <Link to="/reader" style={{ color: 'var(--accent)' }}>Читалке</Link> с тап-переводом и озвучкой. Место, где остановился, запоминается автоматически.
+        {t.reader.booksIntro1}<Link to="/reader" style={{ color: 'var(--accent)' }}>{t.nav.reader}</Link>{t.reader.booksIntro2}
       </p>
 
       {formOpen && isOwner && (
         <form onSubmit={submit} style={{ marginBottom: 24, padding: '20px 24px', background: 'var(--surface-2)', borderRadius: 12, border: '1px solid var(--line)' }}>
           <div style={{ marginBottom: 14 }}>
             <label style={lbl}>Название (необязательно — возьмём из имени файла)</label>
-            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Например: Der kleine Prinz" style={inputStyle} />
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder={t.reader.bookTitlePlaceholder} style={inputStyle} />
           </div>
           <div style={{ marginBottom: 14 }}>
             <label style={lbl}>Файл книги — PDF или TXT *</label>
             <input type="file" accept=".pdf,.txt,application/pdf,text/plain" onChange={e => setFile(e.target.files?.[0] || null)} style={{ display: 'block' }} />
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>PDF должен быть с текстовым слоем (не скан). Скан — сохрани как TXT.</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>{t.reader.pdfTextLayerHint}</div>
           </div>
           <div style={{ marginBottom: 16 }}>
             <label style={lbl}>Обложка (необязательно)</label>
@@ -78,14 +80,14 @@ export default function Books() {
           </div>
           {err && <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{err}</div>}
           <button type="submit" disabled={busy || !file} style={{ ...btnPrimary, opacity: (busy || !file) ? 0.6 : 1 }}>
-            {busy ? 'Загружаю и извлекаю текст…' : 'Загрузить книгу'}
+            {busy ? t.reader.uploadingBook : t.reader.uploadBookBtn}
           </button>
         </form>
       )}
 
       {books.length === 0 ? (
         <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 12, border: '1px dashed var(--line)' }}>
-          Пока нет книг. {isOwner ? 'Нажми «+ Добавить книгу».' : 'Учитель ещё не добавил книги.'}
+          {t.reader.noBooksYet} {isOwner ? t.reader.noBooksOwner : t.reader.noBooksStudent}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
@@ -101,9 +103,9 @@ export default function Books() {
                 {b.source_type?.toUpperCase()} · {Math.max(1, Math.round((b.char_count || 0) / 1000))}k символов
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                <button onClick={() => navigate(`/reader?book=${b.id}`)} style={{ ...btnPrimary, flex: 1, fontSize: 13, padding: '8px 12px' }}>📖 Читать</button>
+                <button onClick={() => navigate(`/reader?book=${b.id}`)} style={{ ...btnPrimary, flex: 1, fontSize: 13, padding: '8px 12px' }}>{t.reader.readBtn}</button>
                 {isOwner && (
-                  <button onClick={() => remove(b)} title="Удалить книгу"
+                  <button onClick={() => remove(b)} title={t.reader.deleteBookTitle}
                     style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'transparent', color: 'var(--red)', cursor: 'pointer', fontSize: 13 }}>
                     🗑
                   </button>

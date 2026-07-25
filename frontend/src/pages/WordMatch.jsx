@@ -245,7 +245,7 @@ export default function WordMatch() {
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={startGame} style={btnStyle('accent')}>
-            <i className="bi bi-arrow-clockwise" /> Играть снова
+            <i className="bi bi-arrow-clockwise" /> {t.games.playAgain}
           </button>
           <button onClick={() => { setCards([]); setFinished(false); setRunning(false) }} style={btnStyle('ghost')}>
             Сменить урок
@@ -285,8 +285,8 @@ export default function WordMatch() {
           <strong style={{ color: 'var(--ink)', display: 'block', marginBottom: 6 }}>{t.games.howToPlay}</strong>
           Переверни карточку — найди её пару.<br />
           {mode === 'image'
-            ? <><span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = немецкое слово</span> · 🖼️ картинка</>
-            : <><span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = немецкое</span> · <span style={{ fontStyle: 'italic' }}>Italic = перевод</span></>}
+            ? <><span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>{t.games.legendSerifWord}</span> · {t.games.legendImage}</>
+            : <><span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>{t.games.legendSerifWord}</span> · <span style={{ fontStyle: 'italic' }}>{t.games.legendItalic}</span></>}
           <br />до 8 пар · сетка
         </div>
 
@@ -316,7 +316,7 @@ export default function WordMatch() {
       {/* Шапка */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>🃏 Словопара</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>🃏 {t.dashboard.matchTitle}</div>
           <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{lessonName}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: 'var(--ink-soft)' }}>
@@ -354,7 +354,7 @@ export default function WordMatch() {
       {/* Подсказка по шрифтам */}
       <div style={{ marginTop: 14, display: 'flex', gap: 16, justifyContent: 'center', fontSize: 11, color: 'var(--ink-soft)' }}>
         <span style={{ fontFamily: 'Georgia,serif', fontWeight: 700 }}>Serif = 🇩🇪 DE</span>
-        <span>{mode === 'image' ? '🖼️ картинка' : <span style={{ fontStyle: 'italic' }}>Italic = перевод</span>}</span>
+        <span>{mode === 'image' ? t.games.legendImage : <span style={{ fontStyle: 'italic' }}>{t.games.legendItalic}</span>}</span>
       </div>
     </div>
   )

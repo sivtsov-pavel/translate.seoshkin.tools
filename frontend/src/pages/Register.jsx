@@ -78,7 +78,7 @@ export default function Register() {
             <div style={{ position: 'relative', marginTop: 4 }}>
               <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
                 style={{ ...inputStyle, marginTop: 0, paddingRight: 44 }} />
-              <button type="button" onClick={() => setShowPass(v => !v)} title={showPass ? 'Скрыть пароль' : 'Показать пароль'}
+              <button type="button" onClick={() => setShowPass(v => !v)} title={showPass ? t.auth.hidePwd : t.auth.showPwd}
                 style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, padding: 4, lineHeight: 1 }}>
                 {showPass ? '🙈' : '👁️'}
               </button>

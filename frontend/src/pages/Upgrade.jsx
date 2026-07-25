@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
+import { useI18nStore } from '../store/i18n.js'
 
 // Страница подписки Premium. Тарифы берём из публичного конфига (супер-админка).
 // Кнопка «Оформить» → Stripe Checkout. Пока Stripe не настроен — показываем «скоро».
@@ -7,6 +8,7 @@ import { api } from '../api/client.js'
 const CUR = { EUR: '€', USD: '$', RUB: '₽', UAH: '₴' }
 
 export default function Upgrade() {
+  const t = useI18nStore(s => s.t)
   const [cfg, setCfg] = useState(null)
   const [status, setStatus] = useState(null)
   const [busy, setBusy] = useState('')
@@ -40,14 +42,14 @@ export default function Upgrade() {
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
         <div style={{ fontSize: 46 }}>⭐</div>
         <h1 style={{ fontSize: 26, fontWeight: 800, margin: '4px 0' }}>Premium</h1>
-        <p style={{ color: 'var(--ink-soft)', margin: 0 }}>Без рекламы, без дневных лимитов, все возможности.</p>
+        <p style={{ color: 'var(--ink-soft)', margin: 0 }}>{t.upgrade.subtitle}</p>
       </div>
 
       {isPremium ? (
         <div style={{ ...card, borderColor: 'var(--accent)' }}>
           <div style={{ fontSize: 40 }}>✅</div>
-          <h2 style={{ margin: '8px 0' }}>У тебя Premium</h2>
-          {status.plan_until && <p style={{ color: 'var(--ink-soft)' }}>Действует до {new Date(status.plan_until).toLocaleDateString('ru-RU')}</p>}
+          <h2 style={{ margin: '8px 0' }}>{t.upgrade.havePremium}</h2>
+          {status.plan_until && <p style={{ color: 'var(--ink-soft)' }}>{t.upgrade.validUntil(new Date(status.plan_until).toLocaleDateString())}</p>}
           <button onClick={async () => {
             try { const { url } = await api.post('/billing/portal'); window.location.href = url } catch (e) { setErr(e.message) }
           }} style={btnGhost}>Управление подпиской</button>
@@ -55,25 +57,25 @@ export default function Upgrade() {
       ) : notConfigured ? (
         <div style={{ ...card }}>
           <div style={{ fontSize: 40 }}>🛠️</div>
-          <h2 style={{ margin: '8px 0' }}>Скоро</h2>
-          <p style={{ color: 'var(--ink-soft)' }}>Оплата подписки готовится к запуску.</p>
+          <h2 style={{ margin: '8px 0' }}>{t.upgrade.soon}</h2>
+          <p style={{ color: 'var(--ink-soft)' }}>{t.upgrade.paymentSoon}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <div style={card}>
-            <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)' }}>Месяц</div>
+            <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)' }}>{t.upgrade.month}</div>
             <div style={{ fontSize: 34, fontWeight: 800, margin: '6px 0' }}>{sym}{price.monthly}</div>
-            <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>в месяц</div>
+            <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>{t.upgrade.perMonth}</div>
             <button onClick={() => checkout('monthly')} disabled={busy} style={btnAccent}>
-              {busy === 'monthly' ? '…' : 'Оформить'}
+              {busy === 'monthly' ? '…' : t.upgrade.subscribe}
             </button>
           </div>
           <div style={{ ...card, borderColor: 'var(--accent)' }}>
-            <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--accent)' }}>Год · выгодно</div>
+            <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--accent)' }}>{t.upgrade.yearDeal}</div>
             <div style={{ fontSize: 34, fontWeight: 800, margin: '6px 0' }}>{sym}{price.yearly}</div>
-            <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>в год</div>
+            <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>{t.upgrade.perYear}</div>
             <button onClick={() => checkout('yearly')} disabled={busy} style={btnAccent}>
-              {busy === 'yearly' ? '…' : 'Оформить'}
+              {busy === 'yearly' ? '…' : t.upgrade.subscribe}
             </button>
           </div>
         </div>

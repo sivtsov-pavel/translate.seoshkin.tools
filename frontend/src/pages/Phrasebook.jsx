@@ -77,7 +77,7 @@ function PhrasebookInner() {
       const p = await api.post('/phrasebook', { de: newDe.trim(), ru: newRu.trim(), category: newCat || null, source: 'manual' })
       if (!p.duplicate) setPhrases(prev => [p, ...prev])
       setNewDe(''); setNewRu(''); setNewCat(''); setShowAdd(false)
-    } catch (e) { alert('Ошибка: ' + e.message) }
+    } catch (e) { alert(TT.common.error + ': ' + e.message) }
     setAdding(false)
   }
 
@@ -102,7 +102,7 @@ function PhrasebookInner() {
   const cats = [...new Set(phrases.map(p => p.category).filter(Boolean))]
   const learnedCount = phrases.filter(p => p.learned).length
 
-  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: 'var(--ink-soft)' }}>Загрузка…</div>
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: 'var(--ink-soft)' }}>{TT.common.loading}</div>
 
   return (
     <div style={{ padding: '24px 14px 80px' }}>
@@ -110,7 +110,7 @@ function PhrasebookInner() {
       {/* Заголовок */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <div>
-          <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>💬 Разговорник</h1>
+          <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>{TT.phrasebook.title}</h1>
           <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
             {phrases.length} фраз · выучено {learnedCount}
           </span>
@@ -127,13 +127,13 @@ function PhrasebookInner() {
           <div style={{ position: 'relative' }}>
             <input value={newDe} onChange={e => setNewDe(e.target.value)}
               onBlur={autoTranslate}
-              placeholder="Немецкая фраза…"
+              placeholder={TT.phrasebook.phrasePlaceholder}
               style={{ fontSize: 15, width: '100%' }} autoFocus
             />
           </div>
           <div style={{ position: 'relative' }}>
             <input value={newRu} onChange={e => setNewRu(e.target.value)}
-              placeholder={translating ? 'Перевожу…' : 'Перевод на русский (ИИ заполнит автоматически)…'}
+              placeholder={translating ? TT.vocabulary.tapTranslating : TT.phrasebook.translationPlaceholder}
               style={{ fontSize: 15, width: '100%', opacity: translating ? 0.6 : 1 }}
             />
             {translating && (
@@ -145,12 +145,12 @@ function PhrasebookInner() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <select value={newCat} onChange={e => setNewCat(e.target.value)}
               style={{ flex: 1, fontSize: 14, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
-              <option value="">— Категория —</option>
+              <option value="">{TT.phrasebook.categoryPlaceholder}</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <button onClick={addPhrase} disabled={adding || !newDe.trim() || !newRu.trim()}
               style={{ padding: '8px 20px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
-              {adding ? '…' : '✓ Сохранить'}
+              {adding ? '…' : `✓ ${TT.common.save}`}
             </button>
             <button onClick={() => { setShowAdd(false); setNewDe(''); setNewRu(''); setNewCat('') }}
               style={{ padding: '8px 12px', background: 'var(--surface-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
@@ -163,7 +163,7 @@ function PhrasebookInner() {
       {/* Фильтры */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, background: 'var(--surface-2)', borderRadius: 10, padding: 3 }}>
-          {[['all', 'Все'], ['new', 'Учить'], ['learned', 'Выучил']].map(([key, label]) => (
+          {[['all', TT.phrasebook.tabAll], ['new', TT.phrasebook.tabNew], ['learned', TT.phrasebook.tabLearned]].map(([key, label]) => (
             <button key={key} onClick={() => setFilter(key)} style={{
               padding: '5px 12px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600,
               cursor: 'pointer',
@@ -176,13 +176,13 @@ function PhrasebookInner() {
         {cats.length > 0 && (
           <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
             style={{ fontSize: 13, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
-            <option value="">Все категории</option>
+            <option value="">{TT.phrasebook.allCategories}</option>
             {cats.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         )}
 
         <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍 Поиск…"
+          placeholder={TT.phrasebook.searchPlaceholder}
           style={{ flex: 1, minWidth: 140, fontSize: 14, padding: '6px 12px', borderRadius: 8 }}
         />
       </div>
@@ -190,7 +190,7 @@ function PhrasebookInner() {
       {phrases.length === 0 && (
         <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 40, textAlign: 'center', color: 'var(--ink-soft)' }}>
           <p style={{ fontSize: 40, margin: '0 0 12px' }}>💬</p>
-          <p style={{ margin: '0 0 8px', fontSize: 16 }}>Разговорник пуст</p>
+          <p style={{ margin: '0 0 8px', fontSize: 16 }}>{TT.phrasebook.empty}</p>
           <p style={{ margin: 0, fontSize: 13 }}>Добавляй фразы вручную или сохраняй из упражнений кнопкой 📖</p>
         </div>
       )}
@@ -218,6 +218,7 @@ function PhrasebookInner() {
 }
 
 function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
+  const { t: TT } = useI18nStore()
   const [editing, setEditing]   = useState(false)
   const [editDe, setEditDe]     = useState(phrase.de)
   const [editRu, setEditRu]     = useState(phrase.ru)
@@ -246,7 +247,7 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
       const updated = await api.patch(`/phrasebook/${phrase.id}`, { de: editDe.trim(), ru: editRu.trim(), category: editCat || null })
       onUpdate(updated)
       setEditing(false)
-    } catch (e) { alert('Ошибка: ' + e.message) }
+    } catch (e) { alert(TT.common.error + ': ' + e.message) }
     setSaving(false)
   }
 
@@ -256,13 +257,13 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
         <div style={{ position: 'relative' }}>
           <input value={editDe} onChange={e => setEditDe(e.target.value)}
             onBlur={autoTranslateEdit}
-            placeholder="Немецкая фраза…"
+            placeholder={TT.phrasebook.phrasePlaceholder}
             style={{ fontSize: 15, fontWeight: 700, width: '100%' }}
           />
         </div>
         <div style={{ position: 'relative' }}>
           <input value={editRu} onChange={e => setEditRu(e.target.value)}
-            placeholder={translating ? 'Перевожу…' : 'Перевод…'}
+            placeholder={translating ? TT.vocabulary.tapTranslating : TT.phrasebook.translationShort}
             style={{ fontSize: 14, width: '100%', color: 'var(--accent)', opacity: translating ? 0.6 : 1 }}
           />
           {translating && (
@@ -271,13 +272,13 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
         </div>
         <select value={editCat} onChange={e => setEditCat(e.target.value)}
           style={{ fontSize: 13, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
-          <option value="">— Категория —</option>
+          <option value="">{TT.phrasebook.categoryPlaceholder}</option>
           {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={save} disabled={saving || !editDe.trim() || !editRu.trim()}
             style={{ flex: 1, padding: '7px 0', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-            {saving ? '…' : '✓ Сохранить'}
+            {saving ? '…' : `✓ ${TT.common.save}`}
           </button>
           <button onClick={cancelEdit}
             style={{ padding: '7px 14px', background: 'var(--surface-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
@@ -296,7 +297,7 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
       opacity: phrase.learned ? 0.65 : 1,
       transition: 'opacity .2s',
     }}>
-      <button onClick={() => onToggle(phrase.id)} title={phrase.learned ? 'Снять отметку' : 'Отметить как выученное'}
+      <button onClick={() => onToggle(phrase.id)} title={phrase.learned ? TT.phrasebook.unmark : TT.phrasebook.markLearned}
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, lineHeight: 1, flexShrink: 0 }}>
         {phrase.learned ? '✅' : '⬜'}
       </button>
@@ -312,12 +313,12 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
           {phrase.ru}
         </div>
         {phrase.source === 'exercise' && (
-          <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>из упражнения</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2 }}>{TT.phrasebook.fromExercise}</div>
         )}
       </div>
 
       {isSpeechRecognitionSupported() && <MicButton text={phrase.de} />}
-      <button onClick={startEdit} title="Редактировать"
+      <button onClick={startEdit} title={TT.phrasebook.editTitle}
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 16, flexShrink: 0, padding: '0 4px' }}>
         <i className="bi bi-pencil" />
       </button>
@@ -331,6 +332,7 @@ function PhraseCard({ phrase, onToggle, onDelete, onUpdate }) {
 
 // Кнопка микрофона для мини-проверки произношения в разговорнике
 function MicButton({ text }) {
+  const { t: TT } = useI18nStore()
   const [status, setStatus] = useState('idle') // idle | listening | ok | bad | almost
   const [transcript, setTranscript] = useState('')
 
@@ -350,7 +352,7 @@ function MicButton({ text }) {
 
   const color = { idle: 'var(--ink-soft)', listening: 'var(--red)', ok: 'var(--good)', almost: 'var(--accent)', bad: 'var(--red)' }[status]
   const icon  = { idle: '🎤', listening: '⏺', ok: '✓', almost: '≈', bad: '✗' }[status]
-  const title = { idle: 'Проверить произношение', listening: 'Слушаю...', ok: `✓ Верно: «${transcript}»`, almost: `≈ Почти: «${transcript}»`, bad: `✗ Нечётко: «${transcript}»` }[status]
+  const title = { idle: TT.phrasebook.checkPron, listening: TT.phrasebook.listeningPron, ok: TT.phrasebook.pronOk(transcript), almost: TT.phrasebook.pronAlmost(transcript), bad: TT.phrasebook.pronBad(transcript) }[status]
 
   return (
     <button onClick={start} title={title} disabled={listening}

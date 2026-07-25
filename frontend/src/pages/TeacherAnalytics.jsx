@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
+import { useI18nStore } from '../store/i18n.js'
 
 // Учебная аналитика для учителя: прогресс класса, трудные слова, где застревают.
-const TYPE_LABELS = {
-  flashcard: 'Флеш-карта', fill_blank: 'Пропуск', multiple_choice: 'Выбор ответа',
-  sentence_write: 'Напиши предложение', letter_fill: 'Добавь букву',
-  dictation: 'Диктант', speech: 'Произношение',
-}
+// Подписи типов — из локали (+ склонение)
+const typeLabelsFor = (t) => ({
+  flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice,
+  sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill,
+  dictation: t.exercise.dictation, speech: t.exercise.speech, conjugation: t.exercise.conjugation,
+})
 const card = { background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 14, padding: 16 }
 const th = { padding: '8px 10px', textAlign: 'left', color: 'var(--ink-soft)', fontWeight: 600, fontSize: 12 }
 const td = { padding: '8px 10px', fontSize: 13, borderTop: '1px solid var(--line)' }
@@ -17,6 +19,8 @@ const td = { padding: '8px 10px', fontSize: 13, borderTop: '1px solid var(--line
 const accColor = (p) => p < 60 ? 'var(--red, #d64545)' : p < 80 ? '#B07D1B' : 'var(--good, #16a34a)'
 
 export default function TeacherAnalytics() {
+  const tt = useI18nStore(s => s.t)
+  const TYPE_LABELS = typeLabelsFor(tt)
   const { user } = useAuthStore()
   const navigate = useNavigate()
   const [data, setData] = useState(null)
@@ -37,7 +41,7 @@ export default function TeacherAnalytics() {
     </div>
   )
   if (err) return <div style={{ color: 'var(--red)', textAlign: 'center', marginTop: 40 }}>{err}</div>
-  if (!data) return <div style={{ color: 'var(--ink-soft)', textAlign: 'center', marginTop: 40 }}>Загрузка…</div>
+  if (!data) return <div style={{ color: 'var(--ink-soft)', textAlign: 'center', marginTop: 40 }}>{tt.common.loading}</div>
 
   const { totals, students, hardestWords, byType } = data
   const fmtDate = d => d ? new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '—'
@@ -52,10 +56,10 @@ export default function TeacherAnalytics() {
 
       {lessons.length > 0 && (
         <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>📊 Отчёт по уроку:</span>
+          <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{tt.reports.reportForLesson}</span>
           <select defaultValue="" onChange={(e) => e.target.value && navigate(`/lesson-report/${e.target.value}`)}
             style={{ padding: '7px 10px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 13, maxWidth: '100%' }}>
-            <option value="" disabled>— выбери урок —</option>
+            <option value="" disabled>{tt.reports.pickLesson}</option>
             {lessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
           </select>
         </div>
@@ -70,10 +74,10 @@ export default function TeacherAnalytics() {
       {!empty && <>
         {/* Итоги */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <Stat big={totals.students} label="Учеников" />
-          <Stat big={totals.active_7d} label="Активны" sub="за 7 дней" />
-          <Stat big={totals.attempts} label="Ответов" />
-          <Stat big={`${totals.accuracy}%`} label="Точность" color={accColor(totals.accuracy)} />
+          <Stat big={totals.students} label={tt.reports.statStudents} />
+          <Stat big={totals.active_7d} label={tt.reports.statActive} sub={tt.reports.statActiveSub} />
+          <Stat big={totals.attempts} label={tt.reports.statAnswers} />
+          <Stat big={`${totals.accuracy}%`} label={tt.reports.statAccuracy} color={accColor(totals.accuracy)} />
         </div>
 
         {/* Ученики */}
@@ -88,7 +92,7 @@ export default function TeacherAnalytics() {
               {students.map(s => (
                 <tr key={s.id}>
                   <td style={td}>{s.name}</td>
-                  <td style={td}>{s.attempts} <span style={{ color: 'var(--ink-soft)', fontSize: 11 }}>({s.attempts_7d} за нед.)</span></td>
+                  <td style={td}>{s.attempts} <span style={{ color: 'var(--ink-soft)', fontSize: 11 }}>{tt.reports.perWeek(s.attempts_7d)}</span></td>
                   <td style={{ ...td, fontWeight: 700, color: accColor(s.accuracy) }}>{s.accuracy}%</td>
                   <td style={td}>{s.known}</td>
                   <td style={td}>{s.learning}</td>
@@ -104,7 +108,7 @@ export default function TeacherAnalytics() {
           <div>
             <h3 style={{ fontSize: 14, marginBottom: 8 }}>🔥 Трудные слова</h3>
             <div style={card}>
-              {hardestWords.length === 0 && <div style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Мало данных (нужно ≥3 попыток на слово).</div>}
+              {hardestWords.length === 0 && <div style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{tt.reports.fewData}</div>}
               {hardestWords.map((w, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderTop: i ? '1px solid var(--line)' : 'none' }}>
                   <span style={{ fontWeight: 700, flex: 1 }}>{w.word_de}</span>

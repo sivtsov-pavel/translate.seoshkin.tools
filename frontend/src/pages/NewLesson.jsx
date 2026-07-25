@@ -124,7 +124,7 @@ function NewLessonInner() {
           setTimeout(() => navigate(selectedCourse ? `/courses/${selectedCourse}` : '/'), 2500)
         } else if (res.status === 'error') {
           clearInterval(pollRef.current)
-          setError(res.progress || 'Ошибка обработки')
+          setError(res.progress || t.lessons.processError)
           setStatus('error')
         }
       } catch {}
@@ -149,7 +149,7 @@ function NewLessonInner() {
       setLessonId(lesson.id)
       setStatus('uploading')
       const totalFiles = photos.length + extraPhotos.length + audios.length
-      setProgress(`0 / ${totalFiles} файлов`)
+      setProgress(t.lessons.filesProgress(0, totalFiles))
       if (photos.length > 0) {
         const fd = new FormData()
         photos.forEach(p => fd.append('files', p.file))
@@ -169,7 +169,7 @@ function NewLessonInner() {
       if (photos.length > 0 || extraPhotos.length > 0) {
         // Есть фото — показываем превью распознанного, коммит только после подтверждения учителя
         setStatus('extracting')
-        setProgress('Распознаю фото...')
+        setProgress(t.lessons.recognizing)
         const data = await api.post(`/lessons/${lesson.id}/extract-preview`, {})
         setPreview({
           words: (data.words || []).map(w => ({ ...w, checked: true })),
@@ -180,7 +180,7 @@ function NewLessonInner() {
       } else {
         // Только аудио/без медиа — как раньше, разбор без превью (текст+транскрипция)
         setStatus('processing')
-        setProgress('Запускаем...')
+        setProgress(t.common.starting)
         await api.post(`/lessons/${lesson.id}/process`, {})
         startPolling(lesson.id)
       }
@@ -195,7 +195,7 @@ function NewLessonInner() {
     setError('')
     try {
       setStatus('processing')
-      setProgress('Сохраняю урок...')
+      setProgress(t.lessons.savingLesson)
       const words = preview.words.filter(w => w.checked).map(({ checked, ...w }) => w)
       const sentences = preview.sentences.filter(s => s.checked).map(({ checked, ...s }) => s)
       await api.post(`/lessons/${lessonId}/confirm`, { words, sentences, grammar_points: preview.grammar_points })
@@ -241,11 +241,11 @@ function NewLessonInner() {
   const isProcessing = status !== 'idle' && status !== 'error' && status !== 'preview'
 
   const statusLabel = {
-    creating:   '⏳ Создаём урок...',
-    uploading:  '⏳ Загружаем файлы...',
-    extracting: '⏳ Распознаём фото...',
-    processing: `⏳ Обрабатываем...`,
-    done:       '✅ Готово!',
+    creating:   `⏳ ${t.lessons.processing.creating}`,
+    uploading:  `⏳ ${t.lessons.processing.uploading}`,
+    extracting: `⏳ ${t.lessons.processing.extracting}`,
+    processing: `⏳ ${t.lessons.processing.processing}`,
+    done:       `✅ ${t.lessons.processing.done}`,
   }[status] || ''
 
   if (status === 'preview' && preview) {
@@ -281,15 +281,15 @@ function NewLessonInner() {
 
         {/* Привязка к курсу — чтобы урок не остался «одиночкой» вне курса (иначе лезет в «Сегодня») */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>📚 Курс</label>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>📚 {t.courses.assignCourse}</label>
           <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} disabled={isProcessing}
             style={{ width: '100%', boxSizing: 'border-box', padding: '9px 10px', borderRadius: 8, border: `1px solid ${selectedCourse ? 'var(--line)' : 'var(--accent)'}`, background: 'var(--surface)', color: 'var(--ink)' }}>
-            <option value="">— Без курса (отдельный урок) —</option>
+            <option value="">{t.lessons.noCourseDash}</option>
             {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
           </select>
           {!selectedCourse && (
             <div style={{ fontSize: 12.5, color: 'var(--accent)', marginTop: 6 }}>
-              💡 Совет: привяжи урок к курсу — тогда он идёт по порядку и не «висит» отдельно в «Сегодня». Без курса — только для разовых уроков/наборов.
+              {t.lessons.courseTipNew}
             </div>
           )}
         </div>

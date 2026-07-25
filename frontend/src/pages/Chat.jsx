@@ -21,8 +21,10 @@ export default function Chat() {
 
 function ChatInner() {
   const { user } = useAuthStore()
-  const { lang } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const isOwner = user?.role === 'owner'
+  // Локализованные подписи каналов (иконки — в TYPE_META)
+  const chLabel = { support: t.chat.support, teacher: t.chat.teacher }
 
   const [conversations, setConversations] = useState([])
   const [activeId, setActiveId]     = useState(null)
@@ -113,7 +115,7 @@ function ChatInner() {
 
   if (loading) return (
     <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-soft)', fontSize: 15 }}>
-      Загрузка...
+      {t.common.loading}
     </div>
   )
 
@@ -138,11 +140,11 @@ function ChatInner() {
         }}>
           {!isOwner && (
             <>
-              <button onClick={() => openOrCreate('support')} title="Техподдержка"
+              <button onClick={() => openOrCreate('support')} title={t.chat.support}
                 style={{ ...iconPillBtn, background: 'var(--accent)', color: 'var(--accent-ink)' }}>
                 🛠️
               </button>
-              <button onClick={() => openOrCreate('teacher')} title="Учителю"
+              <button onClick={() => openOrCreate('teacher')} title={t.chat.teacher}
                 style={{ ...iconPillBtn, background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)' }}>
                 👨‍🏫
               </button>
@@ -156,7 +158,7 @@ function ChatInner() {
             const unread = parseInt(c.unread) || 0
             return (
               <div key={c.id} onClick={() => selectConv(c.id)}
-                title={`${meta.label}${isOwner && c.student_name ? ` — ${c.student_name}` : ''}`}
+                title={`${chLabel[c.type]}${isOwner && c.student_name ? ` — ${c.student_name}` : ''}`}
                 style={{ position: 'relative', cursor: 'pointer' }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 12, display: 'flex',
@@ -185,9 +187,9 @@ function ChatInner() {
           {/* Шапка */}
           <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
             <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: isOwner ? 4 : 12 }}>
-              💬 Чат
+              {t.chat.title}
             </div>
-            {isOwner && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 0 }}>Входящие обращения</div>}
+            {isOwner && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 0 }}>{t.chat.incoming}</div>}
 
             {!isOwner && (
               <>
@@ -205,7 +207,7 @@ function ChatInner() {
                   <span style={{ fontSize: 18 }}>👨‍🏫</span>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 14 }}>Учителю</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', fontWeight: 400 }}>Вопрос по уроку или заданию</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-soft)', fontWeight: 400 }}>{t.chat.lessonQuestion}</div>
                   </div>
                   <span style={{ marginLeft: 'auto', fontSize: 20, color: 'var(--ink-soft)' }}>+</span>
                 </button>
@@ -217,7 +219,7 @@ function ChatInner() {
           <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {conversations.length === 0 && (
               <div style={{ padding: '24px 16px', color: 'var(--ink-soft)', fontSize: 13, lineHeight: 1.7, textAlign: 'center' }}>
-                {isOwner ? 'Нет обращений' : 'Твои разговоры появятся здесь после того как ты напишешь'}
+                {isOwner ? t.chat.noRequests : t.chat.emptyStudent}
               </div>
             )}
             {conversations.map(c => {
@@ -232,7 +234,7 @@ function ChatInner() {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
                     <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>
-                      {meta.icon} {meta.label}
+                      {meta.icon} {chLabel[c.type]}
                     </span>
                     {unread > 0 && (
                       <span style={{
@@ -264,9 +266,9 @@ function ChatInner() {
         {!activeId ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 20, padding: 32, textAlign: 'center' }}>
             <div style={{ fontSize: 56 }}>💬</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>Выбери разговор слева</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>{t.chat.pickLeft}</div>
             <div style={{ fontSize: 14, color: 'var(--ink-soft)', maxWidth: 300 }}>
-              {isOwner ? 'Нажми на обращение в списке чтобы ответить' : 'Или начни новый разговор кнопками в левом меню'}
+              {isOwner ? t.chat.pickHintOwner : t.chat.pickHintStudent}
             </div>
           </div>
         ) : (
@@ -286,7 +288,7 @@ function ChatInner() {
               </button>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>
-                  {activeConv && `${TYPE_META[activeConv.type]?.icon} ${TYPE_META[activeConv.type]?.label}`}
+                  {activeConv && `${TYPE_META[activeConv.type]?.icon} ${chLabel[activeConv.type]}`}
                 </div>
                 {isOwner && activeConv?.student_name && (
                   <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
@@ -344,7 +346,7 @@ function ChatInner() {
                 value={body}
                 onChange={e => setBody(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e) } }}
-                placeholder="Сообщение… (Enter — отправить, Shift+Enter — перенос)"
+                placeholder={t.chat.msgPlaceholder}
                 rows={2}
                 style={{
                   flex: 1, resize: 'none', borderRadius: 12, padding: '9px 13px',

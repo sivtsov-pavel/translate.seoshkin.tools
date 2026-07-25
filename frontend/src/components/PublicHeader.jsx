@@ -52,9 +52,10 @@ export default function PublicHeader() {
 }
 
 function ThemeToggle() {
+  const { t } = useI18nStore()
   const { theme, toggle } = useThemeStore()
   return (
-    <button onClick={toggle} title="Светлая / тёмная тема" style={{
+    <button onClick={toggle} title={t.nav.themeTitle} style={{
       ...btn('ghost'), padding: '7px 10px', display: 'flex', alignItems: 'center',
     }}>
       <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'}`} />

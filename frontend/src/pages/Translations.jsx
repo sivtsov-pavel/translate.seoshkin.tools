@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { api } from '../api/client.js'
+import { useI18nStore } from '../store/i18n.js'
 import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { useAuthStore } from '../store/auth.js'
@@ -60,11 +61,12 @@ const I18N_FLAT = flattenI18n(ru).map(row => {
   return entry
 })
 
-const GROUPS = [
-  { id: 'words',     icon: '📖', label: 'Слова словаря',      desc: 'Немецкие слова с переводами на все языки' },
-  { id: 'lessons',   icon: '📚', label: 'Заголовки уроков',   desc: 'Названия и описания уроков' },
-  { id: 'phrasebook',icon: '💬', label: 'Разговорник',        desc: 'Ваши фразы (немецкий → русский)' },
-  { id: 'interface', icon: '🗺️', label: 'Интерфейс',         desc: 'Кнопки, подсказки, тексты навигации' },
+// Подписи/описания групп — в локалях (t.translations.tab*)
+const groupsFor = (t) => [
+  { id: 'words',     icon: '📖', label: t.translations.tabWords,      desc: t.translations.tabWordsDesc },
+  { id: 'lessons',   icon: '📚', label: t.translations.tabLessons,    desc: t.translations.tabLessonsDesc },
+  { id: 'phrasebook',icon: '💬', label: t.translations.tabPhrasebook, desc: t.translations.tabPhrasebookDesc },
+  { id: 'interface', icon: '🗺️', label: t.translations.tabInterface,  desc: t.translations.tabInterfaceDesc },
 ]
 
 function hl(text, q) {
@@ -91,6 +93,8 @@ export default function Translations() {
 }
 
 function TranslationsInner() {
+  const t = useI18nStore(st => st.t)
+  const GROUPS = groupsFor(t)
   const { user } = useAuthStore()
   const [words, setWords]         = useState([])
   const [lessons, setLessons]     = useState([])
@@ -162,15 +166,15 @@ function TranslationsInner() {
       prev.includes(code) ? (prev.length > 1 ? prev.filter(l => l !== code) : prev) : [...prev, code]
     )
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-soft)' }}>Загрузка…</div>
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink-soft)' }}>{t.common.loading}</div>
 
   return (
     <div style={{ padding: '20px 14px 80px' }}>
 
       {/* Заголовок */}
-      <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>🌍 Переводы</h1>
+      <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: '0 0 4px' }}>{t.translations.title}</h1>
       <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 16 }}>
-        Всё переведённое на сайте — слова, уроки, фразы, интерфейс
+        {t.translations.subtitle}
       </div>
 
       {/* Поиск */}
@@ -179,7 +183,7 @@ function TranslationsInner() {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Поиск по всем переводам…"
+          placeholder={t.translations.searchPlaceholder}
           autoFocus
           style={{ width: '100%', padding: '10px 36px', borderRadius: 10, fontSize: 15 }}
         />
@@ -314,7 +318,7 @@ function LessonsTable({ lessons, visibleLangs, q, isOwner, onUpdate }) {
       onUpdate(updated)
       cancelEdit()
     } catch (e) {
-      alert('Ошибка: ' + e.message)
+      alert(t.common.error + ': ' + e.message)
     } finally {
       setSaving(false)
     }
@@ -335,7 +339,7 @@ function LessonsTable({ lessons, visibleLangs, q, isOwner, onUpdate }) {
                 <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{filled}/{ALL_LANGS.length}</span>
                 {isOwner && !isEditing && (
                   <button onClick={() => startEdit(lesson)}
-                    title="Редактировать переводы"
+                    title={t.translations.editTitle}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: '2px 6px', borderRadius: 6, fontSize: 13 }}>
                     <i className="bi bi-pencil-fill" />
                   </button>
@@ -364,7 +368,7 @@ function LessonsTable({ lessons, visibleLangs, q, isOwner, onUpdate }) {
                   )
                 })}
                 {ALL_LANGS.filter(c => visibleLangs.includes(c)).every(c => !trans[c]) && (
-                  <span style={{ color: 'var(--ink-soft)', fontSize: 12 }}>Переводы не добавлены</span>
+                  <span style={{ color: 'var(--ink-soft)', fontSize: 12 }}>{t.translations.noTranslations}</span>
                 )}
               </div>
             )}
@@ -381,7 +385,7 @@ function LessonsTable({ lessons, visibleLangs, q, isOwner, onUpdate }) {
                         onChange={e => setEditTrans(prev => ({ ...prev, [code]: e.target.value }))}
                         style={{ flex: 1, fontSize: 13, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' }}
                         dir={code === 'ar' ? 'rtl' : 'ltr'}
-                        placeholder={code === 'de' ? 'оригинал (нем.)' : ''}
+                        placeholder={code === 'de' ? t.translations.originalPlaceholder : ''}
                       />
                     </div>
                   ))}
@@ -389,7 +393,7 @@ function LessonsTable({ lessons, visibleLangs, q, isOwner, onUpdate }) {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => saveEdit(lesson.id)} disabled={saving}
                     style={{ padding: '6px 16px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-                    {saving ? '...' : '✓ Сохранить'}
+                    {saving ? '...' : `✓ ${t.common.save}`}
                   </button>
                   <button onClick={cancelEdit}
                     style={{ padding: '6px 12px', background: 'none', color: 'var(--ink-soft)', border: 'none', cursor: 'pointer', fontSize: 13 }}>
@@ -448,7 +452,7 @@ function InterfaceTable({ rows, visibleLangs, q }) {
 function Empty({ q }) {
   return (
     <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-soft)', fontSize: 14 }}>
-      {q ? `Ничего не найдено по «${q}»` : 'Нет данных'}
+      {q ? t.translations.nothingFor(q) : t.translations.noData}
     </div>
   )
 }

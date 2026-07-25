@@ -17,6 +17,7 @@ const THEME_ICON = {
 const iconFor = (theme) => THEME_ICON[theme] || '📦'
 
 export default function Sets() {
+  const t = useI18nStore(s => s.t)
   const navigate = useNavigate()
   const { lang } = useI18nStore()
   const [sets, setSets] = useState(null)
@@ -31,13 +32,13 @@ export default function Sets() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '18px 16px 60px' }}>
       <div style={{ background: 'linear-gradient(135deg, rgba(124,92,255,0.16), rgba(59,122,87,0.12))', border: '1px solid var(--line)', borderRadius: 18, padding: '22px', marginBottom: 20 }}>
-        <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.5px' }}>📚 Наборы по темам</div>
+        <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.5px' }}>{t.sets.title}</div>
         <div style={{ color: 'var(--ink-soft)', fontSize: 14, marginTop: 4 }}>
           Слова собраны по темам из всех уроков, без дублей. Учись по темам — под рукой и без беспорядка.
         </div>
       </div>
 
-      {!sets && <div style={{ color: 'var(--ink-soft)' }}>Загрузка…</div>}
+      {!sets && <div style={{ color: 'var(--ink-soft)' }}>{t.common.loading}</div>}
       {sets && sets.length === 0 && (
         <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 14, border: '1px dashed var(--line)' }}>
           Наборы ещё собираются. Обнови страницу через минуту.
@@ -58,7 +59,7 @@ export default function Sets() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}>
               <div style={{ fontSize: 40, lineHeight: 1 }}>{icon}</div>
               <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{theme}</div>
-              <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{s.words_total || 0} слов</div>
+              <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.vocabulary.wordsCount(s.words_total || 0)}</div>
             </div>
           )
         })}

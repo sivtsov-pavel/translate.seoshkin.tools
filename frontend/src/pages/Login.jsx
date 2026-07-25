@@ -45,7 +45,7 @@ export default function Login() {
           <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>{t.auth.password}
             <span style={{ position: 'relative', display: 'block' }}>
               <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required style={{ ...inputStyle, paddingRight: 44 }} />
-              <button type="button" onClick={() => setShowPw(v => !v)} title={showPw ? 'Скрыть' : 'Показать'}
+              <button type="button" onClick={() => setShowPw(v => !v)} title={showPw ? t.auth.hidePwd : t.auth.showPwd}
                 style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)', padding: 4 }}>
                 <i className={`bi ${showPw ? 'bi-eye-slash' : 'bi-eye'}`} />
               </button>

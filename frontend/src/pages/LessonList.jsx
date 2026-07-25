@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/auth.js'
 import { useAdminOpStore } from '../store/adminOp.js'
 
 // Колонка слов (учебник / тетрадь): textarea + чипы-слова, тап по чипу перекидывает в другой список
-function WordCol({ title, text, setText, onMove, moveHint }) {
+function WordCol({ title, text, setText, onMove, moveHint, placeholder }) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
   return (
     <div style={{ flex: '1 1 240px', minWidth: 0 }}>
@@ -15,7 +15,7 @@ function WordCol({ title, text, setText, onMove, moveHint }) {
         {title} <span style={{ opacity: 0.6, fontWeight: 400 }}>· {lines.length}</span>
       </div>
       <textarea value={text} onChange={e => setText(e.target.value)}
-        placeholder={"der Hund — собака\ndie Katze — кошка"} rows={4}
+        placeholder={placeholder} rows={4}
         style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 13 }} />
       {lines.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
@@ -32,6 +32,7 @@ function WordCol({ title, text, setText, onMove, moveHint }) {
 }
 
 function EditForm({ lesson, onSave, onCancel }) {
+  const { t } = useI18nStore()
   const [title, setTitle]       = useState(lesson.title || '')
   const [desc, setDesc]         = useState(lesson.description || '')
   const [bookText, setBookText]   = useState(lesson.text_content || '')
@@ -55,11 +56,11 @@ function EditForm({ lesson, onSave, onCancel }) {
   useEffect(() => { loadMedia() }, [lesson.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const deleteMedia = async (mediaId) => {
-    if (!window.confirm('Удалить это фото из урока? (слова/упражнения останутся; переобработать урок можно кнопкой ⚙️)')) return
+    if (!window.confirm(t.lessons.deletePhotoConfirm)) return
     try {
       await api.delete(`/lessons/${lesson.id}/media/${mediaId}`)
       setMedia(m => m.filter(x => x.id !== mediaId))
-    } catch (e) { alert('Ошибка удаления: ' + e.message) }
+    } catch (e) { alert(t.lessons.deleteError + e.message) }
   }
 
   const save = async () => {
@@ -73,7 +74,7 @@ function EditForm({ lesson, onSave, onCancel }) {
       })
       onSave(updated)
     } catch (e) {
-      alert('Ошибка: ' + e.message)
+      alert(t.common.error + ': ' + e.message)
     } finally {
       setSaving(false)
     }
@@ -90,10 +91,10 @@ function EditForm({ lesson, onSave, onCancel }) {
       const form = new FormData()
       for (const f of files) form.append('file', f)
       await uploadFiles(`/lessons/${lesson.id}/media?source=${sourceRef.current}`, form)
-      alert(`Загружено (${sourceRef.current === 'extra' ? 'тетрадь/доска' : 'учебник'}): ${files.length} файл(ов)`)
+      alert(t.lessons.uploadedMsg(sourceRef.current === 'extra' ? t.lessons.srcExtra : t.lessons.srcBook, files.length))
       loadMedia()  // освежаем список загруженных страниц
     } catch (e) {
-      alert('Ошибка загрузки: ' + e.message)
+      alert(t.lessons.uploadError + e.message)
     } finally {
       setUploading(false)
     }
@@ -102,40 +103,40 @@ function EditForm({ lesson, onSave, onCancel }) {
   return (
     <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--line)' }}>
       <div style={{ marginBottom: 8 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Название урока</label>
-        <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="Например: Lektion 1" style={{ width: '100%', boxSizing: 'border-box' }} />
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>{t.lessons.titleLabel}</label>
+        <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder={t.lessons.titlePlaceholder} style={{ width: '100%', boxSizing: 'border-box' }} />
       </div>
       <div style={{ marginBottom: 10 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Описание</label>
-        <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Тема урока, особенности группы..." rows={2}
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>{t.lessons.descLabel}</label>
+        <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder={t.lessons.descPlaceholder} rows={2}
           style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
       </div>
       <div style={{ marginBottom: 10 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>
-          Слова урока
-          <span style={{ fontWeight: 400, marginLeft: 6, opacity: 0.7 }}>— Claude разберёт и создаст упражнения. Тапни слово-чип, чтобы перекинуть в другой список.</span>
+          {t.dashboard.lessonWords}
+          <span style={{ fontWeight: 400, marginLeft: 6, opacity: 0.7 }}>{t.lessons.wordsHint}</span>
         </label>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <WordCol title="📘 Из учебника" text={bookText} setText={setBookText} onMove={line => moveLine(line, 'book')} moveHint="Перекинуть в тетрадь" />
-          <WordCol title="✏️ Из тетради/доски" text={extraText} setText={setExtraText} onMove={line => moveLine(line, 'extra')} moveHint="Перекинуть в учебник" />
+          <WordCol title={t.lessons.colBook} text={bookText} setText={setBookText} onMove={line => moveLine(line, 'book')} moveHint={t.lessons.moveToExtra} placeholder={t.lessons.wordsPlaceholder} />
+          <WordCol title={t.lessons.colExtra} text={extraText} setText={setExtraText} onMove={line => moveLine(line, 'extra')} moveHint={t.lessons.moveToBook} placeholder={t.lessons.wordsPlaceholder} />
         </div>
       </div>
       {/* Загруженные фото урока — можно удалить не те страницы и переделать урок */}
       {media.filter(m => m.type === 'photo').length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>
-            📷 Загруженные страницы ({media.filter(m => m.type === 'photo').length}) — нажми ✕, чтобы удалить не ту
+            {t.lessons.uploadedPages(media.filter(m => m.type === 'photo').length)}
           </label>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {media.filter(m => m.type === 'photo').map(m => (
               <div key={m.id} style={{ position: 'relative', width: 76, height: 76, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)', flexShrink: 0 }}>
                 <a href={`/uploads/${m.file_path}`} target="_blank" rel="noreferrer">
-                  <img src={`/uploads/${m.file_path}`} alt="страница" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <img src={`/uploads/${m.file_path}`} alt={t.lessons.pageAlt} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </a>
                 <span style={{ position: 'absolute', bottom: 2, left: 3, fontSize: 9, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,.55)', borderRadius: 4, padding: '1px 4px' }}>
                   {m.source === 'extra' ? '✏️' : '📘'}
                 </span>
-                <button onClick={() => deleteMedia(m.id)} title="Удалить это фото"
+                <button onClick={() => deleteMedia(m.id)} title={t.lessons.deletePhotoTitle}
                   style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'rgba(214,69,69,.92)', color: '#fff', cursor: 'pointer', fontSize: 12, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
                   ✕
                 </button>
@@ -143,7 +144,7 @@ function EditForm({ lesson, onSave, onCancel }) {
             ))}
           </div>
           <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 6 }}>
-            После удаления не тех страниц загрузи правильные и нажми ⚙️ «Пересоздать» на карточке урока.
+            {t.lessons.pagesHint}
           </div>
         </div>
       )}
@@ -151,25 +152,25 @@ function EditForm({ lesson, onSave, onCancel }) {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={save} disabled={saving}
           style={{ padding: '7px 18px', background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-          {saving ? '...' : '✓ Сохранить'}
+          {saving ? '...' : `✓ ${t.common.save}`}
         </button>
         <button onClick={() => pickFiles('textbook')} disabled={uploading}
-          title="Слова из учебника (базовые)"
+          title={t.lessons.bookBtnTitle}
           style={{ padding: '7px 14px', background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          {uploading ? '⏳...' : '📁 Из учебника'}
+          {uploading ? '⏳...' : t.lessons.bookBtn}
         </button>
         <button type="button" onClick={() => pickCamera('textbook')} disabled={uploading}
-          title="Сфотографировать страницу учебника"
+          title={t.lessons.camBookTitle}
           style={{ padding: '7px 10px', background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
           📷
         </button>
         <button onClick={() => pickFiles('extra')} disabled={uploading}
-          title="Тетрадь, доска, дополнительные слова"
+          title={t.lessons.extraBtnTitle}
           style={{ padding: '7px 14px', background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          {uploading ? '⏳...' : '📁 Из тетради/доски'}
+          {uploading ? '⏳...' : t.lessons.extraBtn}
         </button>
         <button type="button" onClick={() => pickCamera('extra')} disabled={uploading}
-          title="Сфотографировать тетрадь/доску"
+          title={t.lessons.camExtraTitle}
           style={{ padding: '7px 10px', background: 'var(--accent-soft)', color: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
           📷
         </button>
@@ -180,7 +181,7 @@ function EditForm({ lesson, onSave, onCancel }) {
           onChange={e => uploadMedia([...e.target.files])} />
         <button onClick={onCancel}
           style={{ padding: '7px 12px', background: 'none', color: 'var(--ink-soft)', border: 'none', cursor: 'pointer', fontSize: 13 }}>
-          Отмена
+          {t.common.cancel}
         </button>
       </div>
     </div>
@@ -219,13 +220,13 @@ export default function LessonList() {
         setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
         if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null) }
       }, 3000)
-    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
+    } catch (e) { alert(t.common.error + ': ' + e.message); setProcessing(null) }
   }
 
   // «Обработать всё» для готового урока: докидывает переводы, картинки, переводы упражнений
   const handleEnrich = async (id) => {
     setProcessing(id)
-    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Дополняю недостающее...' } : l))
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: t.lessons.enriching } : l))
     try {
       await api.post(`/lessons/${id}/enrich`, {})
       const poll = setInterval(async () => {
@@ -233,25 +234,25 @@ export default function LessonList() {
         setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
         if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null) }
       }, 3000)
-    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
+    } catch (e) { alert(t.common.error + ': ' + e.message); setProcessing(null) }
   }
 
   // «Перераспределить» — разбить урок на тематические под-уроки (14 → 14.1, 14.2…)
   // «В наборы»: слова урока → тематические наборы словаря (урок НЕ разбивается)
   const handleRedistribute = async (id) => {
-    if (!window.confirm('Распределить слова этого урока в тематические наборы словаря? Урок останется как есть, слова уйдут в наборы по темам.')) return
+    if (!window.confirm(t.lessons.distributeConfirm)) return
     setProcessing(id)
     try {
       const res = await api.post(`/lessons/${id}/distribute-to-sets`, {})
-      alert(`Распределяю ${res.words} слов по наборам — идёт в фоне. Наборы появятся в Словаре.`)
-    } catch (e) { alert('Ошибка: ' + e.message) } finally { setProcessing(null) }
+      alert(t.lessons.distributeStarted(res.words))
+    } catch (e) { alert(t.common.error + ': ' + e.message) } finally { setProcessing(null) }
   }
 
   // «Нарисовать недостающие картинки» — детсадовские ИИ-иллюстрации (тратит OpenAI)
   const handleDrawImages = async (id) => {
-    if (!window.confirm('Нарисовать детские картинки для слов без фото? Это использует генерацию OpenAI (платно).')) return
+    if (!window.confirm(t.lessons.drawConfirm)) return
     setProcessing(id)
-    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: 'Рисую картинки...' } : l))
+    setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: t.lessons.drawing } : l))
     try {
       await api.post(`/lessons/${id}/draw-images`, {})
       const poll = setInterval(async () => {
@@ -259,15 +260,15 @@ export default function LessonList() {
         setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
         if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null) }
       }, 4000)
-    } catch (e) { alert('Ошибка: ' + e.message); setProcessing(null) }
+    } catch (e) { alert(t.common.error + ': ' + e.message); setProcessing(null) }
   }
 
   const handleAddLetterFill = async (id) => {
     setAddingLetters(id)
     try {
       const res = await api.post(`/lessons/${id}/add-letter-fill`, {})
-      alert(`Добавлено ${res.added} упражнений "Добавь букву"!`)
-    } catch (e) { alert('Ошибка: ' + e.message) } finally { setAddingLetters(null) }
+      alert(t.lessons.lettersAdded(res.added))
+    } catch (e) { alert(t.common.error + ': ' + e.message) } finally { setAddingLetters(null) }
   }
 
   // Диктант из ВЫБРАННЫХ слов: открываем модалку со списком слов урока
@@ -281,10 +282,10 @@ export default function LessonList() {
   // Сгенерировать диктант из отмеченных слов
   const generateDictation = async () => {
     const ids = [...dictModal.selected]
-    if (!ids.length) { alert('Отметь хотя бы одно слово'); return }
+    if (!ids.length) { alert(t.lessons.selectAtLeastOne); return }
     try {
       const res = await api.post(`/lessons/${dictModal.lessonId}/add-dictation`, { word_ids: ids })
-      alert(`Диктант готов: ${res.added} слов`)
+      alert(t.lessons.dictationReady(res.added))
       setDictModal(null)
     } catch (e) { alert(e.message) }
   }
@@ -293,20 +294,20 @@ export default function LessonList() {
     setAddingSpeech(id)
     try {
       const res = await api.post(`/lessons/${id}/add-speech`, {})
-      alert(`Добавлено ${res.added} упражнений "Произношение"!`)
+      alert(t.lessons.speechAdded(res.added))
     } catch (e) {
       if (e.message && e.message.includes('уже добавлен')) {
-        alert('✓ Упражнения на произношение уже добавлены в этот урок')
+        alert(t.lessons.speechExists)
       } else {
-        alert('Ошибка: ' + e.message)
+        alert(t.common.error + ': ' + e.message)
       }
     } finally { setAddingSpeech(null) }
   }
 
   const handleRegen = async (lesson) => {
-    if (!window.confirm(`Пересоздать упражнения для «${lesson.title}»?\nСтарые упражнения и прогресс удалятся.`)) return
+    if (!window.confirm(t.lessons.regenConfirm(lesson.title))) return
     setRegenId(lesson.id)
-    setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, status: 'processing', progress: 'Генерирую упражнения...' } : l))
+    setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, status: 'processing', progress: t.lessons.generating } : l))
     try {
       await api.post(`/lessons/${lesson.id}/regenerate`, {})
       const poll = setInterval(async () => {
@@ -314,7 +315,7 @@ export default function LessonList() {
         setLessons(prev => prev.map(l => l.id === lesson.id ? { ...l, ...updated } : l))
         if (updated.status !== 'processing') { clearInterval(poll); setRegenId(null) }
       }, 3000)
-    } catch (e) { alert('Ошибка: ' + e.message); setRegenId(null) }
+    } catch (e) { alert(t.common.error + ': ' + e.message); setRegenId(null) }
   }
 
   const handleDelete = async (id) => {
@@ -344,7 +345,7 @@ export default function LessonList() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', margin: '0 0 16px' }}>
         <h1 style={{ margin: 0, fontFamily: 'Georgia,serif', fontSize: 22 }}>
           {t.lessons.title}
-          {user?.role === 'owner' && <span style={{ fontSize: 14, color: 'var(--ink-soft)', fontFamily: 'inherit', fontWeight: 400, marginLeft: 12 }}>вид учителя</span>}
+          {user?.role === 'owner' && <span style={{ fontSize: 14, color: 'var(--ink-soft)', fontFamily: 'inherit', fontWeight: 400, marginLeft: 12 }}>{t.lessons.teacherView}</span>}
         </h1>
         {user?.role === 'owner' && (
           <button onClick={() => navigate('/lessons/new')}
@@ -362,11 +363,11 @@ export default function LessonList() {
           <div style={{ marginBottom: 14, padding: '12px 16px', borderRadius: 12, background: 'rgba(214,69,69,.10)', border: '1px solid var(--red, #d64545)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 20 }}>⚠️</span>
             <span style={{ flex: 1, fontSize: 14, color: 'var(--ink)', fontWeight: 600 }}>
-              {bad.length} {bad.length === 1 ? 'урок не обработался' : bad.length < 5 ? 'урока не обработались' : 'уроков не обработались'} — проверь их
+              {t.lessons.badLessons(bad.length)}
             </span>
             <button onClick={() => setErrorFilter(v => !v)}
               style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--red, #d64545)', background: errorFilter ? 'var(--red, #d64545)' : 'transparent', color: errorFilter ? '#fff' : 'var(--red, #d64545)', cursor: 'pointer', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}>
-              {errorFilter ? 'Показать все' : 'Показать проблемные'}
+              {errorFilter ? t.lessons.showAll : t.lessons.showProblems}
             </button>
           </div>
         )
@@ -376,14 +377,14 @@ export default function LessonList() {
       {totalWords > 0 && (
         <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 14, color: 'var(--ink-soft)' }}>{doneWords} / {totalWords} слов</span>
+            <span style={{ fontSize: 14, color: 'var(--ink-soft)' }}>{doneWords} / {totalWords} {t.courses.words}</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>{donePct}%</span>
           </div>
           <div style={{ height: 8, background: 'var(--line)', borderRadius: 4, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${donePct}%`, background: 'var(--accent)', borderRadius: 4, transition: 'width 0.5s ease' }} />
           </div>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 6 }}>
-            {doneLessons} из {lessons.length} уроков готовы
+            {t.lessons.lessonsReady(doneLessons, lessons.length)}
           </div>
         </div>
       )}
@@ -402,7 +403,7 @@ export default function LessonList() {
           {(errorFilter ? lessons.filter(l => l.status === 'error' || l.status === 'pending') : lessons).map(lesson => {
             const status = lesson.status || 'pending'
             const isEditing = editingId === lesson.id
-            const dateStr = lesson.date ? new Date(lesson.date).toLocaleDateString('ru', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
+            const dateStr = lesson.date ? new Date(lesson.date).toLocaleDateString(lang, { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
 
             return (
               <div key={lesson.id} style={{
@@ -422,8 +423,8 @@ export default function LessonList() {
                     )}
                     <div style={{ fontSize: 12, color: 'var(--ink-soft)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                       {dateStr && <span>{dateStr}</span>}
-                      {lesson.media_count > 0 && <span>{lesson.media_count} файл{lesson.media_count === 1 ? '' : lesson.media_count < 5 ? 'а' : 'ов'}</span>}
-                      {lesson.words_total > 0 && <span>{lesson.words_total} слов</span>}
+                      {lesson.media_count > 0 && <span>{t.lessons.mediaCount(lesson.media_count)}</span>}
+                      {lesson.words_total > 0 && <span>{t.vocabulary.wordsCount(lesson.words_total)}</span>}
                     </div>
 
                     {/* Прогресс обработки */}
@@ -449,14 +450,14 @@ export default function LessonList() {
                       {user?.role !== 'owner' && status === 'done' && (
                         <button onClick={() => navigate(`/exercise-session?lesson_id=${lesson.id}&exam=1`)}
                           style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
-                          ▶ Начать
+                          ▶ {t.dashboard.start}
                         </button>
                       )}
 
                       {/* Тренер по этому уроку — тренируется на словах урока */}
                       {status === 'done' && lesson.words_total > 0 && (
                         <button onClick={() => navigate(`/ai-trainer?lesson_id=${lesson.id}&lesson_title=${encodeURIComponent(lesson.title || '')}`)}
-                          title="Поговорить с AI-тренером по словам этого урока"
+                          title={t.lessons.trainerTitle}
                           style={actionBtn('var(--surface-2)', 'var(--accent)', true)}>
                           🗣️
                         </button>
@@ -467,14 +468,14 @@ export default function LessonList() {
                           {(status === 'pending' || status === 'error') && (
                             <button onClick={() => handleProcess(lesson.id)} disabled={processing === lesson.id}
                               style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
-                              {processing === lesson.id ? '⏳' : '▶ Обработать'}
+                              {processing === lesson.id ? '⏳' : t.lessons.processAction}
                             </button>
                           )}
                           {status === 'done' && (
                             <button onClick={() => handleEnrich(lesson.id)} disabled={processing === lesson.id}
-                              title="Дополнить недостающее: переводы, картинки, переводы упражнений на все языки"
+                              title={t.lessons.enrichTitle}
                               style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
-                              {processing === lesson.id ? '⏳' : '✨ Обработать всё'}
+                              {processing === lesson.id ? '⏳' : t.lessons.enrichBtn}
                             </button>
                           )}
                           <button onClick={() => setEditingId(isEditing ? null : lesson.id)}
@@ -484,7 +485,7 @@ export default function LessonList() {
                           {/* Второстепенные действия — под «…», чтобы не захламлять карточку */}
                           <div style={{ position: 'relative' }}>
                             <button onClick={() => setOpenMenuId(openMenuId === lesson.id ? null : lesson.id)}
-                              title="Ещё действия"
+                              title={t.lessons.moreActions}
                               style={actionBtn(openMenuId === lesson.id ? 'var(--accent)' : 'var(--surface-2)', openMenuId === lesson.id ? 'var(--accent-ink)' : 'var(--ink-soft)', true)}>
                               …
                             </button>
@@ -500,37 +501,37 @@ export default function LessonList() {
                                   {status === 'done' && (
                                     <button onClick={() => { setOpenMenuId(null); handleDrawImages(lesson.id) }} disabled={processing === lesson.id}
                                       style={menuItemBtn}>
-                                      🎨 Нарисовать картинки
+                                      {t.lessons.drawBtn}
                                     </button>
                                   )}
                                   {status === 'done' && (
                                     <button onClick={() => { setOpenMenuId(null); handleRedistribute(lesson.id) }} disabled={processing === lesson.id}
                                       style={menuItemBtn}>
-                                      🎯 В наборы по темам
+                                      {t.lessons.toSetsBtn}
                                     </button>
                                   )}
                                   {lesson.words_total > 0 && (
                                     <button onClick={() => { setOpenMenuId(null); handleRegen(lesson) }} disabled={regenId === lesson.id || status === 'processing'}
                                       style={menuItemBtn}>
-                                      ⚙️ Пересоздать упражнения
+                                      {t.lessons.regenBtn}
                                     </button>
                                   )}
                                   {status === 'done' && (
                                     <button onClick={() => { setOpenMenuId(null); handleAddLetterFill(lesson.id) }} disabled={addingLetters === lesson.id}
                                       style={menuItemBtn}>
-                                      🔤 Добавить «Добавь букву»
+                                      {t.lessons.addLettersBtn}
                                     </button>
                                   )}
                                   {status === 'done' && (
                                     <button onClick={() => { setOpenMenuId(null); handleAddDictation(lesson.id) }} disabled={addingDictation === lesson.id}
                                       style={menuItemBtn}>
-                                      🎙️ Добавить диктант
+                                      {t.lessons.addDictationBtn}
                                     </button>
                                   )}
                                   <div style={{ height: 1, background: 'var(--line)', margin: '4px 2px' }} />
                                   <button onClick={() => { setOpenMenuId(null); handleDelete(lesson.id) }} disabled={deleting === lesson.id}
                                     style={{ ...menuItemBtn, color: 'var(--red)' }}>
-                                    {deleting === lesson.id ? '...' : '✕ Удалить урок'}
+                                    {deleting === lesson.id ? '...' : t.lessons.deleteBtn}
                                   </button>
                                 </div>
                               </>
@@ -560,14 +561,14 @@ export default function LessonList() {
           <div onClick={() => setDictModal(null)} style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 520, maxHeight: '85vh', background: 'var(--surface)', borderRadius: '18px 18px 0 0', padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-                <h3 style={{ margin: 0, flex: 1 }}>🎙️ Диктант из слов ({dictModal.selected.size})</h3>
+                <h3 style={{ margin: 0, flex: 1 }}>{t.lessons.dictModalTitle(dictModal.selected.size)}</h3>
                 <button onClick={() => setDictModal(null)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--ink-soft)' }}>✕</button>
               </div>
-              <input value={dictModal.q || ''} onChange={e => setDictModal(m => ({ ...m, q: e.target.value }))} placeholder="Поиск слова…"
+              <input value={dictModal.q || ''} onChange={e => setDictModal(m => ({ ...m, q: e.target.value }))} placeholder={t.lessons.searchWord}
                 style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 14, marginBottom: 8 }} />
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <button onClick={() => setDictModal(m => ({ ...m, selected: new Set(m.words.map(w => w.id)) }))} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer' }}>Все</button>
-                <button onClick={() => setDictModal(m => ({ ...m, selected: new Set() }))} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer' }}>Снять</button>
+                <button onClick={() => setDictModal(m => ({ ...m, selected: new Set(m.words.map(w => w.id)) }))} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer' }}>{t.vocabulary.all}</button>
+                <button onClick={() => setDictModal(m => ({ ...m, selected: new Set() }))} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer' }}>{t.lessons.deselectAll}</button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', marginBottom: 10 }}>
                 {shown.map(w => (
@@ -579,7 +580,7 @@ export default function LessonList() {
                 ))}
               </div>
               <button onClick={generateDictation} style={{ width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
-                Создать диктант ({dictModal.selected.size})
+                {t.lessons.createDictation(dictModal.selected.size)}
               </button>
             </div>
           </div>
@@ -590,11 +591,12 @@ export default function LessonList() {
 }
 
 function StatusBadge({ status }) {
+  const { t } = useI18nStore()
   const cfg = {
-    done:       { label: '✓ готов',      bg: 'rgba(78,154,110,0.12)',    color: 'var(--good)' },
-    processing: { label: '⏳ обработка', bg: 'rgba(201,165,74,0.12)',    color: 'var(--accent)' },
-    pending:    { label: '○ ожидает',   bg: 'var(--surface-2)',          color: 'var(--ink-soft)' },
-    error:      { label: '✗ ошибка',    bg: 'rgba(179,56,44,0.12)',      color: 'var(--red)' },
+    done:       { label: `✓ ${t.lessons.status.done}`,       bg: 'rgba(78,154,110,0.12)', color: 'var(--good)' },
+    processing: { label: `⏳ ${t.lessons.status.processing}`, bg: 'rgba(201,165,74,0.12)', color: 'var(--accent)' },
+    pending:    { label: `○ ${t.lessons.status.pending}`,    bg: 'var(--surface-2)',      color: 'var(--ink-soft)' },
+    error:      { label: `✗ ${t.lessons.status.error}`,      bg: 'rgba(179,56,44,0.12)',  color: 'var(--red)' },
   }
   const { label, bg, color } = cfg[status] || cfg.pending
   return (

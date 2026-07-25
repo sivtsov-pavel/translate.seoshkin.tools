@@ -4,6 +4,7 @@ import BookReader from './BookReader.jsx'
 import { api } from '../api/client.js'
 import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import CameraWords from '../components/CameraWords.jsx'
+import { useI18nStore } from '../store/i18n.js'
 
 // ───────── helpers ─────────
 
@@ -103,8 +104,8 @@ function LangSelect({ value, onChange, style }) {
 // ───────── плавающая панель «Копировать» (только текст на изучаемом языке) ─────────
 
 function CopySelectionBar({ count, onCopy, onCancel, copied, bottomOffset }) {
+  const t = useI18nStore(s => s.t)
   if (!count) return null
-  const label = count === 1 ? 'предложение' : count < 5 ? 'предложения' : 'предложений'
   return (
     <div style={{
       position: 'fixed', bottom: bottomOffset, left: '50%', transform: 'translateX(-50%)',
@@ -113,15 +114,15 @@ function CopySelectionBar({ count, onCopy, onCancel, copied, bottomOffset }) {
       padding: '8px 10px 8px 16px', boxShadow: '0 8px 24px rgba(0,0,0,.25)',
       transition: 'bottom .15s',
     }}>
-      <span style={{ fontSize: 13, color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>{count} {label}</span>
+      <span style={{ fontSize: 13, color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>{t.reader.sentencesCount(count)}</span>
       <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 13, padding: '6px 8px' }}>
-        Отмена
+        {t.common.cancel}
       </button>
       <button onClick={onCopy} style={{
         padding: '8px 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
         background: copied ? 'var(--good, #16a34a)' : 'var(--accent)', color: 'var(--accent-ink)',
       }}>
-        {copied ? '✓ Скопировано' : '📋 Копировать'}
+        {copied ? t.reader.copiedBtn : t.reader.copyBtn}
       </button>
     </div>
   )
@@ -130,10 +131,11 @@ function CopySelectionBar({ count, onCopy, onCancel, copied, bottomOffset }) {
 // Мини-чекбокс копирования (используется в режиме «Разговор»; в «Двуязычном»
 // определён свой локальный аналог внутри bilingual.map — не трогаем его)
 function CopyBox({ on, onToggle }) {
+  const t = useI18nStore(s => s.t)
   return (
     <span
       onClick={onToggle}
-      title="Выбрать для копирования"
+      title={t.reader.selectForCopy}
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 16, height: 16, verticalAlign: 'middle',
@@ -149,11 +151,11 @@ function CopyBox({ on, onToggle }) {
 // ───────── панель выбранных слов ─────────
 
 function WordPanel({ words, onRemove, onClear }) {
+  const t = useI18nStore(s => s.t)
   const [saved, setSaved] = useState(() => new Set())
   if (!words.size) return null
   const entries = [...words.values()]
   const count = words.size
-  const label = count === 1 ? 'слово' : count < 5 ? 'слова' : 'слов'
 
   // Добавить слово в разговорник (плюсик у каждого слова)
   const addWord = async (entry) => {
@@ -178,7 +180,7 @@ function WordPanel({ words, onRemove, onClear }) {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 20px 10px', borderBottom: '1px solid var(--line)', flexShrink: 0,
       }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{count} {label}</span>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{t.reader.wordsSelected(count)}</span>
         <button onClick={onClear} style={{ background: 'none', border: 'none', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 13, padding: '4px 8px', borderRadius: 8 }}>
           Очистить ✕
         </button>
@@ -199,7 +201,7 @@ function WordPanel({ words, onRemove, onClear }) {
               ) : entry.translation ? (
                 <span style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 600 }}>{entry.translation}</span>
               ) : (
-                <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>не найдено в словаре</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{t.reader.notInDict}</span>
               )}
               {!entry.loading && entry.example && (
                 <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2, lineHeight: 1.4 }}>
@@ -211,7 +213,7 @@ function WordPanel({ words, onRemove, onClear }) {
             {/* Плюсик — добавить слово в разговорник */}
             {!entry.loading && (
               <button onClick={() => addWord(entry)} disabled={saved.has(entry.key)}
-                title="Добавить в разговорник" style={{
+                title={t.reader.addToPhrasebook} style={{
                   width: 32, height: 32, borderRadius: 8, flexShrink: 0, cursor: saved.has(entry.key) ? 'default' : 'pointer',
                   border: `1px solid ${saved.has(entry.key) ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
                   background: saved.has(entry.key) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent-soft)',
@@ -230,6 +232,7 @@ function WordPanel({ words, onRemove, onClear }) {
 // ───────── панель истории Читалки (localStorage, без сервера) ─────────
 
 function ReaderHistoryPanel({ entries, search, onSearchChange, onClear, onClose }) {
+  const t = useI18nStore(s => s.t)
   const filtered = entries.filter(e => historyMatchesQuery(e, search))
   return (
     <div style={{
@@ -246,14 +249,14 @@ function ReaderHistoryPanel({ entries, search, onSearchChange, onClear, onClose 
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 20px 10px', borderBottom: '1px solid var(--line)', flexShrink: 0, gap: 10,
       }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>🕘 История ({entries.length})</span>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{t.reader.historyTitle(entries.length)}</span>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--ink-soft)', cursor: 'pointer', fontSize: 20, padding: '0 4px' }}>×</button>
       </div>
       <div style={{ padding: '10px 20px', display: 'flex', gap: 8, flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
         <input
           value={search}
           onChange={e => onSearchChange(e.target.value)}
-          placeholder="Поиск по истории…"
+          placeholder={t.reader.historySearch}
           style={{ flex: 1, fontSize: 14 }}
         />
         {entries.length > 0 && (
@@ -265,7 +268,7 @@ function ReaderHistoryPanel({ entries, search, onSearchChange, onClear, onClose 
       <div style={{ overflowY: 'auto', flex: 1 }}>
         {filtered.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--ink-soft)', fontSize: 14 }}>
-            {entries.length === 0 ? 'История пуста' : 'Ничего не найдено'}
+            {entries.length === 0 ? t.reader.historyEmpty : t.dashboard.nothingFound}
           </div>
         ) : filtered.map(entry => {
           const srcInfo = getLang(entry.src)
@@ -333,6 +336,7 @@ export default function TextReader() {
 }
 
 function TextReaderInner() {
+  const t = useI18nStore(s => s.t)
   const [mode, setMode]     = useState('read')   // 'read' | 'bilingual' | 'conversation'
   const [text, setText]     = useState('')
 
@@ -616,7 +620,7 @@ function TextReaderInner() {
         })
       }
     } catch (e) {
-      setTranslateError('Ошибка перевода: ' + e.message)
+      setTranslateError(t.reader.translateError + e.message)
     } finally {
       setTranslating(false)
     }
@@ -658,7 +662,7 @@ function TextReaderInner() {
 
   const startListening = useCallback((side) => {
     if (!hasSpeechApi) {
-      alert('Распознавание речи доступно только в Google Chrome. Попробуйте открыть страницу в Chrome.')
+      alert(t.reader.speechChromeOnly)
       return
     }
     window.speechSynthesis.cancel() // останавливаем TTS перед слушанием
@@ -676,7 +680,7 @@ function TextReaderInner() {
       if (transcript) handleConvResult(transcript, side)
     }
     recognition.onerror = (event) => {
-      if (event.error === 'not-allowed') alert('Нет доступа к микрофону. Разрешите в настройках браузера.')
+      if (event.error === 'not-allowed') alert(t.reader.micDenied)
       setConvListening(null)
     }
     recognition.onend = () => setConvListening(null)
@@ -721,10 +725,10 @@ function TextReaderInner() {
       if (res.text) {
         setText(res.text); setSentences([]); setBilingual([]); setActive(-1); setReadCopySelected(new Set()); setBilingualCopySelected(new Set())
       } else {
-        alert('У этого урока нет примеров предложений')
+        alert(t.reader.noLessonExamples)
       }
     } catch (e) {
-      alert('Ошибка: ' + e.message)
+      alert(t.common.error + ': ' + e.message)
     } finally {
       setLoadingLesson(false)
     }
@@ -738,7 +742,7 @@ function TextReaderInner() {
     try {
       const set = await api.post('/phrase-sets', { title: saveTitle.trim(), content: text.trim() })
       setSets(prev => [set, ...prev]); setSaveTitle(''); setShowSave(false)
-    } catch (e) { alert('Ошибка: ' + e.message) }
+    } catch (e) { alert(t.common.error + ': ' + e.message) }
     setSaving(false)
   }
 
@@ -764,12 +768,12 @@ function TextReaderInner() {
 
       {/* Заголовок + вкладки */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
-        <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: 0 }}>📖 Читалка</h1>
+        <h1 style={{ fontFamily: 'Georgia,serif', fontSize: 22, margin: 0 }}>📖 {t.nav.reader}</h1>
         <div style={{ display: 'flex', gap: 4, background: 'var(--surface-2)', borderRadius: 10, padding: 3 }}>
           {[
-            { key: 'read',         label: '▶ Читать' },
-            { key: 'bilingual',    label: '🌐 Двуязычный' },
-            { key: 'conversation', label: '💬 Разговор' },
+            { key: 'read',         label: t.reader.modeRead },
+            { key: 'bilingual',    label: t.reader.modeBilingual },
+            { key: 'conversation', label: t.reader.modeConversation },
           ].map(tab => (
             <button key={tab.key} onClick={() => { setMode(tab.key); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()); setBilingualTransSelected(new Set()); setConvCopySelected(new Set()); setConvTransSelected(new Set()) }} style={{
               padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600,
@@ -782,7 +786,7 @@ function TextReaderInner() {
         </div>
 
         {/* История переводов/разговоров — клиентски, localStorage, без сервера */}
-        <button onClick={toggleHistory} title="История переводов и разговоров (сохранено локально в браузере)"
+        <button onClick={toggleHistory} title={t.reader.historyBtnTitle}
           style={{
             padding: '7px 14px', borderRadius: 10, border: '1px solid var(--line)', cursor: 'pointer',
             fontSize: 13, fontWeight: 600,
@@ -798,8 +802,8 @@ function TextReaderInner() {
         {(mode === 'bilingual' || mode === 'conversation') && (
           <div style={{ display: 'flex', gap: 2, background: 'var(--surface-2)', borderRadius: 8, padding: 2, marginLeft: 'auto' }}>
             {[
-              { key: 'mini', label: '⚡ Быстро' , title: 'GPT-4o-mini: быстро и дёшево' },
-              { key: 'smart', label: '✨ Точно', title: 'GPT-4o: лучшее качество перевода' },
+              { key: 'mini', label: t.reader.modelFast, title: t.reader.modelFastTitle },
+              { key: 'smart', label: t.reader.modelSmart, title: t.reader.modelSmartTitle },
             ].map(m => (
               <button key={m.key} onClick={() => setTransModel(m.key)} title={m.title}
                 style={{
@@ -821,7 +825,7 @@ function TextReaderInner() {
           {/* Панель языков */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <LangSelect value={convSrcLang} onChange={setConvSrcLang} />
-            <button onClick={swapConvLangs} title="Поменять языки"
+            <button onClick={swapConvLangs} title={t.reader.swapLangs}
               style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)' }}>
               ⇄
             </button>
@@ -880,7 +884,7 @@ function TextReaderInner() {
                       {msg.translation}
                       {msg.translation && msg.translation !== '…' && msg.translation !== '❌' && (
                         <button onClick={() => speakOut(msg.translation, isSrc ? convTgtLang : convSrcLang)}
-                          title="Воспроизвести перевод"
+                          title={t.reader.playTranslation}
                           style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', fontSize: 13, padding: '0 2px' }}>
                           🔊
                         </button>
@@ -920,7 +924,7 @@ function TextReaderInner() {
                   </span>
                   <span>{lang.flag} {lang.label}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.8 }}>
-                    {isListening ? 'Говорите… (нажмите для остановки)' : convTranslating ? 'Перевожу…' : 'Нажмите и говорите'}
+                    {isListening ? t.reader.speakNow : convTranslating ? t.vocabulary.tapTranslating : t.reader.tapAndSpeak}
                   </span>
                 </button>
               )
@@ -943,7 +947,7 @@ function TextReaderInner() {
             <div data-lesson-dropdown style={{ position: 'relative' }}>
               <button onClick={() => setShowLessons(v => !v)} disabled={loadingLesson}
                 style={{ padding: '7px 14px', background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                {loadingLesson ? '…' : '📚 Из урока ▾'}
+                {loadingLesson ? '…' : t.reader.fromLesson}
               </button>
               {showLessons && (
                 <div style={{
@@ -952,14 +956,14 @@ function TextReaderInner() {
                   boxShadow: '0 8px 24px rgba(0,0,0,.15)', minWidth: 260, maxHeight: 280, overflowY: 'auto',
                 }}>
                   {lessons.length === 0 ? (
-                    <div style={{ padding: 14, fontSize: 13, color: 'var(--ink-soft)' }}>Нет уроков с примерами</div>
+                    <div style={{ padding: 14, fontSize: 13, color: 'var(--ink-soft)' }}>{t.reader.noLessonsWithExamples}</div>
                   ) : lessons.map(lesson => (
                     <div key={lesson.id} onClick={() => loadLesson(lesson)}
                       style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--line)', fontSize: 14, color: 'var(--ink)' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <span style={{ fontWeight: 600 }}>{lesson.title}</span>
-                      <span style={{ color: 'var(--ink-soft)', fontSize: 12, marginLeft: 8 }}>{lesson.sentences_count} предл.</span>
+                      <span style={{ color: 'var(--ink-soft)', fontSize: 12, marginLeft: 8 }}>{t.reader.sentAbbrev(lesson.sentences_count)}</span>
                     </div>
                   ))}
                 </div>
@@ -979,7 +983,7 @@ function TextReaderInner() {
                   boxShadow: '0 8px 24px rgba(0,0,0,.15)', minWidth: 260, maxHeight: 280, overflowY: 'auto',
                 }}>
                   {books.length === 0 ? (
-                    <div style={{ padding: 14, fontSize: 13, color: 'var(--ink-soft)' }}>Пока нет книг. Учитель добавляет их в разделе «📚 Книги».</div>
+                    <div style={{ padding: 14, fontSize: 13, color: 'var(--ink-soft)' }}>{t.reader.noBooks}</div>
                   ) : books.map(b => (
                     <div key={b.id} onClick={() => { setOpenBook(b); setShowBooks(false) }}
                       style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--line)', fontSize: 14, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}
@@ -987,7 +991,7 @@ function TextReaderInner() {
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <span style={{ fontSize: 18 }}>📖</span>
                       <span style={{ fontWeight: 600, flex: 1 }}>{b.title}</span>
-                      {b.para_index > 0 && <span style={{ color: 'var(--accent)', fontSize: 12 }}>▶ продолжить</span>}
+                      {b.para_index > 0 && <span style={{ color: 'var(--accent)', fontSize: 12 }}>{t.reader.continueReading}</span>}
                     </div>
                   ))}
                 </div>
@@ -1007,7 +1011,7 @@ function TextReaderInner() {
           <textarea
             value={text}
             onChange={e => { setText(e.target.value); setSentences([]); setBilingual([]); setActive(-1); setReadCopySelected(new Set()); setBilingualCopySelected(new Set()) }}
-            placeholder="Вставь текст... (абзацы разделяй пустой строкой)"
+            placeholder={t.reader.pastePlaceholder}
             rows={6}
             style={{ width: '100%', fontSize: 15, lineHeight: 1.7, resize: 'vertical', boxSizing: 'border-box' }}
           />
@@ -1050,7 +1054,7 @@ function TextReaderInner() {
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <LangSelect value={biSrc} onChange={v => { setBiSrc(v); setBilingual([]) }} />
-                  <button onClick={swapBiLangs} title="Поменять языки"
+                  <button onClick={swapBiLangs} title={t.reader.swapLangs}
                     style={{ padding: '7px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)' }}>
                     ⇄
                   </button>
@@ -1058,7 +1062,7 @@ function TextReaderInner() {
                 </div>
                 <button onClick={handleTranslate} disabled={!textHasContent || translating}
                   style={{ padding: '8px 20px', background: textHasContent && !translating ? 'var(--accent)' : 'var(--surface-2)', color: textHasContent && !translating ? 'var(--accent-ink)' : 'var(--ink-soft)', border: 'none', borderRadius: 10, cursor: textHasContent && !translating ? 'pointer' : 'default', fontSize: 14, fontWeight: 700, width: '100%' }}>
-                  {translating ? '⏳ Перевожу…' : '🌐 Перевести'}
+                  {translating ? t.reader.translating : t.reader.translateBtn}
                 </button>
               </>
             )}
@@ -1072,7 +1076,7 @@ function TextReaderInner() {
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input autoFocus value={saveTitle} onChange={e => setSaveTitle(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSave()}
-                  placeholder="Название набора..."
+                  placeholder={t.reader.setNamePlaceholder}
                   style={{ fontSize: 14, width: 200 }}
                 />
                 <button onClick={handleSave} disabled={saving || !saveTitle.trim()}
@@ -1107,7 +1111,7 @@ function TextReaderInner() {
                         {/* Чекбокс выбора предложения для копирования — отдельное действие, TTS-клик не трогаем */}
                         <span
                           onClick={e => { e.stopPropagation(); toggleReadCopy(i) }}
-                          title="Выбрать для копирования"
+                          title={t.reader.selectForCopy}
                           style={{
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             width: 16, height: 16, marginRight: 4, verticalAlign: 'middle',
@@ -1155,8 +1159,8 @@ function TextReaderInner() {
               ) : (
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
                   <p style={{ fontSize: 36, marginTop: 0 }}>🎧</p>
-                  <p style={{ margin: '0 0 6px' }}>Вставь немецкий текст и нажми «Читать всё»</p>
-                  <p style={{ fontSize: 13, margin: 0 }}>Или загрузи текст из урока — «Разбить» для кликабельных предложений</p>
+                  <p style={{ margin: '0 0 6px' }}>{t.reader.emptyHint1}</p>
+                  <p style={{ fontSize: 13, margin: 0 }}>{t.reader.emptyHint2}</p>
                 </div>
               )}
             </>
@@ -1184,7 +1188,7 @@ function TextReaderInner() {
                     const CopyBox = ({ on, onToggle }) => (
                       <span
                         onClick={onToggle}
-                        title="Выбрать для копирования"
+                        title={t.reader.selectForCopy}
                         style={{
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           width: 16, height: 16, verticalAlign: 'middle',
@@ -1226,7 +1230,7 @@ function TextReaderInner() {
               {!translating && bilingual.length === 0 && (
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 32, color: 'var(--ink-soft)', textAlign: 'center' }}>
                   <p style={{ fontSize: 36, marginTop: 0 }}>🌐</p>
-                  <p style={{ margin: 0 }}>{textHasContent ? 'Выбери языки и нажми «Перевести»' : 'Вставь текст или загрузи из урока'}</p>
+                  <p style={{ margin: 0 }}>{textHasContent ? t.reader.bilingualHint : t.reader.bilingualHint2}</p>
                 </div>
               )}
             </>

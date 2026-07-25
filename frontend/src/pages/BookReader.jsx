@@ -14,9 +14,9 @@ const wordKey = (w) => w.toLowerCase().replace(/^(der|die|das|ein|eine|einen|dem
 // Полноэкранный ридер книги: тап по слову → в панель «Слова» (перевод + метка + «＋ в словарь»),
 // выделение фразы → перевод + «＋ в разговорник», чтение вслух, закладка по абзацу.
 export default function BookReader({ book, onClose }) {
-  const { lang } = useI18nStore()                 // локаль ученика — язык перевода
+  const { t, lang } = useI18nStore()              // локаль ученика — язык перевода
   const [paras, setParas]     = useState(null)   // null = грузим
-  const [title, setTitle]     = useState(book.title || 'Книга')
+  const [title, setTitle]     = useState(book.title || t.reader.bookFallback)
   const [bookLang, setBookLang] = useState('de')  // язык книги (изучаемый)
   const [resumeIdx, setResumeIdx] = useState(0)
   const [curIdx, setCurIdx]   = useState(0)
@@ -53,7 +53,7 @@ export default function BookReader({ book, onClose }) {
         setCurIdx(res.para_index || 0)
         lastSaved.current = res.para_index || 0
       })
-      .catch(e => alive && setErr(e.message || 'Не удалось открыть книгу'))
+      .catch(e => alive && setErr(e.message || t.reader.openBookFailed))
     return () => { alive = false }
   }, [book.id])
 
@@ -209,14 +209,14 @@ export default function BookReader({ book, onClose }) {
       {/* Шапка + прогресс */}
       <div style={{ flexShrink: 0, borderBottom: '1px solid var(--line)', background: 'var(--surface)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px' }}>
-          <button onClick={close} style={{ border: 'none', background: 'var(--surface-2)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 14, color: 'var(--ink)' }}>← Закрыть</button>
+          <button onClick={close} style={{ border: 'none', background: 'var(--surface-2)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 14, color: 'var(--ink)' }}>{t.reader.closeBtn}</button>
           <div style={{ fontWeight: 700, fontSize: 15, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
           {speakIdx >= 0 ? (
-            <button onClick={stopAloud} title="Остановить чтение"
-              style={{ border: 'none', background: 'var(--red)', color: '#fff', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>⏹ Стоп</button>
+            <button onClick={stopAloud} title={t.reader.stopReading}
+              style={{ border: 'none', background: 'var(--red)', color: '#fff', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>{t.reader.stopBtn}</button>
           ) : (
-            <button onClick={() => setAloudMode(v => !v)} title="Читать вслух: включи и нажми на текст с нужного места"
-              style={{ border: `1px solid ${aloudMode ? 'var(--accent)' : 'var(--line)'}`, background: aloudMode ? 'var(--accent-soft)' : 'var(--surface-2)', color: aloudMode ? 'var(--accent)' : 'var(--ink)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>🔊 Вслух</button>
+            <button onClick={() => setAloudMode(v => !v)} title={t.reader.aloudTitle}
+              style={{ border: `1px solid ${aloudMode ? 'var(--accent)' : 'var(--line)'}`, background: aloudMode ? 'var(--accent-soft)' : 'var(--surface-2)', color: aloudMode ? 'var(--accent)' : 'var(--ink)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>{t.reader.aloudBtn}</button>
           )}
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', whiteSpace: 'nowrap' }}>{pct}%</div>
         </div>
@@ -228,14 +228,14 @@ export default function BookReader({ book, onClose }) {
       {/* Текст книги */}
       <div ref={containerRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 18px 160px', maxWidth: 760, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         {err && <div style={{ color: 'var(--red)', padding: 20 }}>{err}</div>}
-        {paras === null && !err && <div style={{ color: 'var(--ink-soft)', padding: 20 }}>Открываю книгу…</div>}
+        {paras === null && !err && <div style={{ color: 'var(--ink-soft)', padding: 20 }}>{t.reader.openingBook}</div>}
         {paras && !aloudMode && (
           <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 16, textAlign: 'center' }}>
-            👆 Тапни слово → в словарь · выдели фразу → перевод в разговорник{resumeIdx > 0 && speakIdx < 0 ? ' · ↓ продолжаем с места' : ''}
+            {t.reader.tapHint}{resumeIdx > 0 && speakIdx < 0 ? t.reader.resumeHint : ''}
           </div>
         )}
         {aloudMode && speakIdx < 0 && (
-          <div style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 16, textAlign: 'center', fontWeight: 600 }}>🔊 Нажми на текст — начну читать вслух с этого места</div>
+          <div style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 16, textAlign: 'center', fontWeight: 600 }}>{t.reader.aloudHint}</div>
         )}
         {paras && paras.map((p, i) => (
           <p key={i} data-idx={i} ref={el => (paraRefs.current[i] = el)}
@@ -254,7 +254,7 @@ export default function BookReader({ book, onClose }) {
             ) : <span key={j}>{tok}</span>)}
           </p>
         ))}
-        {paras && paras.length === 0 && !err && <div style={{ color: 'var(--ink-soft)', padding: 20 }}>В книге не найден текст.</div>}
+        {paras && paras.length === 0 && !err && <div style={{ color: 'var(--ink-soft)', padding: 20 }}>{t.reader.noTextInBook}</div>}
       </div>
 
       {/* Кнопка перевода выделенного фрагмента → в разговорник */}
@@ -263,7 +263,7 @@ export default function BookReader({ book, onClose }) {
           <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ flex: 1, fontSize: 13, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>«{selText}»</div>
             <button onClick={translateSelection}
-              style={{ border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>🌐 Перевести</button>
+              style={{ border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>{t.reader.translateBtn}</button>
           </div>
         </div>
       )}
@@ -272,15 +272,15 @@ export default function BookReader({ book, onClose }) {
       {sent && (
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 40, padding: 16, background: 'var(--surface)', borderTop: '2px solid var(--accent)', boxShadow: '0 -4px 16px rgba(0,0,0,.2)' }}>
           <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <button onClick={() => speak(sent.text, ttsLang)} title="Озвучить" style={{ border: 'none', background: 'var(--surface-2)', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 16 }}>🔊</button>
+            <button onClick={() => speak(sent.text, ttsLang)} title={t.reader.speakTitle} style={{ border: 'none', background: 'var(--surface-2)', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 16 }}>🔊</button>
             <div style={{ flex: 1, minWidth: 160 }}>
               <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.4 }}>{sent.text}</div>
-              <div style={{ fontSize: 14, color: 'var(--ink)' }}>{sent.loading ? 'перевожу…' : (sent.translation || 'не удалось перевести')}</div>
+              <div style={{ fontSize: 14, color: 'var(--ink)' }}>{sent.loading ? t.reader.translatingLower : (sent.translation || t.reader.translateFailed)}</div>
             </div>
             {!sent.loading && sent.translation && (
               <button onClick={saveSentence} disabled={sent.saved}
                 style={{ border: '1px solid var(--line)', background: 'transparent', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: sent.saved ? 'var(--good)' : 'var(--accent)', whiteSpace: 'nowrap' }}>
-                {sent.saved ? '✓ в разговорнике' : '＋ в разговорник'}
+                {sent.saved ? t.reader.inPhrasebookLower : t.reader.toPhrasebookLower}
               </button>
             )}
             <button onClick={() => setSent(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18, color: 'var(--ink-soft)' }}>✕</button>
@@ -293,9 +293,9 @@ export default function BookReader({ book, onClose }) {
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20, background: 'var(--surface)', borderTop: '1px solid var(--line)', boxShadow: '0 -8px 30px rgba(0,0,0,.25)', maxHeight: '58vh', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 8px', borderBottom: '1px solid var(--line)' }}>
             <span style={{ fontWeight: 700, fontSize: 14, flex: 1 }}>📚 Слова: {pickedArr.length}</span>
-            <button onClick={addAllToDict} style={{ border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12.5, fontWeight: 700 }}>＋ Все в словарь</button>
+            <button onClick={addAllToDict} style={{ border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12.5, fontWeight: 700 }}>{t.reader.allToDict}</button>
             <button onClick={() => setShowWords(v => !v)} style={{ border: 'none', background: 'var(--surface-2)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 12.5, color: 'var(--ink-soft)' }}>{showWords ? '▾' : '▴'}</button>
-            <button onClick={clearWords} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12.5, color: 'var(--ink-soft)' }}>Очистить ✕</button>
+            <button onClick={clearWords} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12.5, color: 'var(--ink-soft)' }}>{t.reader.clearBtn}</button>
           </div>
           {showWords && (
             <div style={{ overflowY: 'auto', flex: 1 }}>
@@ -307,15 +307,15 @@ export default function BookReader({ book, onClose }) {
                       <b style={{ fontSize: 15 }}>{e.word}</b>
                       <SpeakButton text={e.word} size={14} />
                       {!e.loading && (e.inDict
-                        ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px' }}>✓ в словаре</span>
-                        : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px' }}>🆕 новое</span>)}
+                        ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--good)', background: 'rgba(78,154,110,0.18)', borderRadius: 6, padding: '2px 6px' }}>{t.camera.inDictBadge}</span>
+                        : <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', borderRadius: 6, padding: '2px 6px' }}>{t.camera.newBadge}</span>)}
                     </div>
                     <div style={{ fontSize: 13.5, color: e.translation ? 'var(--accent)' : 'var(--ink-soft)', fontWeight: e.translation ? 600 : 400, fontStyle: e.translation ? 'normal' : 'italic' }}>
-                      {e.loading ? '…' : (e.translation || 'нет перевода')}
+                      {e.loading ? '…' : (e.translation || t.reader.noTranslation)}
                     </div>
                   </div>
                   {/* ＋ в словарь — доступно всегда (даже если слово уже в словаре) */}
-                  <button onClick={() => addToDict(e)} disabled={e.loading || e.inMyDict} title="Добавить в мой словарь"
+                  <button onClick={() => addToDict(e)} disabled={e.loading || e.inMyDict} title={t.reader.addToDictTitle}
                     style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, cursor: e.inMyDict ? 'default' : 'pointer',
                       border: `1px solid ${e.inMyDict ? 'var(--good)' : 'var(--accent)'}`,
                       background: e.inMyDict ? 'rgba(78,154,110,0.15)' : 'var(--accent-soft)',

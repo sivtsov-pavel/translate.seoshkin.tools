@@ -104,6 +104,7 @@ const STARTER_PHRASES = {
 }
 
 function BubbleAI({ msg, onSpeak, avatarAvailable, busy, onAvatar }) {
+  const t = useI18nStore(s => s.t)
   const char = CHARACTERS.find(c => c.id === msg.character) || CHARACTERS[0]
   return (
     <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'flex-start' }}>
@@ -121,12 +122,12 @@ function BubbleAI({ msg, onSpeak, avatarAvailable, busy, onAvatar }) {
           border: '1px solid var(--line)',
         }}>
           <span style={{ fontWeight: 600 }}>{msg.reply}</span>
-          <button onClick={() => onSpeak(msg.reply)} title="Прослухати"
+          <button onClick={() => onSpeak(msg.reply)} title={t.trainer.listen}
             style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, opacity: 0.6, verticalAlign: 'middle' }}>
             🔊
           </button>
           {avatarAvailable && !msg.videoUrl && (
-            <button onClick={onAvatar} disabled={busy} title="Видео-аватар (тратит кредит D-ID)"
+            <button onClick={onAvatar} disabled={busy} title={t.trainer.avatarCreditTitle}
               style={{ marginLeft: 6, background: 'none', border: 'none', cursor: busy ? 'default' : 'pointer', fontSize: 14, opacity: 0.6, verticalAlign: 'middle' }}>
               {busy ? '⏳' : '🎥'}
             </button>
@@ -148,7 +149,7 @@ function BubbleAI({ msg, onSpeak, avatarAvailable, busy, onAvatar }) {
             fontSize: 12, color: 'var(--ink)',
           }}>
             ✏️ {msg.correction}
-            <button onClick={() => onSpeak(msg.correction)} title="Прослухати правильно"
+            <button onClick={() => onSpeak(msg.correction)} title={t.trainer.listenCorrect}
               style={{ marginLeft: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.6, verticalAlign: 'middle' }}>
               🔊
             </button>
@@ -213,6 +214,7 @@ function AiTrainerInner() {
   const voiceEndRef = useRef()  // автопрокрутка лога чата в голосовом режиме
   const inputRef = useRef()
   const lang = useI18nStore(s => s.lang)
+  const t = useI18nStore(s => s.t)
   const S = uiStr(lang)
   const R = reportStr(lang)
   const { user } = useAuthStore()
@@ -377,7 +379,7 @@ function AiTrainerInner() {
       const r = await api.post('/ai-trainer/avatar', { text, character })
       setMessages(prev => prev.map((m, i) => i === index ? { ...m, videoUrl: r.video_url } : m))
     } catch {
-      setError('Не удалось создать видео (возможно, закончились кредиты D-ID). Голосовой режим ✨ работает без кредитов.')
+      setError(t.trainer.videoErr)
     } finally {
       setAvatarBusy(-1)
     }
@@ -616,7 +618,7 @@ function AiTrainerInner() {
       return (
         <div style={{ maxWidth: 640, margin: '0 auto', padding: '60px 16px', textAlign: 'center', color: 'var(--ink-soft)' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🗣️</div>
-          Готовлю тренировку по словам урока…
+          {t.trainer.preparing}
         </div>
       )
     }
@@ -635,7 +637,7 @@ function AiTrainerInner() {
         {lessonMode && (
           <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 14, background: 'var(--accent-soft)', border: '1px solid var(--accent)', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 20 }}>📚</span>
-            <span>Тренировка по уроку: <b>{lessonMode.title || 'урок'}</b> · {lessonMode.words.length} слов</span>
+            <span>{t.trainer.lessonTraining} <b>{lessonMode.title || t.trainer.lessonFallback}</b> · {t.vocabulary.wordsCount(lessonMode.words.length)}</span>
           </div>
         )}
 
@@ -796,7 +798,7 @@ function AiTrainerInner() {
           </button>
         )}
         {/* Тумблер «перевод» — под немецкой репликой показывать перевод на язык ученика */}
-        <button onClick={toggleBilingual} title={bilingual ? 'Перевод реплик: включён' : 'Перевод реплик: выключен'} style={{
+        <button onClick={toggleBilingual} title={bilingual ? t.trainer.bilingualOn : t.trainer.bilingualOff} style={{
           width: 38, height: 38, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', fontSize: 17,
           border: `1px solid ${bilingual ? 'var(--accent)' : 'var(--line)'}`,
           background: bilingual ? 'var(--accent-soft)' : 'var(--surface-2)',
@@ -806,7 +808,7 @@ function AiTrainerInner() {
           🌐
         </button>
         {/* Тумблер «озвучка» — проговаривать реплики голосом (чат и голосовой режим) */}
-        <button onClick={toggleSpeak} title={speakOn ? 'Тренер озвучивает — выключить голос' : 'Голос выключен — включить озвучку'} style={{
+        <button onClick={toggleSpeak} title={speakOn ? t.trainer.speakOnTitle : t.trainer.speakOffTitle} style={{
           width: 38, height: 38, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', fontSize: 17,
           border: `1px solid ${speakOn ? 'var(--accent)' : 'var(--line)'}`,
           background: speakOn ? 'var(--accent-soft)' : 'var(--surface-2)',
@@ -883,7 +885,7 @@ function AiTrainerInner() {
           {micSupported && lang !== 'de' && (
             <button
               onClick={() => setMicDe(v => !v)} disabled={listening}
-              title="Язык распознавания: свой или немецкий"
+              title={t.trainer.micLangTitle}
               style={{
                 height: 42, minWidth: 42, padding: '0 8px', borderRadius: 12, flexShrink: 0,
                 border: `1px solid ${micDe ? 'var(--accent)' : 'var(--line)'}`,
@@ -898,7 +900,7 @@ function AiTrainerInner() {
           {micSupported && (
             <button
               onClick={() => (listening ? stopMic() : startMic())}
-              title={micDe ? 'Говорить по-немецки' : 'Говорить на своём языке'}
+              title={micDe ? t.trainer.micDeTitle : t.trainer.micOwnTitle}
               style={{
                 width: 42, height: 42, borderRadius: 12, flexShrink: 0,
                 border: `1px solid ${listening ? 'var(--red)' : 'var(--line)'}`,
@@ -975,12 +977,12 @@ function AiTrainerInner() {
                   {avatarBusy === lastAiIdx ? '⏳' : '🎥'} {V.animate}
                 </button>
               )}
-              <button onClick={toggleSpeak} title={speakOn ? 'Выключить голос тренера' : 'Включить голос тренера'}
+              <button onClick={toggleSpeak} title={speakOn ? t.trainer.voiceOnShort : t.trainer.voiceOffShort}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 15, fontWeight: 600, opacity: speakOn ? 1 : 0.55 }}>
                 {speakOn ? '🔊' : '🔇'}
               </button>
               {/* Режим микрофона: 🎤 говорить по нажатию (push-to-talk) / ♾️ слушать постоянно */}
-              <button onClick={togglePtt} title={pushToTalk ? 'Говорить по нажатию (не ловит шум). Нажми — постоянное слушание' : 'Постоянное слушание. Нажми — говорить по кнопке'}
+              <button onClick={togglePtt} title={pushToTalk ? t.trainer.pttOnTitle : t.trainer.pttOffTitle}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 15, fontWeight: 600 }}>
                 {pushToTalk ? '🎤' : '♾️'}
               </button>
@@ -1031,7 +1033,7 @@ function AiTrainerInner() {
                   <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '88%', background: 'rgba(255,255,255,0.08)', borderRadius: '4px 14px 14px 14px', padding: '10px 13px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                       <span style={{ fontSize: 15, lineHeight: 1.45, fontWeight: 600 }}>{m.reply}</span>
-                      <button onClick={() => handleSpeak(m.reply)} title="Прослушать"
+                      <button onClick={() => handleSpeak(m.reply)} title={t.trainer.listen}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#fff', opacity: 0.65, flexShrink: 0, padding: 0, marginTop: 2 }}>🔊</button>
                     </div>
                     {m.translation && <div style={{ fontSize: 12.5, opacity: 0.55, marginTop: 4 }}>{m.translation}</div>}

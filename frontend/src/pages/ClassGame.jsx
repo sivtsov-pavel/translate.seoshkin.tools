@@ -23,14 +23,14 @@ export default function ClassGame() {
     try {
       await api.post('/phrasebook', { de: l.de, ru: l.tr || '', category: `🎮 ${title}`, source: 'game' })
       setSavedIds(prev => new Set(prev).add(l.id))
-    } catch (e) { alert('Ошибка: ' + e.message) }
+    } catch (e) { alert(t.common.error + ': ' + e.message) }
   }
 
   const load = async () => {
     try {
       const st = await api.get(`/class-games/${id}/status`)
       if (st.status === 'generating') { setErr(''); setData({ generating: true, progress: st.progress }); return }
-      if (st.status === 'error') { setErr(st.progress || 'Ошибка сборки игры'); setData(null); return }
+      if (st.status === 'error') { setErr(st.progress || t.games.buildError); setData(null); return }
       const d = await api.get(`/class-games/${id}?lang=${lang}`)
       setData(d)
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
@@ -42,8 +42,8 @@ export default function ClassGame() {
     try { await api.post(`/class-games/${id}/lines/${lid}/read`, {}); load() } catch {}
   }
   const toPhrasebook = async () => {
-    try { const r = await api.post(`/class-games/${id}/to-phrasebook`, { lang }); setSaved(`✓ Сохранено в разговорник: ${r.saved}`) }
-    catch (e) { setSaved('Ошибка: ' + e.message) }
+    try { const r = await api.post(`/class-games/${id}/to-phrasebook`, { lang }); setSaved(t.camera.savedToPhrasebook(r.saved)) }
+    catch (e) { setSaved(t.common.error + ': ' + e.message) }
   }
 
   if (err) return <Wrap><div style={{ color: 'var(--red)' }}>{err}</div></Wrap>
@@ -57,14 +57,14 @@ export default function ClassGame() {
     return (
       <Wrap>
         <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px' }}>🎮 {data.game.title || t.games.classGame}</h1>
-        <p style={{ color: 'var(--ink-soft)', margin: '0 0 16px', fontSize: 14 }}>Твои {lines.length} фраз. Читай вслух, когда скажет учитель.</p>
+        <p style={{ color: 'var(--ink-soft)', margin: '0 0 16px', fontSize: 14 }}>{t.games.yourPhrasesHint(lines.length)}</p>
         {lines.map(l => (
           <div key={l.id} style={{ background: 'var(--surface)', border: `1px solid ${l.read ? 'var(--good, #16a34a)' : 'var(--line)'}`, borderRadius: 14, padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{ROLE[l.role] || ROLE.statement}</span>
               {/* Крестик «+ в разговорник» */}
               <button onClick={() => addOne(l, data.game.title || t.games.classGame)} disabled={savedIds.has(l.id)}
-                title="Добавить в разговорник" style={{
+                title={t.reader.addToPhrasebook} style={{
                   width: 30, height: 30, borderRadius: 8, flexShrink: 0, cursor: savedIds.has(l.id) ? 'default' : 'pointer',
                   border: `1px solid ${savedIds.has(l.id) ? 'var(--good, #16a34a)' : 'var(--accent)'}`,
                   background: savedIds.has(l.id) ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--accent-soft)',

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
+import { useI18nStore } from '../store/i18n.js'
 
 // Экран ученика: войти в класс по коду или по ссылке-приглашению /join/:code.
 export default function JoinClass() {
+  const t = useI18nStore(s => s.t)
   const { code: urlCode } = useParams()
   const navigate = useNavigate()
   const [code, setCode] = useState(urlCode || '')
@@ -28,15 +30,15 @@ export default function JoinClass() {
         <div style={{ padding: '26px 24px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(124,92,255,0.16), rgba(59,122,87,0.14))' }}>
           <div style={{ fontSize: 44 }}>🏫</div>
           <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6 }}>Войти в класс</div>
-          <div style={{ color: 'var(--ink-soft)', fontSize: 14, marginTop: 4 }}>Введи код от учителя или открой ссылку-приглашение</div>
+          <div style={{ color: 'var(--ink-soft)', fontSize: 14, marginTop: 4 }}>{t.school.joinHint}</div>
         </div>
 
         <div style={{ padding: '22px 24px' }}>
           {status === 'done' ? (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 40 }}>🎉</div>
-              <div style={{ fontSize: 18, fontWeight: 700, margin: '8px 0 4px' }}>Ты в классе «{joined?.name}»!</div>
-              <div style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 18 }}>Теперь тебе доступны уроки этого класса.</div>
+              <div style={{ fontSize: 18, fontWeight: 700, margin: '8px 0 4px' }}>{t.school.joinedTitle(joined?.name)}</div>
+              <div style={{ color: 'var(--ink-soft)', fontSize: 14, marginBottom: 18 }}>{t.school.joinedSub}</div>
               <button onClick={() => navigate('/')} style={{
                 padding: '12px 26px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 800, fontSize: 15,
@@ -46,7 +48,7 @@ export default function JoinClass() {
             <>
               <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())}
                 onKeyDown={e => e.key === 'Enter' && join(code)}
-                placeholder="КОД КЛАССА"
+                placeholder={t.school.codePlaceholder}
                 style={{
                   width: '100%', boxSizing: 'border-box', textAlign: 'center', fontFamily: 'monospace',
                   fontSize: 24, fontWeight: 800, letterSpacing: '4px', padding: '14px', borderRadius: 12,
@@ -58,7 +60,7 @@ export default function JoinClass() {
                 cursor: status === 'joining' ? 'default' : 'pointer',
                 background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 800, fontSize: 15,
                 opacity: (status === 'joining' || !code.trim()) ? 0.6 : 1,
-              }}>{status === 'joining' ? 'Вхожу…' : 'Войти в класс'}</button>
+              }}>{status === 'joining' ? t.school.joining : t.school.joinBtn}</button>
             </>
           )}
         </div>
