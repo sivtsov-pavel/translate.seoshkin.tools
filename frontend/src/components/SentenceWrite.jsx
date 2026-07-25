@@ -3,9 +3,10 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import AvatarReaction from './AvatarReaction.jsx'
+import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import TapText from './TapText.jsx'
 
-export default function SentenceWrite({ exercise, onAnswer, payloadTranslations, showOriginal }) {
+export default function SentenceWrite({ exercise, onAnswer, payloadTranslations, showOriginal, lessonTitle, typeLabel }) {
   const [sentence, setSentence] = useState('')
   const [result, setResult] = useState(null)
   const [reaction, setReaction] = useState(null)
@@ -45,6 +46,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
       <AvatarReaction imageUrl={exercise.image_url} wordDe={word_de} reaction={reaction} />
       <div className="exercise-card-content" style={{ padding: 24 }}>
+      <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
       {/* Задание */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 13, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>

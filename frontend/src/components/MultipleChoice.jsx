@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
+import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import { getTranslation, getEffectiveLang } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 
-export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe, imageUrl, translations, translationRu, payloadTranslations, exerciseId, showOriginal }) {
+export default function MultipleChoice({ payload, onAnswer, lessonTitle, typeLabel, wordDe, imageUrl, translations, translationRu, payloadTranslations, exerciseId, showOriginal }) {
   const [selected, setSelected] = useState(null)
   const resultRef = useRef(null)
   const { t, lang } = useI18nStore()
@@ -72,11 +73,7 @@ export default function MultipleChoice({ payload, onAnswer, lessonTitle, wordDe,
         onReactionEnd={() => setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 60)} />
 
       <div className="exercise-card-content" style={{ padding: 24 }}>
-      {lessonTitle && (
-        <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
-          📚 {lessonTitle}
-        </div>
-      )}
+      <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
 
       <div className="exercise-question-block" style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '14px 20px', marginBottom: 18, textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>

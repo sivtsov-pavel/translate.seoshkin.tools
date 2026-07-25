@@ -5,10 +5,11 @@ import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 import AvatarReaction from './AvatarReaction.jsx'
+import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import TapText from './TapText.jsx'
 import { normalizeFillBlank } from '../utils/fillblank.js'
 
-export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, imageUrl, payloadTranslations, translations, translationRu, exerciseId, showOriginal }) {
+export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, typeLabel, imageUrl, payloadTranslations, translations, translationRu, exerciseId, showOriginal }) {
   const [answer, setAnswer] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [reaction, setReaction] = useState(null)
@@ -68,11 +69,7 @@ export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, 
         onReactionEnd={() => speak(fullSentence)} />
       <div className="exercise-card-content" style={{ padding: 24 }}>
 
-      {lessonTitle && (
-        <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
-          📚 {lessonTitle}
-        </div>
-      )}
+      <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
 
       {/* Описание задания — понятно, как для детей */}
       <div style={{ fontSize: 14, color: 'var(--ink-soft)', marginBottom: 12, textAlign: 'center' }}>

@@ -4,8 +4,9 @@ import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
+import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 
-export default function Dictation({ payload, onAnswer, lessonTitle, translations, translationRu, exerciseId, showOriginal }) {
+export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, translations, translationRu, exerciseId, showOriginal }) {
   const { word_de, translation_ru } = payload
   const [input, setInput]     = useState('')
   const [checked, setChecked] = useState(false)
@@ -52,11 +53,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, translations
 
   return (
     <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {lessonTitle && (
-        <div style={{ fontSize: 12, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          {lessonTitle}
-        </div>
-      )}
+      <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
 
       <div style={{ textAlign: 'center', padding: '20px 16px', background: 'var(--surface-2)', borderRadius: 16 }}>
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase' }}>

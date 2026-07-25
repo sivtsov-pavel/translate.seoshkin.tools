@@ -5,6 +5,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import WordImage, { PabloCircle } from './WordImage.jsx'
 import { ExerciseActions } from './ExerciseActions.jsx'
+import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 
 // ── Немецкая фонетика ──────────────────────────────────────────────
 // Комбинации букв — в порядке от длинных к коротким (иначе «sch» перехватит «ch»)
@@ -275,7 +276,7 @@ function PhonemeDiff({ transcript, word }) {
 }
 
 // ── Главный компонент ───────────────────────────────────────────────
-export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, exerciseId }) {
+export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLabel, imageUrl, translations, translationRu, exerciseId }) {
   const { word_de, translation_ru } = payload
   const { t, lang } = useI18nStore()
 
@@ -371,11 +372,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, imageUr
       )}
 
       <div className="exercise-card-content" style={{ padding: '20px 20px 24px' }}>
-        {lessonTitle && (
-          <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
-            📚 {lessonTitle}
-          </div>
-        )}
+        <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
 
         {/* ── Немецкое слово с подсветкой и ударением ── */}
         <div style={{ background: 'var(--surface-2)', borderRadius: 14, padding: '16px 18px', marginBottom: 14 }}>

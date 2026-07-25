@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
+import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import { getTranslation } from '../utils/translation.js'
 import TapText from './TapText.jsx'
 import { JustifyHint } from './ExerciseActions.jsx'
 
-export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu, showOriginal, wordId, onMarkLearning, learned }) {
+export default function Flashcard({ payload, onAnswer, lessonTitle, typeLabel, imageUrl, translations, translationRu, showOriginal, wordId, onMarkLearning, learned }) {
   const [revealed, setRevealed] = useState(false)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading]   = useState(false)
@@ -39,12 +40,6 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
 
   return (
     <div>
-      {lessonTitle && (
-        <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 8, fontWeight: 500 }}>
-          📚 {lessonTitle}
-        </div>
-      )}
-
       <div
         onClick={!revealed ? reveal : undefined}
         className="exercise-card"
@@ -58,6 +53,7 @@ export default function Flashcard({ payload, onAnswer, lessonTitle, imageUrl, tr
           onReactionEnd={() => onAnswer(gradeRef.current)} />
 
         <div className="exercise-card-content" style={{ padding: '24px 24px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
           <div style={{ fontSize: 36, fontWeight: 700, textAlign: 'center', color: 'var(--ink)' }} dir="ltr">
             <TapText>{payload.question}</TapText>

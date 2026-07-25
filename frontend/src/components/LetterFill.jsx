@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
+import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 
 // Строим массив символов слова, скрывая ~40% букв под пропуски ('_'). Детерминированно
 // (одно и то же слово → одна и та же маска), первую букву не прячем, пробелы/дефисы не трогаем.
@@ -19,7 +20,7 @@ function buildMask(answer) {
   return chars.map((c, i) => (hide.has(i) ? '_' : c))
 }
 
-export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, translations, translationRu }) {
+export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, imageUrl, translations, translationRu }) {
   const [vals, setVals]         = useState({})      // {индекс_буквы: введённый символ}
   const [submitted, setSubmitted] = useState(false)
   const [correct, setCorrect]   = useState(false)
@@ -90,11 +91,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, imageUrl, t
       <AvatarReaction imageUrl={imageUrl} wordDe={payload.word_de} reaction={reaction} />
 
       <div className="exercise-card-content" style={{ padding: 24 }}>
-      {lessonTitle && (
-        <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10, fontWeight: 500 }}>
-          📚 {lessonTitle}
-        </div>
-      )}
+      <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
 
       <p style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 15, marginBottom: 16 }}>
         {t.exercise.rememberWord} <strong style={{ color: 'var(--ink)' }}>{hint}</strong>
