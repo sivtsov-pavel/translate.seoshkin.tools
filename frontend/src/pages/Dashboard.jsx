@@ -152,7 +152,7 @@ export default function Dashboard() {
 
   // Курс-баннер выбора расписания (дрип): курсы без календаря активного языка
   const needsScheduleBanner = needsSchedule.length > 0 && (
-    <div className="dl-banner dl-banner--accent"
+    <div className="dl-banner dl-banner--accent" data-tour="schedule"
       onClick={() => needsSchedule.length === 1 && navigate(`/courses/${needsSchedule[0].id}`)}
       style={{ cursor: needsSchedule.length === 1 ? 'pointer' : 'default' }}>
       <span style={{ fontSize: 26 }}>📅</span>
@@ -199,7 +199,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
           <div className="dl-greeting">{greeting}{name ? `, ${name}` : ''} <span className="dl-wave">👋</span></div>
           {gateLangs && gateLangs.length >= 2 && (
-            <button onClick={() => setGateOpen(true)}
+            <button onClick={() => setGateOpen(true)} data-tour="change-course"
               style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 11, border: '1px solid var(--gold)', background: 'rgba(185,151,91,0.10)', color: 'var(--gold-dark)', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
               <Languages size={16} /> {t.nav.changeCourse || 'Сменить курс'}
             </button>
