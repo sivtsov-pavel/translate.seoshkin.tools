@@ -1,5 +1,6 @@
 export const uk = {
   nav: {
+    iLearn: 'Вивчаю',
     tabProfile: 'Профіль',
     tabSettings: 'Налаштування',
     tabIntegrations: 'Інтеграції',

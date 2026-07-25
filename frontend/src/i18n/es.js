@@ -1,5 +1,6 @@
 export const es = {
   nav: {
+    iLearn: 'Aprendo',
     tabProfile: 'Perfil',
     tabSettings: 'Ajustes',
     tabIntegrations: 'Integraciones',

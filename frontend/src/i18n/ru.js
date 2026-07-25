@@ -1,6 +1,7 @@
 export const ru = {
   // Навигация
   nav: {
+    iLearn: 'Учу',
     tabProfile: 'Профиль',
     tabSettings: 'Настройки',
     tabIntegrations: 'Интеграции',

@@ -1,5 +1,6 @@
 export const tr = {
   nav: {
+    iLearn: 'Öğreniyorum',
     tabProfile: 'Profil',
     tabSettings: 'Ayarlar',
     tabIntegrations: 'Entegrasyonlar',

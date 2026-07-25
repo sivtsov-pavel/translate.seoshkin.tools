@@ -1,6 +1,7 @@
 export const de = {
   // Navigation
   nav: {
+    iLearn: 'Ich lerne',
     tabProfile: 'Profil',
     tabSettings: 'Einstellungen',
     tabIntegrations: 'Integrationen',

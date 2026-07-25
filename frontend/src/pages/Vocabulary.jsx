@@ -6,7 +6,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 import { cardUrl, shareLink } from '../utils/share.js'
-import { numberWord } from '../utils/numberWords.js'
+import { numberWordAny, LARGE_NUMBERS, TTS_LOCALE } from '../utils/numberWords.js'
 
 // Название изучаемого языка — для плейсхолдера поиска (какой словарь)
 const TARGET_LANG_NAME = { de: 'немецкий', es: 'испанский', fr: 'французский', it: 'итальянский', en: 'английский', pt: 'португальский' }
@@ -327,8 +327,8 @@ export default function Vocabulary() {
         </div>
       )}
 
-      {view === 'alphabet' && <GermanAlphabet />}
-      {view === 'numbers' && <GermanNumbers />}
+      {view === 'alphabet' && <AlphabetTab />}
+      {view === 'numbers' && <NumbersTab />}
 
       {view === 'words' && <div style={{ padding: '0 14px' }}>
 
@@ -513,7 +513,7 @@ const DE_ALPHABET = [
   { letter: 'ß', name: 'Eszett', ipa: '[ɛsˈtsɛt]',ru: 'эс-цэт',   word: 'Straße',    wordRu: 'улица',      umlaut: true },
 ]
 
-const PRONUNCIATION_RULES = [
+const DE_RULES = [
   ['ch', 'после а, о, у, au — [х] (Bach), иначе — мягкий [хь] (ich)'],
   ['sch', '[ш] — Schule, Schüler'],
   ['ei', '[ай] — mein, Stein, drei'],
@@ -528,61 +528,111 @@ const PRONUNCIATION_RULES = [
   ['ß', '[с] острая — Straße, Fuß'],
 ]
 
-function GermanAlphabet() {
+// Испанский алфавит — 27 букв (включая Ñ). Название буквы + пример слова с переводом.
+const ES_ALPHABET = [
+  { letter: 'A', name: 'a',     ru: 'а',      word: 'avión',    wordRu: 'самолёт',  vowel: true },
+  { letter: 'B', name: 'be',    ru: 'бэ',     word: 'barco',    wordRu: 'корабль' },
+  { letter: 'C', name: 'ce',    ru: 'сэ',     word: 'casa',     wordRu: 'дом' },
+  { letter: 'D', name: 'de',    ru: 'дэ',     word: 'dedo',     wordRu: 'палец' },
+  { letter: 'E', name: 'e',     ru: 'э',      word: 'elefante', wordRu: 'слон',     vowel: true },
+  { letter: 'F', name: 'efe',   ru: 'эфэ',    word: 'flor',     wordRu: 'цветок' },
+  { letter: 'G', name: 'ge',    ru: 'хэ',     word: 'gato',     wordRu: 'кот' },
+  { letter: 'H', name: 'hache', ru: 'аче',    word: 'hola',     wordRu: 'привет (H немая)' },
+  { letter: 'I', name: 'i',     ru: 'и',      word: 'isla',     wordRu: 'остров',   vowel: true },
+  { letter: 'J', name: 'jota',  ru: 'хота',   word: 'jamón',    wordRu: 'ветчина' },
+  { letter: 'K', name: 'ka',    ru: 'ка',     word: 'kilo',     wordRu: 'килограмм' },
+  { letter: 'L', name: 'ele',   ru: 'эле',    word: 'luna',     wordRu: 'луна' },
+  { letter: 'M', name: 'eme',   ru: 'эмэ',    word: 'mano',     wordRu: 'рука' },
+  { letter: 'N', name: 'ene',   ru: 'энэ',    word: 'nariz',    wordRu: 'нос' },
+  { letter: 'Ñ', name: 'eñe',   ru: 'энье',   word: 'niño',     wordRu: 'ребёнок' },
+  { letter: 'O', name: 'o',     ru: 'о',      word: 'ojo',      wordRu: 'глаз',     vowel: true },
+  { letter: 'P', name: 'pe',    ru: 'пэ',     word: 'perro',    wordRu: 'собака' },
+  { letter: 'Q', name: 'cu',    ru: 'ку',     word: 'queso',    wordRu: 'сыр' },
+  { letter: 'R', name: 'erre',  ru: 'эрэ',    word: 'rojo',     wordRu: 'красный' },
+  { letter: 'S', name: 'ese',   ru: 'эсэ',    word: 'sol',      wordRu: 'солнце' },
+  { letter: 'T', name: 'te',    ru: 'тэ',     word: 'taza',     wordRu: 'чашка' },
+  { letter: 'U', name: 'u',     ru: 'у',      word: 'uva',      wordRu: 'виноград', vowel: true },
+  { letter: 'V', name: 'uve',   ru: 'убэ',    word: 'vaca',     wordRu: 'корова' },
+  { letter: 'W', name: 'uve doble', ru: 'убэ добле', word: 'wifi', wordRu: 'вайфай' },
+  { letter: 'X', name: 'equis', ru: 'экис',   word: 'taxi',     wordRu: 'такси' },
+  { letter: 'Y', name: 'ye',    ru: 'йе',     word: 'yo',       wordRu: 'я' },
+  { letter: 'Z', name: 'zeta',  ru: 'сэта',   word: 'zapato',   wordRu: 'ботинок' },
+]
+
+const ES_RULES = [
+  ['ll', '[й]/[ль] — llave (ключ), calle (улица)'],
+  ['ñ', '[нь] — niño, España'],
+  ['ce/ci', '[с]/[θ] — cine, cero (перед a/o/u — [к]: casa)'],
+  ['ge/gi', '[х] — gente, gigante (перед a/o/u — [г]: gato)'],
+  ['h', 'немая — hola, hora (не читается)'],
+  ['j', 'всегда [х] — jamón, rojo'],
+  ['qu', '[к] — queso, aquí'],
+  ['rr', 'раскатистое [рр] — perro, carro'],
+  ['z', '[с]/[θ] — zapato, luz'],
+  ['v', 'как [б] — vaca, vino'],
+]
+
+// Алфавиты по изучаемому языку. de — с умлаутами (отдельная секция); es — 27 букв в одной сетке.
+const ALPHABETS = {
+  de: { letters: DE_ALPHABET, rules: DE_RULES, intro: 'Немецкий алфавит — 26 букв + умлауты Ä Ö Ü и лигатура ß.', rulesTitle: '💡 Особенности немецкого произношения', specialTitle: 'Умлауты и ß' },
+  es: { letters: ES_ALPHABET, rules: ES_RULES, intro: 'Испанский алфавит — 27 букв, включая Ñ.', rulesTitle: '💡 Особенности испанского произношения' },
+}
+
+function AlphabetTab() {
   const [active, setActive] = useState(null)
+  const target = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
+  const data = ALPHABETS[target]
+  const tts = TTS_LOCALE[target] || 'de-DE'
 
-  const playLetter = (item, e) => {
-    e.stopPropagation()
-    speak(item.name || item.letter, 'de-DE')
-  }
+  if (!data) return (
+    <div style={{ padding: '28px 14px', color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6 }}>
+      Алфавит для этого языка ещё готовим. 🙂 Сейчас есть немецкий и испанский.
+    </div>
+  )
 
-  const playWord = (item, e) => {
-    e.stopPropagation()
-    speak(item.word, 'de-DE')
-  }
+  const playLetter = (item, e) => { e.stopPropagation(); speak(item.name || item.letter, tts) }
+  const playWord = (item, e) => { e.stopPropagation(); speak(item.word, tts) }
+  const main = data.letters.filter(l => !l.umlaut)
+  const special = data.letters.filter(l => l.umlaut)
+
+  const grid = (items) => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 24 }}>
+      {items.map(item => (
+        <LetterCard key={item.letter} item={item} active={active === item.letter}
+          onSelect={() => setActive(active === item.letter ? null : item.letter)}
+          onPlayLetter={e => playLetter(item, e)}
+          onPlayWord={e => playWord(item, e)}
+        />
+      ))}
+    </div>
+  )
 
   return (
     <div style={{ padding: '0 14px 24px' }}>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 18px', lineHeight: 1.6 }}>
-        Немецкий алфавит — 26 букв + умлауты <b>Ä Ö Ü</b> и лигатура <b>ß</b>.
-        Нажми 🔊 чтобы услышать название буквы, нажми на слово — услышишь пример.
+        {data.intro} Нажми 🔊 — услышишь название буквы, нажми на слово — услышишь пример.
       </p>
 
-      {/* Основные буквы */}
       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
-        Алфавит A–Z
+        Алфавит
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 24 }}>
-        {DE_ALPHABET.filter(l => !l.umlaut).map(item => (
-          <LetterCard key={item.letter} item={item} active={active === item.letter}
-            onSelect={() => setActive(active === item.letter ? null : item.letter)}
-            onPlayLetter={e => playLetter(item, e)}
-            onPlayWord={e => playWord(item, e)}
-          />
-        ))}
-      </div>
+      {grid(main)}
 
-      {/* Умлауты */}
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
-        Умлауты и ß
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 24 }}>
-        {DE_ALPHABET.filter(l => l.umlaut).map(item => (
-          <LetterCard key={item.letter} item={item} active={active === item.letter}
-            onSelect={() => setActive(active === item.letter ? null : item.letter)}
-            onPlayLetter={e => playLetter(item, e)}
-            onPlayWord={e => playWord(item, e)}
-          />
-        ))}
-      </div>
+      {special.length > 0 && (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+            {data.specialTitle}
+          </div>
+          {grid(special)}
+        </>
+      )}
 
-      {/* Правила произношения */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 14, padding: '16px 18px' }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14, color: 'var(--ink)' }}>
-          💡 Особенности немецкого произношения
+          {data.rulesTitle}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px 16px' }}>
-          {PRONUNCIATION_RULES.map(([rule, hint]) => (
+          {data.rules.map(([rule, hint]) => (
             <div key={rule} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <span style={{
                 fontWeight: 700, color: 'var(--accent)', fontFamily: 'monospace', fontSize: 14,
@@ -701,27 +751,42 @@ const DE_NUMBERS = [
 // Десятки для группировки
 const TENS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
-function GermanNumbers() {
+function NumbersTab() {
   const [active, setActive] = useState(null)
   const { lang } = useI18nStore()
+  const target = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
+  const tts = TTS_LOCALE[target] || 'de-DE'
+  const trLang = lang === 'de' ? 'ru' : lang // немецкий интерфейс — перевод по-русски (как везде в приложении)
 
-  const playNum = (num) => {
-    speak(num.de, 'de-DE')
-    setActive(num.n)
+  const playNum = (n, word) => {
+    speak(word, tts)
+    setActive(n)
     setTimeout(() => setActive(null), 1200)
   }
 
-  const groups = TENS.slice(0, -1).map((start, i) => ({
-    label: start === 0 ? '1–10' : `${start + 1}–${TENS[i + 1]}`,
-    items: DE_NUMBERS.filter(n => n.n > start && n.n <= TENS[i + 1]),
-  })).filter(g => g.items.length)
+  // 0–100 группами по десяткам + отдельная группа крупных чисел. Слова — на языке курса.
+  const ranges = [[0, 10], [11, 20], [21, 30], [31, 40], [41, 50], [51, 60], [61, 70], [71, 80], [81, 90], [91, 100]]
+  const groups = []
+  for (const [lo, hi] of ranges) {
+    const items = []
+    for (let n = lo; n <= hi; n++) {
+      const word = numberWordAny(n, target)
+      if (word) items.push({ n, word, tr: numberWordAny(n, trLang) })
+    }
+    if (items.length) groups.push({ label: `${lo}–${hi}`, items })
+  }
+  const largeItems = LARGE_NUMBERS.filter(n => n > 100)
+    .map(n => ({ n, word: numberWordAny(n, target), tr: numberWordAny(n, trLang) }))
+    .filter(x => x.word)
+  if (largeItems.length) groups.push({ label: 'Крупные числа', items: largeItems })
+
+  const fmt = (n) => n.toLocaleString('ru-RU') // 100000 → «100 000»
 
   return (
     <div style={{ padding: '0 14px 24px' }}>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 18px', lineHeight: 1.6 }}>
-        Цифры и числа от 1 до 100. Нажми на карточку — услышишь произношение.
-        <br />
-        <b>Правило:</b> от 21 до 99 сначала единицы, потом «und», потом десятки: <b>ein-und-zwanzig</b> (21).
+        Числа от 0 до 100 и крупные — на языке твоего курса. Нажми на карточку — услышишь произношение.
+        {target === 'de' && <><br /><b>Правило:</b> от 21 до 99 сначала единицы, потом «und», потом десятки: <b>ein-und-zwanzig</b> (21).</>}
       </p>
 
       {groups.map(group => (
@@ -731,7 +796,7 @@ function GermanNumbers() {
           </div>
           <div className="vocab-numbers-grid">
             {group.items.map(num => (
-              <button key={num.n} onClick={() => playNum(num)}
+              <button key={num.n} onClick={() => playNum(num.n, num.word)}
                 style={{
                   border: `2px solid ${active === num.n ? 'var(--accent)' : 'var(--line)'}`,
                   borderRadius: 12, background: active === num.n ? 'var(--accent-soft)' : 'var(--surface)',
@@ -742,13 +807,13 @@ function GermanNumbers() {
                 <span style={{
                   width: 36, height: 36, borderRadius: 8, background: 'var(--accent)', color: 'var(--accent-ink)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 900, fontSize: 15, flexShrink: 0,
+                  fontWeight: 900, fontSize: num.n >= 10000 ? 9 : 15, flexShrink: 0, textAlign: 'center', lineHeight: 1,
                 }}>
-                  {num.n}
+                  {fmt(num.n)}
                 </span>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', lineHeight: 1.2 }}>{num.de}</div>
-                  <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 1 }}>{numberWord(num.n, lang, num.ru)}</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', lineHeight: 1.2 }}>{num.word}</div>
+                  {num.tr && <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 1 }}>{num.tr}</div>}
                 </div>
                 <span style={{ marginLeft: 'auto', fontSize: 16, opacity: 0.5 }}>🔊</span>
               </button>
@@ -757,16 +822,17 @@ function GermanNumbers() {
         </div>
       ))}
 
-      {/* Правило образования составных чисел */}
-      <div style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent)', borderRadius: 14, padding: '14px 18px', marginTop: 8 }}>
-        <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 14 }}>📐 Как образуются числа 21–99</div>
-        <div style={{ fontSize: 13, color: 'var(--ink)', lineHeight: 1.7 }}>
-          <b>Единицы + und + десятки</b>:
-          <br />→ <b>vier</b>-und-<b>zwanzig</b> = 24 (четыре-и-двадцать)
-          <br />→ <b>sieben</b>-und-<b>achtzig</b> = 87 (семь-и-восемьдесят)
-          <br />→ <b>drei</b>-und-<b>dreißig</b> = 33 (три-и-тридцать)
+      {target === 'de' && (
+        <div style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent)', borderRadius: 14, padding: '14px 18px', marginTop: 8 }}>
+          <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 14 }}>📐 Как образуются числа 21–99</div>
+          <div style={{ fontSize: 13, color: 'var(--ink)', lineHeight: 1.7 }}>
+            <b>Единицы + und + десятки</b>:
+            <br />→ <b>vier</b>-und-<b>zwanzig</b> = 24 (четыре-и-двадцать)
+            <br />→ <b>sieben</b>-und-<b>achtzig</b> = 87 (семь-и-восемьдесят)
+            <br />→ <b>drei</b>-und-<b>dreißig</b> = 33 (три-и-тридцать)
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

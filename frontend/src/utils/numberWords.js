@@ -91,7 +91,56 @@ function sq(n) {
   return u ? `${SQ_TENS[t]} e ${SQ_UNITS[u]}` : SQ_TENS[t]
 }
 
-const GENERATORS = { en, es, fr, uk, bg, tr, ar, sq }
+// Немецкий генератор 0–100 (системно, без пропусков — заменяет ручной DE_NUMBERS)
+const DE_UNITS = ['null', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwölf', 'dreizehn', 'vierzehn', 'fünfzehn', 'sechzehn', 'siebzehn', 'achtzehn', 'neunzehn']
+const DE_TENS = ['', '', 'zwanzig', 'dreißig', 'vierzig', 'fünfzig', 'sechzig', 'siebzig', 'achtzig', 'neunzig']
+function de(n) {
+  if (n === 100) return 'hundert'
+  if (n < 20) return DE_UNITS[n]
+  const t = Math.floor(n / 10), u = n % 10
+  if (u === 0) return DE_TENS[t]
+  return `${u === 1 ? 'ein' : DE_UNITS[u]}und${DE_TENS[t]}` // einundzwanzig
+}
+
+// Русский генератор 0–100 (для перевода названия числа на русский интерфейс)
+const RU_UNITS = ['ноль', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять', 'десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать']
+const RU_TENS = ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто']
+function ru(n) {
+  if (n === 100) return 'сто'
+  if (n < 20) return RU_UNITS[n]
+  const t = Math.floor(n / 10), u = n % 10
+  return u ? `${RU_TENS[t]} ${RU_UNITS[u]}` : RU_TENS[t]
+}
+
+const GENERATORS = { de, ru, en, es, fr, uk, bg, tr, ar, sq }
+
+// Крупные «круглые» числа — курируем словами по каждому языку (генераторы выше только до 100).
+export const LARGE_NUMBERS = [100, 200, 1000, 10000, 100000, 1000000]
+const LARGE = {
+  de: { 100: 'hundert', 200: 'zweihundert', 1000: 'tausend', 10000: 'zehntausend', 100000: 'hunderttausend', 1000000: 'eine Million' },
+  ru: { 100: 'сто', 200: 'двести', 1000: 'тысяча', 10000: 'десять тысяч', 100000: 'сто тысяч', 1000000: 'миллион' },
+  en: { 100: 'one hundred', 200: 'two hundred', 1000: 'one thousand', 10000: 'ten thousand', 100000: 'one hundred thousand', 1000000: 'one million' },
+  es: { 100: 'cien', 200: 'doscientos', 1000: 'mil', 10000: 'diez mil', 100000: 'cien mil', 1000000: 'un millón' },
+  fr: { 100: 'cent', 200: 'deux cents', 1000: 'mille', 10000: 'dix mille', 100000: 'cent mille', 1000000: 'un million' },
+  uk: { 100: 'сто', 200: 'двісті', 1000: 'тисяча', 10000: 'десять тисяч', 100000: 'сто тисяч', 1000000: 'мільйон' },
+  bg: { 100: 'сто', 200: 'двеста', 1000: 'хиляда', 10000: 'десет хиляди', 100000: 'сто хиляди', 1000000: 'милион' },
+  tr: { 100: 'yüz', 200: 'iki yüz', 1000: 'bin', 10000: 'on bin', 100000: 'yüz bin', 1000000: 'bir milyon' },
+  ar: { 100: 'مئة', 200: 'مئتان', 1000: 'ألف', 10000: 'عشرة آلاف', 100000: 'مئة ألف', 1000000: 'مليون' },
+  sq: { 100: 'njëqind', 200: 'dyqind', 1000: 'një mijë', 10000: 'dhjetë mijë', 100000: 'njëqind mijë', 1000000: 'një milion' },
+}
+
+// Слово-число в ЛЮБОМ языке (для «Цифры» на языке курса + перевод на интерфейс).
+// 0–100 — генератором, крупные — по таблице LARGE. Нет данных → null.
+export function numberWordAny(n, lang) {
+  if (n <= 100 && Number.isInteger(n) && n >= 0) {
+    const gen = GENERATORS[lang]
+    if (gen) return gen(n)
+  }
+  return LARGE[lang]?.[n] ?? null
+}
+
+// TTS-локаль по коду изучаемого языка (для озвучки числа/буквы на языке курса)
+export const TTS_LOCALE = { de: 'de-DE', es: 'es-ES', en: 'en-US', fr: 'fr-FR', it: 'it-IT', pt: 'pt-PT', ru: 'ru-RU', uk: 'uk-UA', bg: 'bg-BG', tr: 'tr-TR', ar: 'ar-SA', sq: 'sq-AL' }
 
 // numRu — русское числительное из уже существующих данных (DE_NUMBERS), используется как
 // значение для 'ru' и как фолбэк для 'de' (немецкий интерфейс показывает перевод по-русски,

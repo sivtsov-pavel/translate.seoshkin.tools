@@ -286,6 +286,7 @@ export default function Layout({ children }) {
         <div style={{ padding: '16px 16px 14px', flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)' }}>{t.nav.iLearn}</span>
               <span>{tgt.flag}</span> {tgtName}
               <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.5, marginLeft: 2 }}>{typeof __BUILD_TS__ !== 'undefined' ? __BUILD_TS__ : ''}</span>
             </span>

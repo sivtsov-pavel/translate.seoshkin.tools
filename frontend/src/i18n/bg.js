@@ -1,5 +1,6 @@
 export const bg = {
   nav: {
+    iLearn: 'Уча',
     tabProfile: 'Профил',
     tabSettings: 'Настройки',
     tabIntegrations: 'Интеграции',

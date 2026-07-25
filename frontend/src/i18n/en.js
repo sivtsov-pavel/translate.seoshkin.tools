@@ -1,5 +1,6 @@
 export const en = {
   nav: {
+    iLearn: 'Learning',
     tabProfile: 'Profile',
     tabSettings: 'Settings',
     tabIntegrations: 'Integrations',

@@ -2,6 +2,7 @@
 export const ar = {
   dir: 'rtl',
   nav: {
+    iLearn: 'أتعلّم',
     tabProfile: 'الملف',
     tabSettings: 'الإعدادات',
     tabIntegrations: 'التكاملات',

@@ -1,5 +1,6 @@
 export const sq = {
   nav: {
+    iLearn: 'Po mësoj',
     tabProfile: 'Profili',
     tabSettings: 'Cilësimet',
     tabIntegrations: 'Integrimet',
