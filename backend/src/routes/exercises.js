@@ -310,18 +310,30 @@ export async function exercisesRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request) => {
     const { id: userId, role } = request.user
-    const doneFilter = role === 'owner' ? '' : "AND l.status='done'"
+    // Фильтр по активному изучаемому языку + владельцу/школе (как в /api/words) — иначе в
+    // испанском курсе снизу «протекают» пройденные немецкие уроки (и чужих учителей).
+    const target = request.headers['x-target-lang'] || 'de'
+    const params = [userId, target]
+    let scope
+    if (userId === 1) {
+      scope = 'l.target_lang = $2' // супер-админ — все владельцы, но только активный язык
+    } else if (role === 'owner') {
+      scope = 'l.owner_id = $1 AND l.target_lang = $2'
+    } else {
+      params.push(request.user.school_id ?? null) // $3
+      scope = "l.status='done' AND l.target_lang = $2 AND ($3::int IS NULL OR l.school_id = $3)"
+    }
     const { rows } = await db.query(
       `SELECT l.id, l.title, COALESCE(l.title_translations,'{}') AS title_translations,
               count(*)::int AS total,
               count(*) FILTER (WHERE uep.next_review_date > CURRENT_DATE)::int AS done
        FROM lessons l JOIN exercises e ON e.lesson_id=l.id
        LEFT JOIN user_exercise_progress uep ON uep.exercise_id=e.id AND uep.user_id=$1
-       WHERE 1=1 ${doneFilter}
+       WHERE ${scope}
        GROUP BY l.id, l.title, l.title_translations
        HAVING ${LESSON_PASSED_HAVING}
        ORDER BY l.date DESC, l.id`,
-      [userId]
+      params
     )
     return rows
   })
