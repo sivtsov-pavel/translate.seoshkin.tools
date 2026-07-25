@@ -949,8 +949,8 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
   for (const [theme, its] of byTheme) {
     // найти или создать набор этой темы у владельца
     const { rows } = await db.query(
-      'SELECT id FROM lessons WHERE is_set AND set_theme = $1 AND owner_id = $2 ORDER BY id LIMIT 1',
-      [theme, ownerId])
+      'SELECT id FROM lessons WHERE is_set AND set_theme = $1 AND owner_id = $2 AND target_lang = $3 ORDER BY id LIMIT 1',
+      [theme, ownerId, targetLang])
     let setId = rows[0]?.id
     if (!setId) {
       // тема двумя параметрами: один $2 в колонках разных типов (varchar/text) валит
@@ -969,9 +969,9 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
       // а Словарь дедупит отображение сам (DISTINCT ON word_de).
       const { rows: ex } = await db.query(
         `SELECT 1 FROM words w JOIN lessons l ON l.id = w.lesson_id
-         WHERE l.is_set AND l.owner_id = $1
+         WHERE l.is_set AND l.owner_id = $1 AND l.target_lang = $3
            AND regexp_replace(lower(w.word_de), '^(der|die|das|ein|eine)\\s+', '') = $2 LIMIT 1`,
-        [ownerId, norm])
+        [ownerId, norm, targetLang])
       if (ex.length) { dup++; continue }
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)

@@ -738,10 +738,13 @@ export async function exercisesRoutes(fastify) {
          ORDER BY e.lesson_id, e.id`, [userId, lessonId || target])
       return rows
     }
+    // Счётчик хвостов — тоже по активному языку (иначе бейдж «протекает» между курсами)
+    const target = request.headers['x-target-lang'] || 'de'
     const { rows } = await db.query(
       `SELECT e.lesson_id, count(*)::int AS cnt
        FROM exercise_deferrals d JOIN exercises e ON e.id = d.exercise_id
-       WHERE d.user_id = $1 GROUP BY e.lesson_id`, [userId])
+       JOIN lessons l ON l.id = e.lesson_id
+       WHERE d.user_id = $1 AND l.target_lang = $2 GROUP BY e.lesson_id`, [userId, target])
     return rows
   })
 

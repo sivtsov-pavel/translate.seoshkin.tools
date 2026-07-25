@@ -30,7 +30,7 @@ export default function CourseGate({ langs, onClose, runTourAfter }) {
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ width: '100%', maxWidth: 440, textAlign: 'center' }}>
         <div style={{ fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700, marginBottom: 6 }}>
-          {t.nav.chooseLanguage || 'Выбери язык'}
+          {t.nav.iLearn || 'Учу'} · {t.nav.chooseLanguage || 'Выбери язык'}
         </div>
         <h1 style={{ fontFamily: 'var(--heading-font)', fontSize: 26, margin: '0 0 22px', color: 'var(--ink)' }}>
           {t.nav.whichCourse || 'Какой курс продолжим?'}

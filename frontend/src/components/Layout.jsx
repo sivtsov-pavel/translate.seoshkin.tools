@@ -293,7 +293,6 @@ export default function Layout({ children }) {
         <div style={{ padding: '16px 16px 14px', flexShrink: 0, borderBottom: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)' }}>{t.nav.iLearn}</span>
               <span>{tgt.flag}</span> {tgtName}
               <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.5, marginLeft: 2 }}>{typeof __BUILD_TS__ !== 'undefined' ? __BUILD_TS__ : ''}</span>
             </span>
@@ -430,7 +429,6 @@ export default function Layout({ children }) {
         {/* Центр: заголовок с флагом + немецкая полоска (как в макете) */}
         <Link to="/" title={`Изучаемый язык: ${tgtName}`}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, textDecoration: 'none', color: 'var(--ink)', minWidth: 0 }}>
-          <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1 }}>{t.nav.iLearn}</span>
           <span style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: 17, whiteSpace: 'nowrap' }}>{tgt.flag} {tgtName}</span>
           <span style={{ display: 'block', height: 3, width: 40, borderRadius: 2, background: `linear-gradient(90deg, ${(tgt.stripe || TARGET_META.de.stripe).join(',')})` }} />
         </Link>
