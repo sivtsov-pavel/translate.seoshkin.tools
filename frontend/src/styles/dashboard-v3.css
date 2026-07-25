@@ -122,6 +122,9 @@
 .dl-linklike { background: none; border: none; color: var(--blue); font-weight: 700; font-size: 12.5px; cursor: pointer; padding: 0 0 0 4px; display: inline-flex; align-items: center; gap: 3px; }
 
 .dl-ex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 18px 4px; }
+@media (max-width: 640px) {
+  .dl-ex-grid { grid-template-columns: 1fr; }
+}
 .dl-ex-btn { position: relative; background: var(--bg); border: none; border-radius: 12px; padding: 12px 12px 12px 40px; font-size: 12.5px; color: var(--ink); min-height: 20px; display: flex; align-items: center; cursor: pointer; text-align: left; }
 .dl-ex-btn--special { background: rgba(62,127,193,0.10); border: 1.5px solid var(--blue); color: var(--blue); font-weight: 700; }
 .dl-ex-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); display: flex; }
