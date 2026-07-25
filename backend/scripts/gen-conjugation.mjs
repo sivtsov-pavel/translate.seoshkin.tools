@@ -5,9 +5,19 @@
 import { db } from '../src/db/index.js'
 import { conjugatePresent } from '../src/services/germanConjugator.js'
 
-// Строчные слова на -en/-n длиной ≥4 считаем глаголами. Стоп-лист — частые НЕ-глаголы на -en.
-const STOP = new Set(['neben', 'oben', 'eben', 'sieben', 'gegen', 'wegen', 'denen', 'ihnen', 'innen', 'außen', 'unten', 'hinten', 'vorne', 'morgen', 'abend', 'wenn', 'denn', 'dann', 'schon', 'eigen', 'offen', 'gerne', 'gern', 'jeden', 'allen', 'seinen', 'meinen', 'deinen', 'keinen', 'einen'])
-const isVerb = w => /^[a-zäöüß]{4,}e?n$/.test(w) && !STOP.has(w)
+// Глагол-инфинитив: строчное слово, оканчивается строго на -en/-eln/-ern (не просто на -n:
+// иначе ловим maskulin, braun, siebzehn). Плюс стоп-лист: числа, причастия, наречия/прилагат. на -en.
+const STOP = new Set([
+  // не-глаголы на -en
+  'neben', 'oben', 'eben', 'sieben', 'gegen', 'wegen', 'denen', 'ihnen', 'innen', 'außen', 'unten',
+  'hinten', 'morgen', 'eigen', 'offen', 'jeden', 'allen', 'seinen', 'meinen', 'deinen', 'keinen',
+  'einen', 'ihren', 'unseren', 'diesen', 'welchen',
+  // причастия II (ge…en) — не инфинитивы
+  'gestorben', 'geboren', 'gegessen', 'geschrieben', 'gesprochen', 'gefunden', 'geschlafen',
+  'geblieben', 'geworden', 'gewesen', 'genommen', 'gewonnen', 'gesehen', 'gelesen', 'getrunken',
+  'gefahren', 'gegangen', 'gekommen', 'gewusst', 'geholfen',
+])
+const isVerb = w => /^[a-zäöüß]{3,}(en|eln|ern)$/.test(w) && !STOP.has(w)
 
 const { rows } = await db.query(
   `SELECT w.id, w.lesson_id, w.word_de, w.translation_ru
