@@ -179,6 +179,7 @@ export const bg = {
     nextLessonSoon: 'Следващият урок ще се отвори по график',
     courseDone: 'Това е последният урок от курса — поздравления!',
     trainWords: 'Треньор по думи за урока',
+    multiVariantHint: 'Тук има няколко форми — напиши ги всички с «/» (както в отговора)',
     fanNext: 'Напред по реда',
     fanOtherType: 'Избери друг тип',
     fanProgress: (pos, total) => `Направени ${pos} от ${total} в урока`,

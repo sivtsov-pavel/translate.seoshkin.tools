@@ -181,6 +181,7 @@ export const ar = {
     nextLessonSoon: 'سيُفتح الدرس التالي حسب الجدول',
     courseDone: 'هذا هو آخر درس في الدورة — تهانينا!',
     trainWords: 'مدرّب كلمات الدرس',
+    multiVariantHint: 'هناك عدة أشكال — اكتبها كلها مع «/» (كما في الإجابة)',
     fanNext: 'المتابعة بالترتيب',
     fanOtherType: 'اختر نوعًا آخر',
     fanProgress: (pos, total) => `${pos} من ${total} في الدرس`,

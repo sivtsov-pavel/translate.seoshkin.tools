@@ -179,6 +179,7 @@ export const fr = {
     nextLessonSoon: "La prochaine leçon s'ouvrira selon le calendrier",
     courseDone: "C'est la dernière leçon du cours — félicitations !",
     trainWords: 'Entraîneur de mots de la leçon',
+    multiVariantHint: 'Plusieurs formes ici — écris-les toutes avec «/» (comme dans la réponse)',
     fanNext: 'Continuer dans l’ordre',
     fanOtherType: 'Choisir un autre type',
     fanProgress: (pos, total) => `Fait ${pos} sur ${total} dans la leçon`,

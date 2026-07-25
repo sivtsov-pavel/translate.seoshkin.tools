@@ -179,6 +179,7 @@ export const sq = {
     nextLessonSoon: 'Mësimi tjetër do të hapet sipas orarit',
     courseDone: 'Ky është mësimi i fundit i kursit — urime!',
     trainWords: 'Stërvitësi i fjalëve të mësimit',
+    multiVariantHint: 'Disa forma këtu — shkruaji të gjitha me «/» (si te përgjigja)',
     fanNext: 'Vazhdo sipas radhës',
     fanOtherType: 'Zgjidh një lloj tjetër',
     fanProgress: (pos, total) => `U bënë ${pos} nga ${total} në mësim`,

@@ -179,6 +179,7 @@ export const en = {
     nextLessonSoon: 'Next lesson will unlock on schedule',
     courseDone: "That's the last lesson of the course — congratulations!",
     trainWords: 'Word trainer for this lesson',
+    multiVariantHint: 'Multiple forms here — type them all with «/» (as in the answer)',
     fanNext: 'Continue in order',
     fanOtherType: 'Choose another type',
     fanProgress: (pos, total) => `Done ${pos} of ${total} in the lesson`,

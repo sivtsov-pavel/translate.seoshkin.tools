@@ -86,6 +86,13 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
         }}
       />
 
+      {/* Подсказка для ответов с несколькими вариантами (напр. «mein / meine») — впиши все через «/» */}
+      {!checked && /\s*\/\s*/.test((word_de || '').trim()) && (
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', textAlign: 'center', marginTop: -8, lineHeight: 1.5 }}>
+          💡 {t.exercise.multiVariantHint || 'Здесь несколько форм — впиши все через «/» (как в ответе)'}
+        </div>
+      )}
+
       {!checked ? (
         <button onClick={check} disabled={!input.trim()}
           style={{ padding: '14px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: input.trim() ? 1 : 0.5 }}>

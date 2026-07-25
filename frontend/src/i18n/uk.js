@@ -179,6 +179,7 @@ export const uk = {
     nextLessonSoon: 'Наступний урок відкриється за розкладом',
     courseDone: 'Це останній урок курсу — вітаю!',
     trainWords: 'Тренер слів уроку',
+    multiVariantHint: 'Тут кілька форм — впиши всі через «/» (як у відповіді)',
     fanNext: 'Далі за логікою',
     fanOtherType: 'Обрати інший тип',
     fanProgress: (pos, total) => `Зроблено ${pos} з ${total} в уроці`,

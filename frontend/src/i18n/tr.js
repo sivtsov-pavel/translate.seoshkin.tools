@@ -179,6 +179,7 @@ export const tr = {
     nextLessonSoon: 'Sonraki ders takvime göre açılacak',
     courseDone: 'Bu, kursun son dersi — tebrikler!',
     trainWords: 'Ders kelimeleri antrenörü',
+    multiVariantHint: 'Birden fazla biçim var — hepsini «/» ile yaz (cevaptaki gibi)',
     fanNext: 'Sırayla devam et',
     fanOtherType: 'Başka tür seç',
     fanProgress: (pos, total) => `Derste ${pos}/${total} tamamlandı`,

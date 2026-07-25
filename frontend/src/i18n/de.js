@@ -183,6 +183,7 @@ export const de = {
     nextLessonSoon: "Die nächste Lektion öffnet nach Zeitplan",
     courseDone: "Das ist die letzte Lektion des Kurses — herzlichen Glückwunsch!",
     trainWords: "Wörtertrainer zur Lektion",
+    multiVariantHint: 'Mehrere Formen — schreibe alle mit «/» (wie in der Antwort)',
     fanNext: 'Der Reihe nach weiter',
     fanOtherType: 'Anderen Typ wählen',
     fanProgress: (pos, total) => `${pos} von ${total} in der Lektion`,
