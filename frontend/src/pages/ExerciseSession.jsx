@@ -15,6 +15,8 @@ import Dictation from '../components/Dictation.jsx'
 import SpeechExercise from '../components/SpeechExercise.jsx'
 import Conjugation from '../components/Conjugation.jsx'
 import ExerciseErrorBoundary from '../components/ExerciseErrorBoundary.jsx'
+import Confetti from '../components/Confetti.jsx'
+import { playFanfare } from '../utils/sound.js'
 
 // Порядок типов упражнений в уроке (педагогический, по просьбе Павла):
 // вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение → проговори → диктант
@@ -183,6 +185,15 @@ export default function ExerciseSession() {
     }
   }, [finished, lessonDone, lessonId, exam, inTails])
 
+  // 🎉 Праздник финиша урока: фанфара один раз (звук уважает тумблер реакций 🔊)
+  const celebratedRef = useRef(false)
+  useEffect(() => {
+    if (finished && lessonDone && !celebratedRef.current) {
+      celebratedRef.current = true
+      if (localStorage.getItem('trainer_reactions') !== 'false') playFanfare()
+    }
+  }, [finished, lessonDone])
+
   // «На главную» — со скроллом к своему уроку на дашборде
   const goHome = () => navigate('/', { state: lessonId ? { scrollToLesson: Number(lessonId) } : undefined })
   // Перейти к следующему уроку курса — полная перезагрузка (сессия пересоберётся под новый lesson_id)
@@ -212,6 +223,7 @@ export default function ExerciseSession() {
     const openDateStr = next?.open_date ? new Date(next.open_date).toLocaleDateString(lang) : null
     return (
       <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        {lessonDone && <Confetti />}
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone && (exam || !type) ? '🏆' : '🎉'}</div>
           <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>

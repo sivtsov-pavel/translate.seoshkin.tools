@@ -172,6 +172,10 @@ export const de = {
     sourceExtraFull: 'Aus dem Heft (zusätzlich)',
 
     loading: 'Laden...',
+    weekTitle: '📅 Deine Woche',
+    weekLessons: (n, goal) => `Lektionen: ${n} von ${goal}`,
+    weekGoalReached: '🎉 Wochenziel erreicht!',
+    weekGoalTitle: 'Ziel: Lektionen pro Woche',
   },
   // Übungen
   exercise: {

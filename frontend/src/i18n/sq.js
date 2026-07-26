@@ -169,6 +169,10 @@ export const sq = {
     sourceExtraFull: 'Nga fletorja (shtesë)',
 
     loading: 'Duke ngarkuar...',
+    weekTitle: '📅 Java jote',
+    weekLessons: (n, goal) => `Mësimeve: ${n} nga ${goal}`,
+    weekGoalReached: '🎉 Qëllimi i javës është arritur!',
+    weekGoalTitle: 'Qëllimi: mësimeve në javë',
   },
   exercise: {
     batchDone: 'Të lumtë! Ushtrimet u kryen',

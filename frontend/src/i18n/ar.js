@@ -171,6 +171,10 @@ export const ar = {
     sourceExtraFull: 'من الدفتر (إضافي)',
 
     loading: 'جاري التحميل...',
+    weekTitle: '📅 أسبوعك',
+    weekLessons: (n, goal) => `الدروس: ${n} من ${goal}`,
+    weekGoalReached: '🎉 تم تحقيق هدف الأسبوع!',
+    weekGoalTitle: 'الهدف: دروس في الأسبوع',
   },
   exercise: {
     batchDone: 'أحسنت! انتهت التمارين',

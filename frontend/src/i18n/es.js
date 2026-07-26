@@ -169,6 +169,10 @@ export const es = {
     sourceExtraFull: 'Del cuaderno (extra)',
 
     loading: 'Cargando...',
+    weekTitle: '📅 Tu semana',
+    weekLessons: (n, goal) => `Lecciones: ${n} de ${goal}`,
+    weekGoalReached: '🎉 ¡Objetivo de la semana alcanzado!',
+    weekGoalTitle: 'Objetivo: lecciones por semana',
   },
   exercise: {
     batchDone: '¡Bien! Ejercicios hechos',

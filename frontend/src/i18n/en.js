@@ -169,6 +169,10 @@ export const en = {
     sourceExtraFull: 'From notebook (extra)',
 
     loading: 'Loading...',
+    weekTitle: '📅 Your week',
+    weekLessons: (n, goal) => `Lessons: ${n} out of ${goal}`,
+    weekGoalReached: '🎉 Weekly goal achieved!',
+    weekGoalTitle: 'Goal: lessons per week',
   },
   exercise: {
     batchDone: 'Well done! Exercises complete',

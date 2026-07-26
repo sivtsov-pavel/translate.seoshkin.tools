@@ -51,6 +51,18 @@ export function playCorrect() {
   } catch {}
 }
 
+// Победная фанфара финиша урока — восходящее арпеджио C5→E5→G5→C6
+export function playFanfare() {
+  try {
+    const ac = getCtx()
+    const t = ac.currentTime
+    beep(523, t,        0.14, 0.16) // C5
+    beep(659, t + 0.12, 0.14, 0.16) // E5
+    beep(784, t + 0.24, 0.14, 0.16) // G5
+    beep(1047, t + 0.36, 0.32, 0.18) // C6
+  } catch {}
+}
+
 export function playWrong() {
   try {
     const ac = getCtx()

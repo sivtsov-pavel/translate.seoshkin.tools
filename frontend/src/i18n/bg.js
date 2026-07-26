@@ -169,6 +169,10 @@ export const bg = {
     sourceExtraFull: 'От тетрадката (доп.)',
 
     loading: 'Зареждане...',
+    weekTitle: '📅 Твоя седмица',
+    weekLessons: (n, goal) => `Уроки: ${n} от ${goal}`,
+    weekGoalReached: '🎉 Целта за седмицата е изпълнена!',
+    weekGoalTitle: 'Цел: уроци на седмица',
   },
   exercise: {
     batchDone: 'Браво! Упражненията са готови',

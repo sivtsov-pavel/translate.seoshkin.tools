@@ -402,6 +402,36 @@ export async function exercisesRoutes(fastify) {
     }
   })
 
+  // «Твоя неделя» (мотивация): попытки по дням с даты from (понедельник клиента, локальный)
+  // + сколько уроков «закрыто» за период (passed-урок, чья последняя попытка попала в период).
+  fastify.get('/api/exercises/weekly', { preHandler: [fastify.authenticate] }, async (request) => {
+    const userId = request.user.id
+    const target = request.headers['x-target-lang'] || 'de'
+    const q = String(request.query?.from || '')
+    const fromDate = /^\d{4}-\d{2}-\d{2}$/.test(q)
+      ? q
+      : new Date(Date.now() - ((new Date().getDay() + 6) % 7) * 864e5).toISOString().slice(0, 10)
+    const { rows: days } = await db.query(
+      `SELECT DATE(a.attempted_at) AS d, COUNT(*)::int AS attempts
+       FROM exercise_attempts a
+       JOIN exercises e ON e.id = a.exercise_id
+       JOIN lessons l ON l.id = e.lesson_id
+       WHERE a.user_id = $1 AND l.target_lang = $2 AND a.attempted_at >= $3::date
+       GROUP BY 1 ORDER BY 1`, [userId, target, fromDate])
+    const { rows: passed } = await db.query(
+      `SELECT l.id, MAX(a.attempted_at) AS last_at
+       FROM lessons l
+       JOIN exercises e ON e.lesson_id = l.id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+       LEFT JOIN exercise_attempts a ON a.exercise_id = e.id AND a.user_id = $1
+       WHERE l.target_lang = $2 AND l.is_set = false
+       GROUP BY l.id
+       HAVING ${LESSON_PASSED_HAVING}`, [userId, target])
+    const fromTs = new Date(fromDate + 'T00:00:00Z').getTime() - 12 * 3600e3 // запас на таймзоны
+    const lessonsThisWeek = passed.filter(r => r.last_at && new Date(r.last_at).getTime() >= fromTs).length
+    return { from: fromDate, days, lessons_this_week: lessonsThisWeek }
+  })
+
   // Статистика для дашборда — по урокам и типам, per-user
   fastify.get('/api/exercises/stats', {
     preHandler: [fastify.authenticate],

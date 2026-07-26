@@ -53,6 +53,9 @@ export default function Dashboard() {
   const [games, setGames] = useState([])
   const [completed, setCompleted] = useState([])
   const [tailsCount, setTailsCount] = useState(0) // «хвосты» курса — пропущенные упражнения
+  const [weekly, setWeekly] = useState(null)      // «Твоя неделя»: {days, lessons_this_week}
+  const [weekGoal, setWeekGoal] = useState(() => Math.min(7, Math.max(1, parseInt(localStorage.getItem('weekly_goal')) || 3)))
+  const changeWeekGoal = (d) => setWeekGoal(g => { const n = Math.min(7, Math.max(1, g + d)); localStorage.setItem('weekly_goal', String(n)); return n })
   const [lessonQuery, setLessonQuery] = useState('')
   const [showSets, setShowSets] = useState(() => localStorage.getItem('dash_show_sets') === '1')
   // По умолчанию тумблер ВЫКЛ: показываем только пройденные уроки + текущий (у Пабло это 2 кружка).
@@ -99,6 +102,12 @@ export default function Dashboard() {
     api.get('/exercises/completed-lessons').then(setCompleted).catch(() => {})
     if (isOnline()) api.get('/exercises/progress').then(setProgress).catch(() => {})
     if (isOnline()) api.get('/exercises/deferred').then(rows => setTailsCount((rows || []).reduce((s, r) => s + (r.cnt || 0), 0))).catch(() => {})
+    // «Твоя неделя»: активность с ЛОКАЛЬНОГО понедельника
+    if (isOnline()) {
+      const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+      const monday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      api.get(`/exercises/weekly?from=${monday}`).then(setWeekly).catch(() => {})
+    }
   }
   useEffect(() => {
     reloadStats()
@@ -225,6 +234,9 @@ export default function Dashboard() {
             <div className="dl-stat dl-stat--fire"><b><Flame size={15} className="dl-inline-icon" />{progress.streak ?? 0}</b><span>{t.dashboard.streakDays}</span></div>
           </div>
         )}
+
+        {/* 📅 «Твоя неделя» — дни активности + цель по урокам (мотивация) */}
+        {weekly && <WeekCard weekly={weekly} goal={weekGoal} onGoal={changeWeekGoal} t={t} />}
 
         {total > 0 && (
           <button className="dl-repeat-big" onClick={() => navigate('/exercise-session')}>
@@ -451,6 +463,69 @@ export default function Dashboard() {
     </div>
   )
 }
+
+/* ================= «ТВОЯ НЕДЕЛЯ» (мотивация) ================= */
+function WeekCard({ weekly, goal, onGoal, t }) {
+  // Пн-Вс текущей недели (локальные даты)
+  const monday = new Date(); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
+  const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const attemptsByDay = {}
+  for (const r of (weekly.days || [])) attemptsByDay[String(r.d).slice(0, 10)] = r.attempts
+  const todayKey = dayKey(new Date())
+  const labels = t.courses.weekdaysShort
+  const done = weekly.lessons_this_week || 0
+  const reached = done >= goal
+  return (
+    <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 14, background: 'var(--surface)', border: `1px solid ${reached ? 'var(--good)' : 'var(--line)'}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>{t.dashboard.weekTitle}</span>
+        {/* Цель: уроков в неделю (− / +) */}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink-soft)' }} title={t.dashboard.weekGoalTitle}>
+          <button onClick={() => onGoal(-1)} style={weekGoalBtn}>−</button>
+          🎯 {goal}
+          <button onClick={() => onGoal(1)} style={weekGoalBtn}>+</button>
+        </span>
+      </div>
+      {/* Дни недели: закрашен = занимался в этот день */}
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between', marginBottom: 10 }}>
+        {labels.map((lbl, i) => {
+          const d = new Date(monday); d.setDate(monday.getDate() + i)
+          const k = dayKey(d)
+          const active = (attemptsByDay[k] || 0) > 0
+          const isToday = k === todayKey
+          const future = d > new Date()
+          return (
+            <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{
+                width: 30, height: 30, margin: '0 auto 3px', borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                background: active ? 'var(--good)' : 'var(--surface-2)',
+                color: active ? '#fff' : 'var(--ink-soft)',
+                border: isToday ? '2px solid var(--accent)' : '1px solid var(--line)',
+                opacity: future ? 0.45 : 1,
+              }}>
+                {active ? '✓' : ''}
+              </div>
+              <span style={{ fontSize: 10, color: isToday ? 'var(--accent)' : 'var(--ink-soft)', fontWeight: isToday ? 700 : 400 }}>{lbl}</span>
+            </div>
+          )
+        })}
+      </div>
+      {/* Прогресс цели по урокам */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 3, flex: 1 }}>
+          {Array.from({ length: goal }, (_, i) => (
+            <div key={i} style={{ flex: 1, height: 8, borderRadius: 4, background: i < Math.min(done, goal) ? 'var(--good)' : 'var(--surface-2)', border: '1px solid var(--line)' }} />
+          ))}
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: reached ? 'var(--good)' : 'var(--ink-soft)', flexShrink: 0 }}>
+          {reached ? (t.dashboard.weekGoalReached) : t.dashboard.weekLessons(done, goal)}
+        </span>
+      </div>
+    </div>
+  )
+}
+const weekGoalBtn = { width: 22, height: 22, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }
 
 /* ================= МЕТРИКА ================= */
 function MetricCard({ Icon, title, value, total, color, pct }) {

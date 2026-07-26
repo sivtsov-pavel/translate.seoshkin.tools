@@ -169,6 +169,10 @@ export const fr = {
     sourceExtraFull: 'Du cahier (supp.)',
 
     loading: 'Chargement...',
+    weekTitle: '📅 Ta semaine',
+    weekLessons: (n, goal) => `Leçons: ${n} sur ${goal}`,
+    weekGoalReached: '🎉 Objectif de la semaine atteint !',
+    weekGoalTitle: 'Objectif: leçons par semaine',
   },
   exercise: {
     batchDone: 'Bravo ! Exercices faits',

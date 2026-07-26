@@ -169,6 +169,10 @@ export const tr = {
     sourceExtraFull: 'Defterden (ek)',
 
     loading: 'Yükleniyor...',
+    weekTitle: '📅 Senin Haftan',
+    weekLessons: (n, goal) => `Dersler: ${n} / ${goal}`,
+    weekGoalReached: '🎉 Haftanın hedefi tamamlandı!',
+    weekGoalTitle: 'Hedef: haftada ders sayısı',
   },
   exercise: {
     batchDone: 'Aferin! Alıştırmalar tamam',

@@ -169,6 +169,10 @@ export const uk = {
     sourceExtraFull: 'Із зошита (дод.)',
 
     loading: 'Завантаження...',
+    weekTitle: '📅 Твій тиждень',
+    weekLessons: (n, goal) => `Уроків: ${n} з ${goal}`,
+    weekGoalReached: '🎉 Мету тижня виконано!',
+    weekGoalTitle: 'Мета: уроків на тиждень',
   },
   exercise: {
     batchDone: 'Молодець! Вправи пройдено',

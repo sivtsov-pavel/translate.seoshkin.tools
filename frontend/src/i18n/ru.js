@@ -155,6 +155,10 @@ export const ru = {
     createSetTitle: "+ создать набор",
     createSetDesc: "Собери набор упражнений из нужных слов словаря",
 
+    weekTitle: '📅 Твоя неделя',
+    weekLessons: (n, goal) => `Уроков: ${n} из ${goal}`,
+    weekGoalReached: '🎉 Цель недели выполнена!',
+    weekGoalTitle: 'Цель: уроков в неделю',
     tailsBanner: 'Доделать хвосты',
     tailsBannerSub: 'Пропущенные упражнения — пройди для финиша курса',
     lessonPath: 'Путь урока',
