@@ -476,7 +476,7 @@ function WeekCard({ weekly, goal, onGoal, t }) {
   const done = weekly.lessons_this_week || 0
   const reached = done >= goal
   return (
-    <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 14, background: 'var(--surface)', border: `1px solid ${reached ? 'var(--good)' : 'var(--line)'}` }}>
+    <div style={{ margin: '12px 0 14px', padding: '12px 14px', borderRadius: 14, background: 'var(--surface)', border: `1px solid ${reached ? 'var(--good)' : 'var(--line)'}` }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 13, fontWeight: 700 }}>{t.dashboard.weekTitle}</span>
         {/* Цель: уроков в неделю (− / +) */}
