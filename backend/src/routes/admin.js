@@ -142,6 +142,30 @@ export async function adminRoutes(fastify) {
     return rows
   })
 
+  // Супер-админ: назначить/снять роль учителя.
+  // Раньше учителем можно было стать ТОЛЬКО при регистрации с почтой из жёсткого
+  // списка OWNER_EMAILS (auth.js) — новый учитель школы навсегда оставался
+  // 'student' и не видел классы, словари и уроки. Теперь роль меняется здесь,
+  // без правки кода и деплоя.
+  fastify.patch('/api/admin/users/:userId/role', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const userId = parseInt(request.params.userId)
+    const role = String(request.body?.role || '').trim()
+    if (!['owner', 'student'].includes(role)) {
+      return reply.status(400).send({ error: 'role должен быть owner или student' })
+    }
+    if (userId === SUPER_ADMIN_ID) {
+      return reply.status(400).send({ error: 'Роль супер-админа менять нельзя' })
+    }
+    const { rows } = await db.query(
+      'UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, role, full_name',
+      [role, userId]
+    )
+    if (!rows[0]) return reply.status(404).send({ error: 'Пользователь не найден' })
+    // Роль зашита в JWT — пользователю нужно перелогиниться.
+    return { ...rows[0], note: 'Пользователю нужно выйти и войти заново — роль обновится в токене.' }
+  })
+
   // Супер-админ: «Войти как» — получить токен любого пользователя БЕЗ его пароля.
   // Токен помечен impersonatedBy=1, чтобы показать баннер и дать вернуться к себе.
   fastify.post('/api/admin/impersonate/:userId', { preHandler: [fastify.authenticate] }, async (request, reply) => {
