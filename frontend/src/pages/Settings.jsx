@@ -44,6 +44,32 @@ function TrainerReactionsRow({ onSave }) {
   )
 }
 
+// Тумблер «мини-меню между типами упражнений» (веер: дальше/другой тип/тренер).
+// Хранится локально (fan_skip) — галочка «Больше не показывать» на самом веере ставит его же.
+function FanToggleRow() {
+  const { t } = useI18nStore()
+  const [on, setOn] = useState(() => localStorage.getItem('fan_skip') !== '1')
+  const toggle = () => {
+    const next = !on
+    localStorage.setItem('fan_skip', next ? '0' : '1')
+    setOn(next)
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderTop: '1px solid var(--line)', marginTop: 8 }}>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: 14 }}>{t.settings.fanToggleTitle || '🃏 Мини-меню между упражнениями'}</div>
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.settings.fanToggleDesc || 'После каждого блока (выбери ответ, карточки…) — выбор: дальше / другой тип / тренер.'}</div>
+      </div>
+      <button onClick={toggle} style={{
+        flexShrink: 0, width: 52, height: 30, borderRadius: 999, border: 'none', cursor: 'pointer', position: 'relative',
+        background: on ? 'var(--accent)' : 'var(--surface-2)', transition: 'background .2s',
+      }}>
+        <span style={{ position: 'absolute', top: 3, left: on ? 25 : 3, width: 24, height: 24, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.3)' }} />
+      </button>
+    </div>
+  )
+}
+
 // onSave — тот же коллбек, что и у TrainerReactionsRow (см. выше) — досылает полный visual-блок.
 function VoicePicker({ onSave }) {
   const { t } = useI18nStore()
@@ -559,6 +585,7 @@ export default function Settings() {
 
         <VoicePicker key={`voice-${visualVersion}`} onSave={saveFullVisual} />
         <TrainerReactionsRow key={`reactions-${visualVersion}`} onSave={saveFullVisual} />
+        <FanToggleRow />
       </Section>
 
       {/* ── Видео-аватар (платная опция D-ID) ── */}

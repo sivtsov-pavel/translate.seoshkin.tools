@@ -18,13 +18,14 @@ import CameraWords from '../components/CameraWords.jsx'
 import '../styles/dashboard-v3.css'
 
 // Языки → флаг/название/полоска флага (для шапки курса)
+// Полоска флага курса (название языка рисуется через Intl в Layout)
 const LANGS = {
-  de: { flag: '🇩🇪', name: 'Немецкий',    stripe: ['#1a1a1a', '#dd0000', '#ffce00'] },
-  en: { flag: '🇬🇧', name: 'Английский',  stripe: ['#012169', '#ffffff', '#C8102E'] },
-  es: { flag: '🇪🇸', name: 'Испанский',   stripe: ['#AA151B', '#F1BF00', '#AA151B'] },
-  fr: { flag: '🇫🇷', name: 'Французский', stripe: ['#0055A4', '#ffffff', '#EF4135'] },
-  it: { flag: '🇮🇹', name: 'Итальянский', stripe: ['#008C45', '#ffffff', '#CD212A'] },
-  pt: { flag: '🇵🇹', name: 'Португальский', stripe: ['#006600', '#ffffff', '#FF0000'] },
+  de: { flag: '🇩🇪', stripe: ['#1a1a1a', '#dd0000', '#ffce00'] },
+  en: { flag: '🇬🇧', stripe: ['#012169', '#ffffff', '#C8102E'] },
+  es: { flag: '🇪🇸', stripe: ['#AA151B', '#F1BF00', '#AA151B'] },
+  fr: { flag: '🇫🇷', stripe: ['#0055A4', '#ffffff', '#EF4135'] },
+  it: { flag: '🇮🇹', stripe: ['#008C45', '#ffffff', '#CD212A'] },
+  pt: { flag: '🇵🇹', stripe: ['#006600', '#ffffff', '#FF0000'] },
 }
 
 // Порядок как в сессии (ExerciseSession TYPE_SEQ): склонение — между «проговори» и диктантом

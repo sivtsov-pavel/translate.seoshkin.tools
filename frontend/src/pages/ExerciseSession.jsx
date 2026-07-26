@@ -144,7 +144,8 @@ export default function ExerciseSession() {
     if (exam || inTails) { setCurrent(next); return }       // зачёт/хвосты — без веера, сразу дальше
     // Мини-веер показываем на ГРАНИЦЕ типа: прошёл все карточки типа (напр. все «выбери ответ») —
     // получаешь выбор. Внутри одного типа идём подряд без веера.
-    if (exercises[next].type !== exercises[current].type) {
+    // Галочка «Больше не показывать» (fan_skip) — едем дальше без остановки.
+    if (exercises[next].type !== exercises[current].type && localStorage.getItem('fan_skip') !== '1') {
       setFanTypesOpen(false)
       setBetweenFan(true)
     } else {
@@ -383,6 +384,12 @@ export default function ExerciseSession() {
             style={{ width: '100%', padding: '10px', borderRadius: 14, border: 'none', background: 'none', color: 'var(--ink-soft)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
             · {t.exercise.toHome || 'На главную'} ·
           </button>
+          {/* «Больше не показывать» — прячет мини-веер навсегда (вернуть можно в Настройках) */}
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 10, fontSize: 12.5, color: 'var(--ink-soft)', cursor: 'pointer' }}>
+            <input type="checkbox" onChange={() => { localStorage.setItem('fan_skip', '1'); goNext() }}
+              style={{ width: 15, height: 15, accentColor: 'var(--accent)' }} />
+            {t.exercise.fanDontShow || 'Больше не показывать это меню'}
+          </label>
         </div>
       </div>
     )

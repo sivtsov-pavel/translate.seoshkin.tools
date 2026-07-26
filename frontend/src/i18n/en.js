@@ -281,6 +281,7 @@ export const en = {
     errCardDetails: 'Show technical error',
     continueBtn: 'Continue',
     pickOtherLesson: 'Choose another lesson',
+    fanDontShow: 'Don\'t show this menu anymore',
   },
   lessons: {
     title: 'Lessons',
@@ -858,6 +859,8 @@ export const en = {
     generatedPasswordHint: 'Copy and save — you won\'t be able to see it again:',
     passwordCopied: 'Password copied',
     copyBtn: 'Copy',
+    fanToggleTitle: '🃏 Mini-menu between exercises',
+    fanToggleDesc: 'After each block (choose an answer, flashcards…) — options: next / different type / tutor.',
   },
 
   sets: {

@@ -281,6 +281,7 @@ export const sq = {
     errCardDetails: 'Shfaq gabimin teknik',
     continueBtn: 'Vazhdo',
     pickOtherLesson: 'Zgjidh një mësim tjetër',
+    fanDontShow: 'Nuk e tregoni më këtë menu',
   },
   lessons: {
     title: 'Mësimet',
@@ -857,6 +858,8 @@ export const sq = {
     generatedPasswordHint: 'Kopjo dhe ruaj — nuk do të mundesh ta shohësh përsëri:',
     passwordCopied: 'Fjalëkalimi është kopjuar',
     copyBtn: 'Kopjo',
+    fanToggleTitle: '🃏 Mini-menu ndërmjet ushtrimeve',
+    fanToggleDesc: 'Pas çdo bloku (zgjedh një përgjigje, kartat…) — zgjedhja: vazhdo / lloj tjetër / trajner.',
   },
 
   sets: {

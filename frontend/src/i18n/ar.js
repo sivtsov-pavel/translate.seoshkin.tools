@@ -283,6 +283,7 @@ export const ar = {
     errCardDetails: 'إظهار الخطأ التقني',
     continueBtn: 'استمر',
     pickOtherLesson: 'اختر درسًا آخر',
+    fanDontShow: 'لا تظهر هذا القائمة مرة أخرى',
   },
   lessons: {
     title: 'الدروس',
@@ -848,6 +849,8 @@ export const ar = {
     generatedPasswordHint: 'انسخ واحفظ - لن تتمكن من رؤيتها مرة أخرى:',
     passwordCopied: 'تم نسخ كلمة المرور',
     copyBtn: 'نسخ',
+    fanToggleTitle: '🃏 القائمة الصغيرة بين التمارين',
+    fanToggleDesc: 'بعد كل مجموعة (اختر الإجابة، البطاقات…) — الخيار: التالي / نوع آخر / مدرب.',
   },
 
   sets: {

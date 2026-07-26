@@ -8,7 +8,6 @@ import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 import { cardUrl, shareLink } from '../utils/share.js'
 import { numberWordAny, LARGE_NUMBERS, TTS_LOCALE } from '../utils/numberWords.js'
 
-const shortLesson = (title, noLesson) => title?.match(/Урок\s*\d+/)?.[0] || title || noLesson
 
 // Мобильный брейкпоинт (≤640px) — адаптация только для мобилки, на ПК всё как было
 function useIsMobile() {

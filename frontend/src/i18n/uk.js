@@ -280,6 +280,7 @@ export const uk = {
     errCardDetails: 'Показати технічну помилку',
     continueBtn: 'Продовжити',
     pickOtherLesson: 'Вибрати інший урок',
+    fanDontShow: 'Більше не показувати це меню',
   },
   lessons: {
     title: 'Уроки',
@@ -857,6 +858,8 @@ export const uk = {
     generatedPasswordHint: 'Скопіюй і збережи — побачити його знову не вдасться:',
     passwordCopied: 'Пароль скопійовано',
     copyBtn: 'Скопіювати',
+    fanToggleTitle: '🃏 Міні-меню між вправами',
+    fanToggleDesc: 'Після кожного блоку (обери відповідь, картки…) — вибір: далі / інший тип / тренер.',
   },
 
   sets: {

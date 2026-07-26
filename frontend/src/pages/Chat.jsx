@@ -6,9 +6,10 @@ import { useI18nStore } from '../store/i18n.js'
 
 const POLL_INTERVAL = 15_000
 
+// Иконки каналов; подписи — из локали (chLabel в компоненте)
 const TYPE_META = {
-  support: { icon: '🛠️', label: 'Техподдержка', labelEn: 'Support' },
-  teacher: { icon: '👨‍🏫', label: 'Учителю', labelEn: 'Teacher' },
+  support: { icon: '🛠️' },
+  teacher: { icon: '👨‍🏫' },
 }
 
 // Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний

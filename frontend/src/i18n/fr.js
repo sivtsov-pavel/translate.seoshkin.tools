@@ -280,6 +280,7 @@ export const fr = {
     errCardDetails: "Afficher l'erreur technique",
     continueBtn: 'Continuer',
     pickOtherLesson: 'Choisir une autre leçon',
+    fanDontShow: 'Ne plus montrer ce menu',
   },
   lessons: {
     title: 'Leçons',
@@ -845,6 +846,8 @@ export const fr = {
     generatedPasswordHint: 'Copie et sauvegarde — tu ne pourras plus le revoir :',
     passwordCopied: 'Mot de passe copié',
     copyBtn: 'Copier',
+    fanToggleTitle: '🃏 Mini-menu entre les exercices',
+    fanToggleDesc: 'Après chaque bloc (choisis une réponse, cartes…) — choix : continuer / autre type / entraîneur.',
   },
 
   sets: {

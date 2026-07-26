@@ -7,6 +7,18 @@ import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
 import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
 
+// Сопоставление сгенерированного word_de со словом урока: GPT иногда возвращает слово
+// без артикля или в другом регистре → точное совпадение промахивается и упражнение
+// повисает с word_id = NULL. Карта держит и точный, и нормализованный ключ.
+const wordKeyNorm = (s) => String(s || '').toLowerCase().replace(/^(der|die|das|ein|eine|el|la|los|las|the)\s+/, '').trim()
+function buildWordMap(rows) {
+  const map = Object.create(null)
+  for (const w of rows) { const k = wordKeyNorm(w.word_de); if (!(k in map)) map[k] = w.id }
+  for (const w of rows) if (!(w.word_de in map)) map[w.word_de] = w.id
+  return map
+}
+const wordIdFor = (map, wordDe) => map[wordDe] ?? map[wordKeyNorm(wordDe)] ?? null
+
 // К какому скану (lesson_media) относится слово — ищем в извлечениях по каждому фото.
 // pairs: [{ mediaId, extraction }]. Совпадение по слову (без артикля, регистронезависимо).
 function mediaIdForWord(wordDe, pairs) {
@@ -120,10 +132,10 @@ export async function redistributeLesson(lessonId) {
       // Упражнения из слов набора + его предложений
       const { rows: nw } = await db.query('SELECT id, word_de, translation_ru, example_sentence FROM words WHERE lesson_id=$1 ORDER BY id', [newId])
       const exercises = await generateExercises(nw, [], L.target_lang, await getLessonSentences(newId), client)
-      const wordMap = Object.fromEntries(nw.map(w => [w.word_de, w.id]))
+      const wordMap = buildWordMap(nw)
       for (const ex of exercises) {
         await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
-          [newId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+          [newId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
       }
       for (const w of nw) {
         const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
@@ -406,7 +418,7 @@ export async function regenerateExercisesFromDb(lessonId) {
       translation_ru: w.translation_ru,
       example_sentence: w.example_sentence,
     }))
-    const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+    const wordMap = buildWordMap(wordRows)
 
     // Удаляем старые упражнения (если есть)
     await db.query('DELETE FROM exercises WHERE lesson_id = $1', [lessonId])
@@ -417,7 +429,7 @@ export async function regenerateExercisesFromDb(lessonId) {
     const exercises = await generateExercises(words, [], targetLang, await getLessonSentences(lessonId), client)
 
     for (const ex of exercises) {
-      const wordId = wordMap[ex.word_de] || null
+      const wordId = wordIdFor(wordMap, ex.word_de)
       await db.query(
         'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
         [lessonId, wordId, ex.type, JSON.stringify(ex.payload)]
@@ -426,7 +438,7 @@ export async function regenerateExercisesFromDb(lessonId) {
 
     // Диктант + «Проговори слова» (speech) — по одному на каждое слово
     for (const word of words) {
-      const wordId = wordMap[word.word_de] || null
+      const wordId = wordIdFor(wordMap, word.word_de)
       const payload = JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'dictation', payload])
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'speech', payload])
@@ -462,7 +474,7 @@ export async function regenerateExercisesSafe(lessonId) {
   const targetLang = lrow?.target_lang || 'de'
   const client = await getOwnerClient(lrow?.owner_id)
   const words = wordRows.map(w => ({ word_de: w.word_de, translation_ru: w.translation_ru, example_sentence: w.example_sentence }))
-  const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+  const wordMap = buildWordMap(wordRows)
 
   // Пул существующих упражнений: очередь ID по ключу `word_id|type` — берём по одному под каждое новое.
   const { rows: existing } = await db.query(
@@ -486,10 +498,12 @@ export async function regenerateExercisesSafe(lessonId) {
 
   let updated = 0, inserted = 0
   for (const ex of generated) {
-    const wordId = wordMap[ex.word_de] || null
+    const wordId = wordIdFor(wordMap, ex.word_de)
     const reuseId = takeId(wordId, ex.type)
     if (reuseId) {
-      await db.query('UPDATE exercises SET payload = $1 WHERE id = $2', [JSON.stringify(ex.payload), reuseId])
+      // payload сменился → старые переводы (10 локалей) больше не соответствуют содержимому.
+      // Сбрасываем — enrichLesson (шаг «Перевожу упражнения») переведёт заново.
+      await db.query("UPDATE exercises SET payload = $1, payload_translations = '{}' WHERE id = $2", [JSON.stringify(ex.payload), reuseId])
       updated++
     } else {
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
@@ -614,10 +628,10 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
     if (wordRows.length) {
       await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} слов...`)
       const exercises = await generateExercises(wordRows, grammarPoints, targetLang, await getLessonSentences(lessonId), client)
-      const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+      const wordMap = buildWordMap(wordRows)
       for (const ex of exercises) {
         await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
-          [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+          [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
       }
       for (const w of wordRows) {
         const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
@@ -680,10 +694,10 @@ export async function processNewMedia(lessonId) {
   if (wordRows.length) {
     await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
     const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId), client)
-    const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+    const wordMap = buildWordMap(wordRows)
     for (const ex of exercises) {
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
-        [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+        [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
     }
     for (const w of wordRows) {
       const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
@@ -720,10 +734,10 @@ export async function saveCameraWords(lessonId, words) {
     if (wordRows.length) {
       await setProgress(lessonId, `Создаю упражнения для ${wordRows.length} новых слов...`)
       const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId), client)
-      const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+      const wordMap = buildWordMap(wordRows)
       for (const ex of exercises) {
         await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
-          [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+          [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
       }
       for (const w of wordRows) {
         const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
@@ -752,10 +766,10 @@ export async function generateCustomSet(lessonId, wordIds) {
       return
     }
     const exercises = await generateExercises(words, [], tl, await getLessonSentences(lessonId), client)
-    const wordMap = Object.fromEntries(words.map(w => [w.word_de, w.id]))
+    const wordMap = buildWordMap(words)
     for (const ex of exercises) {
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
-        [lessonId, wordMap[ex.word_de] || null, ex.type, JSON.stringify(ex.payload)])
+        [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
     }
     for (const w of words) {
       const payload = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
@@ -882,10 +896,10 @@ export async function processLesson(lessonId, ownerId) {
       'SELECT id, word_de FROM words WHERE user_id = $1 AND lesson_id = $2',
       [ownerId, lessonId]
     )
-    const wordMap = Object.fromEntries(wordRows.map(w => [w.word_de, w.id]))
+    const wordMap = buildWordMap(wordRows)
 
     for (const ex of exercises) {
-      const wordId = wordMap[ex.word_de] || null
+      const wordId = wordIdFor(wordMap, ex.word_de)
       await db.query(
         'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
         [lessonId, wordId, ex.type, JSON.stringify(ex.payload)]
@@ -894,7 +908,7 @@ export async function processLesson(lessonId, ownerId) {
 
     // Диктант + «Проговори слова» (speech) — по одному на каждое слово, последними
     for (const word of consolidated.words) {
-      const wordId = wordMap[word.word_de] || null
+      const wordId = wordIdFor(wordMap, word.word_de)
       const payload = JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'dictation', payload])
       await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'speech', payload])

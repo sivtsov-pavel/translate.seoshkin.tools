@@ -285,6 +285,7 @@ export const de = {
     errCardDetails: 'Technische Fehlermeldung anzeigen',
     continueBtn: 'Fortsetzen',
     pickOtherLesson: 'Wähle eine andere Lektion',
+    fanDontShow: 'Nicht mehr dieses Menü anzeigen',
   },
   // Lektionen
   lessons: {
@@ -864,6 +865,8 @@ export const de = {
     generatedPasswordHint: 'Kopiere und speichere es — du wirst es später nicht wiedersehen:',
     passwordCopied: 'Passwort kopiert',
     copyBtn: 'Kopieren',
+    fanToggleTitle: '🃏 Mini-Menü zwischen den Übungen',
+    fanToggleDesc: 'Nach jedem Block (Antwort wählen, Karten…) — Auswahl: weiter / anderer Typ / Trainer.',
   },
 
   sets: {

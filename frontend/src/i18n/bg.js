@@ -276,6 +276,7 @@ export const bg = {
     errCardDetails: 'Покажи техническата грешка',
     continueBtn: 'Продължи',
     pickOtherLesson: 'Избери друг урок',
+    fanDontShow: 'Вече не показвай това меню',
   },
   lessons: {
     title: 'Уроци',
@@ -840,6 +841,8 @@ export const bg = {
     generatedPasswordHint: 'Копирай и запази — няма да можеш да я видиш отново:',
     passwordCopied: 'Паролата е копирана',
     copyBtn: 'Копирай',
+    fanToggleTitle: '🃏 Мини-меню между упражненията',
+    fanToggleDesc: 'След всеки блок (избери отговор, карти…) — избор: напред / друг тип / треньор.',
   },
 
   sets: {

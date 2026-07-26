@@ -280,6 +280,7 @@ export const tr = {
     errCardDetails: 'Teknik hatayı göster',
     continueBtn: 'Devam et',
     pickOtherLesson: 'Başka bir dersi seç',
+    fanDontShow: 'Artık bu menüyü gösterme',
   },
   lessons: {
     title: 'Dersler',
@@ -845,6 +846,8 @@ export const tr = {
     generatedPasswordHint: 'Kopyala ve sakla — tekrar göremezsin:',
     passwordCopied: 'Şifre kopyalandı',
     copyBtn: 'Kopyala',
+    fanToggleTitle: '🃏 Egzersizler arasında mini menü',
+    fanToggleDesc: 'Her bloktan sonra (cevabı seç, kartlar…) — seçenek: devam et / başka bir tür / eğitmen.',
   },
 
   sets: {
