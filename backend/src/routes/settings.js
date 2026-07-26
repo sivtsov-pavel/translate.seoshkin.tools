@@ -1,8 +1,23 @@
 import OpenAI from 'openai'
 import { db } from '../db/index.js'
 import { encryptSecret, decryptSecret, maskSecret } from '../services/secretBox.js'
+import { config } from '../config.js'
+import { localAiHealth } from '../services/localAi.js'
 
 export async function settingsRoutes(fastify) {
+  // Статус AI-бэкендов для переключателя в интерфейсе: где сейчас генерятся
+  // тексты и картинки и доступен ли локальный вариант (ноутбук Павла).
+  fastify.get('/api/settings/ai-providers', {
+    preHandler: [fastify.authenticate],
+  }, async () => {
+    const health = await localAiHealth()
+    return {
+      text: { provider: config.aiTextProvider, model: config.ollamaModel, local_available: health.text },
+      image: { provider: config.aiImageProvider, local_available: health.image },
+      hint: 'Переключение: env AI_TEXT_PROVIDER / AI_IMAGE_PROVIDER = local|openai',
+    }
+  })
+
   fastify.get('/api/settings', {
     preHandler: [fastify.authenticate],
   }, async (request) => {

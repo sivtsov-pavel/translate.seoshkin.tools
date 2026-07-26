@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import { config } from '../config.js'
 import { saveOptimizedImage } from './imageOptimize.js'
+import { generateImageLocally } from './localAi.js'
 
 const openai = new OpenAI({ apiKey: config.openaiApiKey })
 
@@ -35,6 +36,17 @@ async function fetchToBuffer(url) {
 export async function generateWordImage(wordDe, translationRu, wordId, targetLang = 'de', client = openai) {
   const prompt = `Simple cheerful flat vector illustration for a children's flashcard. Show clearly the concept: "${translationRu}". Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style.
 IMPORTANT: absolutely NO text, NO letters, NO words, NO signs, NO captions in any language — only the drawing.`
+  // Локальный режим: рисуем на ноутбуке через Draw Things — бесплатно.
+  // При сбое НЕ уходим молча в платный OpenAI (правило денег): вернём null,
+  // слово останется без картинки до починки локального генератора.
+  if (config.aiImageProvider === 'local') {
+    try {
+      return await saveOptimizedImage(await generateImageLocally(prompt), wordId)
+    } catch (e) {
+      console.error('draw-things:', e.message)
+      return null
+    }
+  }
   try {
     const r = await client.images.generate({ model: 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', n: 1 })
     if (r.data?.[0]?.b64_json) return await saveOptimizedImage(Buffer.from(r.data[0].b64_json, 'base64'), wordId)

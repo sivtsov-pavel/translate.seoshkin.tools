@@ -6,9 +6,13 @@ import OpenAI from 'openai'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
 import { decryptSecret } from './secretBox.js'
+import { makeOllamaClient } from './localAi.js'
 
-// Платформенный клиент (общий ключ из .env) — дефолт и fallback.
-export const platformClient = new OpenAI({ apiKey: config.openaiApiKey })
+// Платформенный клиент. При AI_TEXT_PROVIDER=local это Ollama на ноутбуке
+// (бесплатно, тот же OpenAI-совместимый интерфейс) — call-сайты не меняются.
+export const platformClient = config.aiTextProvider === 'local'
+  ? makeOllamaClient()
+  : new OpenAI({ apiKey: config.openaiApiKey })
 
 // Кэш клиентов по владельцу: { ownerId -> { key, client } }. Пересоздаём только при смене ключа.
 const clientCache = new Map()
@@ -31,6 +35,8 @@ async function getOwnerKey(ownerId) {
 // Возвращает OpenAI-клиент для генерации от имени владельца урока.
 // Есть валидный свой ключ → его клиент; иначе платформенный.
 export async function getOwnerClient(ownerId) {
+  // В локальном режиме генерация идёт на ноутбуке — ключи владельцев не нужны.
+  if (config.aiTextProvider === 'local') return platformClient
   const key = await getOwnerKey(ownerId)
   if (!key) return platformClient
   const cached = clientCache.get(ownerId)
