@@ -571,10 +571,12 @@ function LessonPath({ lessons, selectedId, onSelect, lang }) {
         <path d={pathD} className="dl-thread-done"
           style={{ strokeDasharray: 2000, strokeDashoffset: 2000 - (2000 * (doneCount + 0.5)) / points.length }} />
       </svg>
+      {/* Горизонталь кружков — в ПРОЦЕНТАХ той же 320px-сетки, что и viewBox тропинки:
+          SVG растягивается на ширину контейнера, кружки едут вместе с ним → линия обнимает кружки */}
       {points.map(p => (
         <button key={p.lesson_id} data-node-lesson={p.lesson_id}
           className={`dl-node dl-node--${p.status}` + (p.lesson_id === selectedId ? ' dl-node--selected' : '')}
-          style={{ left: p.x - NODE / 2, top: p.y - NODE / 2, width: NODE, height: NODE }}
+          style={{ left: `${(p.x / 320) * 100}%`, transform: 'translateX(-50%)', top: p.y - NODE / 2, width: NODE, height: NODE }}
           onClick={() => onSelect(p.lesson_id)}
           title={getLessonTitle(p.lesson_title, p.lesson_title_translations, lang)}>
           <span className="dl-node-icon">
