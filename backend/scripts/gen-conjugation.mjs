@@ -20,7 +20,13 @@ const STOP = new Set([
   'geblieben', 'geworden', 'gewesen', 'genommen', 'gewonnen', 'gesehen', 'gelesen', 'getrunken',
   'gefahren', 'gegangen', 'gekommen', 'gewusst', 'geholfen',
 ])
-const isVerb = w => /^[a-zäöüß]{3,}(en|eln|ern)$/.test(w) && !STOP.has(w)
+// Отделяемые приставки: конъюгатор спрягает слитно («ich einkaufe» вместо «ich kaufe ein») —
+// такие глаголы ИСКЛЮЧАЕМ из генерации (лучше нет упражнения, чем неверные формы).
+// Исключения-неотделяемые, которые похожи на приставочные (antworten — «ant», не «an»+worten):
+const NONSEPARABLE = new Set(['antworten', 'anworten', 'beißen', 'beichten', 'einigen'])
+const SEP_PREFIX = /^(ab|an|auf|aus|bei|ein|fern|fest|frei|her|hin|los|mit|nach|statt|teil|vor|weg|weiter|zu|zurück|zusammen)/
+const isSeparable = w => SEP_PREFIX.test(w) && !NONSEPARABLE.has(w)
+const isVerb = w => /^[a-zäöüß]{3,}(en|eln|ern)$/.test(w) && !STOP.has(w) && !isSeparable(w)
 
 const { rows } = await db.query(
   `SELECT w.id, w.lesson_id, w.word_de, w.translation_ru

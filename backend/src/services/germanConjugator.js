@@ -35,6 +35,8 @@ const IRREGULAR = {
   mögen:  { ich: 'mag',  du: 'magst', er: 'mag',  wir: 'mögen', ihr: 'mögt',  sie: 'mögen' },
   // nehmen — нерегулярное удвоение: nimmt
   nehmen: { ich: 'nehme', du: 'nimmst', er: 'nimmt', wir: 'nehmen', ihr: 'nehmt', sie: 'nehmen' },
+  // möchten — форма Konjunktiv II от mögen: в er/sie/es НЕТ окончания -t (er möchte!)
+  möchten: { ich: 'möchte', du: 'möchtest', er: 'möchte', wir: 'möchten', ihr: 'möchtet', sie: 'möchten' },
 }
 
 // Сильные глаголы: меняется корень ТОЛЬКО в du и er/sie/es. Задаём новый корень.
@@ -62,26 +64,31 @@ function stemOf(inf) {
   return inf
 }
 
-// Форма du/ihr/er с учётом орфографии основы.
-function addEnding(stem, ending) {
-  // ending: 'st' (du), 't' (er/ihr), 'e' (ich), 'en'/'n' (wir/sie)
-  const last = stem.slice(-1)
-  const last2 = stem.slice(-2)
+// Форма du/ihr/er с учётом орфографии основы. strong=true — сильная основа (изменённый
+// корень в du/er): у них -e- НЕ вставляется (du hältst, er hält — а не «hältest»).
+function addEnding(stem, ending, strong = false) {
   // Основа на -s/-ß/-z/-x/-tz: у du отпадает s (heißen → du heißt, sitzen → du sitzt)
   if (ending === 'st' && /(s|ß|z|x|tz)$/.test(stem)) return stem + 't'
+  // Сильная основа на -t/-d: er = сама основа (er hält, er rät), du = основа+st (du hältst)
+  if (strong && /[td]$/.test(stem)) {
+    if (ending === 't') return stem
+    if (ending === 'st') return stem + 'st'
+  }
   // Основа на -t/-d или согласный+m/n (arbeiten, finden, öffnen, regnen): вставляем -e-
-  if ((ending === 'st' || ending === 't') && (/[td]$/.test(stem) || isConsClusterMN(stem))) {
+  if ((ending === 'st' || ending === 't') && !strong && (/[td]$/.test(stem) || isConsClusterMN(stem))) {
     return stem + 'e' + ending
   }
   return stem + ending
 }
 
-// Основа заканчивается на согласную + m/n (öffn-, regn-, atm-) — нужен -e- перед st/t.
-// Но НЕ после l/r/m/n (lernen, kommen → без -e-: du lernst, du kommst).
+// Основа заканчивается на согласную + m/n (öffn-, regn-, atm-, zeichn-) — нужен -e- перед st/t.
+// Но НЕ после l/r/m/n (lernen, kommen → du lernst) и НЕ после немой h за гласной
+// (wohnen → du wohnst; но zeichnen → du zeichnest, там «ch»).
 function isConsClusterMN(stem) {
   if (!/(m|n)$/.test(stem)) return false
   const before = stem.slice(-2, -1)
-  return /[bcdfghkpstw]/.test(before) // напр. öff-n, reg-n, at-m
+  if (before === 'h') return stem.slice(-3, -2) === 'c' // 'chn' (zeichnen) — да; 'о+hn' (wohnen) — нет
+  return /[bcdfgkpstw]/.test(before) // напр. öff-n, reg-n, at-m
 }
 
 // Спрягает инфинитив в Präsens. Возвращает { ich, du, er, wir, ihr, sie }.
@@ -100,15 +107,16 @@ export function conjugatePresent(infinitiveRaw) {
   if (key.endsWith('eln')) ichForm = stem.slice(0, -2) + 'le' // samm-el → sammle
   else ichForm = stem + 'e'
 
-  // du / er — с учётом сильного изменения корня
+  // du / er — с учётом сильного изменения корня (у сильных -e- не вставляется)
   const strongStem = STRONG_STEM[key]
+  const isStrong = Boolean(strongStem)
   const duStem = strongStem || stem
   const erStem = strongStem || stem
 
   const forms = {
     ich: ichForm,
-    du: addEnding(duStem, 'st'),
-    er: addEnding(erStem, 't'),
+    du: addEnding(duStem, 'st', isStrong),
+    er: addEnding(erStem, 't', isStrong),
     wir: stem + plural,
     ihr: addEnding(stem, 't'),
     sie: stem + plural,

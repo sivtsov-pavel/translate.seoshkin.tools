@@ -48,16 +48,30 @@ export async function lessonsRoutes(fastify) {
   fastify.get('/api/lessons', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
-    const { role } = request.user
+    const { id: userId, role } = request.user
     const target = request.headers['x-target-lang'] || 'de'
     // Мульти-таргет: показываем только уроки активного изучаемого языка
     // Личные наборы ученика («мои сложные слова») в общий список не показываем никому,
     // кроме их владельца — иначе они утекли бы всей школе.
-    const personalFilter = ` AND (NOT l.is_personal OR l.owner_id = ${parseInt(request.user.id)})`
+    const personalFilter = ` AND (NOT l.is_personal OR l.owner_id = ${parseInt(userId)})`
     // Пустые авто-уроки из PDF (обложка/пустая страница — ИИ не нашёл слов) прячем из списка,
     // данные не удаляем (фото остаётся в БД, урок виден только напрямую/через БД).
     const emptyAutoPdfFilter = ' AND NOT (l.auto_pdf AND l.status = \'done\' AND NOT EXISTS (SELECT 1 FROM words w2 WHERE w2.lesson_id = l.id))'
-    const filter = (role === 'owner' ? 'WHERE l.target_lang = $1' : "WHERE l.status = 'done' AND l.target_lang = $1") + personalFilter + emptyAutoPdfFilter
+    // Мультиарендность (как в /api/words и /exercises/today): учитель видит СВОИ уроки
+    // (супер-админ id=1 — все), ученик — уроки СВОЕЙ школы (null-safe: без школы — как раньше).
+    let tenantFilter = ''
+    if (userId === 1) {
+      tenantFilter = ''
+    } else if (role === 'owner') {
+      tenantFilter = ` AND l.owner_id = ${parseInt(userId)}`
+    } else {
+      const schoolId = request.user.school_id ?? null
+      // Личные наборы ученика (is_personal, owner = ученик) видны всегда — у них нет school_id
+      tenantFilter = schoolId != null
+        ? ` AND (l.school_id = ${parseInt(schoolId)} OR (l.is_personal AND l.owner_id = ${parseInt(userId)}))`
+        : ''
+    }
+    const filter = (role === 'owner' ? 'WHERE l.target_lang = $1' : "WHERE l.status = 'done' AND l.target_lang = $1") + personalFilter + emptyAutoPdfFilter + tenantFilter
 
     const { rows } = await db.query(
       `SELECT l.*,

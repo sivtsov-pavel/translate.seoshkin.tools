@@ -36,5 +36,17 @@ eq(conjugatePresent('nehmen'), { ich: 'nehme', du: 'nimmst', er: 'nimmt', wir: '
 // -eln
 eq(conjugatePresent('sammeln'), { ich: 'sammle', du: 'sammelst', er: 'sammelt', wir: 'sammeln', ihr: 'sammelt', sie: 'sammeln' }, 'sammeln')
 
+// Сильные с основой на -t: БЕЗ вставки -e- (du hältst, er hält — не «hältest»); ihr — регулярно
+eq(conjugatePresent('halten'), { ich: 'halte', du: 'hältst', er: 'hält', wir: 'halten', ihr: 'haltet', sie: 'halten' }, 'halten')
+eq(conjugatePresent('raten'), { ich: 'rate', du: 'rätst', er: 'rät', wir: 'raten', ihr: 'ratet', sie: 'raten' }, 'raten')
+eq(conjugatePresent('gelten'), { ich: 'gelte', du: 'giltst', er: 'gilt', wir: 'gelten', ihr: 'geltet', sie: 'gelten' }, 'gelten')
+
+// Немая h после гласной: без -e- (wohnen); но «chn» (zeichnen) — с -e-
+eq(conjugatePresent('wohnen'), { ich: 'wohne', du: 'wohnst', er: 'wohnt', wir: 'wohnen', ihr: 'wohnt', sie: 'wohnen' }, 'wohnen')
+eq(conjugatePresent('zeichnen'), { ich: 'zeichne', du: 'zeichnest', er: 'zeichnet', wir: 'zeichnen', ihr: 'zeichnet', sie: 'zeichnen' }, 'zeichnen')
+
+// möchten — Konjunktiv II: er möchte (без -t!)
+eq(conjugatePresent('möchten'), { ich: 'möchte', du: 'möchtest', er: 'möchte', wir: 'möchten', ihr: 'möchtet', sie: 'möchten' }, 'möchten')
+
 console.log(`\n${fail === 0 ? '✅ ВСЕ ТЕСТЫ ПРОШЛИ' : '❌ ЕСТЬ ПАДЕНИЯ'}: ${pass} pass, ${fail} fail`)
 process.exit(fail === 0 ? 0 : 1)
