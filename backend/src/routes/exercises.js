@@ -515,17 +515,17 @@ export async function exercisesRoutes(fastify) {
       lessonsMap[r.lesson_id].total += r.count
     }
 
-    // Дорисовываем уроки курса, у которых сегодня НЕТ повторений. Без этого пройденный урок
-    // пропадал с дорожной карты: SRS отодвинул все его упражнения в будущее → урок вылетал
-    // из запроса выше. Ученику вдобавок показываем закрытые дрипом (locked: видно, но не пройти).
+    // Дорисовываем уроки, у которых сегодня НЕТ повторений. Без этого пройденный урок пропадал
+    // с дорожной карты: SRS отодвинул все его упражнения в будущее → урок вылетал из запроса
+    // выше. Ученику вдобавок помечаем закрытые дрипом (locked: видно, но проходить нельзя).
+    // Внекурсовые уроки (course_id NULL — например скопированные через каталог) тоже берём:
+    // дрип их и так считает всегда открытыми, а на карте их не было вовсе.
     {
-      // Ученику — только уроки курса (дрип-очередь строится по курсу), учителю — все свои
-      // уроки, включая внекурсовые. Гигиена как в /api/lessons: чужие личные наборы и пустые
-      // авто-уроки из PDF на карту не тащим.
+      // Гигиена как в /api/lessons: чужие личные наборы и пустые авто-уроки из PDF не тащим.
       const hygiene = ` AND (NOT l.is_personal OR l.owner_id = ${parseInt(userId)})
         AND NOT (l.auto_pdf AND NOT EXISTS (SELECT 1 FROM words w2 WHERE w2.lesson_id = l.id))`
       const scope = playableSet
-        ? { sql: `l.status='done' AND l.target_lang=$1 AND l.is_set=false AND l.course_id IS NOT NULL
+        ? { sql: `l.status='done' AND l.target_lang=$1 AND l.is_set=false
                   AND ($2::int IS NULL OR l.school_id=$2)${hygiene}`, params: [target, request.user.school_id ?? null] }
         : { sql: `l.status='done' AND l.target_lang=$1 AND l.is_set=false${teacherScope}${hygiene}`,
             params: [target] }
