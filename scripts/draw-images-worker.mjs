@@ -55,31 +55,61 @@ function pushFile(localPath, remoteName) {
 }
 
 // ── Что рисуем ────────────────────────────────────────────────────────────────
+// Считаем и обновляем ПО СЛОВУ, а не по строке таблицы. Одно и то же слово лежит в базе
+// несколько раз (пришло из разных уроков), и словарь показывает лишь один экземпляр —
+// тот же дедуп, что в /api/words. Отсюда две ошибки, если работать построчно:
+//   • объём завышен (в немецком 151 строка против 83 слов в словаре — 68 лишних часов работы);
+//   • перерисовали одну строку, а словарь показывает другую — старое фото на месте.
+// Ключ дедупа — как в словаре: без артикля, регистр первой буквы значим.
+const B = `regexp_replace(w.word_de, '^(der|die|das|ein|eine|el|la|los|las|the)\\s+', '', 'i')`
+const KEY = `(left(${B}, 1) || lower(substr(${B}, 2)))`
 const langFilter = lang ? `AND l.target_lang = '${lang.replace(/[^a-z]/gi, '')}'` : ''
-const modeFilter = mode === 'photos'
-  // .jpg = фото Unsplash, .webp = рисунок ИИ. Маркер простой и точный (см. HANDOFF_LOCAL_AI.md).
-  ? `AND w.image_url LIKE '%.jpg'`
-  : `AND w.image_url IS NULL`
+// .jpg = фото Unsplash, .webp = рисунок ИИ. Маркер простой и точный (см. HANDOFF_LOCAL_AI.md).
+const groupFilter = mode === 'photos'
+  ? `drawn = 0 AND with_img > 0`      // есть только фото — заменяем на рисовашку
+  : mode === 'align'
+    ? `drawn > 0 AND drawn < n`       // у части экземпляров рисовашка есть, у остальных нет
+    : `with_img = 0`                  // нет картинки вообще ни у одного экземпляра
 
 const rows = JSON.parse(prodSql(`
-  SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
-    SELECT w.id, w.word_de, w.translation_ru, l.target_lang, l.id AS lesson_id
+  WITH k AS (
+    SELECT w.id, w.word_de, w.translation_ru, w.created_at, l.target_lang, l.id AS lesson_id,
+           ${KEY} AS kkey,
+           COALESCE(w.image_url, (SELECT e.image_url FROM exercises e
+             WHERE e.word_id = w.id AND e.image_url IS NOT NULL LIMIT 1)) AS img
     FROM words w JOIN lessons l ON l.id = w.lesson_id
-    WHERE TRUE ${modeFilter} ${langFilter}
-    ORDER BY w.id LIMIT ${limit}) t`))
+    WHERE TRUE ${langFilter}
+  ), g AS (
+    SELECT kkey, min(id) AS lead_id, array_agg(id) AS ids, count(*) AS n,
+           count(*) FILTER (WHERE img ILIKE '%.webp%') AS drawn,
+           count(*) FILTER (WHERE img IS NOT NULL) AS with_img,
+           (array_agg(img) FILTER (WHERE img ILIKE '%.webp%'))[1] AS drawn_url
+    FROM k GROUP BY kkey
+  )
+  SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
+    SELECT k.id, k.word_de, k.translation_ru, k.target_lang, k.lesson_id, g.ids, g.drawn_url
+    FROM g JOIN k ON k.id = g.lead_id
+    WHERE ${groupFilter}
+    ORDER BY k.id LIMIT ${limit}) t`))
 
-// Служебные слова (предлоги, артикли, числа) иллюстрировать бессмысленно — тот же
-// фильтр, что и в боевой генерации.
-const todo = rows.filter(r => !isFunctionWord(r.word_de))
-console.log(`Режим «${mode}»${lang ? `, язык ${lang}` : ''}: кандидатов ${rows.length}, к рисованию ${todo.length}`)
-if (!todo.length) { console.log('Нечего рисовать.'); process.exit(0) }
+// Служебные слова (предлоги, артикли, числа) иллюстрировать бессмысленно — тот же фильтр,
+// что и в боевой генерации. Но в режиме align мы ничего не рисуем, а раздаём уже готовую
+// картинку дублям — там фильтр не нужен: раз рисовашка есть, пусть будет у всех экземпляров.
+const todo = mode === 'align' ? rows : rows.filter(r => !isFunctionWord(r.word_de))
+const verb = mode === 'align' ? 'к выравниванию' : 'к рисованию'
+console.log(`Режим «${mode}»${lang ? `, язык ${lang}` : ''}: кандидатов ${rows.length}, ${verb} ${todo.length}`)
+if (!todo.length) { console.log('Делать нечего.'); process.exit(0) }
 if (dry) {
   todo.forEach(r => console.log(`  ${r.id} ${r.word_de} — ${r.translation_ru}`))
   process.exit(0)
 }
 
-// ── Локальные службы должны быть на связи ─────────────────────────────────────
-const health = await localAiHealth()
+// ── Режим align: рисовать не нужно, локальные службы не требуются ────────────
+// Одно и то же слово лежит в базе несколько раз (пришло из разных уроков). Если рисовашка
+// есть хотя бы у одного экземпляра — раздаём её остальным: в словаре слово и так покажется
+// с картинкой (дедуп выбирает экземпляр с картинкой), а вот во флеш-карте урока картинка
+// берётся по конкретному word_id — и у дубля её не было. Операция бесплатная, без ИИ.
+const health = mode === 'align' ? { text: true, image: true } : await localAiHealth()
 if (!health.image) { console.error('❌ Draw Things не отвечает — запусти его на ноутбуке'); process.exit(1) }
 if (!health.text) console.warn('⚠️ Ollama не отвечает: понятие не переведём на английский, качество будет хуже')
 
@@ -115,6 +145,14 @@ try {
     const eta = ok ? Math.round(((Date.now() - started) / ok) * left / 60000) : '?'
     process.stdout.write(`[${i + 1}/${todo.length}] ${w.word_de} … (осталось ~${eta} мин) `)
     try {
+      if (mode === 'align') {
+        await db.query('UPDATE words SET image_url = $1 WHERE id = ANY($2::int[]) AND (image_url IS NULL OR image_url NOT ILIKE $3)',
+          [w.drawn_url, w.ids, '%.webp%'])
+        await logOp({ lessonId: w.lesson_id, status: 'ok', items: 1, durationMs: Date.now() - t0,
+          message: 'выравнивание дублей (без генерации)', meta: { word_de: w.word_de, word_id: w.id, mode } })
+        ok++; console.log('✓ выровнено')
+        continue
+      }
       // Русский концепт диффузионная модель не понимает и рисует НАДПИСЬ («стол» → буквы «СТОЛ»).
       const concept = await conceptToEnglish(w.translation_ru, w.word_de)
         || String(w.word_de).replace(/^(der|die|das|ein|eine|el|la|los|las|the)\s+/i, '').trim()
@@ -123,8 +161,10 @@ try {
 
       pushFile(join(tmp, 'word-images', `word_${w.id}.webp`), `word_${w.id}.webp`)
       pushFile(join(tmp, 'word-images', `word_${w.id}_sm.webp`), `word_${w.id}_sm.webp`)
-      // Кэш-бастер: у части слов картинка меняется, а имя файла прежнее.
-      await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [`${url}?v=${Date.now()}`, w.id])
+      // Обновляем ВСЕ экземпляры слова (w.ids), а не только тот, по которому рисовали:
+      // иначе словарь покажет соседний дубль со старым фото. Кэш-бастер — имя файла прежнее.
+      await db.query('UPDATE words SET image_url = $1 WHERE id = ANY($2::int[])',
+        [`${url}?v=${Date.now()}`, w.ids])
 
       const ms = Date.now() - t0
       await logOp({ lessonId: w.lesson_id, status: 'ok', items: 1, durationMs: ms,
