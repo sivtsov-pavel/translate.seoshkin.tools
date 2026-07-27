@@ -34,6 +34,26 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
   const chars = buildMask(answer)
   const blanks = chars.map((c, i) => (c === '_' ? i : -1)).filter(i => i >= 0)
 
+  // Разбиваем на слова (по пробелам) — чтобы перенос шёл между словами, а не рвал слово
+  // посередине: «der Kugelschreiber» = «der» + «Kugelschreiber» на двух строках.
+  const groups = []
+  let cur = []
+  chars.forEach((ch, i) => {
+    if (ch === ' ') { if (cur.length) groups.push(cur); cur = []; return }
+    cur.push({ ch, i })
+  })
+  if (cur.length) groups.push(cur)
+
+  // Размер клетки под самое длинное слово: узкий экран (~312px рабочей ширины) делим
+  // на длину слова. Без этого «Kugelschreiber» (14 букв × 34px = 476px) не помещался.
+  const AVAIL = 312, GAP = 4, MIN_SLOT = 16
+  const longest = groups.reduce((m, g) => Math.max(m, g.length), 1)
+  const slot = Math.max(MIN_SLOT, Math.min(34, Math.floor(AVAIL / longest) - GAP))
+  const font = Math.round(slot * 0.88)
+  // Слово-гигант («Sozialversicherungsnummer») не помещается даже минимальными клетками —
+  // тогда разрешаем перенос внутри слова: лучше две строки, чем уехавший за экран хвост.
+  const allowBreakInWord = longest * (slot + GAP) > AVAIL
+
   useEffect(() => {
     // фокус на первый пропуск + озвучка слова
     const first = blanks[0]
@@ -97,39 +117,51 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
         {t.exercise.rememberWord} <strong style={{ color: 'var(--ink)' }}>{hint}</strong>
       </p>
 
-      {/* Слово: видимые буквы + клетки-пропуски (каждая клетка = одна буква) */}
+      {/* Слово: видимые буквы + клетки-пропуски (каждая клетка = одна буква).
+          Длинные слова («der Kugelschreiber») в одну строку не влезали и уезжали за
+          экран. Теперь слово переносится ЦЕЛИКОМ — артикль отдельной строкой, само
+          слово отдельной — и клетки ужимаются под длину самого длинного слова. */}
       <div style={{ textAlign: 'center', marginBottom: 20 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 4, fontSize: 34, fontWeight: 700 }} dir="ltr">
-          {chars.map((ch, i) => (
-            ch === '_'
-              // Показываем то, что ВВЁЛ ученик (даже после проверки) — чтобы он видел свою букву
-              // и понял ошибку (в т.ч. регистр). Автозаглавную клавиатуры выключаем.
-              ? <input key={i}
-                  ref={el => { refs.current[i] = el }}
-                  value={vals[i] || ''}
-                  onChange={e => setChar(i, e.target.value)}
-                  onKeyDown={e => handleKey(i, e)}
-                  disabled={submitted}
-                  maxLength={1}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  inputMode="text"
-                  aria-label={t.exercise.missingLetterAria}
-                  style={{
-                    width: 34, height: 46, padding: 0, textAlign: 'center',
-                    fontSize: 30, fontWeight: 700, fontFamily: 'inherit',
-                    color: slotColor(i), background: 'transparent',
-                    border: 'none', borderBottom: `3px solid ${submitted ? slotColor(i) : 'var(--accent)'}`,
-                    borderRadius: 0, outline: 'none',
-                  }}
-                />
-              : ch === ' '
-                // Зазор между словами (в многословных ответах пробел был слишком узким)
-                ? <span key={i} style={{ display: 'inline-block', width: 16 }} />
-                : <span key={i} style={{ color: 'var(--ink)', lineHeight: '46px' }}>{ch}</span>
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+          alignItems: 'flex-end', columnGap: 14, rowGap: 6, fontWeight: 700,
+        }} dir="ltr">
+          {groups.map((g, gi) => (
+            // Одно слово = неразрывная группа: перенос идёт по пробелам, а не по буквам
+            <div key={gi} style={{
+              display: 'inline-flex', alignItems: 'flex-end', gap: GAP, rowGap: 6,
+              flexWrap: allowBreakInWord ? 'wrap' : 'nowrap',
+              justifyContent: 'center',
+            }}>
+              {g.map(({ ch, i }) => (
+                ch === '_'
+                  // Показываем то, что ВВЁЛ ученик (даже после проверки) — чтобы он видел свою букву
+                  // и понял ошибку (в т.ч. регистр). Автозаглавную клавиатуры выключаем.
+                  ? <input key={i}
+                      ref={el => { refs.current[i] = el }}
+                      value={vals[i] || ''}
+                      onChange={e => setChar(i, e.target.value)}
+                      onKeyDown={e => handleKey(i, e)}
+                      disabled={submitted}
+                      maxLength={1}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="text"
+                      aria-label={t.exercise.missingLetterAria}
+                      style={{
+                        width: slot, height: slot * 1.35, padding: 0, textAlign: 'center',
+                        fontSize: font, fontWeight: 700, fontFamily: 'inherit',
+                        color: slotColor(i), background: 'transparent',
+                        border: 'none', borderBottom: `3px solid ${submitted ? slotColor(i) : 'var(--accent)'}`,
+                        borderRadius: 0, outline: 'none',
+                      }}
+                    />
+                  : <span key={i} style={{ color: 'var(--ink)', fontSize: font, lineHeight: `${slot * 1.35}px` }}>{ch}</span>
+              ))}
+            </div>
           ))}
-          <SpeakButton text={payload.word_de} size={22} style={{ marginLeft: 10 }} />
+          <SpeakButton text={payload.word_de} size={22} style={{ alignSelf: 'flex-end' }} />
         </div>
       </div>
 

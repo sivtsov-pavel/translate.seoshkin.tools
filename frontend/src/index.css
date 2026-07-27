@@ -447,3 +447,25 @@ html.offline-mode .main-content { padding-top: 80px; }
     height: 100%;
   }
 }
+
+/* ── Открытая клавиатура на мобиле ───────────────────────────────────────────
+   Пока клавиатура на экране, нижняя навигация не нужна: она отъедает ~76px ровно
+   там, где должно быть видно поле ввода. Прячем её и обнуляем --bottom-nav-h,
+   чтобы .full-page-layout занял освободившееся место (жалоба Павла: в упражнении
+   «Напиши предложение» клавиатура перекрывала поле). */
+html.keyboard-open .bottom-nav { display: none !important; }
+html.keyboard-open { --bottom-nav-h: 0px; }
+
+/* Карточка упражнения при открытой клавиатуре не должна растягиваться на всю
+   высоту — иначе поле ввода уезжает вниз и скроллить его некуда. */
+html.keyboard-open .exercise-session-page .exercise-card { flex: 0 0 auto !important; }
+
+/* Медиа-область (фото слова) при вводе только мешает — ужимаем, чтобы поле и
+   кнопка «Проверить» помещались над клавиатурой. */
+html.keyboard-open .exercise-session-page .word-image-bleed {
+  max-height: 96px !important;
+  transition: max-height .18s ease;
+}
+
+/* Запас снизу, чтобы последняя строка формы не липла к клавиатуре при скролле. */
+html.keyboard-open .exercise-session-page .exercise-card-content::after { height: 48px; }
