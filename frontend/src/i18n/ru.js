@@ -228,7 +228,7 @@ export const ru = {
     conjugation: 'Склонение',
     conjChoose: 'Выбрать',
     conjType: 'Вписать руками',
-    multiVariantHint: 'Здесь несколько форм — впиши все через «/» (как в ответе)',
+    multiVariantHint: 'Здесь несколько форм — достаточно написать любую одну',
     continueBtn: 'Продолжить',
     pickOtherLesson: 'Выбрать другой урок',
     fanNext: 'Дальше по логике',

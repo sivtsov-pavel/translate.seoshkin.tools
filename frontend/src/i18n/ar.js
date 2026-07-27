@@ -226,7 +226,7 @@ export const ar = {
     conjugation: 'التصريف',
     conjChoose: 'اختر',
     conjType: 'اكتب',
-    multiVariantHint: 'هناك عدة أشكال — اكتبها كلها مع «/» (كما في الإجابة)',
+    multiVariantHint: 'هناك عدة أشكال — يكفي كتابة واحدة منها',
     fanNext: 'المتابعة بالترتيب',
     fanOtherType: 'اختر نوعًا آخر',
     fanProgress: (pos, total) => `${pos} من ${total} في الدرس`,

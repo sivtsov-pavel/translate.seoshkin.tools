@@ -224,7 +224,7 @@ export const uk = {
     conjugation: 'Відмінювання',
     conjChoose: 'Обрати',
     conjType: 'Вписати вручну',
-    multiVariantHint: 'Тут кілька форм — впиши всі через «/» (як у відповіді)',
+    multiVariantHint: 'Тут кілька форм — достатньо написати будь-яку одну',
     fanNext: 'Далі за логікою',
     fanOtherType: 'Обрати інший тип',
     fanProgress: (pos, total) => `Зроблено ${pos} з ${total} в уроці`,

@@ -224,7 +224,7 @@ export const sq = {
     conjugation: 'Zgjedhimi',
     conjChoose: 'Zgjidh',
     conjType: 'Shkruaj',
-    multiVariantHint: 'Disa forma këtu — shkruaji të gjitha me «/» (si te përgjigja)',
+    multiVariantHint: 'Disa forma këtu — mjafton të shkruash njërën',
     fanNext: 'Vazhdo sipas radhës',
     fanOtherType: 'Zgjidh një lloj tjetër',
     fanProgress: (pos, total) => `U bënë ${pos} nga ${total} në mësim`,

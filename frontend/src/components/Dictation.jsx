@@ -5,6 +5,7 @@ import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
+import { checkDictation, answerVariants, spokenForm } from '../utils/dictation.js'
 
 export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, translations, translationRu, exerciseId, showOriginal }) {
   const { word_de, translation_ru } = payload
@@ -20,26 +21,24 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
     ? word_de
     : getTranslation(translations, lang, translationRu || translation_ru)
 
+  // Диктуем ОДНУ форму (см. spokenForm) — иначе синтезатор читает «die Lehrerin / die
+  // Kursleiterin» вместе со слэшем и новичку непонятно, что писать.
+  const spoken = spokenForm(word_de)
+
   useEffect(() => {
-    setTimeout(() => speak(word_de, 'de-DE', 0.8), 300)
+    setTimeout(() => speak(spoken, 'de-DE', 0.8), 300)
     inputRef.current?.focus()
     setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
   }, [word_de])
 
-  // Чистим ответ: срезаем хвост-подсказку в скобках («(z.B.)», «(Wörter)») и лишние пробелы.
-  // Регистр НЕ понижаем — в немецком заглавная буква обязательна (существительные с большой),
-  // тренируемся писать правильно. Регистрозависимое сравнение.
-  const clean = (s) => (s || '')
-    .replace(/\s*\([^)]*\)\s*/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  // Формы, которые считаем верными («die Lehrerin / die Kursleiterin» → хватит любой одной).
+  // Регистр НЕ понижаем — в немецком существительные с заглавной, тренируемся писать правильно.
+  const variants = answerVariants(word_de)
 
   const check = () => {
-    const a = clean(input), b = clean(word_de)
-    const exact = a === b
-    // Ответ верный по буквам, но перепутан регистр → не засчитываем, но подсказываем про заглавную
-    setCaseHint(!exact && a.toLowerCase() === b.toLowerCase())
-    setCorrect(exact)
+    const { correct: ok, caseHint: hint } = checkDictation(input, word_de)
+    setCaseHint(hint)
+    setCorrect(ok)
     setChecked(true)
     // звук верно/неверно — централизован в AvatarReaction (играет при выключенной озвучке)
   }
@@ -63,7 +62,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
           {displayTranslation}
         </div>
         <button
-          onClick={() => speak(word_de, 'de-DE', 0.8)}
+          onClick={() => speak(spoken, 'de-DE', 0.8)}
           style={{ marginTop: 12, padding: '4px 14px', borderRadius: 20, border: 'none', background: 'transparent', color: 'var(--accent)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
           ◄ {t.exercise.listenAgain}
         </button>
@@ -86,10 +85,10 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
         }}
       />
 
-      {/* Подсказка для ответов с несколькими вариантами (напр. «mein / meine») — впиши все через «/» */}
-      {!checked && /\s*\/\s*/.test((word_de || '').trim()) && (
+      {/* У слов с несколькими формами («mein / meine») достаточно ввести любую одну */}
+      {!checked && variants.length > 1 && (
         <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', textAlign: 'center', marginTop: -8, lineHeight: 1.5 }}>
-          💡 {t.exercise.multiVariantHint || 'Здесь несколько форм — впиши все через «/» (как в ответе)'}
+          💡 {t.exercise.multiVariantHint || 'Здесь несколько форм — достаточно написать любую одну'}
         </div>
       )}
 

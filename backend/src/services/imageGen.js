@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import { config } from '../config.js'
 import { saveOptimizedImage } from './imageOptimize.js'
-import { generateImageLocally } from './localAi.js'
+import { generateImageLocally, conceptToEnglish } from './localAi.js'
 
 const openai = new OpenAI({ apiKey: config.openaiApiKey })
 
@@ -34,14 +34,21 @@ async function fetchToBuffer(url) {
 // client — OpenAI-клиент; по умолчанию платформенный, но processor передаёт клиент владельца
 // урока (генерация картинок идёт за счёт учителя, если у него задан свой ключ).
 export async function generateWordImage(wordDe, translationRu, wordId, targetLang = 'de', client = openai) {
-  const prompt = `Simple cheerful flat vector illustration for a children's flashcard. Show clearly the concept: "${translationRu}". Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style.
+  const buildPrompt = (concept) => `Simple cheerful flat vector illustration for a children's flashcard. Show clearly the concept: "${concept}". Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style.
 IMPORTANT: absolutely NO text, NO letters, NO words, NO signs, NO captions in any language — only the drawing.`
+  const prompt = buildPrompt(translationRu)
   // Локальный режим: рисуем на ноутбуке через Draw Things — бесплатно.
   // При сбое НЕ уходим молча в платный OpenAI (правило денег): вернём null,
   // слово останется без картинки до починки локального генератора.
   if (config.aiImageProvider === 'local') {
     try {
-      return await saveOptimizedImage(await generateImageLocally(prompt), wordId)
+      // Русский концепт локальная модель не понимает и рисует НАДПИСЬ («стол» → буквы «СТОЛ»).
+      // Переводим понятие на английский локальной же моделью — бесплатно. Если не вышло,
+      // берём слово на изучаемом языке без артикля: латиница модели ближе, чем кириллица.
+      const concept = await conceptToEnglish(translationRu, wordDe)
+        || String(wordDe || '').replace(/^(der|die|das|ein|eine|el|la|los|las|the)\s+/i, '').trim()
+        || translationRu
+      return await saveOptimizedImage(await generateImageLocally(buildPrompt(concept)), wordId)
     } catch (e) {
       console.error('draw-things:', e.message)
       return null

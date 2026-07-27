@@ -443,6 +443,13 @@ export async function exercisesRoutes(fastify) {
     // Для ученика — строгий дрип: только разблокированные уроки; курсы без расписания → needs_schedule
     let needsScheduleCourses = []
     let playableSet = null // set разблокированных уроков ученика (для отметки закрытых на карте)
+    // Мультиарендность (как в /api/lessons и /api/words): учитель видит уроки СВОЕЙ школы
+    // плюс свои личные, супер-админ (id=1) — все. Раньше в учительской ветке фильтра не было
+    // вовсе: чужой учитель того же языка видел в статистике уроки соседней школы.
+    const teacherScope = userId === 1 ? '' : (request.user.school_id != null
+      ? ` AND (l.school_id = ${parseInt(request.user.school_id)} OR l.owner_id = ${parseInt(userId)})`
+      : ` AND l.owner_id = ${parseInt(userId)}`)
+
     let query, params
     if (role === 'owner') {
       params = [userId, today, target]
@@ -455,7 +462,7 @@ export async function exercisesRoutes(fastify) {
         FROM exercises e
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
-        WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2 AND l.target_lang = $3
+        WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2 AND l.target_lang = $3${teacherScope}
         GROUP BY l.id, l.title, l.description, l.date, l.is_set, l.course_id, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
     } else {
@@ -507,7 +514,42 @@ export async function exercisesRoutes(fastify) {
       lessonsMap[r.lesson_id].byType[r.type] = r.count
       lessonsMap[r.lesson_id].total += r.count
     }
-    // Количество уникальных слов на урок + сколько уже изучено (next_review > today)
+
+    // Дорисовываем уроки курса, у которых сегодня НЕТ повторений. Без этого пройденный урок
+    // пропадал с дорожной карты: SRS отодвинул все его упражнения в будущее → урок вылетал
+    // из запроса выше. Ученику вдобавок показываем закрытые дрипом (locked: видно, но не пройти).
+    {
+      // Ученику — только уроки курса (дрип-очередь строится по курсу), учителю — все свои
+      // уроки, включая внекурсовые. Гигиена как в /api/lessons: чужие личные наборы и пустые
+      // авто-уроки из PDF на карту не тащим.
+      const hygiene = ` AND (NOT l.is_personal OR l.owner_id = ${parseInt(userId)})
+        AND NOT (l.auto_pdf AND NOT EXISTS (SELECT 1 FROM words w2 WHERE w2.lesson_id = l.id))`
+      const scope = playableSet
+        ? { sql: `l.status='done' AND l.target_lang=$1 AND l.is_set=false AND l.course_id IS NOT NULL
+                  AND ($2::int IS NULL OR l.school_id=$2)${hygiene}`, params: [target, request.user.school_id ?? null] }
+        : { sql: `l.status='done' AND l.target_lang=$1 AND l.is_set=false${teacherScope}${hygiene}`,
+            params: [target] }
+      const { rows: allLes } = await db.query(
+        `SELECT l.id AS lesson_id, l.title AS lesson_title, l.date AS lesson_date, l.is_set AS is_set, l.course_id,
+                l.description AS lesson_description,
+                COALESCE(l.title_translations,'{}') AS lesson_title_translations,
+                COALESCE(l.description_translations,'{}') AS lesson_description_translations
+         FROM lessons l WHERE ${scope.sql}`, scope.params)
+      for (const l of allLes) {
+        const shown = lessonsMap[l.lesson_id]
+        if (shown) {
+          if (playableSet) shown.locked = false
+        } else {
+          lessonsMap[l.lesson_id] = {
+            ...l, is_set: false, total: 0, byType: {}, words_count: 0,
+            ...(playableSet ? { locked: !playableSet.has(l.lesson_id) } : {}),
+          }
+        }
+      }
+    }
+
+    // Количество уникальных слов на урок + сколько уже изучено (next_review > today).
+    // Считаем ПОСЛЕ дорисовки — иначе у пройденных уроков было бы «Слова урока: 0».
     const lessonIds = Object.keys(lessonsMap).map(Number)
     if (lessonIds.length > 0) {
       const { rows: wRows } = await db.query(
@@ -556,29 +598,6 @@ export async function exercisesRoutes(fastify) {
     const lessonsTotal = lessonStats[0]?.total ?? 0
     const lessonsDone  = lessonStats[0]?.done_count ?? 0
 
-    // Ученик: показываем на карте и ЗАКРЫТЫЕ (дрип) уроки — видно, но проходить нельзя (locked).
-    // Разблокированные без упражнений «на сегодня» тоже добавляем (чтобы путь был полным).
-    if (playableSet) {
-      const shownIds = new Set(lessons.map(l => l.lesson_id))
-      const { rows: allLes } = await db.query(
-        `SELECT l.id AS lesson_id, l.title AS lesson_title, l.date AS lesson_date, l.is_set AS is_set, l.course_id,
-                l.description AS lesson_description,
-                COALESCE(l.title_translations,'{}') AS lesson_title_translations,
-                COALESCE(l.description_translations,'{}') AS lesson_description_translations
-         FROM lessons l
-         WHERE l.status='done' AND l.target_lang=$1 AND l.is_set=false AND l.course_id IS NOT NULL
-           AND ($2::int IS NULL OR l.school_id=$2)`,
-        [target, request.user.school_id ?? null])
-      for (const l of allLes) {
-        if (shownIds.has(l.lesson_id)) {
-          const ex = lessons.find(x => x.lesson_id === l.lesson_id); if (ex) ex.locked = false
-        } else {
-          lessons.push({ ...l, is_set: false, total: 0, byType: {}, words_count: 0, locked: !playableSet.has(l.lesson_id) })
-        }
-      }
-      lessons.sort((a, b) => ts(b.lesson_date) - ts(a.lesson_date) || (a.lesson_id - b.lesson_id))
-    }
-
     // Курсы, по которым ученик ещё не выбрал календарь — фронт покажет баннер «Выбери календарь»
     let needsSchedule = []
     if (needsScheduleCourses.length) {
@@ -623,8 +642,17 @@ export async function exercisesRoutes(fastify) {
       params.push(status)
     }
 
+    // Ключ дедупа — слово БЕЗ артикля (как wordKeyNorm в processor.js). Строгое сравнение по
+    // word_de оставляло в словаре пары «der Tisch» + «Tisch», «die Schule» + «Schule» — одно и
+    // то же слово с разных сканов. Из группы оставляем самый информативный вариант:
+    // с артиклем → с картинкой → свежий.
+    // ВАЖНО: регистр ПЕРВОЙ буквы значим — в немецком он несёт смысл: «sprechen» (глагол) и
+    // «das Sprechen» (существительное) — РАЗНЫЕ слова, как «essen»/«das Essen», «sie»/«Sie».
+    const wBase = `regexp_replace(w.word_de, '^(der|die|das|ein|eine|el|la|los|las|the)\\s+', '', 'i')`
+    const normKey = `(left(${wBase}, 1) || lower(substr(${wBase}, 2)))`
+    const hasArticle = `(w.word_de ~* '^(der|die|das|ein|eine|el|la|los|las|the)\\s')`
     const inner = `
-      SELECT DISTINCT ON (w.word_de) w.*,
+      SELECT DISTINCT ON (${normKey}) w.*,
              COALESCE(w.image_url, (
                SELECT e.image_url FROM exercises e
                WHERE e.word_id = w.id AND e.image_url IS NOT NULL LIMIT 1
@@ -639,7 +667,7 @@ export async function exercisesRoutes(fastify) {
       LEFT JOIN courses c ON c.id = l.course_id
       LEFT JOIN user_word_status uws ON uws.word_id = w.id AND uws.user_id = $1
       WHERE ${lessonFilter}${statusCond}
-      ORDER BY w.word_de, (w.image_url IS NOT NULL) DESC, w.created_at DESC`
+      ORDER BY ${normKey}, ${hasArticle} DESC, (w.image_url IS NOT NULL) DESC, w.created_at DESC`
 
     const { rows } = await db.query(`SELECT * FROM (${inner}) t ORDER BY t.created_at DESC`, params)
     return rows

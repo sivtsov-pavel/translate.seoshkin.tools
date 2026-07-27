@@ -29,6 +29,9 @@ export const config = {
   aiImageProvider: process.env.AI_IMAGE_PROVIDER || 'openai',
   ollamaBaseUrl: process.env.OLLAMA_BASE_URL || 'http://host.docker.internal:11434',
   ollamaModel: process.env.OLLAMA_MODEL || 'qwen3:14b',
+  // Быстрая модель для микро-задач (перевод одного слова перед генерацией картинки).
+  // qwen3:14b на такое тратит ~2.5 мин из-за «размышлений» — здесь это ни к чему.
+  ollamaFastModel: process.env.OLLAMA_FAST_MODEL || 'llama3.1:8b',
   ollamaVisionModel: process.env.OLLAMA_VISION_MODEL || 'gemma3:4b',
   drawThingsUrl: process.env.DRAW_THINGS_URL || 'http://host.docker.internal:7860',
 }

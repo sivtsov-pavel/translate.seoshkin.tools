@@ -224,7 +224,7 @@ export const tr = {
     conjugation: 'Çekim',
     conjChoose: 'Seç',
     conjType: 'Yaz',
-    multiVariantHint: 'Birden fazla biçim var — hepsini «/» ile yaz (cevaptaki gibi)',
+    multiVariantHint: 'Birden fazla biçim var — birini yazman yeterli',
     fanNext: 'Sırayla devam et',
     fanOtherType: 'Başka tür seç',
     fanProgress: (pos, total) => `Derste ${pos}/${total} tamamlandı`,

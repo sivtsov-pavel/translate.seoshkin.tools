@@ -224,7 +224,7 @@ export const bg = {
     conjugation: 'Спрежение',
     conjChoose: 'Избери',
     conjType: 'Напиши',
-    multiVariantHint: 'Тук има няколко форми — напиши ги всички с «/» (както в отговора)',
+    multiVariantHint: 'Тук има няколко форми — достатъчно е да напишеш само една',
     fanNext: 'Напред по реда',
     fanOtherType: 'Избери друг тип',
     fanProgress: (pos, total) => `Направени ${pos} от ${total} в урока`,

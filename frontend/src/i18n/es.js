@@ -224,7 +224,7 @@ export const es = {
     conjugation: 'Conjugación',
     conjChoose: 'Elegir',
     conjType: 'Escribir',
-    multiVariantHint: 'Varias formas aquí — escríbelas todas con «/» (como en la respuesta)',
+    multiVariantHint: 'Varias formas aquí — basta con escribir una',
     fanNext: 'Continuar en orden',
     fanOtherType: 'Elegir otro tipo',
     fanProgress: (pos, total) => `Hecho ${pos} de ${total} en la lección`,

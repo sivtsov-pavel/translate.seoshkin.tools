@@ -224,7 +224,7 @@ export const en = {
     conjugation: 'Conjugation',
     conjChoose: 'Choose',
     conjType: 'Type it',
-    multiVariantHint: 'Multiple forms here — type them all with «/» (as in the answer)',
+    multiVariantHint: 'Multiple forms here — writing any one of them is enough',
     fanNext: 'Continue in order',
     fanOtherType: 'Choose another type',
     fanProgress: (pos, total) => `Done ${pos} of ${total} in the lesson`,
