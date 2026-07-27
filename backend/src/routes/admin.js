@@ -43,6 +43,49 @@ export async function adminRoutes(fastify) {
     return { users: users[0], content: content[0], activity: activity[0] }
   })
 
+  // Журнал операций: что система делала, чем считала и во сколько обошлось.
+  // Утренняя проверка ночного прогона — сюда. Фильтры: ?status=error&kind=image&days=1
+  fastify.get('/api/admin/operations', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const { status, kind, provider, lesson_id: lessonId } = request.query
+    const days = Math.min(parseInt(request.query.days || '7') || 7, 90)
+    const limit = Math.min(parseInt(request.query.limit || '200') || 200, 1000)
+
+    // Поля обязательно с префиксом o.: в ленте есть JOIN с lessons, где тоже есть
+    // created_at/status/id — без префикса Postgres ругается на неоднозначность.
+    const where = [`o.created_at > now() - ($1 || ' days')::interval`]
+    const params = [String(days)]
+    const add = (sql, val) => { params.push(val); where.push(sql.replace('$?', `$${params.length}`)) }
+    if (status)   add('o.status = $?', status)
+    if (kind)     add('o.kind = $?', kind)
+    if (provider) add('o.provider = $?', provider)
+    if (lessonId) add('o.lesson_id = $?::int', lessonId)
+    const whereSql = where.join(' AND ')
+
+    const [{ rows }, { rows: totals }, { rows: byKind }] = await Promise.all([
+      db.query(
+        `SELECT o.*, l.title AS lesson_title
+         FROM operation_log o LEFT JOIN lessons l ON l.id = o.lesson_id
+         WHERE ${whereSql} ORDER BY o.created_at DESC LIMIT ${limit}`, params),
+      // Сводка за период: сколько операций, сколько ошибок и СКОЛЬКО ДЕНЕГ ушло
+      db.query(
+        `SELECT count(*)::int AS total,
+                count(*) FILTER (WHERE o.status='error')::int AS errors,
+                COALESCE(sum(o.cost_usd), 0)::float AS cost_usd,
+                count(*) FILTER (WHERE o.provider='local')::int  AS local_calls,
+                count(*) FILTER (WHERE o.provider='openai')::int AS openai_calls
+         FROM operation_log o WHERE ${whereSql}`, params),
+      db.query(
+        `SELECT o.kind, o.provider, count(*)::int AS n,
+                count(*) FILTER (WHERE o.status='error')::int AS errors,
+                COALESCE(sum(o.cost_usd), 0)::float AS cost_usd,
+                COALESCE(round(avg(o.duration_ms))::int, 0) AS avg_ms
+         FROM operation_log o WHERE ${whereSql}
+         GROUP BY o.kind, o.provider ORDER BY n DESC`, params),
+    ])
+    return { rows, totals: totals[0], byKind, days }
+  })
+
   // Прочитать глобальные настройки
   fastify.get('/api/admin/platform-settings', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (!isSuperAdmin(request, reply)) return

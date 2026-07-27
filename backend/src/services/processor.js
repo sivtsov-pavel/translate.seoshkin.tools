@@ -1,11 +1,12 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme, classifyWordsToThemes, CORE_EXERCISE_TYPES } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme, classifyWordsToThemes, CORE_EXERCISE_TYPES, usage, resetUsage, usageCostUSD } from './claude.js'
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
 import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
+import { logOperation, textProvider } from './opLog.js'
 
 // Сопоставление сгенерированного word_de со словом урока: GPT иногда возвращает слово
 // без артикля или в другом регистре → точное совпадение промахивается и упражнение
@@ -46,7 +47,7 @@ export async function drawLessonImages(lessonId) {
       // Банк слов: переиспользуем существующую картинку такого же слова (0 затрат)
       const existing = await findExistingWordImage(w.word_de, w.translation_ru, targetLang, w.id)
       if (existing) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [existing, w.id]); done++; continue }
-      const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client)
+      const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client, { lessonId })
       if (url) { await db.query('UPDATE words SET image_url=$1 WHERE id=$2', [url, w.id]); done++ }
     } catch (e) { console.error('drawLessonImages', w.word_de, e.message) }
   }
@@ -242,7 +243,7 @@ export async function enrichLesson(lessonId) {
         if (existing) { await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [existing, w.id]); continue }
         // Платная генерация (gpt-image-1) — только при вкл. авто И доступе (супер-админ / свой ключ).
         if (!autoImages || !canGenImages) continue
-        const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client)
+        const url = await generateWordImage(w.word_de, w.translation_ru, w.id, targetLang, client, { lessonId })
         if (url) await db.query('UPDATE words SET image_url = $1 WHERE id = $2', [url + '?v=3', w.id])
       } catch (e) { console.error('enrichLesson draw', w.word_de, e.message) }
     }
@@ -299,7 +300,14 @@ export async function enrichLesson(lessonId) {
     const missing = wRows.filter(w => CORE_EXERCISE_TYPES.some(t => !(have.get(w.id)?.has(t))))
     if (missing.length) {
       await setProgress(lessonId, `Докидываю упражнения (${missing.length} слов)...`)
+      // Считаем расход именно этого шага: сбрасываем счётчик, гоняем, читаем цену.
+      const t0 = Date.now(); resetUsage()
       const generated = await generateExercises(missing, [], targetLang, await getLessonSentences(lessonId), client)
+      await logOperation({
+        kind: 'exercises', lessonId, provider: textProvider(), model: config.aiTextProvider === 'local' ? config.ollamaModel : 'gpt-4o-mini',
+        items: generated.length, durationMs: Date.now() - t0, costUsd: usageCostUSD(),
+        message: `догенерация по ${missing.length} словам`, meta: { words: missing.length, calls: usage.calls },
+      })
       const idByWord = new Map(wRows.map(w => [wKey(w.word_de), w.id]))
       for (const ex of generated) {
         const wid = idByWord.get(wKey(ex.word_de))

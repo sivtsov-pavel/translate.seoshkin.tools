@@ -2,20 +2,42 @@ import OpenAI from 'openai'
 import { db } from '../db/index.js'
 import { encryptSecret, decryptSecret, maskSecret } from '../services/secretBox.js'
 import { config } from '../config.js'
-import { localAiHealth } from '../services/localAi.js'
+import { providersStatus, setProviders } from '../services/aiProviders.js'
 
 export async function settingsRoutes(fastify) {
   // Статус AI-бэкендов для переключателя в интерфейсе: где сейчас генерятся
   // тексты и картинки и доступен ли локальный вариант (ноутбук Павла).
   fastify.get('/api/settings/ai-providers', {
     preHandler: [fastify.authenticate],
-  }, async () => {
-    const health = await localAiHealth()
-    return {
-      text: { provider: config.aiTextProvider, model: config.ollamaModel, local_available: health.text },
-      image: { provider: config.aiImageProvider, local_available: health.image },
-      hint: 'Переключение: env AI_TEXT_PROVIDER / AI_IMAGE_PROVIDER = local|openai',
+  }, async () => providersStatus())
+
+  // Переключение режима — только супер-админ (это влияет на ВСЮ платформу и на деньги).
+  // Меняется на живую, без перезапуска бэкенда.
+  fastify.patch('/api/settings/ai-providers', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          text:  { type: 'string', enum: ['openai', 'local'] },
+          image: { type: 'string', enum: ['openai', 'local'] },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    if (request.user?.id !== 1) return reply.status(403).send({ error: 'Только для супер-админа' })
+    const { text, image } = request.body || {}
+    // Не даём уйти в локальный режим, если служба не поднята: иначе генерация просто
+    // молча перестанет работать, а причина будет неочевидна.
+    const st = await providersStatus()
+    if (text === 'local' && !st.text.local_available) {
+      return reply.status(409).send({ error: 'Ollama недоступна — запусти её на ноутбуке' })
     }
+    if (image === 'local' && !st.image.local_available) {
+      return reply.status(409).send({ error: 'Draw Things недоступен — запусти его на ноутбуке' })
+    }
+    await setProviders({ text, image })
+    return providersStatus()
   })
 
   fastify.get('/api/settings', {

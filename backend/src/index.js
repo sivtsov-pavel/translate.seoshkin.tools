@@ -86,6 +86,12 @@ export async function buildApp() {
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   const app = await buildApp()
   await runMigrationsOnStartup()
+  // Режим ИИ (платный OpenAI / бесплатные локальные модели) хранится в базе и переживает
+  // рестарт — иначе после каждого деплоя тумблер сбрасывался бы на значение из env.
+  await import('./services/aiProviders.js').then(async m => {
+    const p = await m.loadProviders()
+    console.log(`ИИ-провайдеры: тексты=${p.text}, картинки=${p.image}`)
+  }).catch(e => console.error('loadProviders on boot:', e.message))
   startReminderCron()
   startDripCron()
   startMotivationCron()

@@ -2,8 +2,14 @@ import OpenAI from 'openai'
 import { config } from '../config.js'
 import { saveOptimizedImage } from './imageOptimize.js'
 import { generateImageLocally, conceptToEnglish } from './localAi.js'
+import { logOperation } from './opLog.js'
 
 const openai = new OpenAI({ apiKey: config.openaiApiKey })
+
+// Цена одной картинки, USD. Ради этих цифр и заведён журнал: на 2737 слов gpt-image-1
+// даёт больше 100$, а Draw Things на ноутбуке — ноль (только время, ~2 минуты на штуку).
+const PRICE_GPT_IMAGE_1 = 0.042  // 1024×1024, quality: medium
+const PRICE_DALL_E_2    = 0.018  // 512×512
 
 // Служебные слова — предлоги, артикли, местоимения, числа, союзы, частицы.
 // Их бессмысленно иллюстрировать (der/die/zwei/sehr) — пропускаем при генерации.
@@ -33,7 +39,13 @@ async function fetchToBuffer(url) {
 // нем./исп./фр…). Отсутствие текста заодно чинит баг «надпись не на том языке».
 // client — OpenAI-клиент; по умолчанию платформенный, но processor передаёт клиент владельца
 // урока (генерация картинок идёт за счёт учителя, если у него задан свой ключ).
-export async function generateWordImage(wordDe, translationRu, wordId, targetLang = 'de', client = openai) {
+// ctx — контекст для журнала операций: { lessonId, userId }. Не влияет на генерацию.
+export async function generateWordImage(wordDe, translationRu, wordId, targetLang = 'de', client = openai, ctx = {}) {
+  const t0 = Date.now()
+  const logImage = (fields) => logOperation({
+    kind: 'image', lessonId: ctx.lessonId ?? null, userId: ctx.userId ?? null,
+    durationMs: Date.now() - t0, meta: { word_de: wordDe, word_id: wordId }, ...fields,
+  })
   const prompt = `Simple cheerful flat vector illustration for a children's flashcard. Show clearly the concept: "${translationRu}". Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style.
 IMPORTANT: absolutely NO text, NO letters, NO words, NO signs, NO captions in any language — only the drawing.`
   // Промпт для локальной модели — БЕЗ кавычек вокруг понятия и без слова «concept»:
@@ -52,24 +64,38 @@ IMPORTANT: absolutely NO text, NO letters, NO words, NO signs, NO captions in an
       const concept = await conceptToEnglish(translationRu, wordDe)
         || String(wordDe || '').replace(/^(der|die|das|ein|eine|el|la|los|las|the)\s+/i, '').trim()
         || translationRu
-      return await saveOptimizedImage(await generateImageLocally(localPrompt(concept)), wordId)
+      const url = await saveOptimizedImage(await generateImageLocally(localPrompt(concept)), wordId)
+      await logImage({ provider: 'local', model: 'draw-things', items: 1, message: `концепт: ${concept}` })
+      return url
     } catch (e) {
       console.error('draw-things:', e.message)
+      // Отдельный статус: локальный генератор не отвечает (Draw Things закрыт / ноут уснул) —
+      // это самая частая причина «картинок нет», и в журнале она должна быть видна сразу.
+      await logImage({ provider: 'local', model: 'draw-things', status: 'error', message: e.message })
       return null
     }
   }
   try {
     const r = await client.images.generate({ model: 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', n: 1 })
-    if (r.data?.[0]?.b64_json) return await saveOptimizedImage(Buffer.from(r.data[0].b64_json, 'base64'), wordId)
-    if (r.data?.[0]?.url) return await saveOptimizedImage(await fetchToBuffer(r.data[0].url), wordId)
+    let url = null
+    if (r.data?.[0]?.b64_json) url = await saveOptimizedImage(Buffer.from(r.data[0].b64_json, 'base64'), wordId)
+    else if (r.data?.[0]?.url) url = await saveOptimizedImage(await fetchToBuffer(r.data[0].url), wordId)
+    if (url) {
+      await logImage({ provider: 'openai', model: 'gpt-image-1', items: 1, costUsd: PRICE_GPT_IMAGE_1 })
+      return url
+    }
   } catch (e) {
     console.error('gpt-image-1:', e.message)
+    await logImage({ provider: 'openai', model: 'gpt-image-1', status: 'error', message: e.message })
   }
   try {
     const r2 = await client.images.generate({ model: 'dall-e-2', prompt, size: '512x512', n: 1 })
-    return await saveOptimizedImage(await fetchToBuffer(r2.data[0].url), wordId)
+    const url = await saveOptimizedImage(await fetchToBuffer(r2.data[0].url), wordId)
+    await logImage({ provider: 'openai', model: 'dall-e-2', items: 1, costUsd: PRICE_DALL_E_2 })
+    return url
   } catch (e) {
     console.error('dall-e-2:', e.message)
+    await logImage({ provider: 'openai', model: 'dall-e-2', status: 'error', message: e.message })
     return null
   }
 }

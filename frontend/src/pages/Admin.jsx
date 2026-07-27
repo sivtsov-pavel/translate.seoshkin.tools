@@ -3,7 +3,8 @@ import { useAuthStore } from '../store/auth.js'
 import { api } from '../api/client.js'
 
 // Супер-админ панель — только для пользователя id=1 (Administrator).
-// Вкладки: Обзор (статистика), Монетизация (реклама/тарифы/фичи), Пользователи.
+// Вкладки: Обзор, Монетизация, Меню, Языки, Школы, Пользователи,
+// ИИ-провайдер (платно/бесплатно) и Журнал операций.
 
 const card = {
   background: 'var(--surface)', border: '1px solid var(--line)',
@@ -76,6 +77,8 @@ export default function Admin() {
           ['languages', '🌍 Языки'],
           ['schools', '🏫 Школы'],
           ['users', '👥 Пользователи'],
+          ['ai', '🤖 ИИ-провайдер'],
+          ['ops', '📜 Журнал'],
         ].map(([k, lbl]) => (
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '8px 14px', borderRadius: 999, border: '1px solid var(--line)',
@@ -92,6 +95,8 @@ export default function Admin() {
       {tab === 'languages' && <Languages />}
       {tab === 'schools' && <Schools />}
       {tab === 'users' && <Users />}
+      {tab === 'ai' && <AiProviders />}
+      {tab === 'ops' && <Operations />}
     </div>
   )
 }
@@ -631,6 +636,187 @@ function Users() {
         </tbody>
       </table>
       </div>
+    </div>
+  )
+}
+
+// ── ИИ-провайдер: платный OpenAI или бесплатные локальные модели на ноутбуке ──
+// Переключается на живую, без перезапуска бэкенда. Уйти в «локально» нельзя, если
+// служба не поднята — иначе генерация молча перестала бы работать.
+function AiProviders() {
+  const [st, setSt] = useState(null)
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState('')
+
+  const load = () => api.get('/settings/ai-providers').then(setSt).catch(e => setErr(e.message))
+  useEffect(() => { load() }, [])
+
+  const switchTo = async (what, provider) => {
+    setErr(''); setBusy(what)
+    try { setSt(await api.patch('/settings/ai-providers', { [what]: provider })) }
+    catch (e) { setErr(e.message) }
+    finally { setBusy('') }
+  }
+
+  if (err && !st) return <div style={{ ...card, color: 'var(--red)' }}>{err}</div>
+  if (!st) return <div style={card}>Загрузка…</div>
+
+  const row = (what, title, paidLabel, freeLabel, note) => {
+    const cur = st[what]
+    return (
+      <div style={{ ...card, marginBottom: 12 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px' }}>{title}</h3>
+        <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 12 }}>{note}</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[['openai', paidLabel, '💶'], ['local', freeLabel, '🆓']].map(([p, lbl, icon]) => {
+            const active = cur.provider === p
+            const blocked = p === 'local' && !cur.local_available
+            return (
+              <button key={p} disabled={busy === what || active || blocked}
+                onClick={() => switchTo(what, p)}
+                title={blocked ? 'Локальная служба не отвечает' : ''}
+                style={{
+                  padding: '10px 16px', borderRadius: 10, fontSize: 14, fontWeight: active ? 700 : 500,
+                  border: `2px solid ${active ? 'var(--accent)' : 'var(--line)'}`,
+                  background: active ? 'var(--accent)' : 'var(--surface-2)',
+                  color: active ? 'var(--accent-ink)' : 'var(--ink)',
+                  cursor: active || blocked ? 'default' : 'pointer', opacity: blocked ? 0.45 : 1,
+                }}>
+                {icon} {lbl}{active ? ' ✓' : ''}
+              </button>
+            )
+          })}
+        </div>
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 10 }}>
+          Сейчас: <b>{cur.model}</b>
+          {' · '}
+          локальная служба {cur.local_available
+            ? <span style={{ color: 'var(--good)' }}>на связи</span>
+            : <span style={{ color: 'var(--red)' }}>не отвечает</span>}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {err && <div style={{ ...card, color: 'var(--red)', marginBottom: 12 }}>{err}</div>}
+      {row('image', '🖼 Картинки', 'gpt-image-1 (~4¢ за штуку)', 'Draw Things на ноуте (0₽, ~2 мин)',
+        'Главная статья расходов: на 2737 слов gpt-image-1 даёт больше 100 $. Локально — бесплатно, но ноут должен быть включён и не спать.')}
+      {row('text', '📝 Тексты упражнений', 'gpt-4o-mini (копейки)', 'Ollama на ноуте (0₽, медленно)',
+        'Замер на M4: локальная модель — ~28 минут на 4 слова. Курс из 406 слов ≈ 40 часов против часа и меньше доллара у gpt-4o-mini.')}
+      <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', padding: '4px 2px' }}>
+        Режим хранится в базе и переживает перезапуск. Значения из env используются как
+        начальные: тексты <b>{st.env_defaults.text}</b>, картинки <b>{st.env_defaults.image}</b>.
+      </div>
+    </div>
+  )
+}
+
+// ── Журнал операций: что система делала, чем считала и во сколько обошлось ──
+function Operations() {
+  const [data, setData] = useState(null)
+  const [err, setErr] = useState('')
+  const [flt, setFlt] = useState({ days: 7, status: '', kind: '' })
+
+  useEffect(() => {
+    const q = new URLSearchParams(Object.entries(flt).filter(([, v]) => v !== '' && v != null))
+    api.get(`/admin/operations?${q}`).then(setData).catch(e => setErr(e.message))
+  }, [flt])
+
+  if (err) return <div style={{ ...card, color: 'var(--red)' }}>{err}</div>
+  if (!data) return <div style={card}>Загрузка…</div>
+
+  const { rows, totals, byKind } = data
+  const money = (n) => '$' + Number(n || 0).toFixed(3)
+  const secs = (ms) => ms == null ? '—' : (ms >= 1000 ? `${(ms / 1000).toFixed(1)} с` : `${ms} мс`)
+  const KIND = { image: '🖼 картинка', exercises: '✏️ упражнения', translate: '🌍 перевод', extract: '📷 разбор фото', upload: '⬆️ загрузка' }
+
+  return (
+    <div>
+      <div style={{ ...card, marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 12 }}>
+          <Stat label="Операций" value={totals.total} />
+          <Stat label="Ошибок" value={totals.errors} color={totals.errors ? 'var(--red)' : 'var(--good)'} />
+          <Stat label="Потрачено" value={money(totals.cost_usd)} color={totals.cost_usd > 0 ? 'var(--red)' : 'var(--good)'} />
+          <Stat label="Бесплатно (ноут)" value={totals.local_calls} color="var(--good)" />
+          <Stat label="Платно (OpenAI)" value={totals.openai_calls} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <select style={{ ...input, width: 'auto' }} value={flt.days} onChange={e => setFlt(f => ({ ...f, days: e.target.value }))}>
+            <option value="1">за сутки</option><option value="7">за неделю</option><option value="30">за месяц</option>
+          </select>
+          <select style={{ ...input, width: 'auto' }} value={flt.status} onChange={e => setFlt(f => ({ ...f, status: e.target.value }))}>
+            <option value="">все</option><option value="error">только ошибки</option><option value="ok">только успешные</option>
+          </select>
+          <select style={{ ...input, width: 'auto' }} value={flt.kind} onChange={e => setFlt(f => ({ ...f, kind: e.target.value }))}>
+            <option value="">любые операции</option>
+            {Object.entries(KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {byKind.length > 0 && (
+        <div style={{ ...card, marginBottom: 12 }}>
+          <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)', margin: '0 0 8px' }}>По типам</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 13.5, borderCollapse: 'collapse' }}>
+              <thead><tr style={{ color: 'var(--ink-soft)', textAlign: 'left' }}>
+                <th style={{ padding: '4px 8px 4px 0' }}>что</th><th>чем</th><th>шт.</th><th>ошибок</th><th>в среднем</th><th>деньги</th>
+              </tr></thead>
+              <tbody>
+                {byKind.map((r, i) => (
+                  <tr key={i} style={{ borderTop: '1px solid var(--line)' }}>
+                    <td style={{ padding: '6px 8px 6px 0' }}>{KIND[r.kind] || r.kind}</td>
+                    <td>{r.provider === 'local' ? '🆓 ноут' : r.provider === 'openai' ? '💶 OpenAI' : '— код'}</td>
+                    <td>{r.n}</td>
+                    <td style={{ color: r.errors ? 'var(--red)' : 'inherit' }}>{r.errors || '—'}</td>
+                    <td>{secs(r.avg_ms)}</td>
+                    <td style={{ color: r.cost_usd > 0 ? 'var(--red)' : 'var(--good)' }}>{money(r.cost_usd)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div style={card}>
+        <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)', margin: '0 0 8px' }}>
+          Лента ({rows.length})
+        </h3>
+        {rows.length === 0 && <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Пока пусто.</div>}
+        {rows.map(r => (
+          <div key={r.id} style={{
+            borderTop: '1px solid var(--line)', padding: '8px 0', fontSize: 13.5,
+            borderLeft: r.status === 'error' ? '3px solid var(--red)' : 'none',
+            paddingLeft: r.status === 'error' ? 10 : 0,
+          }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }}>
+              <span style={{ color: 'var(--ink-soft)', fontSize: 12.5 }}>
+                {new Date(r.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+              </span>
+              <b>{KIND[r.kind] || r.kind}</b>
+              <span>{r.provider === 'local' ? '🆓' : r.provider === 'openai' ? '💶' : '⚙️'} {r.model || r.provider}</span>
+              {r.items != null && <span style={{ color: 'var(--ink-soft)' }}>× {r.items}</span>}
+              <span style={{ color: 'var(--ink-soft)' }}>{secs(r.duration_ms)}</span>
+              {Number(r.cost_usd) > 0 && <span style={{ color: 'var(--red)' }}>{money(r.cost_usd)}</span>}
+            </div>
+            {r.lesson_title && <div style={{ color: 'var(--ink-soft)', fontSize: 12.5 }}>📚 {r.lesson_title}</div>}
+            {r.meta?.word_de && <div style={{ fontSize: 12.5 }}>слово: <b>{r.meta.word_de}</b></div>}
+            {r.message && <div style={{ color: r.status === 'error' ? 'var(--red)' : 'var(--ink-soft)', fontSize: 12.5 }}>{r.message}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Stat({ label, value, color }) {
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: color || 'var(--ink)' }}>{value}</div>
     </div>
   )
 }

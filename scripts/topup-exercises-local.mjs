@@ -103,7 +103,7 @@ if (!rows.length) process.exit(0)
 
 // Пишем параметризованно через ssh-туннель к прод-базе (порт наружу не публикуется:
 // туннель живёт только на время работы скрипта). Склейки JSON в SQL-строку нет.
-const { default: pg } = await import('pg')
+const { default: pg } = await import('../backend/node_modules/pg/lib/index.js')
 const { spawn } = await import('child_process')
 const DB_IP = process.env.PROD_DB_IP || '172.19.0.2' // IP контейнера translate-db-1 в сети докера
 const PORT = 55432

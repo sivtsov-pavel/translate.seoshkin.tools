@@ -10,9 +10,22 @@ import { makeOllamaClient } from './localAi.js'
 
 // Платформенный клиент. При AI_TEXT_PROVIDER=local это Ollama на ноутбуке
 // (бесплатно, тот же OpenAI-совместимый интерфейс) — call-сайты не меняются.
-export const platformClient = config.aiTextProvider === 'local'
+//
+// ВАЖНО: `let`, а не `const`. Тумблер провайдера в админке меняет режим на живую, без
+// перезапуска сервера, — и переприсваивает эту переменную. ES-модули отдают импортёрам
+// «живую» ссылку, поэтому claude.js подхватит новый клиент сам (там `client = platformClient`
+// вычисляется при каждом вызове). Без этого тумблер переключал бы только картинки.
+export let platformClient = config.aiTextProvider === 'local'
   ? makeOllamaClient()
   : new OpenAI({ apiKey: config.openaiApiKey })
+
+// Пересобрать платформенный клиент под текущий config.aiTextProvider.
+export function refreshPlatformClient() {
+  platformClient = config.aiTextProvider === 'local'
+    ? makeOllamaClient()
+    : new OpenAI({ apiKey: config.openaiApiKey })
+  return config.aiTextProvider
+}
 
 // Кэш клиентов по владельцу: { ownerId -> { key, client } }. Пересоздаём только при смене ключа.
 const clientCache = new Map()
