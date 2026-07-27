@@ -17,20 +17,58 @@ function rawOllamaClient() {
   })
 }
 
-// Клиент Ollama через OpenAI-совместимый API. Модель подменяется на локальную
-// в любом вызове chat.completions.create — call-сайты править не нужно.
+// Клиент Ollama. Снаружи выглядит как OpenAI-клиент (call-сайты не меняются), но
+// chat.completions.create ходит в РОДНОЙ /api/chat, а не в /v1-совместимую прослойку.
+//
+// Зачем родной API: у Ollama окно контекста по умолчанию 4096 токенов, а генерация
+// упражнений просит ответ до 8192 — модель обрывала бы ответ на полуслове (ровно тот баг
+// усечения, из-за которого старые уроки неполные). Задать num_ctx через /v1-прослойку
+// НЕЛЬЗЯ: она принимает только OpenAI-поля. Оставался бы ручной `ollama create` с
+// PARAMETER num_ctx на конкретной машине — настройка, которая не переживает переустановку.
+// Родной эндпоинт принимает options.num_ctx явно, поэтому контекст живёт в коде.
 export function makeOllamaClient() {
   const client = rawOllamaClient()
-  const origCreate = client.chat.completions.create.bind(client.chat.completions)
-  client.chat.completions.create = (params, opts) => {
+  client.chat.completions.create = async (params) => {
     // Vision-запросы (картинки на вход) требуют мультимодальную модель.
     const hasImage = JSON.stringify(params?.messages || '').includes('image_url')
     const model = hasImage ? config.ollamaVisionModel : config.ollamaModel
-    // response_format json_schema Ollama не поддерживает — оставляем json_object.
-    const rf = params?.response_format?.type === 'json_schema'
-      ? { type: 'json_object' }
-      : params?.response_format
-    return origCreate({ ...params, model, response_format: rf }, opts)
+    // Ollama знает только format:"json"; json_schema не поддерживается.
+    const wantsJson = params?.response_format?.type === 'json_schema'
+      || params?.response_format?.type === 'json_object'
+    // Контекст должен вмещать промпт И запрошенный ответ, иначе усечение.
+    const numPredict = params?.max_tokens ?? config.ollamaNumPredict
+    const numCtx = Math.max(config.ollamaNumCtx, numPredict * 2)
+
+    const res = await fetch(`${config.ollamaBaseUrl.replace(/\/$/, '')}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: params.messages,
+        stream: false,
+        ...(wantsJson ? { format: 'json' } : {}),
+        options: {
+          num_ctx: numCtx,
+          num_predict: numPredict,
+          ...(params.temperature != null ? { temperature: params.temperature } : {}),
+        },
+      }),
+      signal: AbortSignal.timeout(config.ollamaTimeoutMs),
+    })
+    if (!res.ok) throw new Error(`Ollama ${res.status}: ${(await res.text()).slice(0, 200)}`)
+    const data = await res.json()
+    // Приводим к форме ответа OpenAI — call-сайты читают choices[0].message.content и usage.
+    return {
+      choices: [{
+        message: { role: 'assistant', content: data?.message?.content ?? '' },
+        finish_reason: data?.done_reason === 'length' ? 'length' : 'stop',
+      }],
+      usage: {
+        prompt_tokens: data?.prompt_eval_count ?? 0,
+        completion_tokens: data?.eval_count ?? 0,
+        total_tokens: (data?.prompt_eval_count ?? 0) + (data?.eval_count ?? 0),
+      },
+    }
   }
   return client
 }

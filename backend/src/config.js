@@ -33,5 +33,12 @@ export const config = {
   // qwen3:14b на такое тратит ~2.5 мин из-за «размышлений» — здесь это ни к чему.
   ollamaFastModel: process.env.OLLAMA_FAST_MODEL || 'llama3.1:8b',
   ollamaVisionModel: process.env.OLLAMA_VISION_MODEL || 'gemma3:4b',
+  // Окно контекста. У Ollama дефолт 4096 — этого НЕ хватает генерации упражнений
+  // (промпт ~2000 токенов + ответ до 8192), ответ обрывался бы на полуслове.
+  // Код всегда просит минимум max_tokens×2, но не меньше этого значения.
+  ollamaNumCtx: parseInt(process.env.OLLAMA_NUM_CTX || '16384'),
+  ollamaNumPredict: parseInt(process.env.OLLAMA_NUM_PREDICT || '4096'),
+  // Локальные модели считают минутами, а не секундами — дефолтный таймаут fetch мал.
+  ollamaTimeoutMs: parseInt(process.env.OLLAMA_TIMEOUT_MS || '1800000'), // 30 минут
   drawThingsUrl: process.env.DRAW_THINGS_URL || 'http://host.docker.internal:7860',
 }

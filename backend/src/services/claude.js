@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
+import { normalizeLetterFill } from './letterFill.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
 // принимают необязательный параметр `client`, чтобы работать на ключе владельца урока
@@ -371,9 +372,22 @@ export async function generateLetterFill(words) {
   for (let i = 0; i < words.length; i += BATCH_SIZE) {
     const batch = words.slice(i, i + BATCH_SIZE)
     const text = await ask(`${LETTER_FILL_PROMPT}\n\nСлова:\n${JSON.stringify(batch, null, 2)}`, { max_tokens: 4096 })
-    all.push(...parseJson(text))
+    all.push(...parseJson(text).map(sanitizeExercise).filter(Boolean))
   }
   return all
+}
+
+// Единый выходной фильтр упражнений от модели: чиним битые маски «Добавь букву»
+// (модель регулярно теряет буквы или меняет длину — упражнение становится невыполнимым)
+// и отбрасываем то, что починить нечем. Дальше — перемешивание вариантов ответа.
+function sanitizeExercise(ex) {
+  if (!ex || typeof ex !== 'object') return null
+  if (ex.type === 'letter_fill') {
+    const payload = normalizeLetterFill(ex.payload)
+    if (!payload) return null // слово нечем маскировать — упражнения не будет
+    return shuffleOptions({ ...ex, payload })
+  }
+  return shuffleOptions(ex)
 }
 
 function shuffleOptions(ex) {
@@ -442,7 +456,7 @@ export async function generateExercises(words, grammar_points, targetLang = 'de'
   const gen = async (batch) => {
     const input = JSON.stringify({ words: batch, grammar_points, sentences: realSentences }, null, 2)
     const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192, client })
-    return parseJson(text).map(shuffleOptions)
+    return parseJson(text).map(sanitizeExercise).filter(Boolean)
   }
   for (let i = 0; i < words.length; i += EX_BATCH) {
     allExercises.push(...await gen(words.slice(i, i + EX_BATCH)))
