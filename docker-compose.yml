@@ -28,6 +28,14 @@ services:
       PORT: 8090
       HOST: 0.0.0.0
       UPLOAD_DIR: /data/uploads
+      # Локальные модели на ноутбуке (бесплатно): тексты — Ollama, картинки — Draw Things.
+      # Переключение обратно на платный OpenAI: значение openai (или убрать переменные).
+      AI_TEXT_PROVIDER: ${AI_TEXT_PROVIDER:-openai}
+      AI_IMAGE_PROVIDER: ${AI_IMAGE_PROVIDER:-openai}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:14b}
+      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-gemma3:4b}
+      DRAW_THINGS_URL: ${DRAW_THINGS_URL:-http://host.docker.internal:7860}
     volumes:
       - uploads_data:/data/uploads
     depends_on:
