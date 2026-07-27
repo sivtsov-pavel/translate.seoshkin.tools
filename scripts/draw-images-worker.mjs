@@ -27,6 +27,13 @@ import { saveOptimizedImage } from '../backend/src/services/imageOptimize.js'
 import { config } from '../backend/src/config.js'
 import { isFunctionWord } from '../backend/src/services/imageGen.js'
 
+// Скрипт запускается НА МАКЕ, а не в докере. Дефолты в config.js — докерные
+// (host.docker.internal): снаружи контейнера такого хоста нет, и запрос падает с
+// «Draw Things не отвечает». Правим сам config, а не process.env: импорты выполняются
+// раньше любого кода, к этому моменту config уже прочитал переменные окружения.
+config.drawThingsUrl = config.drawThingsUrl.replace('host.docker.internal', 'localhost')
+config.ollamaBaseUrl = config.ollamaBaseUrl.replace('host.docker.internal', 'localhost')
+
 const args = process.argv.slice(2)
 const argOf = (name, def = null) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : def }
 const mode = argOf('--mode', 'missing')
