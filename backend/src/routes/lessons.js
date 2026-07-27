@@ -63,7 +63,13 @@ export async function lessonsRoutes(fastify) {
     if (userId === 1) {
       tenantFilter = ''
     } else if (role === 'owner') {
-      tenantFilter = ` AND l.owner_id = ${parseInt(userId)}`
+      // Учитель видит уроки СВОЕЙ ШКОЛЫ плюс свои личные.
+      // Было `owner_id = userId` — второй учитель школы не видел ничего и знал
+      // меньше собственных учеников (те видят уроки школы). Исправлено 2026-07-27.
+      const teacherSchoolId = request.user.school_id ?? null
+      tenantFilter = teacherSchoolId != null
+        ? ` AND (l.school_id = ${parseInt(teacherSchoolId)} OR l.owner_id = ${parseInt(userId)})`
+        : ` AND l.owner_id = ${parseInt(userId)}`
     } else {
       const schoolId = request.user.school_id ?? null
       // Личные наборы ученика (is_personal, owner = ученик) видны всегда — у них нет school_id
