@@ -34,9 +34,13 @@ async function fetchToBuffer(url) {
 // client — OpenAI-клиент; по умолчанию платформенный, но processor передаёт клиент владельца
 // урока (генерация картинок идёт за счёт учителя, если у него задан свой ключ).
 export async function generateWordImage(wordDe, translationRu, wordId, targetLang = 'de', client = openai) {
-  const buildPrompt = (concept) => `Simple cheerful flat vector illustration for a children's flashcard. Show clearly the concept: "${concept}". Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style.
+  const prompt = `Simple cheerful flat vector illustration for a children's flashcard. Show clearly the concept: "${translationRu}". Cute minimalist cartoon, bright friendly colors, plain light background, one centered object or simple scene, thick clean outlines, kindergarten style.
 IMPORTANT: absolutely NO text, NO letters, NO words, NO signs, NO captions in any language — only the drawing.`
-  const prompt = buildPrompt(translationRu)
+  // Промпт для локальной модели — БЕЗ кавычек вокруг понятия и без слова «concept»:
+  // диффузионная модель читает «...concept: "suitcase"» как приказ нарисовать НАДПИСЬ
+  // (проверено: с кавычками на чемодане появилось «Suitcae», без — чистая картинка).
+  // Negative prompt тут почти не работает: у turbo-модели cfg=2, при низком cfg негатив слаб.
+  const localPrompt = (concept) => `A ${concept}, simple cheerful flat vector illustration for a children flashcard, cute minimalist cartoon, bright friendly colors, plain light background, one centered object, thick clean outlines, kindergarten style`
   // Локальный режим: рисуем на ноутбуке через Draw Things — бесплатно.
   // При сбое НЕ уходим молча в платный OpenAI (правило денег): вернём null,
   // слово останется без картинки до починки локального генератора.
@@ -48,7 +52,7 @@ IMPORTANT: absolutely NO text, NO letters, NO words, NO signs, NO captions in an
       const concept = await conceptToEnglish(translationRu, wordDe)
         || String(wordDe || '').replace(/^(der|die|das|ein|eine|el|la|los|las|the)\s+/i, '').trim()
         || translationRu
-      return await saveOptimizedImage(await generateImageLocally(buildPrompt(concept)), wordId)
+      return await saveOptimizedImage(await generateImageLocally(localPrompt(concept)), wordId)
     } catch (e) {
       console.error('draw-things:', e.message)
       return null
