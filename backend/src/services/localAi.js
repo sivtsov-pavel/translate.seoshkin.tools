@@ -37,15 +37,16 @@ export async function generateImageLocally(prompt) {
     negative_prompt: 'text, letters, words, watermark, signature, blurry, deformed',
     width: 512,
     height: 512,
-    steps: 12,
-    cfg_scale: 5,
-    sampler_name: 'DPM++ 2M Karras',
+    // z-image-turbo: 4 шага достаточно (turbo-модель), cfg низкий.
+    // На M4 одна карточка ~2.5 минуты — генерацию ставим в фон, не в запрос.
+    steps: 4,
+    cfg_scale: 2,
   }
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(180000),
+    signal: AbortSignal.timeout(600000),
   })
   if (!res.ok) throw new Error(`Draw Things ${res.status}`)
   const data = await res.json()
