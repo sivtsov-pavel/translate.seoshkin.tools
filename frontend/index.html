@@ -4,7 +4,15 @@
     <meta charset="UTF-8" />
     <!-- DEV-домен: жёстко закрыт от поисковиков до переезда на боевой домен. Снять при запуске. -->
     <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content" />
+    <!-- НЕ добавлять interactive-widget=overlays-content (было 21.07.2026, откачено 28.07.2026).
+         При overlays-content клавиатура рисуется поверх и НЕ меняет ни разметку, ни видимую
+         область. Последствия: (1) браузер перестаёт сам прокручивать к полю ввода, (2)
+         visualViewport.height не уменьшается — то есть высоту клавиатуры измерить нечем,
+         и вся JS-компенсация (--keyboard-inset) всегда равна нулю. Из-за этого поле ввода
+         в «Напиши предложение» месяц оставалось под клавиатурой.
+         Дефолт (resizes-visual) — клавиатура сжимает видимую область, браузер сам скроллит
+         к полю, а visualViewport честно отдаёт высоту для наших шторок. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#C9A54A" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
