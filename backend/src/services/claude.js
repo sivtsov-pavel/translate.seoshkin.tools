@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
 import { pickSentencesFor } from './sentencePick.js'
+import { fixFillBlank } from './fillBlankFix.js'
 import { normalizeLetterFill } from './letterFill.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
@@ -485,8 +486,15 @@ function sanitizeExercise(ex) {
   // Пропуск: модель ставит то два подчёркивания, то четыре. Фронт делит предложение
   // строго по «___», поэтому «Ich __ jeden Morgen.» осталось бы без пропуска вовсе.
   // Нормализуем на входе, чтобы в базе лежали чистые данные, а не чинились при показе.
-  if (ex.type === 'fill_blank' && typeof ex.payload?.sentence === 'string') {
-    ex = { ...ex, payload: { ...ex.payload, sentence: ex.payload.sentence.replace(/_{2,}/g, '___') } }
+  if (ex.type === 'fill_blank') {
+    let payload = ex.payload || {}
+    if (typeof payload.sentence === 'string') {
+      payload = { ...payload, sentence: payload.sentence.replace(/_{2,}/g, '___') }
+    }
+    // Ответа нет среди вариантов — упражнение непроходимо. Чаще всего модель кладёт в ответ
+    // словарную форму, а в варианты — ту, что нужна в предложении («schließen» против
+    // «ich schließe»). Правим на входе, чтобы такое не оседало в базе.
+    ex = { ...ex, payload: fixFillBlank(payload) }
   }
   if (ex.type === 'letter_fill') {
     const payload = normalizeLetterFill(ex.payload)
