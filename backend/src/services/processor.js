@@ -624,7 +624,8 @@ export async function extractLessonPreview(lessonId) {
   // Незакрытый разбор: превью посчитано, но учитель ещё не подтвердил выбор
   // (после подтверждения preview очищается — см. commitLessonWords).
   const { rows: saved } = await db.query('SELECT preview FROM lessons WHERE id=$1', [lessonId])
-  const pendingPreview = saved[0]?.preview || null
+  // Только превью нового формата (с savedAt) считается ждущим подтверждения.
+  const pendingPreview = saved[0]?.preview?.savedAt ? saved[0].preview : null
 
   // Уже готовое превью отдаём сразу — не тратим деньги на повторный разбор.
   if (!fresh.length && pendingPreview) return pendingPreview
@@ -716,7 +717,11 @@ export async function extractLessonPreview(lessonId) {
       }
       if (Array.isArray(cons.grammar_points)) grammarPoints.push(...cons.grammar_points)
     }
-    const preview = { words, sentences, grammar_points: grammarPoints }
+    // savedAt отмечает превью, которое ЖДЁТ подтверждения учителя. Без метки не отличить
+    // его от превью давно закоммиченного урока: в уроке 19 такой остаток пролежал с
+    // загрузки ДО чистки повторов, и подтверждение вернуло бы 57 удалённых дублей.
+    // Превью без savedAt — из прошлой версии, к разбору не предлагаем.
+    const preview = { words, sentences, grammar_points: grammarPoints, savedAt: new Date().toISOString() }
     await db.query("UPDATE lessons SET status=$4, progress=$1, preview=$2 WHERE id=$3",
       [`Превью готово: слов ${words.length}, предложений ${sentences.length}`, JSON.stringify(preview), lessonId, backTo])
   } catch (err) {

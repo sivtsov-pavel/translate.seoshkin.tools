@@ -90,7 +90,7 @@ export async function lessonsRoutes(fastify) {
           -- «разобрать». Без счётчика учитель грузит фото и не понимает, почему ничего
           -- не происходит — загрузка только складывает файлы, разбор запускается отдельно.
           COUNT(DISTINCT lm.id) FILTER (WHERE NOT lm.processed AND lm.type = 'photo')::int AS pending_media,
-          (l.preview IS NOT NULL) AS has_preview,
+          (l.preview->>'savedAt' IS NOT NULL) AS has_preview,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images,
           COUNT(DISTINCT e.id)::int AS exercises_total
