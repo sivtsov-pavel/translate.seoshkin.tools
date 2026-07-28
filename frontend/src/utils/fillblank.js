@@ -38,8 +38,17 @@ function stripLeadingArticle(word) {
 }
 
 // Возвращает payload с исправленными blank/options (или исходный, если чинить нечего).
+// Пропуск в предложении рисуется как «___», но модель регулярно ставит два подчёркивания
+// или больше трёх. Приложение делит строку строго по «___», поэтому «Ich __ jeden Morgen.»
+// не разбивалось вовсе — пропуск не появлялся и упражнение было непроходимым (70 таких
+// нашёл аудит 28.07.2026). Приводим любую последовательность из 2+ подчёркиваний к «___».
+export function normalizeBlankMarker(sentence) {
+  return typeof sentence === 'string' ? sentence.replace(/_{2,}/g, '___') : sentence
+}
+
 export function normalizeFillBlank(payload) {
   if (!payload || typeof payload.sentence !== 'string') return payload
+  payload = { ...payload, sentence: normalizeBlankMarker(payload.sentence) }
   const idx = payload.sentence.indexOf('___')
   if (idx < 0) return payload
 

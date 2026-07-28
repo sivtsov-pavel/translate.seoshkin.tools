@@ -20,6 +20,11 @@ import { writeFileSync } from 'fs'
 import { execFileSync, spawn } from 'child_process'
 
 const apply = process.argv.includes('--apply')
+// Явное решение по спорной группе: --pick 4382,5727,6581 — перечисляем id ПРАВИЛЬНЫХ
+// вариантов. Скрипт сам такие группы не трогает (см. disputed): выбор между «die Müll»
+// и «der Müll» — вопрос грамматики, а не техники, его делает человек.
+const picks = new Set((process.argv[process.argv.indexOf('--pick') + 1] || '')
+  .split(',').map(n => parseInt(n)).filter(Boolean))
 const SSH_HOST = process.env.PROD_SSH_HOST || 'gcloud-seosite'
 const PROD_DIR = process.env.PROD_DIR || '/home/seosite/translate'
 const DC = 'docker compose -f docker-compose.prod.yml'
@@ -79,9 +84,10 @@ function disputed(g) {
 const plan = []
 const skipped = []
 for (const [, g] of groups) {
-  const why = disputed(g)
+  const picked = g.find(w => picks.has(w.id))
+  const why = picked ? null : disputed(g)
   if (why) { skipped.push({ g, why }); continue }
-  const canon = pickCanon(g)
+  const canon = picked || pickCanon(g)
   for (const d of g) if (d.id !== canon.id) plan.push({ canon, dup: d })
 }
 
