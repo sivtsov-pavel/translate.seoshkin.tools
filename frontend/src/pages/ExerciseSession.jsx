@@ -50,6 +50,11 @@ export default function ExerciseSession() {
   const [remaining, setRemaining]  = useState(0)
   const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
   const [lessonFlow, setLessonFlow] = useState(null) // позиция в курсе + следующий урок (финиш-экран)
+  // Что уже показали в ЭТОЙ сессии. «Продолжить упражнения» перезапрашивает сервер, а тот
+  // отдаёт всё, что доступно на сегодня, — включая только что пройденное, если ответ ещё не
+  // успел изменить расписание или упражнение вернулось по SRS в тот же день. Со стороны это
+  // выглядит как второй круг по тем же карточкам вместо новых.
+  const seenIds = useRef(new Set())
   const [betweenFan, setBetweenFan] = useState(false) // мини-веер после каждого упражнения (выбор: дальше/другой тип/тренер)
   const [pickLessonOpen, setPickLessonOpen] = useState(false) // финиш: раскрыт ли список «Выбрать другой урок»
   const [fanTypesOpen, setFanTypesOpen] = useState(false) // раскрыт ли список «выбрать другой тип» в мини-веере
@@ -99,8 +104,11 @@ export default function ExerciseSession() {
           list.filter(e => VOICE_TYPES.has(e.type)).forEach(e => api.post(`/exercises/${e.id}/defer`, {}).catch(() => {}))
           list = list.filter(e => !VOICE_TYPES.has(e.type))
         }
+        // Уже показанное в этой сессии не повторяем — см. seenIds выше.
+        const fresh = list.filter(e => !seenIds.current.has(e.id))
         // Педагогический порядок типов: вопрос-ответ → флеш → буква → слово → предложение → проговори → диктант
-        const ordered = list.sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
+        const ordered = fresh.sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
+        ordered.forEach(e => seenIds.current.add(e.id))
         setExercises(ordered)
         setCurrent(0)
         return ordered
@@ -367,7 +375,13 @@ export default function ExerciseSession() {
       if (i <= current) row.done++ // карточки до текущей (включительно) уже пройдены
     })
     const goNext = () => { setBetweenFan(false); setCurrent(current + 1) }
-    const jumpToType = (first) => { setFanTypesOpen(false); setBetweenFan(false); setCurrent(first) }
+    // Прыгаем на первое НЕпройденное упражнение типа, а не на его начало: у пройденного
+    // типа старый вариант откатывал сессию к первой карточке — тот же второй круг.
+    const jumpToType = (first, type) => {
+      const idx = exercises.findIndex((e, i) => e.type === type && i > current)
+      setFanTypesOpen(false); setBetweenFan(false)
+      setCurrent(idx >= 0 ? idx : first)
+    }
     return (
       <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '28px 22px', boxShadow: 'var(--card-shadow)' }}>
@@ -392,7 +406,7 @@ export default function ExerciseSession() {
                   {typeAgg.map(r => {
                     const finished = r.done >= r.count // тип пройден полностью
                     return (
-                      <button key={r.type} onClick={() => jumpToType(r.first)}
+                      <button key={r.type} onClick={() => jumpToType(r.first, r.type)}
                         style={{ width: '100%', padding: '11px 13px', borderRadius: 12, border: '1px solid var(--line)', background: r.type === ex.type ? 'rgba(62,127,193,0.10)' : 'var(--surface)', color: finished ? 'var(--ink-soft)' : 'var(--ink)', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                         <span>{finished ? '✓ ' : ''}{TYPE_LABELS[r.type] || r.type}</span>
                         <span style={{ color: finished ? 'var(--good)' : 'var(--ink-soft)', flexShrink: 0 }}>

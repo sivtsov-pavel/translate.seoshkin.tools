@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
 import { pickSentencesFor } from './sentencePick.js'
 import { fixFillBlank } from './fillBlankFix.js'
+import { groundFillBlank, groundSentenceWrite } from './grounding.js'
 import { normalizeLetterFill } from './letterFill.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
@@ -593,6 +594,16 @@ export async function generateExercises(words, grammar_points, targetLang = 'de'
   }
   for (let i = 0; i < words.length; i += EX_BATCH) {
     allExercises.push(...await gen(words.slice(i, i + EX_BATCH)))
+  }
+  // Промпт ПРОСИТ модель брать реальные фразы урока, и она это регулярно игнорирует: замер
+  // по уроку 19 дал 5% упражнений на живых предложениях при потолке 33%. Просьбу заменяем
+  // действием — если для слова фраза со страницы есть, подставляем её кодом.
+  const realSentences = (sentences || []).map(s => (typeof s === 'string' ? s : s?.text)).filter(Boolean)
+  if (realSentences.length) {
+    for (const ex of allExercises) {
+      if (ex.type === 'fill_blank') ex.payload = groundFillBlank(ex.payload, realSentences, targetLang)
+      else if (ex.type === 'sentence_write') ex.payload = groundSentenceWrite(ex.payload, realSentences, targetLang)
+    }
   }
   // Контроль покрытия: у КАЖДОГО слова должны быть все core-типы. Модель может пропустить/усечь —
   // до двух добивочных проходов маленькими батчами только по недобранным словам.
