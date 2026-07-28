@@ -7,6 +7,7 @@ import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
 import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
 import { logOperation, textProvider } from './opLog.js'
+import { normalizeIncomingWord } from './wordNormalize.js'
 
 // Сопоставление сгенерированного word_de со словом урока: GPT иногда возвращает слово
 // без артикля или в другом регистре → точное совпадение промахивается и упражнение
@@ -52,6 +53,17 @@ export async function drawLessonImages(lessonId) {
     } catch (e) { console.error('drawLessonImages', w.word_de, e.message) }
   }
   return done
+}
+
+// Уже принятые написания слов этого языка — эталон для сверки новых.
+// Берём один раз на обработку урока: слов тысячи, дёргать базу на каждое слово дорого.
+async function knownWordsFor(targetLang) {
+  try {
+    const { rows } = await db.query(
+      `SELECT DISTINCT w.word_de FROM words w JOIN lessons l ON l.id = w.lesson_id
+       WHERE l.target_lang = $1 AND w.word_de IS NOT NULL`, [targetLang])
+    return rows.map(r => r.word_de)
+  } catch (e) { console.error('knownWordsFor:', e.message); return [] }
 }
 
 async function setProgress(lessonId, text) {
@@ -636,15 +648,21 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
     const client = await getOwnerClient(ownerId)
     await setProgress(lessonId, 'Сохраняю урок...')
 
+    const known = await knownWordsFor(targetLang)
     for (const w of (words || [])) {
       if (!w?.word_de) continue
+      // Мусорные префиксы («verb: kochen») срезаем, опечатки приводим к уже принятому
+      // написанию («Enthschuldigung» → «die Entschuldigung»): иначе ученик получал
+      // диктант, который невозможно пройти.
+      const wordDe = normalizeIncomingWord(w.word_de, known)
+      if (!wordDe) continue
       const source = w.source === 'extra' ? 'extra' : 'textbook'
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
          VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
          DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
                        media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-        [lessonId, ownerId, String(w.word_de).trim(), (w.translation_ru || '').trim() || null,
+        [lessonId, ownerId, wordDe, (w.translation_ru || '').trim() || null,
          w.example_sentence || null, source, w.media_id || null])
     }
 
@@ -717,8 +735,11 @@ export async function processNewMedia(lessonId) {
     // Умная обработка: сверяем с уже имеющимися словами урока (тетрадь после учебника)
     const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
     const cons = await mergeLesson(pairs.map(p => p.extraction), null, existRows.map(r => r.word_de), targetLang, client)
+    const known = await knownWordsFor(targetLang)
     for (const w of (cons.words || [])) {
-      const mediaId = mediaIdForWord(w.word_de, pairs) // с какого скана слово
+      const wordDe = normalizeIncomingWord(w.word_de, known)
+      if (!wordDe) continue
+      const mediaId = mediaIdForWord(wordDe, pairs) // с какого скана слово
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
          VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
@@ -762,12 +783,15 @@ export async function saveCameraWords(lessonId, words) {
     if (!ownerId) throw new Error('Урок не найден')
     const client = await getOwnerClient(ownerId) // ключ владельца или платформенный
     await setProgress(lessonId, 'Добавляю слова с фото...')
+    const knownCam = await knownWordsFor(targetLang)
     for (const w of words) {
       if (!w || !w.de) continue
+      const wordDe = normalizeIncomingWord(w.de, knownCam)
+      if (!wordDe) continue
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
          VALUES ($1,$2,$3,$4,'camera') ON CONFLICT (lesson_id, word_de) DO NOTHING`,
-        [lessonId, ownerId, String(w.de).trim(), (w.tr || '').trim() || null])
+        [lessonId, ownerId, wordDe, (w.tr || '').trim() || null])
     }
     // Упражнения только для слов урока БЕЗ упражнений (новые)
     const { rows: wordRows } = await db.query(
@@ -895,15 +919,18 @@ export async function processLesson(lessonId, ownerId) {
       // Тетрадь/доска (extra) сверяется с уже извлечёнными словами учебника — не дублируем
       const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
       const cons = await mergeLesson(ex, text, existRows.map(r => r.word_de), targetLang, client)
+      const known = await knownWordsFor(targetLang)
       for (const word of (cons.words || [])) {
-        const mediaId = mediaIdForWord(word.word_de, pairs) // с какого скана слово
+        const wordDe = normalizeIncomingWord(word.word_de, known)
+        if (!wordDe) continue
+        const mediaId = mediaIdForWord(wordDe, pairs) // с какого скана слово
         await db.query(
           `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
            VALUES ($1, $2, $3, $4, $5, $6, $7)
            ON CONFLICT (lesson_id, word_de)
            DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
                          media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-          [lessonId, ownerId, word.word_de, word.translation_ru, word.example_sentence || null, source, mediaId]
+          [lessonId, ownerId, wordDe, word.translation_ru, word.example_sentence || null, source, mediaId]
         )
       }
       await saveSentences(lessonId, cons.sentences, source) // реальные предложения урока
@@ -1064,6 +1091,7 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
         [ownerId, theme, targetLang, theme])
       setId = ins.rows[0].id
     }
+    const knownSet = await knownWordsFor(targetLang)
     for (const it of its) {
       const norm = bare(it.de)
       // Дедуп по ВСЕМ наборам владельца (не только текущему): слово живёт максимум
@@ -1076,10 +1104,12 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
            AND regexp_replace(lower(w.word_de), '^(der|die|das|ein|eine)\\s+', '') = $2 LIMIT 1`,
         [ownerId, norm, targetLang])
       if (ex.length) { dup++; continue }
+      const wordDe = normalizeIncomingWord(it.de, knownSet)
+      if (!wordDe) continue
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
          VALUES ($1, $2, $3, $4, 'camera') ON CONFLICT (lesson_id, word_de) DO NOTHING`,
-        [setId, ownerId, it.de, it.tr])
+        [setId, ownerId, wordDe, it.tr])
       added++
     }
     affected.push(setId)
