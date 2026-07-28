@@ -754,7 +754,11 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
     await enrichLesson(lessonId)
     // Превью подтверждено и больше не нужно — чистим, чтобы не подсовывать старый разбор
     // при следующей дозагрузке фото в этот же урок.
-    await db.query("UPDATE lessons SET status='done', progress=$1, preview=NULL WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
+    // Проверку качества запускаем и здесь: подтверждение превью — ОСНОВНОЙ путь создания
+    // урока, а аудит был подключён только к обработке фото, и новые уроки его не проходили.
+    const audit = await auditLessonAndLog(lessonId, ownerId)
+    await db.query("UPDATE lessons SET status='done', progress=$1, preview=NULL WHERE id=$2",
+      [`Готово! Слов: ${words.length}${audit ? `. Проверка: ${audit.summary}` : ''}`, lessonId])
     await auditLessonAndLog(lessonId, ownerId)   // отчёт о качестве — в журнал
   } catch (err) {
     console.error('commitLessonWords:', err.message)
