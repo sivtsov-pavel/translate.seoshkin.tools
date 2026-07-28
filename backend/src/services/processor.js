@@ -10,6 +10,7 @@ import { logOperation, textProvider } from './opLog.js'
 import { normalizeIncomingWord } from './wordNormalize.js'
 import { bareWord, articlePattern } from './articles.js'
 import { auditLesson } from './lessonAudit.js'
+import { classifyEntry } from './entryKind.js'
 
 // Сопоставление сгенерированного word_de со словом урока: GPT иногда возвращает слово
 // без артикля или в другом регистре → точное совпадение промахивается и упражнение
@@ -673,6 +674,7 @@ export async function extractLessonPreview(lessonId) {
 
   const words = []
   const sentences = []
+  const sentenceSeen = new Set() // дедуп: одна фраза могла попасть и в слова, и в предложения
   const grammarPoints = []
   try {
     for (const src of ['textbook', 'extra']) {
@@ -697,6 +699,21 @@ export async function extractLessonPreview(lessonId) {
       // Сверяем с уже имеющимися словами урока (тетрадь после учебника — не дублируем)
       const cons = await mergeLesson(pairs.map(p => p.extraction), null, existingWords, targetLang, client)
       for (const w of (cons.words || [])) {
+        // Vision кладёт в «слова» и целые фразы со страницы («Welche Sprache sprichst du?»),
+        // и заготовки заданий («ich suche die ... Straße»), и суффиксы из таблиц («_ig»).
+        // Подтверди такое как слово — оно уйдёт в словарь ученика и обрастёт карточкой,
+        // диктантом и «Добавь букву», которые для фразы бессмысленны.
+        const kind = classifyEntry(w.word_de)
+        if (kind === 'sentence') {
+          // Фразу не выбрасываем — она ценнее слова: реальное предложение со страницы
+          // это главный источник для «Заполни пропуск» и «Напиши предложение».
+          const text = String(w.word_de).trim()
+          if (!sentenceSeen.has(text.toLowerCase().slice(0, 80))) {
+            sentenceSeen.add(text.toLowerCase().slice(0, 80))
+            sentences.push({ text, translation_ru: w.translation_ru || null, source: src })
+          }
+          continue
+        }
         const mediaId = mediaIdForWord(w.word_de, pairs) // с какого скана слово
         // Помечаем каждое слово, чтобы учитель не вычитывал список глазами:
         //  • seenIn — где это слово уже встречалось (повтор, упражнения на него уже есть);
@@ -707,13 +724,16 @@ export async function extractLessonPreview(lessonId) {
           word_de: w.word_de, translation_ru: w.translation_ru || '',
           example_sentence: w.example_sentence || null, source: src, media_id: mediaId,
           isNew: !seenIn, seenIn,
-          isFunction: isFunctionWord(w.word_de, targetLang),
+          isFunction: kind === 'fragment' || isFunctionWord(w.word_de, targetLang),
         })
         existingWords.push(w.word_de) // между textbook/extra в одном превью тоже не дублировать
       }
       for (const s of (cons.sentences || [])) {
         const text = (typeof s === 'string' ? s : s?.text || '').trim()
-        if (text) sentences.push({ text, translation_ru: (typeof s === 'object' && s ? s.translation_ru : null) || null, source: src })
+        const key = text.toLowerCase().slice(0, 80)
+        if (!text || sentenceSeen.has(key)) continue
+        sentenceSeen.add(key)
+        sentences.push({ text, translation_ru: (typeof s === 'object' && s ? s.translation_ru : null) || null, source: src })
       }
       if (Array.isArray(cons.grammar_points)) grammarPoints.push(...cons.grammar_points)
     }
@@ -747,6 +767,28 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
     await setProgress(lessonId, 'Сохраняю урок...')
 
     const known = await knownWordsFor(targetLang)
+    // Вторая линия обороны. Превью уже раскладывает фразы по своим местам, но подтвердить
+    // могут и разбор, посчитанный до этой правки, и отмеченную вручную строку. Фраза,
+    // попавшая в словарь, обрастает карточкой и диктантом — а диктовать «Welche Sprache
+    // sprichst du?» ученику бессмысленно. Здесь фразы уходят к предложениям, обрывки
+    // («_ig») отбрасываются.
+    const keptWords = [], movedSentences = []
+    for (const w of (words || [])) {
+      if (!w?.word_de) continue
+      const kind = classifyEntry(w.word_de)
+      if (kind === 'sentence') movedSentences.push({ text: String(w.word_de).trim(), translation_ru: w.translation_ru || null, source: w.source })
+      else if (kind !== 'fragment') keptWords.push(w)
+    }
+    if (movedSentences.length) {
+      const seen = new Set((sentences || []).map(x => String(x?.text || '').trim().toLowerCase().slice(0, 80)))
+      for (const ms of movedSentences) {
+        const key = ms.text.toLowerCase().slice(0, 80)
+        if (!seen.has(key)) { seen.add(key); (sentences ||= []).push(ms) }
+      }
+      console.log(`commitLessonWords ${lessonId}: из слов перенесено в предложения ${movedSentences.length}`)
+    }
+    words = keptWords
+
     for (const w of (words || [])) {
       if (!w?.word_de) continue
       // Мусорные префиксы («verb: kochen») срезаем, опечатки приводим к уже принятому
