@@ -90,6 +90,23 @@ export function checkExercise(ex) {
       }
     }
   }
+
+  // Вопрос в «выбери ответ» задаётся на изучаемом языке или по-русски — но НЕ на чужом
+  // изучаемом. Реальный случай: в английском курсе остался немецкий оборот от старого
+  // промпта — «Wie heißt das auf Russisch: grandfather?».
+  if (ex.type === 'multiple_choice' && ex.target_lang !== 'de') {
+    const q = String(p.question || '')
+    if (/\b(wie heißt|auf Russisch|auf Deutsch)\b/i.test(q)) {
+      bad('warn', `вопрос по-немецки в курсе «${ex.target_lang}»: «${q.slice(0, 50)}»`)
+    }
+  }
+
+  // Пример в «напиши предложение» должен быть на изучаемом языке. Кириллица здесь
+  // означает, что модель выдала русский вместо целевого языка.
+  if (ex.type === 'sentence_write' && /[\u0400-\u04FF]/.test(String(p.example || ''))) {
+    bad('warn', `пример по-русски вместо ${ex.target_lang}: «${String(p.example).slice(0, 50)}»`)
+  }
+
   return out
 }
 
