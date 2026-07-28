@@ -226,7 +226,10 @@ export default function LessonList() {
   // вроде «Ergänze». Теперь тот же экран превью, что и при создании урока: галочки уже
   // расставлены (новые — да, повторы и служебные — нет), учитель правит и подтверждает.
   const openPreview = async (lesson) => {
-    setPreviewLesson({ id: lesson.id, title: getLessonTitle(lesson, lang) })
+    // getLessonTitle принимает (title, translations, lang) — не сам урок. С уроком первым
+    // аргументом она молча возвращала его целиком, и React падал на попытке отрисовать
+    // объект вместо строки (белый экран, ошибка #31).
+    setPreviewLesson({ id: lesson.id, title: getLessonTitle(lesson.title, lesson.title_translations, lang) || `#${lesson.id}` })
     setPreviewBusy(true); setPreviewError(''); setPreview(null)
     try {
       // Если превью уже считали (учитель закрыл экран и вернулся) — берём сохранённое,
@@ -592,7 +595,7 @@ export default function LessonList() {
                             <button onClick={() => openPreview(lesson)} disabled={processing === lesson.id}
                               title={t.lessons.reviewPhotosTitle}
                               style={actionBtn('var(--gold)', 'var(--gold-ink, #3a2c00)')}>
-                              👀 {t.lessons.reviewPhotos}{lesson.pending_media > 0 ? ` (${lesson.pending_media})` : ''}
+                              {t.lessons.reviewPhotos}{lesson.pending_media > 0 ? ` (${lesson.pending_media})` : ''}
                             </button>
                           )}
                           {status === 'done' && (

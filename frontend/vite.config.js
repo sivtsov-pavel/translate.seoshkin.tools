@@ -20,9 +20,15 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        // Скачивание APK и проверка assetlinks должны идти мимо SPA-фолбэка,
-        // иначе сервис-воркер отдаст index.html вместо файла
-        navigateFallbackDenylist: [/^\/downloads\//, /^\/\.well-known\//],
+        // Файлы должны идти мимо SPA-фолбэка, иначе сервис-воркер отдаёт index.html
+        // вместо самого файла. Симптом всегда один — белый экран: React открывает
+        // приложение по несуществующему маршруту.
+        //   • /downloads/ и /.well-known/ — скачивание APK и проверка assetlinks;
+        //   • /uploads/ — просмотр загруженного скана в новой вкладке. Миниатюра рядом
+        //     грузилась нормально: <img> — это не навигация, фолбэк её не трогает,
+        //     поэтому баг выглядел необъяснимо («картинка есть, а открыть нельзя»);
+        //   • /api/ — прямые ссылки на файлы, отдаваемые бэкендом.
+        navigateFallbackDenylist: [/^\/downloads\//, /^\/\.well-known\//, /^\/uploads\//, /^\/api\//],
         // Импортируем push-обработчики в сгенерированный service worker
         importScripts: ['/push-sw.js'],
         runtimeCaching: [
