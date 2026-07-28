@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
+import { pickSentencesFor } from './sentencePick.js'
 import { normalizeLetterFill } from './letterFill.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
@@ -570,10 +571,15 @@ const exWordKey = (s) => String(s || '').toLowerCase().replace(/^(der|die|das|ei
 
 export async function generateExercises(words, grammar_points, targetLang = 'de', sentences = [], client = platformClient) {
   const allExercises = []
-  // Реальные предложения урока — приоритетный источник для fill_blank/sentence_write
-  const realSentences = (sentences || []).map(s => (typeof s === 'string' ? s : s?.text)).filter(Boolean).slice(0, 40)
+  // Реальные предложения урока — приоритетный источник для fill_blank/sentence_write.
+  // Подбираем их ПОД КАЖДУЮ пачку слов, а не берём первые 40 по порядку: на плотном уроке
+  // (в уроке 8 предложений 164) слова из конца оставались без своих примеров, и модель
+  // сочиняла им фразы с нуля, теряя грамматику урока.
   const gen = async (batch) => {
-    const input = JSON.stringify({ words: batch, grammar_points, sentences: realSentences }, null, 2)
+    const input = JSON.stringify({
+      words: batch, grammar_points,
+      sentences: pickSentencesFor(sentences, batch, targetLang, 40),
+    }, null, 2)
     const text = await ask(`${EXERCISES_PROMPT(TL(targetLang))}\n\nКонспект урока:\n${input}`, { max_tokens: 8192, client })
     return parseJson(text).map(sanitizeExercise).filter(Boolean)
   }
