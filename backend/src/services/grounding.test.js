@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groundFillBlank, groundSentenceWrite } from './grounding.js'
+import { groundFillBlank, groundSentenceWrite, isUsableSentence } from './grounding.js'
 
 const SENTS = [
   'Das ist mein Freund Jamil.',
@@ -60,5 +60,41 @@ describe('groundSentenceWrite', () => {
   it('фразы со словом нет — образец прежний', () => {
     const p = { word_de: 'die Blume', example: 'Die Blume ist schön.' }
     expect(groundSentenceWrite(p, SENTS)).toBe(p)
+  })
+})
+
+// Реальный мусор из lesson_sentences урока 5 — на нём подстановка делала упражнения хуже
+describe('isUsableSentence — что подставлять нельзя', () => {
+  it('перевод в скобках', () => {
+    expect(isUsableSentence('Bist du Raucher? (Are you a smoker?)')).toBe(false)
+  })
+
+  it('русский перевод внутри строки', () => {
+    expect(isUsableSentence('Die Pause ist vorbei oder fertig. — Перерыв закончен.')).toBe(false)
+  })
+
+  it('обрывок в два слова — после пропуска не останется контекста', () => {
+    expect(isUsableSentence('die Dose')).toBe(false)
+  })
+
+  it('заголовок задания', () => {
+    expect(isUsableSentence('Ergänzen Sie bitte die Sätze:')).toBe(false)
+  })
+
+  it('нормальная фраза урока проходит', () => {
+    expect(isUsableSentence('Entschuldigung, wer sind Sie?')).toBe(true)
+    expect(isUsableSentence('Das ist mein Freund Jamil.')).toBe(true)
+  })
+})
+
+describe('groundFillBlank — мусор не подставляется', () => {
+  it('обрывок «die Dose» не заменит нормальное предложение', () => {
+    const p = { sentence: 'Die ___ ist leer.', blank: 'Dose', options: ['Dose', 'Tasse', 'Kanne'] }
+    expect(groundFillBlank(p, ['die Dose'])).toBe(p)
+  })
+
+  it('фраза с английским переводом в скобках не берётся', () => {
+    const p = { sentence: 'Bist du ___?', blank: 'Raucher', options: ['Raucher', 'Leser'] }
+    expect(groundFillBlank(p, ['Bist du Raucher? (Are you a smoker?)'])).toBe(p)
   })
 })

@@ -43,6 +43,25 @@ function findForm(sentence, word, lang) {
   return m ? m[2] : null
 }
 
+// Годится ли строка как основа упражнения. Проверка обязательна: в lesson_sentences попадает
+// не только чистая речь со страницы, но и мусор распознавания. Живые примеры из урока 5:
+//   «Bist du Raucher? (Are you a smoker?)»        — английский перевод в скобках;
+//   «Die Pause ist vorbei oder fertig. — Перерыв закончен.» — русский перевод через тире;
+//   «die Dose»                                     — обрывок в два слова.
+// Подставь такое — и упражнение станет хуже, чем выдуманное моделью.
+export function isUsableSentence(raw, maxWords = 12) {
+  const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim()
+  if (!text) return false
+  const words = text.split(/\s+/).filter(Boolean)
+  // Меньше четырёх слов — после пропуска не останется контекста, по которому можно догадаться.
+  if (words.length < 4 || words.length > maxWords) return false
+  if (/[А-Яа-яЁё]/.test(text)) return false          // перевод затесался в текст
+  if (/[()\[\]]/.test(text)) return false            // «(Are you a smoker?)»
+  if (/\s[—–-]\s/.test(text)) return false           // «фраза — перевод»
+  if (/[:;]\s*$/.test(text)) return false            // заголовок задания, а не фраза
+  return true
+}
+
 /**
  * Пересобирает fill_blank на реальном предложении урока, если оно есть.
  * @returns {object} новый payload или исходный, если подходящей фразы нет
@@ -55,10 +74,8 @@ export function groundFillBlank(payload, sentences, lang = 'de', maxWords = 12) 
   if (options.length < 2) return payload
 
   for (const raw of (sentences || [])) {
+    if (!isUsableSentence(raw, maxWords)) continue
     const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim()
-    if (!text) continue
-    // Длинную фразу на A1 не берём: пропуск в ней теряется, а сама она не запоминается.
-    if (text.split(/\s+/).length > maxWords) continue
     const form = findForm(text, word, lang)
     if (!form) continue
     // Пропуск ставим на найденную форму — ровно один раз, первое вхождение.
@@ -79,8 +96,8 @@ export function groundSentenceWrite(payload, sentences, lang = 'de', maxWords = 
   const word = String(payload.word_de || '').trim()
   if (!word) return payload
   for (const raw of (sentences || [])) {
+    if (!isUsableSentence(raw, maxWords)) continue
     const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim()
-    if (!text || text.split(/\s+/).length > maxWords) continue
     if (!findForm(text, word, lang)) continue
     return { ...payload, example: text }
   }
