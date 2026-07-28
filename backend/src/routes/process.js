@@ -1,4 +1,5 @@
 import { db } from '../db/index.js'
+import { logOperation, textProvider } from '../services/opLog.js'
 import { processLesson, enrichLesson, auditLessonAndLog, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson, distributeWordsToSets, extractLessonPreview, commitLessonWords } from '../services/processor.js'
 import { ownerHasOwnKey } from '../services/openaiClient.js'
 import { config } from '../config.js'
@@ -57,11 +58,26 @@ export async function processRoutes(fastify) {
     if (!words.length) return reply.status(400).send({ error: 'Нет слов в уроке' })
     const { rows: sents } = await db.query('SELECT text, translation_ru FROM lesson_sentences WHERE lesson_id = $1', [lessonId])
     reply.code(202).send({ started: true, words: words.length })
+    // Работа идёт в фоне (ответ 202 уже ушёл), поэтому её итог обязан попасть в журнал:
+    // раньше ошибка тонула в логе, и учитель нажимал кнопку, не узнавая, что не сработало —
+    // именно так вышло, что наборы существовали только для немецкого.
+    const t0 = Date.now()
     distributeWordsToSets(
       words.map(w => ({ de: w.word_de, tr: w.translation_ru })),
       request.user.id, lr[0].target_lang,
       sents.map(s => ({ text: s.text, translation: s.translation_ru }))
-    ).catch(err => fastify.log.error({ lessonId, err }, 'Ошибка распределения в наборы'))
+    ).then(res => logOperation({
+      kind: 'sets', lessonId, userId: request.user.id, provider: textProvider(), model: 'gpt-4o',
+      status: 'ok', items: res?.added ?? 0, durationMs: Date.now() - t0,
+      message: `в наборы: добавлено ${res?.added ?? 0}, дублей ${res?.duplicates ?? 0}`,
+      meta: { themes: res?.themes || [], lang: lr[0].target_lang },
+    })).catch(err => {
+      fastify.log.error({ lessonId, err }, 'Ошибка распределения в наборы')
+      logOperation({
+        kind: 'sets', lessonId, userId: request.user.id, provider: textProvider(), model: 'gpt-4o',
+        status: 'error', message: err.message, durationMs: Date.now() - t0,
+      })
+    })
   })
 
   // «Свои упражнения»: создать набор из выбранных слов словаря
