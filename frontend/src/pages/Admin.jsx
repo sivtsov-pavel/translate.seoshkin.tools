@@ -80,6 +80,7 @@ export default function Admin() {
           ['ai', '🤖 ИИ-провайдер'],
           ['ops', '📜 Журнал'],
           ['hard', '🎯 Трудные места'],
+          ['maint', '🔧 Обслуживание'],
         ].map(([k, lbl]) => (
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '8px 14px', borderRadius: 999, border: '1px solid var(--line)',
@@ -99,6 +100,7 @@ export default function Admin() {
       {tab === 'ai' && <AiProviders />}
       {tab === 'ops' && <Operations />}
       {tab === 'hard' && <HardSpots />}
+      {tab === 'maint' && <Maintenance />}
     </div>
   )
 }
@@ -919,6 +921,117 @@ function HardSpots() {
             )}
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Обслуживание: запуск проверок и догенерации без терминала ─────────────────
+// Всё, что делает сервер — кнопкой. Картинки рисуются на ноутбуке (сервер физически
+// не видит ноут), поэтому для них показываем готовую команду.
+function Maintenance() {
+  const [st, setSt] = useState(null)
+  const [busy, setBusy] = useState('')
+  const [msg, setMsg] = useState(null)
+  const [err, setErr] = useState('')
+
+  const load = () => api.get('/admin/maintenance-status').then(setSt).catch(e => setErr(e.message))
+  useEffect(() => { load() }, [])
+
+  const run = async (action, confirmText) => {
+    if (confirmText && !window.confirm(confirmText)) return
+    setBusy(action); setErr(''); setMsg(null)
+    try { setMsg(await api.post(`/admin/maintenance/${action}`, {})); load() }
+    catch (e) { setErr(e.message) }
+    finally { setBusy('') }
+  }
+
+  const cmd = (text) => (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8 }}>
+      <code style={{ flex: 1, background: 'var(--surface-2)', padding: '10px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, wordBreak: 'break-all' }}>{text}</code>
+      <button onClick={() => navigator.clipboard?.writeText(text)}
+        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        копировать
+      </button>
+    </div>
+  )
+
+  if (err && !st) return <div style={{ ...card, color: 'var(--red)' }}>{err}</div>
+  if (!st) return <div style={card}>Загрузка…</div>
+
+  return (
+    <div>
+      {err && <div style={{ ...card, color: 'var(--red)', marginBottom: 12 }}>{err}</div>}
+      {msg && (
+        <div style={{ ...card, marginBottom: 12, borderColor: 'var(--good)' }}>
+          {msg.started
+            ? `Запущено в фоне: уроков ${msg.lessons}, слов ${msg.words}. Ход работы — во вкладке «📜 Журнал».`
+            : `Проверено уроков: ${msg.checked}. Непроходимых упражнений: ${msg.blockers}. Слов без полного набора: ${msg.uncovered}.`}
+        </div>
+      )}
+
+      {/* Состояние материала */}
+      <div style={{ ...card, marginBottom: 12 }}>
+        <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)', margin: '0 0 10px' }}>Состояние материала</h3>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          <Stat label="Слов всего" value={st.coverage.total} />
+          <Stat label="Без полного набора" value={st.coverage.uncovered}
+            color={st.coverage.uncovered ? '#B07D1B' : 'var(--good)'} />
+          <Stat label="Без картинки" value={st.images.no_image} color={st.images.no_image ? '#B07D1B' : 'var(--good)'} />
+          <Stat label="Фото вместо рисунка" value={st.images.photos} />
+        </div>
+        {st.lastAudit && (
+          <div style={{ marginTop: 10, fontSize: 12.5, color: 'var(--ink-soft)' }}>
+            Последняя проверка: {new Date(st.lastAudit.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — {st.lastAudit.message}
+          </div>
+        )}
+      </div>
+
+      {/* Кнопки — то, что умеет сервер */}
+      <div style={{ ...card, marginBottom: 12 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px' }}>🔍 Проверить материал</h3>
+        <p style={{ fontSize: 13.5, color: 'var(--ink-soft)', margin: '0 0 10px', lineHeight: 1.6 }}>
+          Прогоняет все уроки: непроходимые упражнения, слова без полного набора, текст не на
+          языке курса, род и заглавная буква. Ничего не меняет и не тратит. Отчёт по каждому
+          уроку — в «📜 Журнал».
+        </p>
+        <button onClick={() => run('audit')} disabled={!!busy}
+          style={{ padding: '11px 20px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 14.5, fontWeight: 700, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+          {busy === 'audit' ? 'Проверяю…' : 'Проверить'}
+        </button>
+      </div>
+
+      <div style={{ ...card, marginBottom: 12 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px' }}>✏️ Догенерировать упражнения</h3>
+        <p style={{ fontSize: 13.5, color: 'var(--ink-soft)', margin: '0 0 10px', lineHeight: 1.6 }}>
+          Добирает недостающие типы у слов, где их не хватает. <b style={{ color: 'var(--red)' }}>Тратит
+          деньги</b> — примерно 2 копейки за 100 слов (gpt-4o-mini). Сейчас без полного
+          набора: <b>{st.coverage.uncovered}</b> слов.
+        </p>
+        <button onClick={() => run('topup', `Догенерировать упражнения для ${st.coverage.uncovered} слов? Это потратит деньги с баланса OpenAI.`)}
+          disabled={!!busy || !st.coverage.uncovered}
+          style={{ padding: '11px 20px', borderRadius: 10, border: 'none', background: st.coverage.uncovered ? 'var(--accent)' : 'var(--line)', color: st.coverage.uncovered ? 'var(--accent-ink)' : 'var(--ink-soft)', fontSize: 14.5, fontWeight: 700, cursor: busy ? 'wait' : (st.coverage.uncovered ? 'pointer' : 'default') }}>
+          {busy === 'topup' ? 'Запускаю…' : 'Догенерировать'}
+        </button>
+      </div>
+
+      {/* Команды — то, что делает ноутбук */}
+      <div style={card}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px' }}>🖼 Картинки — на ноутбуке</h3>
+        <p style={{ fontSize: 13.5, color: 'var(--ink-soft)', margin: '0 0 4px', lineHeight: 1.6 }}>
+          Кнопкой не запустить: сервер физически не видит твой ноутбук, а рисует именно он —
+          бесплатно. Открой Терминал на маке и вставь команду. Draw Things должен быть запущен,
+          крышку не закрывай. Прервать можно в любой момент — повторный запуск продолжит с того же места.
+        </p>
+        <div style={{ fontSize: 13, fontWeight: 600, marginTop: 12 }}>Нарисовать недостающие (сейчас {st.images.no_image}):</div>
+        {cmd('cd ~/Klients/Projects/translate.seoshkin.tools && caffeinate -i node scripts/draw-images-worker.mjs --mode missing --limit 999')}
+        <div style={{ fontSize: 13, fontWeight: 600, marginTop: 14 }}>Заменить фото на рисунки (сейчас {st.images.photos}):</div>
+        {cmd('cd ~/Klients/Projects/translate.seoshkin.tools && caffeinate -i node scripts/draw-images-worker.mjs --mode photos --limit 999')}
+        <div style={{ fontSize: 13, fontWeight: 600, marginTop: 14 }}>Перерисовать конкретное слово (id из Словаря):</div>
+        {cmd('cd ~/Klients/Projects/translate.seoshkin.tools && node scripts/draw-images-worker.mjs --ids 4536,4867')}
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 12 }}>
+          Ход работы и ошибки видны в «📜 Журнал» — там же проверь, что потрачено $0.000.
+        </div>
       </div>
     </div>
   )

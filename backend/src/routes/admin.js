@@ -131,6 +131,67 @@ export async function adminRoutes(fastify) {
     return { days, minTries, byType, spots }
   })
 
+  // Обслуживание: запуск проверок и догенерации прямо из админки, чтобы не лезть в терминал.
+  // Всё, что можно сделать на сервере — здесь. Картинки рисуются на ноутбуке Павла и
+  // запускаются командой (сервер физически не видит ноутбук).
+  fastify.post('/api/admin/maintenance/:action', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const { action } = request.params
+    const { auditLessonAndLog, enrichLesson } = await import('../services/processor.js')
+
+    // Проверка материала: гоняем аудит по всем готовым урокам, отчёт каждого — в журнал.
+    if (action === 'audit') {
+      const { rows } = await db.query(`SELECT id FROM lessons WHERE status='done' ORDER BY id`)
+      let blockers = 0, uncovered = 0, checked = 0
+      for (const l of rows) {
+        const r = await auditLessonAndLog(l.id, request.user.id)
+        if (!r) continue
+        checked++; blockers += r.blockers.length; uncovered += r.uncovered.length
+      }
+      return { ok: true, checked, blockers, uncovered }
+    }
+
+    // Догенерация недостающих упражнений. ТРАТИТ ДЕНЬГИ — фронт предупреждает и требует
+    // подтверждения; сюда приходит уже осознанный запрос.
+    if (action === 'topup') {
+      const { rows } = await db.query(`
+        WITH need AS (
+          SELECT w.lesson_id, (SELECT count(DISTINCT e.type) FROM exercises e
+            WHERE e.word_id = w.id AND e.type IN ('flashcard','fill_blank','multiple_choice','sentence_write','letter_fill')) have
+          FROM words w JOIN lessons l ON l.id = w.lesson_id WHERE l.is_set = false)
+        SELECT lesson_id, count(*) FILTER (WHERE have < 5)::int AS miss
+        FROM need GROUP BY 1 HAVING count(*) FILTER (WHERE have < 5) > 0 ORDER BY 2 DESC`)
+      // Запускаем в фоне: уроков бывает десятки, HTTP-запрос столько не живёт.
+      ;(async () => {
+        for (const r of rows) {
+          try { await enrichLesson(r.lesson_id); await auditLessonAndLog(r.lesson_id, request.user.id) }
+          catch (e) { console.error('maintenance topup:', r.lesson_id, e.message) }
+        }
+      })()
+      return { ok: true, started: true, lessons: rows.length, words: rows.reduce((s, r) => s + r.miss, 0) }
+    }
+
+    return reply.status(400).send({ error: 'Неизвестное действие' })
+  })
+
+  // Что сейчас требует внимания — для карточек раздела «Обслуживание»
+  fastify.get('/api/admin/maintenance-status', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const [{ rows: cov }, { rows: img }, { rows: lastAudit }] = await Promise.all([
+      db.query(`WITH need AS (
+          SELECT w.id, l.target_lang, (SELECT count(DISTINCT e.type) FROM exercises e
+            WHERE e.word_id = w.id AND e.type IN ('flashcard','fill_blank','multiple_choice','sentence_write','letter_fill')) have
+          FROM words w JOIN lessons l ON l.id = w.lesson_id WHERE l.is_set = false)
+        SELECT count(*) FILTER (WHERE have < 5)::int AS uncovered, count(*)::int AS total FROM need`),
+      db.query(`SELECT count(*) FILTER (WHERE w.image_url IS NULL)::int AS no_image,
+                       count(*) FILTER (WHERE w.image_url LIKE '%.jpg%')::int AS photos
+                FROM words w JOIN lessons l ON l.id = w.lesson_id`),
+      db.query(`SELECT created_at, message, status FROM operation_log
+                WHERE kind='audit' ORDER BY id DESC LIMIT 1`),
+    ])
+    return { coverage: cov[0], images: img[0], lastAudit: lastAudit[0] || null }
+  })
+
   // Прочитать глобальные настройки
   fastify.get('/api/admin/platform-settings', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (!isSuperAdmin(request, reply)) return
