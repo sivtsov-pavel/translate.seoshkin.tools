@@ -98,6 +98,20 @@ const SECTIONS_RU = [
 мешать. Ночью или в транспорте это нормально: вернётесь к ним, когда сможете говорить
 вслух. Отложенные засчитываются как пройденные — вы их не пропустили, а перенесли.
 
+СЛОВА ИЗ УЧЕБНИКА И ИЗ ТЕТРАДИ
+В списке слов урока каждое помечено источником:
+📖 из учебника — основная программа урока;
+✏️ из тетради или с доски — то, что учитель дописал дополнительно.
+
+Разница в одном: ЗАЧЁТ (кнопка «✏️ Зачёт» на карточке урока) идёт только по словам
+учебника. Иначе сдать урок было бы нереально — в некоторых уроках дописанных слов
+больше, чем основных.
+
+В обычной тренировке участвуют ВСЕ слова, и это осознанно: дописанное с доски обычно
+самое живое и нужное. Предложения из тетради тоже идут в дело — из них делаются
+задания «заполни пропуск» и «напиши предложение», так что вы закрепляете ровно ту
+грамматику, которую разбирали на уроке, а не абстрактную.
+
 СТАТУС СЛОВА (🔵 новое → 🟡 учу → 🟢 знаю)
 • 🟡 «учу» — после первого успешного ответа по слову
 • 🟢 «знаю» — после 5 успешных повторений (по алгоритму SM-2)
@@ -359,6 +373,20 @@ IF AN EXERCISE IS AWKWARD RIGHT NOW
 Pronunciation and dictation can be postponed — they move to "leftovers" and stop getting
 in the way. At night or on a bus that's perfectly fine: come back when you can speak out
 loud. Postponed exercises count as done — you didn't skip them, you rescheduled them.
+
+WORDS FROM THE TEXTBOOK AND FROM THE NOTEBOOK
+Every word in the lesson list is marked with its source:
+📖 from the textbook — the core lesson programme;
+✏️ from the notebook or whiteboard — what the teacher added on top.
+
+One difference: the TEST (the "✏️ Test" button on the lesson card) only covers textbook
+words. Otherwise passing a lesson would be unrealistic — in some lessons the added words
+outnumber the core ones.
+
+Regular practice includes ALL words, and that is deliberate: what the teacher wrote on
+the board is usually the most alive and useful part. Sentences from the notebook are used
+too — they become "fill the blank" and "write a sentence" tasks, so you drill exactly the
+grammar you covered in class rather than something abstract.
 
 WORD STATUS (🔵 new → 🟡 learning → 🟢 known)
 • 🟡 "learning" — after the first correct answer for the word
