@@ -1,7 +1,20 @@
 # nginx/ — конфиги доменов проекта translate
 
-**Это источник истины для входных доменов приложения.** Файлы отсюда монтируются в общий
-шлюз `seoshkin_nginx` на сервере. Правим ТОЛЬКО здесь, в git — не на сервере вручную.
+**Это источник истины для входных доменов приложения.** Правим ТОЛЬКО здесь, в git.
+
+⚠️ **НО: автоматически на сервер эти файлы НЕ попадают** (обнаружено 28.07.2026).
+В шлюз смонтирован один файл `/var/www/translate.seoshkin.tools/nginx.conf`, а не каталог
+отсюда. После правки конфига его нужно перенести руками:
+
+```bash
+ssh gcloud-seosite 'cd /home/seosite/translate && \
+  cp /var/www/translate.seoshkin.tools/nginx.conf /var/www/translate.seoshkin.tools/nginx.conf.bak-$(date +%Y%m%d) && \
+  cat nginx/translate.seoshkin.tools.conf nginx/deutschlernen.ai.conf > /var/www/translate.seoshkin.tools/nginx.conf && \
+  docker exec seoshkin_nginx nginx -t && docker exec seoshkin_nginx nginx -s reload'
+```
+
+Из-за этого расхождения файлы однажды разъехались, и в Android-приложении перестал
+работать вход. Задача на устранение передана Флабу (см. `docs/handoff/`).
 
 ## ⛔ Правила (чтобы не перетереть и не сломать прод)
 
