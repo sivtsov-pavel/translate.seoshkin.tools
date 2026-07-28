@@ -642,6 +642,20 @@ export async function extractLessonPreview(lessonId) {
   const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
   const existingWords = existRows.map(r => r.word_de)
 
+  // Что учитель уже проходил в этом языке: слово → урок, где оно встречалось.
+  // Нужно, чтобы в превью отделить НОВЫЕ слова от повторов: на повторы упражнения
+  // уже созданы, и добавлять их второй раз незачем.
+  const { rows: knownRows } = await db.query(
+    `SELECT w.word_de, l.id AS lesson_id, l.title
+       FROM words w JOIN lessons l ON l.id = w.lesson_id
+      WHERE l.owner_id = $1 AND l.target_lang = $2 AND l.id <> $3
+      ORDER BY l.id DESC`, [ownerId, targetLang, lessonId])
+  const knownByWord = new Map()
+  for (const r of knownRows) {
+    const k = wordKeyNorm(r.word_de)
+    if (!knownByWord.has(k)) knownByWord.set(k, { lessonId: r.lesson_id, title: r.title })
+  }
+
   const words = []
   const sentences = []
   const grammarPoints = []
@@ -669,7 +683,17 @@ export async function extractLessonPreview(lessonId) {
       const cons = await mergeLesson(pairs.map(p => p.extraction), null, existingWords, targetLang, client)
       for (const w of (cons.words || [])) {
         const mediaId = mediaIdForWord(w.word_de, pairs) // с какого скана слово
-        words.push({ word_de: w.word_de, translation_ru: w.translation_ru || '', example_sentence: w.example_sentence || null, source: src, media_id: mediaId })
+        // Помечаем каждое слово, чтобы учитель не вычитывал список глазами:
+        //  • seenIn — где это слово уже встречалось (повтор, упражнения на него уже есть);
+        //  • isFunction — служебное (артикли, местоимения, предлоги) либо кусок подписи
+        //    к заданию вроде «Sehen Sie die Bilder an» — такие в словарь не нужны.
+        const seenIn = knownByWord.get(wordKeyNorm(w.word_de)) || null
+        words.push({
+          word_de: w.word_de, translation_ru: w.translation_ru || '',
+          example_sentence: w.example_sentence || null, source: src, media_id: mediaId,
+          isNew: !seenIn, seenIn,
+          isFunction: isFunctionWord(w.word_de, targetLang),
+        })
         existingWords.push(w.word_de) // между textbook/extra в одном превью тоже не дублировать
       }
       for (const s of (cons.sentences || [])) {
