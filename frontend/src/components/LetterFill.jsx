@@ -25,6 +25,10 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
   const [submitted, setSubmitted] = useState(false)
   const [correct, setCorrect]   = useState(false)
   const [caseHint, setCaseHint] = useState('')      // подсказка про регистр (перепутал большую/маленькую)
+  // Что ученик реально собрал. Раньше в отчёт уходил ПРАВИЛЬНЫЙ ответ, поэтому в
+  // статистике выглядело так, будто человек написал верно, а система засчитала ошибку.
+  // Из-за этого же «Почему ошибка?» разбирал не тот текст.
+  const [built, setBuilt] = useState('')
   const [reaction, setReaction] = useState(null)
   const refs = useRef({})
   const { t, lang } = useI18nStore()
@@ -82,11 +86,12 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
   const handleSubmit = () => {
     if (submitted || !filledAll) return
     // Собираем слово: видимые буквы + вписанные в пропуски. Регистрозависимо (нем. заглавные).
-    const built = chars.map((c, i) => (c === '_' ? (vals[i] || '') : c)).join('')
-    const isCorrect = built.trim() === answer
+    const assembled = chars.map((c, i) => (c === '_' ? (vals[i] || '') : c)).join('')
+    setBuilt(assembled.trim())
+    const isCorrect = assembled.trim() === answer
     // Перепутан ТОЛЬКО регистр (буквы верные) → объясняем правило, а не просто «неверно».
     let ch = ''
-    if (!isCorrect && built.trim().toLowerCase() === answer.toLowerCase()) {
+    if (!isCorrect && assembled.trim().toLowerCase() === answer.toLowerCase()) {
       const bad = blanks.find(i => (vals[i] || '') !== answer[i] && (vals[i] || '').toLowerCase() === (answer[i] || '').toLowerCase())
       const correctIsUpper = bad != null && answer[bad] === (answer[bad] || '').toUpperCase()
       ch = correctIsUpper
@@ -183,7 +188,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
               ✍️ {caseHint}
             </div>
           )}
-          <button onClick={() => onAnswer(correct ? 5 : 1, answer)}
+          <button onClick={() => onAnswer(correct ? 5 : 1, built || answer)}
             style={{ padding: '13px 36px', background: 'var(--ink)', color: 'var(--bg)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 16, fontWeight: 700 }}>
             {t.exercise.next}
           </button>

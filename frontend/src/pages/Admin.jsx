@@ -79,6 +79,7 @@ export default function Admin() {
           ['users', '👥 Пользователи'],
           ['ai', '🤖 ИИ-провайдер'],
           ['ops', '📜 Журнал'],
+          ['hard', '🎯 Трудные места'],
         ].map(([k, lbl]) => (
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '8px 14px', borderRadius: 999, border: '1px solid var(--line)',
@@ -97,6 +98,7 @@ export default function Admin() {
       {tab === 'users' && <Users />}
       {tab === 'ai' && <AiProviders />}
       {tab === 'ops' && <Operations />}
+      {tab === 'hard' && <HardSpots />}
     </div>
   )
 }
@@ -834,6 +836,90 @@ function Stat({ label, value, color }) {
     <div>
       <div style={{ fontSize: 12, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 800, color: color || 'var(--ink)' }}>{value}</div>
+    </div>
+  )
+}
+
+// ── Трудные места: где ученики массово ошибаются ──────────────────────────────
+// Смысл не в том, чтобы оценивать учеников. Высокая доля ошибок у ОДНОГО упражнения
+// почти всегда означает брак в самом упражнении: неверный артикль, кривой вариант,
+// требование ввести слово через «/». Поэтому показываем реальные ответы учеников —
+// по ним сразу видно, что люди пишут и чем это отличается от «правильного».
+function HardSpots() {
+  const [data, setData] = useState(null)
+  const [err, setErr] = useState('')
+  const [flt, setFlt] = useState({ days: 30, lang: '' })
+
+  useEffect(() => {
+    const q = new URLSearchParams(Object.entries(flt).filter(([, v]) => v !== ''))
+    api.get(`/admin/hard-spots?${q}`).then(setData).catch(e => setErr(e.message))
+  }, [flt])
+
+  if (err) return <div style={{ ...card, color: 'var(--red)' }}>{err}</div>
+  if (!data) return <div style={card}>Загрузка…</div>
+  const { byType, spots } = data
+  const TYPE = { flashcard: 'Флеш-карта', fill_blank: 'Заполни пропуск', multiple_choice: 'Выбор ответа', sentence_write: 'Напиши предложение', letter_fill: 'Добавь букву', dictation: 'Диктант', speech: 'Произношение', conjugation: 'Склонение' }
+  const color = (p) => p >= 70 ? 'var(--red)' : p >= 50 ? '#B07D1B' : 'var(--ink)'
+
+  return (
+    <div>
+      <div style={{ ...card, marginBottom: 12 }}>
+        <p style={{ margin: '0 0 12px', fontSize: 13.5, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
+          Упражнения, где ошибается больше половины попыток. Если на одном месте спотыкаются
+          все — скорее всего дело не в учениках, а в самом упражнении. Смотрите, что люди вводили.
+        </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <select style={{ ...input, width: 'auto' }} value={flt.days} onChange={e => setFlt(f => ({ ...f, days: e.target.value }))}>
+            <option value="7">за неделю</option><option value="30">за месяц</option><option value="365">за всё время</option>
+          </select>
+          <select style={{ ...input, width: 'auto' }} value={flt.lang} onChange={e => setFlt(f => ({ ...f, lang: e.target.value }))}>
+            <option value="">все языки</option><option value="de">немецкий</option><option value="es">испанский</option><option value="en">английский</option>
+          </select>
+        </div>
+      </div>
+
+      <div style={{ ...card, marginBottom: 12 }}>
+        <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)', margin: '0 0 8px' }}>По типам упражнений</h3>
+        {byType.length === 0 && <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>Пока нет данных.</div>}
+        {byType.map(t => (
+          <div key={t.type} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: '1px solid var(--line)' }}>
+            <span style={{ flex: 1, fontSize: 14 }}>{TYPE[t.type] || t.type}</span>
+            <span style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>{t.tries} попыток</span>
+            <span style={{ width: 120, height: 8, background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden' }}>
+              <span style={{ display: 'block', width: `${t.fail_pct}%`, height: '100%', background: color(t.fail_pct) }} />
+            </span>
+            <b style={{ width: 44, textAlign: 'right', color: color(t.fail_pct) }}>{t.fail_pct}%</b>
+          </div>
+        ))}
+      </div>
+
+      <div style={card}>
+        <h3 style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-soft)', margin: '0 0 8px' }}>
+          Конкретные упражнения ({spots.length})
+        </h3>
+        {spots.length === 0 && <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>Проблемных упражнений не найдено.</div>}
+        {spots.map(s => (
+          <div key={s.id} style={{ borderTop: '1px solid var(--line)', padding: '10px 0', fontSize: 13.5 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }}>
+              <b style={{ color: color(s.fail_pct) }}>{s.fail_pct}%</b>
+              <span>{TYPE[s.type] || s.type}</span>
+              <b>{s.word}</b>
+              {s.translation_ru && <span style={{ color: 'var(--ink-soft)' }}>— {s.translation_ru}</span>}
+              <span style={{ color: 'var(--ink-soft)', fontSize: 12.5 }}>
+                {s.fails} из {s.tries}, учеников {s.students}
+              </span>
+            </div>
+            {s.lesson_title && <div style={{ color: 'var(--ink-soft)', fontSize: 12.5 }}>📚 {s.lesson_title}</div>}
+            {s.wrong_answers?.filter(Boolean).length > 0 && (
+              <div style={{ fontSize: 12.5, marginTop: 3 }}>
+                отвечали: {s.wrong_answers.filter(Boolean).map((a, i) => (
+                  <code key={i} style={{ background: 'var(--surface-2)', padding: '1px 6px', borderRadius: 5, marginRight: 5 }}>{a}</code>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

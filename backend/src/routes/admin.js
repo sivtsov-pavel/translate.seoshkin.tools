@@ -86,6 +86,51 @@ export async function adminRoutes(fastify) {
     return { rows, totals: totals[0], byKind, days }
   })
 
+  // «Трудные места»: где ученики массово ошибаются. Высокая доля ошибок у ОДНОГО
+  // упражнения почти всегда означает не слабость учеников, а брак в самом упражнении —
+  // неверный артикль, кривой вариант ответа, требование ввести слово через «/».
+  // Поэтому вместе с процентом отдаём РЕАЛЬНЫЕ ответы учеников: по ним сразу видно,
+  // что именно люди пишут и чем это отличается от «правильного» варианта.
+  fastify.get('/api/admin/hard-spots', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (!isSuperAdmin(request, reply)) return
+    const days = Math.min(parseInt(request.query.days || '30') || 30, 365)
+    const minTries = Math.max(parseInt(request.query.min || '3') || 3, 2)
+    const target = request.query.lang || null
+
+    const [{ rows: byType }, { rows: spots }] = await Promise.all([
+      db.query(
+        `SELECT e.type, count(*)::int AS tries,
+                count(*) FILTER (WHERE a.quality < 3)::int AS fails,
+                round(100.0 * count(*) FILTER (WHERE a.quality < 3) / count(*))::int AS fail_pct
+         FROM exercise_attempts a
+         JOIN exercises e ON e.id = a.exercise_id
+         JOIN lessons l ON l.id = e.lesson_id
+         WHERE a.attempted_at > now() - ($1 || ' days')::interval
+           AND ($2::text IS NULL OR l.target_lang = $2)
+         GROUP BY e.type ORDER BY fail_pct DESC`, [String(days), target]),
+      db.query(
+        `SELECT e.id, e.type, e.lesson_id, l.title AS lesson_title,
+                COALESCE(w.word_de, e.payload->>'word_de', e.payload->>'question') AS word,
+                w.translation_ru,
+                count(*)::int AS tries,
+                count(*) FILTER (WHERE a.quality < 3)::int AS fails,
+                round(100.0 * count(*) FILTER (WHERE a.quality < 3) / count(*))::int AS fail_pct,
+                -- что ученики реально вводили в неудачных попытках
+                (array_agg(DISTINCT a.user_answer) FILTER (WHERE a.quality < 3 AND a.user_answer <> ''))[1:5] AS wrong_answers,
+                count(DISTINCT a.user_id)::int AS students
+         FROM exercise_attempts a
+         JOIN exercises e ON e.id = a.exercise_id
+         JOIN lessons l ON l.id = e.lesson_id
+         LEFT JOIN words w ON w.id = e.word_id
+         WHERE a.attempted_at > now() - ($1 || ' days')::interval
+           AND ($3::text IS NULL OR l.target_lang = $3)
+         GROUP BY e.id, e.type, e.lesson_id, l.title, w.word_de, e.payload, w.translation_ru
+         HAVING count(*) >= $2 AND count(*) FILTER (WHERE a.quality < 3) * 2 >= count(*)
+         ORDER BY fail_pct DESC, tries DESC LIMIT 60`, [String(days), minTries, target]),
+    ])
+    return { days, minTries, byType, spots }
+  })
+
   // Прочитать глобальные настройки
   fastify.get('/api/admin/platform-settings', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     if (!isSuperAdmin(request, reply)) return
