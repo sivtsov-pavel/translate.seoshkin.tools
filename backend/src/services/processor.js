@@ -8,6 +8,7 @@ import { generateWordImage, isFunctionWord } from './imageGen.js'
 import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
 import { logOperation, textProvider } from './opLog.js'
 import { normalizeIncomingWord } from './wordNormalize.js'
+import { auditLesson } from './lessonAudit.js'
 
 // Сопоставление сгенерированного word_de со словом урока: GPT иногда возвращает слово
 // без артикля или в другом регистре → точное совпадение промахивается и упражнение
@@ -64,6 +65,37 @@ async function knownWordsFor(targetLang) {
        WHERE l.target_lang = $1 AND w.word_de IS NOT NULL`, [targetLang])
     return rows.map(r => r.word_de)
   } catch (e) { console.error('knownWordsFor:', e.message); return [] }
+}
+
+// Проверка урока сразу после генерации: непроходимые упражнения, слова без полного
+// набора, текст не на языке курса. Отчёт уходит в журнал операций (Админ → 📜 Журнал),
+// чтобы учитель видел качество материала, а не узнавал о браке от ученика.
+// Никогда не роняет обработку: аудит — это наблюдение, а не часть генерации.
+export async function auditLessonAndLog(lessonId, userId = null) {
+  try {
+    const [{ rows: exercises }, { rows: words }] = await Promise.all([
+      db.query(`SELECT e.id, e.type, e.payload, e.word_id, l.target_lang
+                FROM exercises e JOIN lessons l ON l.id = e.lesson_id WHERE e.lesson_id = $1`, [lessonId]),
+      db.query(`SELECT w.id, w.word_de, l.target_lang
+                FROM words w JOIN lessons l ON l.id = w.lesson_id WHERE w.lesson_id = $1`, [lessonId]),
+    ])
+    const r = auditLesson({ exercises, words })
+    await logOperation({
+      kind: 'audit', lessonId, userId, provider: 'none',
+      status: r.blockers.length ? 'error' : 'ok',
+      message: r.summary,
+      items: r.blockers.length + r.warns.length + r.uncovered.length,
+      meta: {
+        blockers: r.blockers.slice(0, 20),
+        warns: r.warns.slice(0, 20),
+        uncovered: r.uncovered.slice(0, 20).map(w => w.word_de),
+      },
+    })
+    return r
+  } catch (e) {
+    console.error('auditLessonAndLog:', e.message)
+    return null
+  }
 }
 
 async function setProgress(lessonId, text) {
@@ -701,6 +733,7 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
 
     await enrichLesson(lessonId)
     await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
+    await auditLessonAndLog(lessonId, ownerId)   // отчёт о качестве — в журнал
   } catch (err) {
     console.error('commitLessonWords:', err.message)
     await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 150), lessonId])
@@ -813,6 +846,7 @@ export async function saveCameraWords(lessonId, words) {
     }
     await enrichLesson(lessonId)
     await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слова с фото добавлены.`, lessonId])
+    await auditLessonAndLog(lessonId, ownerId)
   } catch (err) {
     console.error('saveCameraWords:', err.message)
     await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [String(err.message).slice(0, 100), lessonId])
@@ -844,6 +878,7 @@ export async function generateCustomSet(lessonId, wordIds) {
     }
     await enrichLesson(lessonId)  // переводы упражнений на все языки (у слов картинки/переводы уже есть)
     await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
+    await auditLessonAndLog(lessonId, ownerId)   // отчёт о качестве — в журнал
   } catch (err) {
     console.error('generateCustomSet:', err.message)
     await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 100), lessonId])

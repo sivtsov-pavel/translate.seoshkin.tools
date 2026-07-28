@@ -730,7 +730,7 @@ function Operations() {
   const { rows, totals, byKind } = data
   const money = (n) => '$' + Number(n || 0).toFixed(3)
   const secs = (ms) => ms == null ? '—' : (ms >= 1000 ? `${(ms / 1000).toFixed(1)} с` : `${ms} мс`)
-  const KIND = { image: '🖼 картинка', exercises: '✏️ упражнения', translate: '🌍 перевод', extract: '📷 разбор фото', transcribe: '🎧 расшифровка аудио', upload: '⬆️ загрузка' }
+  const KIND = { audit: '🔍 проверка урока', image: '🖼 картинка', exercises: '✏️ упражнения', translate: '🌍 перевод', extract: '📷 разбор фото', transcribe: '🎧 расшифровка аудио', upload: '⬆️ загрузка' }
 
   return (
     <div>
@@ -804,6 +804,23 @@ function Operations() {
             </div>
             {r.lesson_title && <div style={{ color: 'var(--ink-soft)', fontSize: 12.5 }}>📚 {r.lesson_title}</div>}
             {r.meta?.word_de && <div style={{ fontSize: 12.5 }}>слово: <b>{r.meta.word_de}</b></div>}
+            {/* Отчёт проверки урока: показываем сами находки, а не только их число */}
+            {r.kind === 'audit' && (r.meta?.blockers?.length > 0 || r.meta?.uncovered?.length > 0) && (
+              <div style={{ marginTop: 4, fontSize: 12.5, lineHeight: 1.6 }}>
+                {r.meta.blockers?.slice(0, 5).map((b, i) => (
+                  <div key={i} style={{ color: 'var(--red)' }}>🔴 {b.kind}: {b.text}</div>
+                ))}
+                {r.meta.blockers?.length > 5 && (
+                  <div style={{ color: 'var(--ink-soft)' }}>…ещё {r.meta.blockers.length - 5} непроходимых</div>
+                )}
+                {r.meta.uncovered?.length > 0 && (
+                  <div style={{ color: 'var(--ink-soft)' }}>
+                    без полного набора упражнений: {r.meta.uncovered.slice(0, 6).join(', ')}
+                    {r.meta.uncovered.length > 6 ? ` и ещё ${r.meta.uncovered.length - 6}` : ''}
+                  </div>
+                )}
+              </div>
+            )}
             {r.message && <div style={{ color: r.status === 'error' ? 'var(--red)' : 'var(--ink-soft)', fontSize: 12.5 }}>{r.message}</div>}
           </div>
         ))}

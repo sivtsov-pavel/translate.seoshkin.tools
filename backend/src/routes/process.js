@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { processLesson, enrichLesson, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson, distributeWordsToSets, extractLessonPreview, commitLessonWords } from '../services/processor.js'
+import { processLesson, enrichLesson, auditLessonAndLog, generateCustomSet, drawLessonImages, processNewMedia, redistributeLesson, distributeWordsToSets, extractLessonPreview, commitLessonWords } from '../services/processor.js'
 import { ownerHasOwnKey } from '../services/openaiClient.js'
 import { config } from '../config.js'
 
@@ -161,8 +161,11 @@ export async function processRoutes(fastify) {
         // Сначала обрабатываем НОВЫЕ фото (новые слова + упражнения), потом дополняем
         const n = await processNewMedia(lessonId)
         await enrichLesson(lessonId)
+        // Проверяем качество материала и кладём отчёт в журнал (Админ → 📜 Журнал)
+        const audit = await auditLessonAndLog(lessonId, request.user.id)
         await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2",
-          [n > 0 ? `Готово! Обработано новых фото: ${n}.` : 'Готово! Всё дополнено.', lessonId])
+          [(n > 0 ? `Готово! Обработано новых фото: ${n}. ` : 'Готово! Всё дополнено. ')
+            + (audit ? `Проверка: ${audit.summary}.` : ''), lessonId])
       } catch (err) {
         fastify.log.error({ lessonId, err }, 'Ошибка «Обработать всё»')
         await db.query("UPDATE lessons SET status='done', progress='Готово (с ошибками).' WHERE id=$1", [lessonId])
