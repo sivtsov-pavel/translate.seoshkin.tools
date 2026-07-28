@@ -5,6 +5,8 @@ import { useI18nStore } from '../store/i18n.js'
 import { getLessonTitle, getLessonDesc } from '../utils/translation.js'
 import { useAuthStore } from '../store/auth.js'
 import { useAdminOpStore } from '../store/adminOp.js'
+import PreviewScreen from '../components/PreviewScreen.jsx'
+import { NSTR } from '../i18n/newLesson.js'
 
 // Колонка слов (учебник / тетрадь): textarea + чипы-слова, тап по чипу перекидывает в другой список
 function WordCol({ title, text, setText, onMove, moveHint, placeholder }) {
@@ -201,6 +203,14 @@ export default function LessonList() {
   const [openMenuId, setOpenMenuId]   = useState(null) // «…» с второстепенными действиями (пересоздать/картинки/наборы/буквы/диктант)
   const [processing, setProcessing]   = useState(null)
   const [editingId, setEditingId]     = useState(null)
+  // Разбор дозагруженных фото: превью со словами, где учитель снимает галочки.
+  const [previewLesson, setPreviewLesson] = useState(null) // { id, title }
+  const [preview, setPreview]         = useState(null)
+  const [previewBusy, setPreviewBusy] = useState(false)
+  const [previewError, setPreviewError] = useState('')
+  const [newWordDe, setNewWordDe]     = useState('')
+  const [newWordTr, setNewWordTr]     = useState('')
+  const [newSentence, setNewSentence] = useState('')
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const adminOp = useAdminOpStore()
@@ -209,6 +219,72 @@ export default function LessonList() {
   useEffect(() => {
     api.get('/lessons').then(rows => setLessons((rows || []).filter(l => !l.is_set))).finally(() => setLoading(false))
   }, [])
+
+  // ── Разбор дозагруженных фото ────────────────────────────────────────────────
+  // Учитель добавил страницы тетради в готовый урок. Раньше их распознавала кнопка
+  // «Обработать всё» — молча и целиком: в урок заезжали и повторы, и подписи к заданиям
+  // вроде «Ergänze». Теперь тот же экран превью, что и при создании урока: галочки уже
+  // расставлены (новые — да, повторы и служебные — нет), учитель правит и подтверждает.
+  const openPreview = async (lesson) => {
+    setPreviewLesson({ id: lesson.id, title: getLessonTitle(lesson, lang) })
+    setPreviewBusy(true); setPreviewError(''); setPreview(null)
+    try {
+      // Если превью уже считали (учитель закрыл экран и вернулся) — берём сохранённое,
+      // vision повторно не платим: разбор каждой страницы лежит в lesson_media.
+      const data = lesson.has_preview && !lesson.pending_media
+        ? await api.get(`/lessons/${lesson.id}/preview`)
+        : await api.post(`/lessons/${lesson.id}/extract-preview`, {})
+      setPreview({
+        words: (data?.words || []).map(w => ({ ...w, checked: w.isNew !== false && !w.isFunction })),
+        sentences: (data?.sentences || []).map(s => ({ ...s, checked: true })),
+        grammar_points: data?.grammar_points || [],
+      })
+    } catch (e) {
+      setPreviewError(e.message)
+    } finally { setPreviewBusy(false) }
+  }
+
+  const confirmPreview = async () => {
+    const id = previewLesson.id
+    setPreviewBusy(true)
+    try {
+      const words = preview.words.filter(w => w.checked).map(({ checked, ...w }) => w)
+      const sentences = preview.sentences.filter(s => s.checked).map(({ checked, ...s }) => s)
+      await api.post(`/lessons/${id}/confirm`, { words, sentences, grammar_points: preview.grammar_points })
+      closePreview()
+      setProcessing(id)
+      setLessons(prev => prev.map(l => l.id === id ? { ...l, status: 'processing', progress: t.common.starting } : l))
+      const poll = setInterval(async () => {
+        const updated = await api.get(`/lessons/${id}`)
+        setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updated, preview: undefined } : l))
+        if (updated.status !== 'processing') { clearInterval(poll); setProcessing(null) }
+      }, 3000)
+    } catch (e) { setPreviewError(e.message); setPreviewBusy(false) }
+  }
+
+  // Закрыть экран, ничего не теряя: фото остаются распознанными, превью лежит в уроке,
+  // вернуться к разбору можно в любой момент. Урок при этом НЕ удаляем — в отличие от
+  // отмены при создании нового урока, где удалять нечего.
+  const closePreview = () => { setPreviewLesson(null); setPreview(null); setPreviewError(''); setPreviewBusy(false) }
+
+  const toggleWord = (idx) => setPreview(p => ({ ...p, words: p.words.map((w, i) => i === idx ? { ...w, checked: !w.checked } : w) }))
+  const toggleSentence = (idx) => setPreview(p => ({ ...p, sentences: p.sentences.map((s, i) => i === idx ? { ...s, checked: !s.checked } : s) }))
+  const toggleGroup = (idxs, value) => setPreview(p => {
+    const set = new Set(idxs)
+    return { ...p, words: p.words.map((w, i) => set.has(i) ? { ...w, checked: value } : w) }
+  })
+  const addManualWord = () => {
+    const de = newWordDe.trim()
+    if (!de) return
+    setPreview(p => ({ ...p, words: [...p.words, { word_de: de, translation_ru: newWordTr.trim(), example_sentence: null, source: 'extra', media_id: null, checked: true }] }))
+    setNewWordDe(''); setNewWordTr('')
+  }
+  const addManualSentence = () => {
+    const text = newSentence.trim()
+    if (!text) return
+    setPreview(p => ({ ...p, sentences: [...p.sentences, { text, translation_ru: null, source: 'extra', checked: true }] }))
+    setNewSentence('')
+  }
 
   const handleProcess = async (id) => {
     setProcessing(id)
@@ -340,6 +416,45 @@ export default function LessonList() {
   const donePct       = totalWords > 0 ? Math.round(doneWords / totalWords * 100) : 0
   const doneLessons   = lessons.filter(l => l.status === 'done').length
 
+  // Экран разбора фото занимает всю страницу — как при создании урока, чтобы длинный
+  // список слов не ютился в модалке поверх карточек.
+  if (previewLesson) {
+    const N = NSTR[lang] || NSTR.en
+    if (previewBusy && !preview) {
+      return (
+        <div style={{ padding: '40px 0', textAlign: 'center' }}>
+          <div style={{ fontSize: 15, marginBottom: 8 }}>⏳ {t.lessons.processing.extracting}</div>
+          <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{previewLesson.title}</div>
+        </div>
+      )
+    }
+    if (!preview) {
+      return (
+        <div style={{ padding: '40px 0', textAlign: 'center' }}>
+          <div style={{ color: 'var(--danger)', marginBottom: 12 }}>{previewError || t.common.error}</div>
+          <button onClick={closePreview}>{N.pv.cancel}</button>
+        </div>
+      )
+    }
+    return (
+      <PreviewScreen
+        preview={preview}
+        error={previewError}
+        N={{ ...N.pv, title: `👀 ${previewLesson.title}` }}
+        onToggleWord={toggleWord}
+        onToggleGroup={toggleGroup}
+        onToggleSentence={toggleSentence}
+        newWordDe={newWordDe} setNewWordDe={setNewWordDe}
+        newWordTr={newWordTr} setNewWordTr={setNewWordTr}
+        onAddWord={addManualWord}
+        newSentence={newSentence} setNewSentence={setNewSentence}
+        onAddSentence={addManualSentence}
+        onConfirm={confirmPreview}
+        onCancel={closePreview}
+      />
+    )
+  }
+
   return (
     <div style={{ paddingTop: 8, paddingBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', margin: '0 0 16px' }}>
@@ -469,6 +584,15 @@ export default function LessonList() {
                             <button onClick={() => handleProcess(lesson.id)} disabled={processing === lesson.id}
                               style={actionBtn('var(--accent)', 'var(--accent-ink)')}>
                               {processing === lesson.id ? '⏳' : t.lessons.processAction}
+                            </button>
+                          )}
+                          {/* Есть нераспознанные фото (или недоподтверждённый разбор) — предлагаем
+                              разобрать их с галочками, а не заливать в урок целиком. */}
+                          {(lesson.pending_media > 0 || lesson.has_preview) && (
+                            <button onClick={() => openPreview(lesson)} disabled={processing === lesson.id}
+                              title={t.lessons.reviewPhotosTitle}
+                              style={actionBtn('var(--gold)', 'var(--gold-ink, #3a2c00)')}>
+                              👀 {t.lessons.reviewPhotos}{lesson.pending_media > 0 ? ` (${lesson.pending_media})` : ''}
                             </button>
                           )}
                           {status === 'done' && (

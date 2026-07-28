@@ -381,6 +381,8 @@ export const de = {
     trainerTitle: 'Mit dem AI-Trainer über die Wörter dieser Lektion sprechen',
     processAction: '▶ Verarbeiten',
     enrichBtn: '✨ Alles verarbeiten',
+    reviewPhotos: '👀 Fotos durchsehen',
+    reviewPhotosTitle: 'Zeigen, was auf den neuen Fotos erkannt wurde: neue Wörter sind markiert, Wiederholungen und Funktionswörter nicht',
     enrichTitle: 'Das Fehlende ergänzen: Übersetzungen, Bilder, Übersetzungen der Übungen in alle Sprachen',
     moreActions: 'Weitere Aktionen',
     drawBtn: '🎨 Bilder zeichnen',

@@ -376,6 +376,8 @@ export const sq = {
     trainerTitle: 'Bisedo me trajnerin AI për fjalët e këtij mësimi',
     processAction: '▶ Përpunoni',
     enrichBtn: '✨ Përpunoni gjithçka',
+    reviewPhotos: '👀 Shqyrto fotot',
+    reviewPhotosTitle: 'Tregon çfarë u njoh në fotot e reja: fjalët e reja janë të shënuara, përsëritjet dhe fjalët funksionale jo',
     enrichTitle: 'Plotëso të munguarat: përkthime, figura, përkthime ushtrimesh në të gjitha gjuhët',
     moreActions: 'Veprime të tjera',
     drawBtn: '🎨 Vizato figura',

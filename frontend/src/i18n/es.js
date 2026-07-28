@@ -371,6 +371,8 @@ export const es = {
     trainerTitle: 'Hablar con el entrenador de IA sobre las palabras de esta lección',
     processAction: '▶ Procesar',
     enrichBtn: '✨ Procesar todo',
+    reviewPhotos: '👀 Revisar fotos',
+    reviewPhotosTitle: 'Muestra lo reconocido en las fotos nuevas: las palabras nuevas están marcadas, las repetidas y funcionales no',
     enrichTitle: 'Completar lo que falta: traducciones, imágenes, traducciones de ejercicios en todos los idiomas',
     moreActions: 'Más acciones',
     drawBtn: '🎨 Dibujar imágenes',

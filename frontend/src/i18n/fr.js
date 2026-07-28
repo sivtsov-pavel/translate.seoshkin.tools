@@ -370,6 +370,8 @@ export const fr = {
     trainerTitle: 'Parler avec l\'entraîneur AI sur les mots de cette leçon',
     processAction: '▶ Traiter',
     enrichBtn: '✨ Traiter tout',
+    reviewPhotos: '👀 Examiner les photos',
+    reviewPhotosTitle: 'Montre ce qui a été reconnu sur les nouvelles photos : les mots nouveaux sont cochés, les répétitions et mots outils non',
     enrichTitle: 'Compléter ce qui manque : traductions, images, traductions des exercices dans toutes les langues',
     moreActions: 'Autres actions',
     drawBtn: '🎨 Dessiner des images',

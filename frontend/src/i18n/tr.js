@@ -370,6 +370,8 @@ export const tr = {
     trainerTitle: 'Bu dersin kelimeleriyle AI eğitmeniyle konuş',
     processAction: '▶ İşle',
     enrichBtn: '✨ Hepsini işle',
+    reviewPhotos: '👀 Fotoğrafları incele',
+    reviewPhotosTitle: 'Yeni fotoğraflarda neyin tanındığını gösterir: yeni kelimeler işaretli, tekrarlar ve işlev sözcükleri değil',
     enrichTitle: 'Eksik olanı tamamla: çeviriler, resimler, tüm dillerde alıştırma çevirileri',
     moreActions: 'Daha fazla eylem',
     drawBtn: '🎨 Resimler çiz',

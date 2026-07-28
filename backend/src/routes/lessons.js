@@ -86,6 +86,11 @@ export async function lessonsRoutes(fastify) {
           -- смысл только пока идёт/упала обработка (перекрывает l.progress из l.*, см. ниже).
           CASE WHEN l.status IN ('processing', 'pending', 'error') THEN l.progress ELSE NULL END AS progress,
           COUNT(DISTINCT lm.id)::int AS media_count,
+          -- Фото, которые загружены, но ещё не распознаны: по ним показываем кнопку
+          -- «разобрать». Без счётчика учитель грузит фото и не понимает, почему ничего
+          -- не происходит — загрузка только складывает файлы, разбор запускается отдельно.
+          COUNT(DISTINCT lm.id) FILTER (WHERE NOT lm.processed AND lm.type = 'photo')::int AS pending_media,
+          (l.preview IS NOT NULL) AS has_preview,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images,
           COUNT(DISTINCT e.id)::int AS exercises_total
@@ -98,7 +103,9 @@ export async function lessonsRoutes(fastify) {
        ORDER BY l.date DESC`,
       [target]
     )
-    return rows
+    // `l.*` тянет и preview — это весь разбор фото, сотни слов JSON на урок. В списке он
+    // не нужен (есть флаг has_preview), а трафик на телефоне раздувает заметно.
+    return rows.map(({ preview, ...rest }) => rest)
   })
 
   // Добавить letter_fill к уроку без сброса прогресса

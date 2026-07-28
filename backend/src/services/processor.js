@@ -621,22 +621,35 @@ export async function extractLessonPreview(lessonId) {
   const { rows: fresh } = await db.query(
     "SELECT * FROM lesson_media WHERE lesson_id=$1 AND type='photo' AND processed=false ORDER BY id", [lessonId])
 
-  // Уже готовое превью отдаём сразу — не тратим деньги на повторный разбор.
-  if (!fresh.length) {
-    const { rows: saved } = await db.query('SELECT preview FROM lessons WHERE id=$1', [lessonId])
-    if (saved[0]?.preview) return saved[0].preview
-  }
+  // Незакрытый разбор: превью посчитано, но учитель ещё не подтвердил выбор
+  // (после подтверждения preview очищается — см. commitLessonWords).
+  const { rows: saved } = await db.query('SELECT preview FROM lessons WHERE id=$1', [lessonId])
+  const pendingPreview = saved[0]?.preview || null
 
-  // Фото помечаются обработанными сразу после распознавания. Если связь оборвалась ПОСЛЕ
-  // этого, но ДО сохранения превью — повторный запуск не должен возвращать пустоту и уж
-  // тем более платить за vision второй раз: разбор каждой страницы лежит в raw_extraction.
-  const media = fresh.length ? fresh : (await db.query(
-    "SELECT * FROM lesson_media WHERE lesson_id=$1 AND type='photo' AND raw_extraction IS NOT NULL ORDER BY id",
-    [lessonId])).rows
+  // Уже готовое превью отдаём сразу — не тратим деньги на повторный разбор.
+  if (!fresh.length && pendingPreview) return pendingPreview
+
+  // Фото помечаются обработанными сразу после распознавания. Дальше два случая, и в обоих
+  // берём страницы из raw_extraction, где разбор уже лежит, — vision второй раз не платим:
+  //  • связь оборвалась ПОСЛЕ пометки, но ДО сохранения превью (иначе вернулась бы пустота);
+  //  • учитель догрузил страницы поверх неподтверждённого разбора. Тогда считать только новые
+  //    нельзя: превью перезапишется ими, и ранее распознанное молча пропадёт из выбора.
+  const older = (pendingPreview || !fresh.length)
+    ? (await db.query(
+        "SELECT * FROM lesson_media WHERE lesson_id=$1 AND type='photo' AND raw_extraction IS NOT NULL ORDER BY id",
+        [lessonId])).rows
+    : []
+  const seen = new Set(fresh.map(m => m.id))
+  const media = [...older.filter(m => !seen.has(m.id)), ...fresh].sort((a, b) => a.id - b.id)
   if (!media.length) return { words: [], sentences: [], grammar_points: [] }
-  const { rows: lrow } = await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])
+  const { rows: lrow } = await db.query('SELECT owner_id, target_lang, status FROM lessons WHERE id=$1', [lessonId])
   const ownerId = lrow[0]?.owner_id
   const targetLang = lrow[0]?.target_lang || 'de'
+  // Куда вернуть урок после разбора. Для НОВОГО урока это 'pending' (слов ещё нет,
+  // разбор впереди). Для готового — 'done': учитель дозагрузил тетрадь в урок, который
+  // уже проходят ученики, и на время выбора галочек урок не должен исчезать у них из
+  // списка (ученику видны только done-уроки).
+  const backTo = lrow[0]?.status === 'done' ? 'done' : 'pending'
   const client = await getOwnerClient(ownerId)
   await db.query("UPDATE lessons SET status='processing', progress=$1 WHERE id=$2", [`Распознаю ${media.length} фото...`, lessonId])
 
@@ -704,10 +717,13 @@ export async function extractLessonPreview(lessonId) {
       if (Array.isArray(cons.grammar_points)) grammarPoints.push(...cons.grammar_points)
     }
     const preview = { words, sentences, grammar_points: grammarPoints }
-    await db.query("UPDATE lessons SET status='pending', progress=$1, preview=$2 WHERE id=$3",
-      [`Превью готово: слов ${words.length}, предложений ${sentences.length}`, JSON.stringify(preview), lessonId])
+    await db.query("UPDATE lessons SET status=$4, progress=$1, preview=$2 WHERE id=$3",
+      [`Превью готово: слов ${words.length}, предложений ${sentences.length}`, JSON.stringify(preview), lessonId, backTo])
   } catch (err) {
-    await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 150), lessonId])
+    // Готовый урок в 'error' не роняем: у него есть слова и упражнения, ученики его проходят.
+    // Ошибка распознавания новых фото не должна выключать рабочий урок.
+    await db.query("UPDATE lessons SET status=$3, progress=$1 WHERE id=$2",
+      [String(err.message).slice(0, 150), lessonId, backTo === 'done' ? 'done' : 'error'])
     throw err
   }
   return { words, sentences, grammar_points: grammarPoints }

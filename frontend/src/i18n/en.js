@@ -376,6 +376,8 @@ export const en = {
     trainerTitle: 'Talk to the AI trainer about the words in this lesson',
     processAction: '▶ Process',
     enrichBtn: '✨ Process everything',
+    reviewPhotos: '👀 Review photos',
+    reviewPhotosTitle: 'See what was recognized on the new photos: new words are checked, repeats and function words are not',
     enrichTitle: 'Supplement the missing: translations, pictures, exercise translations in all languages',
     moreActions: 'More actions',
     drawBtn: '🎨 Draw pictures',
