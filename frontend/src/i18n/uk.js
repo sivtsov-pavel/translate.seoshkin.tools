@@ -137,6 +137,7 @@ export const uk = {
     needsScheduleMultiDesc: 'Спочатку обери курс, потім зручні дні — уроки відкриються.',
     pickCoursePlaceholder: '— Обери курс —',
     configureBtn: 'Налаштувати →',
+    masteredLabel: 'Пройдено вправ',
     passedBadge: '✓ пройдено',
     progressLessons: 'Навчання за уроками',
     progressWords: '💪 Закріплення знань · слова',

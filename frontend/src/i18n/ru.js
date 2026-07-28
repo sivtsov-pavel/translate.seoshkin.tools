@@ -140,6 +140,7 @@ export const ru = {
     needsScheduleMultiDesc: 'Сначала выбери курс, затем удобные дни — уроки откроются.',
     pickCoursePlaceholder: '— Выбери курс —',
     configureBtn: 'Настроить →',
+    masteredLabel: 'Пройдено упражнений',
     passedBadge: '✓ пройдено',
     progressLessons: 'Обучение по урокам',
     progressWords: '💪 Усиление знаний · слова',

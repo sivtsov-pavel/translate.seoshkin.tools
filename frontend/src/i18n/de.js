@@ -140,6 +140,7 @@ export const de = {
     needsScheduleMultiDesc: 'Wähle zuerst einen Kurs, dann passende Tage — die Lektionen werden freigeschaltet.',
     pickCoursePlaceholder: '— Kurs wählen —',
     configureBtn: 'Einrichten →',
+    masteredLabel: 'Erledigte Übungen',
     passedBadge: '✓ bestanden',
     progressLessons: 'Lernen nach Lektionen',
     progressWords: '💪 Wissen festigen · Wörter',

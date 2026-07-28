@@ -139,6 +139,7 @@ export const ar = {
     needsScheduleMultiDesc: 'اختر أولاً الدورة ثم الأيام المناسبة — ستُفتح الدروس.',
     pickCoursePlaceholder: '— اختر دورة —',
     configureBtn: 'ضبط ←',
+    masteredLabel: 'التمارين المكتملة',
     passedBadge: '✓ اجتاز',
     progressLessons: 'التعلم حسب الدروس',
     progressWords: '💪 تعزيز المعرفة · الكلمات',

@@ -78,11 +78,25 @@ const SECTIONS_RU = [
     id: 'progress',
     icon: '📊',
     title: 'Как считаются уроки, прогресс и «баллы»',
-    body: `КОГДА УРОК СЧИТАЕТСЯ ПРОЙДЕННЫМ
-Урок засчитан, когда КАЖДОЕ слово урока отработано хотя бы в одном упражнении
-(любого из 7 типов) — не нужно проходить все 7 упражнений каждого слова.
-Как только все слова «задеты» — урок пройден: в курсе открывается следующий урок,
-а счётчик «📘 уроки» на дашборде растёт.
+    body: `ДВА РАЗНЫХ ПОНЯТИЯ: «УРОК ЗАСЧИТАН» И «УРОК ОСВОЕН»
+
+Урок ЗАСЧИТАН, когда каждое слово отработано хотя бы одним упражнением любого типа.
+С этого момента открывается следующий урок курса и растёт счётчик «📘 уроки».
+Двигаться вперёд специально не мешаем: упереться в стену и бросить — худший исход.
+
+Урок ОСВОЕН, когда пройдены ВСЕ его упражнения. На карточке урока видно полосу
+«Пройдено упражнений — 12 / 47», а вместо галочки стоит процент, пока он не 100.
+
+Зачем так. Слово запоминается, когда встретилось в разных заданиях: узнал на карточке,
+собрал по буквам, вставил в предложение, написал сам, услышал в диктанте. Если
+прощёлкать только карточки, урок засчитается — но слова забудутся через неделю.
+Поэтому на финише урока главная кнопка — «Продолжить упражнения», а «следующий урок»
+становится второстепенным, пока в текущем осталось незакрытое.
+
+ЕСЛИ УПРАЖНЕНИЕ СЕЙЧАС НЕУДОБНО
+Произношение и диктант можно отложить кнопкой — они уйдут в «хвосты» и не будут
+мешать. Ночью или в транспорте это нормально: вернётесь к ним, когда сможете говорить
+вслух. Отложенные засчитываются как пройденные — вы их не пропустили, а перенесли.
 
 СТАТУС СЛОВА (🔵 новое → 🟡 учу → 🟢 знаю)
 • 🟡 «учу» — после первого успешного ответа по слову
@@ -324,11 +338,27 @@ Say the word into the microphone — the system checks your pronunciation.`,
     id: 'progress',
     icon: '📊',
     title: 'How lessons, progress & points are counted',
-    body: `WHEN A LESSON COUNTS AS COMPLETED
-A lesson is completed once EVERY word in it has been practiced in at least one
-exercise (any of the 7 types) — you don't need to finish all 7 exercises per word.
-Once every word is touched, the lesson is done: the next lesson in the course
-unlocks and the "📘 lessons" counter on the dashboard goes up.
+    body: `TWO DIFFERENT THINGS: "LESSON COMPLETED" AND "LESSON MASTERED"
+
+A lesson is COMPLETED once every word has been practiced in at least one exercise of
+any type. From that moment the next lesson unlocks and the "📘 lessons" counter grows.
+We deliberately don't block your way forward: hitting a wall and quitting is the worst
+possible outcome.
+
+A lesson is MASTERED once ALL its exercises are done. The lesson card shows a bar
+"Exercises completed — 12 / 47", and instead of a checkmark you see the percentage
+until it reaches 100.
+
+Why this way. A word sticks when you meet it in different tasks: recognise it on a card,
+spell it out, drop it into a sentence, write your own, hear it in dictation. Click
+through flashcards only and the lesson will count — but the words fade within a week.
+That's why on the lesson finish screen the main button is "Continue exercises", while
+"next lesson" stays secondary as long as something is left unfinished.
+
+IF AN EXERCISE IS AWKWARD RIGHT NOW
+Pronunciation and dictation can be postponed — they move to "leftovers" and stop getting
+in the way. At night or on a bus that's perfectly fine: come back when you can speak out
+loud. Postponed exercises count as done — you didn't skip them, you rescheduled them.
 
 WORD STATUS (🔵 new → 🟡 learning → 🟢 known)
 • 🟡 "learning" — after the first correct answer for the word

@@ -137,6 +137,7 @@ export const tr = {
     needsScheduleMultiDesc: 'Önce bir kurs seç, sonra uygun günleri — dersler açılacak.',
     pickCoursePlaceholder: '— Kurs seç —',
     configureBtn: 'Ayarla →',
+    masteredLabel: 'Tamamlanan alıştırmalar',
     passedBadge: '✓ geçildi',
     progressLessons: 'Derslere göre öğrenme',
     progressWords: '💪 Bilgi pekiştirme · kelimeler',

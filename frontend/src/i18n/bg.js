@@ -137,6 +137,7 @@ export const bg = {
     needsScheduleMultiDesc: 'Първо избери курс, после удобни дни — уроците ще се отключат.',
     pickCoursePlaceholder: '— Избери курс —',
     configureBtn: 'Настрой →',
+    masteredLabel: 'Завършени упражнения',
     passedBadge: '✓ преминат',
     progressLessons: 'Обучение по уроци',
     progressWords: '💪 Затвърждаване на знания · думи',

@@ -261,7 +261,7 @@ export default function ExerciseSession() {
               ученик упирался в «На главную», хотя в уроке ждали десятки упражнений. */}
           {(!lessonDone || remaining > 0) && (
             <button onClick={continuePractice} disabled={continuing}
-              style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
               {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'}${remaining > 0 ? ` (${remaining})` : ''} →`}
             </button>
           )}
@@ -270,7 +270,12 @@ export default function ExerciseSession() {
               видна ВСЕГДА, даже когда остались хвосты. Хвосты — вторичная кнопка ниже. */}
           {showFan && next && next.playable && (
             <button onClick={() => goNextLesson(next.id)}
-              style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+              style={remaining > 0
+                // В уроке ещё есть упражнения — «дальше» делаем вторичной кнопкой.
+                // Не запрещаем перейти, но по умолчанию зовём доучить: прощёлкать
+                // карточки и уйти — не то же самое, что пройти урок.
+                ? { width: '100%', padding: '14px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }
+                : { width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
               ▶ {t.exercise.continueBtn || 'Продолжить'} → {getLessonTitle(next.title, next.title_translations, lang)}
             </button>
           )}
@@ -286,6 +291,15 @@ export default function ExerciseSession() {
           {showFan && !next && total > 0 && (
             <div style={{ padding: '12px', borderRadius: 12, background: 'var(--good-soft, rgba(34,197,94,.12))', color: 'var(--good)', fontSize: 14, fontWeight: 600, marginBottom: 10 }}>
               🎓 {t.exercise.courseDone || 'Это последний урок курса — поздравляю!'}
+            </div>
+          )}
+
+          {/* Честно говорим, что урок ещё не пройден целиком — без блокировки, но видно */}
+          {remaining > 0 && showFan && (
+            <div style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--surface-2)', color: 'var(--ink-soft)', fontSize: 13, marginBottom: 10, lineHeight: 1.5 }}>
+              {t.exercise.notFullyDone
+                ? t.exercise.notFullyDone(remaining)
+                : `В уроке осталось ${remaining} упражнений. Слово запоминается, когда пройдены все типы, а не только карточки.`}
             </div>
           )}
 

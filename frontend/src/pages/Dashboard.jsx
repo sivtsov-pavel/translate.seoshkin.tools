@@ -611,7 +611,13 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
     sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill,
     speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation, dictation: t.exercise.dictation,
   }
-  const tag = lesson.status === 'done' ? t.dashboard.passedBadge
+  // Освоение урока: сколько упражнений реально сделано из всех. Отличается от «пройден»:
+  // урок засчитывается, когда затронуто каждое слово, а освоен — когда сделаны ВСЕ
+  // упражнения. Движение вперёд не блокируем (так на рынке и делают — блокировка
+  // демотивирует), но показываем неполноту: видимая шкала тянет вернуться и добить.
+  const mastered = lesson.mastered_pct
+  const tag = lesson.status === 'done'
+    ? (mastered != null && mastered < 100 ? `${mastered}%` : t.dashboard.passedBadge)
     : lesson.status === 'current' ? t.dashboard.statusProgress : t.dashboard.statusNew
 
   const loadWords = async () => {
@@ -690,6 +696,21 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
         <span className="dl-detail-title">{title}</span>
         <span className={'dl-detail-tag' + (lesson.status === 'done' ? ' dl-detail-tag--done' : '')}>{tag}</span>
       </div>
+
+      {/* Полоса освоения урока — видно, что пройдено не всё, даже если урок «зачтён» */}
+      {mastered != null && lesson.total_ex > 0 && (
+        <div style={{ padding: '0 0 8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 4 }}>
+            <span>{t.dashboard.masteredLabel || 'Пройдено упражнений'}</span>
+            <b style={{ color: mastered >= 100 ? 'var(--good)' : 'var(--ink-soft)' }}>
+              {lesson.mastered_ex} / {lesson.total_ex}
+            </b>
+          </div>
+          <div style={{ height: 6, borderRadius: 4, background: 'var(--surface-2)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${mastered}%`, background: mastered >= 100 ? 'var(--good)' : 'var(--accent)', borderRadius: 4, transition: 'width .4s' }} />
+          </div>
+        </div>
+      )}
 
       <div className="dl-detail-sub">
         {t.dashboard.exercisesWaiting(lesson.total || 0)}{' '}

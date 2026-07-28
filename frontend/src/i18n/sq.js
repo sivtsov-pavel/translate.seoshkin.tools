@@ -137,6 +137,7 @@ export const sq = {
     needsScheduleMultiDesc: 'Së pari zgjidh një kurs, pastaj ditët e përshtatshme — mësimet do të hapen.',
     pickCoursePlaceholder: '— Zgjidh kursin —',
     configureBtn: 'Cakto →',
+    masteredLabel: 'Ushtrime të përfunduara',
     passedBadge: '✓ kaluar',
     progressLessons: 'Mësim sipas mësimeve',
     progressWords: '💪 Përforcim njohurish · fjalë',

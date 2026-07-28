@@ -137,6 +137,7 @@ export const fr = {
     needsScheduleMultiDesc: "Choisis d'abord un cours, puis des jours pratiques — les leçons se débloqueront.",
     pickCoursePlaceholder: '— Choisis un cours —',
     configureBtn: 'Configurer →',
+    masteredLabel: 'Exercices terminés',
     passedBadge: '✓ réussi',
     progressLessons: 'Apprentissage par leçons',
     progressWords: '💪 Renforcement des connaissances · mots',

@@ -582,13 +582,19 @@ export async function exercisesRoutes(fastify) {
       for (const r of wRows) {
         if (lessonsMap[r.lesson_id]) lessonsMap[r.lesson_id].words_count = r.words_count
       }
-      // Сколько упражнений по уроку уже "в будущем" (изучены, не требуют повторения сегодня)
+      // Две РАЗНЫЕ величины, их легко перепутать:
+      //  • done_ex     — упражнения «в будущем» по SRS (повторять пока не нужно);
+      //  • mastered_ex — упражнения, которые ученик реально СДЕЛАЛ хотя бы раз.
+      // Освоение урока считаем по второй: она отвечает на вопрос «я прошёл урок целиком?».
+      // Отложенные в хвосты засчитываем — ученик их осознанно перенёс, а не пропустил.
       const { rows: doneByLesson } = await db.query(
         `SELECT e.lesson_id,
                 COUNT(*)::int AS total_ex,
-                COUNT(*) FILTER (WHERE uep.next_review_date > $2)::int AS done_ex
+                COUNT(*) FILTER (WHERE uep.next_review_date > $2)::int AS done_ex,
+                COUNT(*) FILTER (WHERE uep.exercise_id IS NOT NULL OR d.exercise_id IS NOT NULL)::int AS mastered_ex
          FROM exercises e
          LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+         LEFT JOIN exercise_deferrals d ON d.exercise_id = e.id AND d.user_id = $1
          WHERE e.lesson_id = ANY($3)
          GROUP BY e.lesson_id`,
         [userId, today, lessonIds]
@@ -598,6 +604,8 @@ export async function exercisesRoutes(fastify) {
           lessonsMap[r.lesson_id].total_ex = r.total_ex
           lessonsMap[r.lesson_id].done_ex  = r.done_ex
           lessonsMap[r.lesson_id].done_pct = r.total_ex > 0 ? Math.round(r.done_ex / r.total_ex * 100) : 0
+          lessonsMap[r.lesson_id].mastered_ex = r.mastered_ex
+          lessonsMap[r.lesson_id].mastered_pct = r.total_ex > 0 ? Math.round(r.mastered_ex / r.total_ex * 100) : 0
         }
       }
     }

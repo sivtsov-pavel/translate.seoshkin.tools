@@ -137,6 +137,7 @@ export const en = {
     needsScheduleMultiDesc: 'First pick a course, then convenient days — lessons will unlock.',
     pickCoursePlaceholder: '— Pick a course —',
     configureBtn: 'Set up →',
+    masteredLabel: 'Exercises completed',
     passedBadge: '✓ passed',
     progressLessons: 'Learning by lessons',
     progressWords: '💪 Reinforcing knowledge · words',

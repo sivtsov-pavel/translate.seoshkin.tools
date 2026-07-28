@@ -137,6 +137,7 @@ export const es = {
     needsScheduleMultiDesc: 'Primero elige un curso, luego los días convenientes — las lecciones se desbloquearán.',
     pickCoursePlaceholder: '— Elige un curso —',
     configureBtn: 'Configurar →',
+    masteredLabel: 'Ejercicios completados',
     passedBadge: '✓ aprobado',
     progressLessons: 'Aprendizaje por lecciones',
     progressWords: '💪 Refuerzo de conocimientos · palabras',
