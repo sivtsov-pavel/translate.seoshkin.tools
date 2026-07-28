@@ -598,7 +598,9 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const [exOpen, setExOpen] = useState(true)
-  const [wordsOpen, setWordsOpen] = useState(false)
+  // Слова урока показываем сразу развёрнутыми: карточка открывается только для выбранного
+  // урока, так что лишних запросов нет. Свёрнутый список ученики просто не находили.
+  const [wordsOpen, setWordsOpen] = useState(true)
   const [words, setWords] = useState(null)
   const [listening, setListening] = useState(false)
 
@@ -628,6 +630,8 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
     setWords(data); return data
   }
   const toggleWords = async () => { await loadWords(); setWordsOpen(v => !v) }
+  // Карточка открылась — сразу тянем слова, чтобы список был виден без лишнего клика
+  useEffect(() => { loadWords().catch(() => {}) }, [id])
   const handleListen = async () => {
     const list = await loadWords()
     if (!list?.length) return
@@ -761,8 +765,10 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
             <button className="dl-ctrl-btn" onClick={() => window.open(`/print/${id}`, '_blank')}><Printer size={15} /></button>
           </>
         )}
-        <button className="dl-ctrl-pencil" onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}>
-          <Pencil size={14} /> {lesson.total || 0}
+        {/* Раньше был просто карандаш с числом — никто не понимал, что это зачёт по уроку */}
+        <button className="dl-ctrl-pencil" title={t.dashboard.examTitle || 'Зачёт по уроку — все упражнения подряд'}
+          onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}>
+          <Pencil size={14} /> {t.dashboard.examShort || 'Зачёт'} · {lesson.total || 0}
         </button>
         <span className="dl-ctrl-words">{t.dashboard.lessonWords} <b>{wordsCount}</b></span>
         <button className="dl-linklike dl-ctrl-chevron" onClick={toggleWords}>
@@ -772,6 +778,11 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
 
       {wordsOpen && (
         <div className="dl-word-list">
+          {words && words.length > 0 && (
+            <div style={{ fontSize: 11.5, color: 'var(--ink-soft)', padding: '2px 0 6px' }}>
+              📖 {t.dashboard.sourceBook} · ✏️ {t.dashboard.sourceExtraFull}
+            </div>
+          )}
           {(!words || !words.length) && <div className="dl-word-empty">—</div>}
           {words && words.map(w => {
             const tr = getTranslation(w.translations, lang, w.translation_ru)

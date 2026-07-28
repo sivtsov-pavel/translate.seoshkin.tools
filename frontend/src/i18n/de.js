@@ -168,6 +168,8 @@ export const de = {
     readyBadge: 'FERTIG',
     cameraTitle: 'Fotografieren — Wörter erkennen',
     resetConfirm: 'Lektionsfortschritt zurücksetzen und neu beginnen?',
+    examShort: 'Test',
+    examTitle: 'Lektionstest — alle Übungen nacheinander',
     sourceBook: 'Aus dem Lehrbuch',
     sourceExtra: 'Aus dem Heft',
     sourceExtraFull: 'Aus dem Heft (zusätzlich)',

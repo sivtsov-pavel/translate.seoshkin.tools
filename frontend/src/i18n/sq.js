@@ -165,6 +165,8 @@ export const sq = {
     readyBadge: 'GATI',
     cameraTitle: 'Fotografo — analizë fjalësh',
     resetConfirm: 'Të rivendoset progresi i mësimit dhe të kryhet nga fillimi?',
+    examShort: 'Test',
+    examTitle: 'Test i mësimit — të gjitha ushtrimet me radhë',
     sourceBook: 'Nga libri',
     sourceExtra: 'Nga fletorja',
     sourceExtraFull: 'Nga fletorja (shtesë)',

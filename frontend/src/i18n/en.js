@@ -165,6 +165,8 @@ export const en = {
     readyBadge: 'READY',
     cameraTitle: 'Take a photo — parse words',
     resetConfirm: 'Reset lesson progress and start over?',
+    examShort: 'Test',
+    examTitle: 'Lesson test — all exercises in a row',
     sourceBook: 'From textbook',
     sourceExtra: 'From notebook',
     sourceExtraFull: 'From notebook (extra)',

@@ -172,6 +172,8 @@ export const ru = {
     readyBadge: 'ГОТОВА',
     cameraTitle: 'Сфотографировать — разбор слов',
     resetConfirm: 'Сбросить прогресс урока и пройти заново?',
+    examShort: 'Зачёт',
+    examTitle: 'Зачёт по уроку — все упражнения подряд',
     sourceBook: 'Из учебника',
     sourceExtra: 'Из тетради',
     sourceExtraFull: 'Из тетради (доп.)',

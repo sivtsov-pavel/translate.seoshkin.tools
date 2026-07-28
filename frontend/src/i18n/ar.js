@@ -167,6 +167,8 @@ export const ar = {
     readyBadge: 'جاهزة',
     cameraTitle: 'التقط صورة — تحليل الكلمات',
     resetConfirm: 'إعادة ضبط تقدّم الدرس والبدء من جديد؟',
+    examShort: 'اختبار',
+    examTitle: 'اختبار الدرس — كل التمارين تباعًا',
     sourceBook: 'من الكتاب المدرسي',
     sourceExtra: 'من الدفتر',
     sourceExtraFull: 'من الدفتر (إضافي)',

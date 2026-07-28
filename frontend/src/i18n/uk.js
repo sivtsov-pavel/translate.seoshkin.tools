@@ -165,6 +165,8 @@ export const uk = {
     readyBadge: 'ГОТОВА',
     cameraTitle: 'Сфотографувати — розбір слів',
     resetConfirm: 'Скинути прогрес уроку і пройти заново?',
+    examShort: 'Залік',
+    examTitle: 'Залік з уроку — усі вправи поспіль',
     sourceBook: 'З підручника',
     sourceExtra: 'Із зошита',
     sourceExtraFull: 'Із зошита (дод.)',

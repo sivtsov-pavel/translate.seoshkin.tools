@@ -165,6 +165,8 @@ export const fr = {
     readyBadge: 'PRÊTE',
     cameraTitle: 'Prendre en photo — analyse des mots',
     resetConfirm: 'Réinitialiser la progression de la leçon et recommencer ?',
+    examShort: 'Test',
+    examTitle: 'Test de la leçon — tous les exercices à la suite',
     sourceBook: 'Du manuel',
     sourceExtra: 'Du cahier',
     sourceExtraFull: 'Du cahier (supp.)',

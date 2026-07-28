@@ -165,6 +165,8 @@ export const tr = {
     readyBadge: 'HAZIR',
     cameraTitle: 'Fotoğraf çek — kelime çözümü',
     resetConfirm: 'Ders ilerlemesi sıfırlansın ve yeniden başlansın mı?',
+    examShort: 'Sınav',
+    examTitle: 'Ders sınavı — tüm alıştırmalar arka arkaya',
     sourceBook: 'Ders kitabından',
     sourceExtra: 'Defterden',
     sourceExtraFull: 'Defterden (ek)',

@@ -165,6 +165,8 @@ export const bg = {
     readyBadge: 'ГОТОВА',
     cameraTitle: 'Снимай — разпознаване на думи',
     resetConfirm: 'Да нулираме прогреса на урока и да го преминем отново?',
+    examShort: 'Тест',
+    examTitle: 'Тест по урока — всички упражнения подред',
     sourceBook: 'От учебника',
     sourceExtra: 'От тетрадката',
     sourceExtraFull: 'От тетрадката (доп.)',

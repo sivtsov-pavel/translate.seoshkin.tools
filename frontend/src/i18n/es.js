@@ -165,6 +165,8 @@ export const es = {
     readyBadge: 'LISTA',
     cameraTitle: 'Fotografiar — analizar palabras',
     resetConfirm: '¿Reiniciar el progreso de la lección y empezar de nuevo?',
+    examShort: 'Examen',
+    examTitle: 'Examen de la lección — todos los ejercicios seguidos',
     sourceBook: 'Del libro',
     sourceExtra: 'Del cuaderno',
     sourceExtraFull: 'Del cuaderno (extra)',
