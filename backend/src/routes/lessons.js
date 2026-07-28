@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { db } from '../db/index.js'
 import { generateLetterFill } from '../services/claude.js'
 import { regenerateExercisesFromDb } from '../services/processor.js'
@@ -388,6 +389,7 @@ export async function lessonsRoutes(fastify) {
 
     const parts = request.parts()
     const savedFiles = []
+    const duplicates = []   // страницы, которые уже есть в другом уроке этого учителя
 
     for await (const part of parts) {
       if (part.type !== 'file') continue
@@ -400,9 +402,10 @@ export async function lessonsRoutes(fastify) {
           const buf = await part.toBuffer()
           const pages = await pdfToImages(buf)
           for (const p of pages) {
+            const pageHash = createHash('sha256').update(p.filename).digest('hex')
             const { rows } = await db.query(
-              "INSERT INTO lesson_media (lesson_id, type, file_path, source) VALUES ($1, 'photo', $2, $3) RETURNING id",
-              [lessonId, p.filename, source])
+              "INSERT INTO lesson_media (lesson_id, type, file_path, source, file_hash) VALUES ($1, 'photo', $2, $3, $4) RETURNING id",
+              [lessonId, p.filename, source, pageHash])
             savedFiles.push({ mediaId: rows[0].id, filename: p.filename, type: 'photo' })
           }
         } catch (e) {
@@ -412,11 +415,23 @@ export async function lessonsRoutes(fastify) {
       }
 
       const mediaType = mimeType.startsWith('audio') ? 'audio' : 'photo'
-      const { filename } = await fastify.saveUploadedFile(part)
+      const { filename, fileHash } = await fastify.saveUploadedFile(part)
+
+      // Тот же файл уже есть в ДРУГОМ уроке? Значит страницы грузят повторно —
+      // обычно после обновления страницы во время разбора. Не запрещаем (бывает, что
+      // фото правда нужно в двух уроках), но сообщаем, чтобы не платить дважды и не
+      // держать два одинаковых урока.
+      if (fileHash) {
+        const { rows: dup } = await db.query(
+          `SELECT m.lesson_id, l.title FROM lesson_media m JOIN lessons l ON l.id = m.lesson_id
+            WHERE m.file_hash = $1 AND m.lesson_id <> $2 AND l.owner_id = $3 LIMIT 1`,
+          [fileHash, lessonId, request.user.id])
+        if (dup[0]) duplicates.push({ filename: part.filename, lessonId: dup[0].lesson_id, lessonTitle: dup[0].title })
+      }
 
       const { rows } = await db.query(
-        'INSERT INTO lesson_media (lesson_id, type, file_path, source) VALUES ($1, $2, $3, $4) RETURNING id',
-        [lessonId, mediaType, filename, source]
+        'INSERT INTO lesson_media (lesson_id, type, file_path, source, file_hash) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        [lessonId, mediaType, filename, source, fileHash || null]
       )
       savedFiles.push({ mediaId: rows[0].id, filename, type: mediaType })
     }
@@ -425,7 +440,7 @@ export async function lessonsRoutes(fastify) {
     // терялась незаметно). Разбор — через явное превью: POST /extract-preview → учитель
     // проверяет/правит → POST /confirm. Для добавления фото к готовому уроку — как раньше,
     // кнопка «✨ Обработать всё» (эндпоинт /enrich, processNewMedia остаётся для неё).
-    return reply.status(201).send({ files: savedFiles, processing: false })
+    return reply.status(201).send({ files: savedFiles, processing: false, duplicates })
   })
 
   // Удалить одно загруженное медиа урока (фото/аудио) — чтобы переделать урок с нужными страницами.

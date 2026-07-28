@@ -150,15 +150,30 @@ function NewLessonInner() {
       setStatus('uploading')
       const totalFiles = photos.length + extraPhotos.length + audios.length
       setProgress(t.lessons.filesProgress(0, totalFiles))
+      // Собираем предупреждения о страницах, которые уже есть в другом уроке: обычно это
+      // повторная загрузка после обновления страницы, и без предупреждения возникает
+      // второй одинаковый урок, за разбор которого платим ещё раз.
+      const dups = []
       if (photos.length > 0) {
         const fd = new FormData()
         photos.forEach(p => fd.append('files', p.file))
-        await uploadFiles(`/lessons/${lesson.id}/media`, fd)  // источник: учебник (по умолчанию)
+        const r = await uploadFiles(`/lessons/${lesson.id}/media`, fd)  // источник: учебник (по умолчанию)
+        dups.push(...(r?.duplicates || []))
       }
       if (extraPhotos.length > 0) {
         const fd = new FormData()
         extraPhotos.forEach(p => fd.append('files', p.file))
-        await uploadFiles(`/lessons/${lesson.id}/media?source=extra`, fd)  // источник: тетрадь/доска
+        const r = await uploadFiles(`/lessons/${lesson.id}/media?source=extra`, fd)  // источник: тетрадь/доска
+        dups.push(...(r?.duplicates || []))
+      }
+      if (dups.length > 0) {
+        const where = [...new Set(dups.map(d => `«${d.lessonTitle}»`))].join(', ')
+        const ok = window.confirm(
+          `Эти страницы уже загружены в урок ${where}.\n\n` +
+          `Скорее всего, урок уже создан — например, страница обновилась во время разбора.\n\n` +
+          `Разобрать их ещё раз? Это создаст второй урок с тем же материалом и снова спишет ` +
+          `деньги за распознавание.\n\nОК — продолжить, Отмена — открыть существующий урок.`)
+        if (!ok) { navigate(`/lessons?highlight=${dups[0].lessonId}`); return }
       }
       if (audios.length > 0) {
         const fd = new FormData()
