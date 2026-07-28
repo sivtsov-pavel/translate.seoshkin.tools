@@ -617,8 +617,21 @@ export async function regenerateExercisesSafe(lessonId) {
 // и вернуть учителю на правку — БЕЗ вставки слов/упражнений в БД (только пометка фото
 // processed+raw_extraction, как в processNewMedia, чтобы не гонять vision дважды).
 export async function extractLessonPreview(lessonId) {
-  const { rows: media } = await db.query(
+  const { rows: fresh } = await db.query(
     "SELECT * FROM lesson_media WHERE lesson_id=$1 AND type='photo' AND processed=false ORDER BY id", [lessonId])
+
+  // Уже готовое превью отдаём сразу — не тратим деньги на повторный разбор.
+  if (!fresh.length) {
+    const { rows: saved } = await db.query('SELECT preview FROM lessons WHERE id=$1', [lessonId])
+    if (saved[0]?.preview) return saved[0].preview
+  }
+
+  // Фото помечаются обработанными сразу после распознавания. Если связь оборвалась ПОСЛЕ
+  // этого, но ДО сохранения превью — повторный запуск не должен возвращать пустоту и уж
+  // тем более платить за vision второй раз: разбор каждой страницы лежит в raw_extraction.
+  const media = fresh.length ? fresh : (await db.query(
+    "SELECT * FROM lesson_media WHERE lesson_id=$1 AND type='photo' AND raw_extraction IS NOT NULL ORDER BY id",
+    [lessonId])).rows
   if (!media.length) return { words: [], sentences: [], grammar_points: [] }
   const { rows: lrow } = await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])
   const ownerId = lrow[0]?.owner_id
@@ -639,10 +652,16 @@ export async function extractLessonPreview(lessonId) {
       const pairs = []
       for (const photo of list) {
         try {
-          const extraction = await tracked({ kind: 'extract', lessonId, items: 1, meta: { file: photo.file_path } },
-          () => extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client))
+          // Страница уже разобрана (повтор после обрыва связи) — берём сохранённое,
+          // vision не вызываем: он самый дорогой шаг, платить дважды незачем.
+          const extraction = photo.raw_extraction
+            ? (typeof photo.raw_extraction === 'string' ? JSON.parse(photo.raw_extraction) : photo.raw_extraction)
+            : await tracked({ kind: 'extract', lessonId, items: 1, meta: { file: photo.file_path } },
+                () => extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client))
           pairs.push({ mediaId: photo.id, extraction })
-          await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
+          if (!photo.raw_extraction) {
+            await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
+          }
         } catch (e) { console.error('extractLessonPreview extract', e.message) }
       }
       if (!pairs.length) continue
@@ -659,8 +678,9 @@ export async function extractLessonPreview(lessonId) {
       }
       if (Array.isArray(cons.grammar_points)) grammarPoints.push(...cons.grammar_points)
     }
-    await db.query("UPDATE lessons SET status='pending', progress=$1 WHERE id=$2",
-      [`Превью готово: слов ${words.length}, предложений ${sentences.length}`, lessonId])
+    const preview = { words, sentences, grammar_points: grammarPoints }
+    await db.query("UPDATE lessons SET status='pending', progress=$1, preview=$2 WHERE id=$3",
+      [`Превью готово: слов ${words.length}, предложений ${sentences.length}`, JSON.stringify(preview), lessonId])
   } catch (err) {
     await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 150), lessonId])
     throw err
@@ -732,7 +752,9 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
     }
 
     await enrichLesson(lessonId)
-    await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
+    // Превью подтверждено и больше не нужно — чистим, чтобы не подсовывать старый разбор
+    // при следующей дозагрузке фото в этот же урок.
+    await db.query("UPDATE lessons SET status='done', progress=$1, preview=NULL WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
     await auditLessonAndLog(lessonId, ownerId)   // отчёт о качестве — в журнал
   } catch (err) {
     console.error('commitLessonWords:', err.message)

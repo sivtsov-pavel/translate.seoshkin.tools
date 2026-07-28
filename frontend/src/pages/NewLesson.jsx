@@ -170,7 +170,18 @@ function NewLessonInner() {
         // Есть фото — показываем превью распознанного, коммит только после подтверждения учителя
         setStatus('extracting')
         setProgress(t.lessons.recognizing)
-        const data = await api.post(`/lessons/${lesson.id}/extract-preview`, {})
+        // Разбор фото занимает секунды на страницу, и на мобильной связи запрос успевает
+        // оборваться — браузер показывает «failed to fetch», хотя сервер работу ДОДЕЛАЛ
+        // и превью уже лежит в уроке. Поэтому при сетевой ошибке не пугаем, а забираем
+        // готовый результат: он сохраняется в lessons.preview.
+        let data
+        try {
+          data = await api.post(`/lessons/${lesson.id}/extract-preview`, {})
+        } catch (netErr) {
+          // Сервер мог доделать разбор уже после обрыва связи — забираем сохранённое превью
+          data = await api.get(`/lessons/${lesson.id}/preview`).catch(() => null)
+          if (!data || !(data.words || []).length) throw netErr
+        }
         setPreview({
           words: (data.words || []).map(w => ({ ...w, checked: true })),
           sentences: (data.sentences || []).map(s => ({ ...s, checked: true })),

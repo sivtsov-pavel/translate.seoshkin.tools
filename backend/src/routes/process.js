@@ -84,6 +84,15 @@ export async function processRoutes(fastify) {
   // (учебник+тетрадь, дедуп), вернуть учителю на правку — слова/предложения в БД ещё
   // НЕ вставлены. Vision-разбор идёт здесь и только здесь (один раз). Синхронный ответ —
   // nginx proxy_read_timeout 900s, нескольких фото хватает с запасом.
+  // Забрать уже готовое превью: страница перезагрузилась, связь оборвалась, вернулись
+  // позже с телефона — список распознанных слов не должен теряться.
+  fastify.get('/api/lessons/:id/preview', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const { rows } = await db.query('SELECT preview FROM lessons WHERE id=$1', [parseInt(request.params.id)])
+    if (!rows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+    return rows[0].preview || null
+  })
+
   fastify.post('/api/lessons/:id/extract-preview', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {

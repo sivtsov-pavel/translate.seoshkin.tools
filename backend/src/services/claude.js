@@ -67,6 +67,17 @@ export function usageCostUSD() {
   return usd
 }
 
+// Учёт расхода для вызовов, которые идут МИМО ask() — vision дергает SDK напрямую.
+// Без этого самый дорогой шаг (разбор фото на gpt-4o) показывал в журнале $0.0000,
+// то есть деньги уходили незаметно.
+export function trackUsage(model, u = {}) {
+  usage.calls++
+  usage.promptTokens += u.prompt_tokens || 0
+  usage.completionTokens += u.completion_tokens || 0
+  const bm = usage.byModel[model] || (usage.byModel[model] = { calls: 0, promptTokens: 0, completionTokens: 0 })
+  bm.calls++; bm.promptTokens += u.prompt_tokens || 0; bm.completionTokens += u.completion_tokens || 0
+}
+
 async function ask(prompt, { model = 'gpt-4o-mini', max_tokens = 4096, client = platformClient } = {}) {
   const res = await client.chat.completions.create({
     model,
@@ -171,6 +182,8 @@ export async function extractFromPhoto(filepath, targetLang = 'de', client = pla
       ],
     }],
   })
+
+  trackUsage('gpt-4o', res.usage)   // иначе разбор фото не виден в расходах
 
   // Пустая/обложечная страница: GPT возвращает отказ («Извините…») вместо JSON.
   // Не роняем урок — считаем страницу пустой (слов нет), обработка идёт дальше.
