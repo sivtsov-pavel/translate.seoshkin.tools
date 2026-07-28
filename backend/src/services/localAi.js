@@ -103,8 +103,12 @@ export async function conceptToEnglish(translationRu, wordDe) {
       model: config.ollamaFastModel,
       messages: [{
         role: 'user',
-        content: `Translate this word to English. Answer with ONE English word only, nothing else.\n`
-          + `Russian: "${translationRu}"${wordDe ? ` (target: "${wordDe}")` : ''}`,
+        // «ONE word only» ломалось на многословных понятиях: «в парке» модель склеивала
+        // в «Inpark», и картинка выходила бессмысленной. Просим назвать ПРЕДМЕТ, который
+        // нужно нарисовать, и разрешаем короткую фразу.
+        content: `Name in English the object or scene that should be drawn for this concept.\n`
+          + `Answer with 1-3 English words only, nothing else. No explanations, no quotes.\n`
+          + `Concept (Russian): "${translationRu}"${wordDe ? ` (original: "${wordDe}")` : ''}`,
       }],
       temperature: 0,
       max_tokens: 500, // запас на <think> у qwen3, сам ответ — одно слово

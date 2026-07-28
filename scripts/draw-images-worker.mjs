@@ -40,6 +40,9 @@ const mode = argOf('--mode', 'missing')
 const lang = argOf('--lang', null)
 const limit = parseInt(argOf('--limit', '50'))
 const dry = args.includes('--dry')
+// Точечная перерисовка: --ids 4536,4867 — заменить картинку у конкретных слов,
+// независимо от того, есть она уже или нет. Для случая «эта картинка не нравится».
+const ids = (argOf('--ids', '') || '').split(',').map(n => parseInt(n)).filter(Boolean)
 
 const SSH_HOST = process.env.PROD_SSH_HOST || 'gcloud-seosite'
 const PROD_DIR = process.env.PROD_DIR || '/home/seosite/translate'
@@ -72,7 +75,9 @@ const B = `regexp_replace(w.word_de, '^(der|die|das|ein|eine|el|la|los|las|the)\
 const KEY = `(left(${B}, 1) || lower(substr(${B}, 2)))`
 const langFilter = lang ? `AND l.target_lang = '${lang.replace(/[^a-z]/gi, '')}'` : ''
 // .jpg = фото Unsplash, .webp = рисунок ИИ. Маркер простой и точный (см. HANDOFF_LOCAL_AI.md).
-const groupFilter = mode === 'photos'
+const groupFilter = ids.length
+  ? `lead_id = ANY(ARRAY[${ids.join(',')}]::int[]) OR ids && ARRAY[${ids.join(',')}]::int[]`
+  : mode === 'photos'
   ? `drawn = 0 AND with_img > 0`      // есть только фото — заменяем на рисовашку
   : mode === 'align'
     // Есть рисовашка И есть экземпляры вообще без картинки. Слова с фото сюда не попадают:
@@ -104,7 +109,7 @@ const rows = JSON.parse(prodSql(`
 // Служебные слова (предлоги, артикли, числа) иллюстрировать бессмысленно — тот же фильтр,
 // что и в боевой генерации. Но в режиме align мы ничего не рисуем, а раздаём уже готовую
 // картинку дублям — там фильтр не нужен: раз рисовашка есть, пусть будет у всех экземпляров.
-const todo = mode === 'align' ? rows : rows.filter(r => !isFunctionWord(r.word_de))
+const todo = (mode === 'align' || ids.length) ? rows : rows.filter(r => !isFunctionWord(r.word_de, r.target_lang))
 const verb = mode === 'align' ? 'к выравниванию' : 'к рисованию'
 console.log(`Режим «${mode}»${lang ? `, язык ${lang}` : ''}: кандидатов ${rows.length}, ${verb} ${todo.length}`)
 if (!todo.length) { console.log('Делать нечего.'); process.exit(0) }

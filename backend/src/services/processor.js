@@ -262,7 +262,7 @@ export async function enrichLesson(lessonId) {
     await setProgress(lessonId, 'Подбираю картинки...')
     const { rows } = await db.query('SELECT id, word_de, translation_ru FROM words WHERE lesson_id = $1 AND image_url IS NULL ORDER BY id', [lessonId])
     for (const w of rows) {
-      if (isFunctionWord(w.word_de)) continue
+      if (isFunctionWord(w.word_de, targetLang)) continue
       try {
         // Банк слов: уже есть картинка такого же слова → переиспользуем ВСЕГДА (0 затрат, всем,
         // независимо от тумблера авто-генерации — иначе после перераспределения слова, у которых

@@ -13,17 +13,41 @@ const PRICE_DALL_E_2    = 0.018  // 512×512
 
 // Служебные слова — предлоги, артикли, местоимения, числа, союзы, частицы.
 // Их бессмысленно иллюстрировать (der/die/zwei/sehr) — пропускаем при генерации.
-const FUNCTION_WORDS = new Set(`der die das den dem des ein eine einen einem einer eines kein keine keinen keinem keiner keines
+// Списки РАЗНЫЕ по языкам: раньше английские слова проверялись по немецкому списку,
+// и «in the park» (парк) и «an arm» (рука) отбрасывались из-за немецких «in» и «an».
+const FUNCTION_WORDS = {
+  de: `der die das den dem des ein eine einen einem einer eines kein keine keinen keinem keiner keines
 in an auf vor hinter neben zwischen unter über um durch für gegen ohne bis mit nach bei seit von zu aus außer gegenüber ab entlang
 und oder aber denn sondern doch
 ich du er sie es wir ihr man mich dich sich uns euch mir dir ihm ihnen ihre sein mein dein
 wer was wo wie wann warum wieso welche welcher welches wohin woher
 nicht auch nur schon noch sehr ganz hier da dort dann jetzt wenn dass weil also ja nein bitte danke
-null eins zwei drei vier fünf sechs sieben acht neun zehn elf zwölf dreizehn vierzehn fünfzehn sechzehn siebzehn achtzehn neunzehn zwanzig dreißig vierzig fünfzig sechzig siebzig achtzig neunzig hundert tausend`.split(/\s+/))
+null eins zwei drei vier fünf sechs sieben acht neun zehn elf zwölf dreizehn vierzehn fünfzehn sechzehn siebzehn achtzehn neunzehn zwanzig dreißig vierzig fünfzig sechzig siebzig achtzig neunzig hundert tausend`,
+  en: `the a an this that these those
+in on at to from with by for of about under over between through into onto off up down
+and or but so because if when while
+i you he she it we they me him her us them my your his its our their
+who what where how why which
+not also only just very here there now then yes no please thanks
+zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand`,
+  es: `el la los las un una unos unas
+en a de por para con sin sobre bajo entre hasta desde hacia
+y o pero porque si cuando
+yo tú él ella nosotros vosotros ellos me te se nos os mi tu su
+quién qué dónde cómo por qué cuál
+no también solo muy aquí allí ahora entonces sí gracias
+cero uno dos tres cuatro cinco seis siete ocho nueve diez once doce trece catorce quince dieciséis veinte treinta cuarenta cincuenta sesenta setenta ochenta noventa cien mil`,
+}
+const WORD_SETS = Object.fromEntries(
+  Object.entries(FUNCTION_WORDS).map(([k, v]) => [k, new Set(v.split(/\s+/))]))
+const ANY_ARTICLE = /^(der|die|das|ein|eine|el|la|los|las|the|a|an|un|una)\s+/i
 
-export function isFunctionWord(wordDe) {
-  const base = (wordDe || '').toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '').split(/\s+/)[0]
-  return FUNCTION_WORDS.has(base)
+export function isFunctionWord(wordDe, targetLang = 'de') {
+  const core = (wordDe || '').trim().toLowerCase().replace(ANY_ARTICLE, '')
+  // Фраза из нескольких слов служебной не бывает: «in the park» — это парк, ему нужна
+  // картинка, хотя начинается с предлога. Проверяем только одиночные слова.
+  if (!core || /\s/.test(core)) return false
+  return (WORD_SETS[targetLang] || WORD_SETS.de).has(core)
 }
 
 // Скачивает картинку по URL в буфер (для фолбэка dall-e, который отдаёт url, а не b64).
