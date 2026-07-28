@@ -58,6 +58,34 @@ async function setProgress(lessonId, text) {
   await db.query('UPDATE lessons SET progress = $1 WHERE id = $2', [text, lessonId])
 }
 
+// Обёртка «замерь и запиши в журнал» для шагов, которые тратят деньги или могут упасть.
+// Считает реальную цену через счётчик токенов (usage) — в журнале видно, во сколько
+// обошёлся конкретный разбор фото или пачка переводов, а не общая сумма за день.
+// Журнал никогда не ломает работу: ошибку пробрасываем как есть, запись — best effort.
+async function tracked({ kind, lessonId, items = null, message = null, meta = {} }, fn) {
+  const t0 = Date.now()
+  resetUsage()
+  const provider = textProvider()
+  const model = provider === 'local' ? config.ollamaModel : Object.keys(usage.byModel)[0] || null
+  try {
+    const result = await fn()
+    await logOperation({
+      kind, lessonId, provider, items, message, meta,
+      model: provider === 'local' ? config.ollamaModel : (Object.keys(usage.byModel)[0] || model),
+      status: 'ok', durationMs: Date.now() - t0,
+      costUsd: provider === 'local' ? 0 : usageCostUSD(),
+    })
+    return result
+  } catch (e) {
+    await logOperation({
+      kind, lessonId, provider, model, meta,
+      status: 'error', message: e.message, durationMs: Date.now() - t0,
+      costUsd: provider === 'local' ? 0 : usageCostUSD(),
+    })
+    throw e
+  }
+}
+
 // Сохранить реальные предложения урока (из учебника/тетради/доски) — источник упражнений.
 // Дедуп по тексту в рамках урока. Служебные пустые/короткие обрывки пропускаем.
 async function saveSentences(lessonId, sentences, source) {
@@ -263,7 +291,10 @@ export async function enrichLesson(lessonId) {
         if (existing) await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(existing), w.id])
         else toTranslate.push(w)
       }
-      const results = toTranslate.length ? await translateWordsToAllLangs(toTranslate, activeLocales, client) : {}
+      const results = toTranslate.length
+        ? await tracked({ kind: 'translate', lessonId, items: toTranslate.length, message: 'слова на локали' },
+            () => translateWordsToAllLangs(toTranslate, activeLocales, client))
+        : {}
       for (const [id, t] of Object.entries(results)) {
         await db.query('UPDATE words SET translations = COALESCE(translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(t), parseInt(id)])
       }
@@ -331,7 +362,8 @@ export async function enrichLesson(lessonId) {
          AND (payload_translations IS NULL OR payload_translations = '{}' OR NOT (payload_translations ? 'sq')) ORDER BY id`, [lessonId])
     for (let i = 0; i < rows.length; i += 15) {
       try {
-        const results = await translateExercisePayloads(rows.slice(i, i + 15), activeLocales, client)
+        const results = await tracked({ kind: 'translate', lessonId, items: Math.min(15, rows.length - i), message: 'упражнения на локали' },
+          () => translateExercisePayloads(rows.slice(i, i + 15), activeLocales, client))
         for (const [id, langs] of Object.entries(results)) {
           await db.query('UPDATE exercises SET payload_translations = COALESCE(payload_translations, \'{}\'::jsonb) || $1::jsonb WHERE id = $2', [JSON.stringify(langs), parseInt(id)])
         }
@@ -563,7 +595,8 @@ export async function extractLessonPreview(lessonId) {
       const pairs = []
       for (const photo of list) {
         try {
-          const extraction = await extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client)
+          const extraction = await tracked({ kind: 'extract', lessonId, items: 1, meta: { file: photo.file_path } },
+          () => extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client))
           pairs.push({ mediaId: photo.id, extraction })
           await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
         } catch (e) { console.error('extractLessonPreview extract', e.message) }
@@ -674,7 +707,8 @@ export async function processNewMedia(lessonId) {
     const pairs = []
     for (const photo of list) {
       try {
-        const extraction = await extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client)
+        const extraction = await tracked({ kind: 'extract', lessonId, items: 1, meta: { file: photo.file_path } },
+          () => extractFromPhoto(join(config.uploadDir, photo.file_path), targetLang, client))
         pairs.push({ mediaId: photo.id, extraction })
         await db.query('UPDATE lesson_media SET processed=true, raw_extraction=$1 WHERE id=$2', [JSON.stringify(extraction), photo.id])
       } catch (e) { console.error('processNewMedia extract', e.message) }
@@ -825,7 +859,8 @@ export async function processLesson(lessonId, ownerId) {
         }
         await setProgress(lessonId, `Фото ${offset + i + 1}...`)
         const filepath = join(config.uploadDir, photo.file_path)
-        const extraction = await extractFromPhoto(filepath, targetLang, client)
+        const extraction = await tracked({ kind: 'extract', lessonId, items: 1, meta: { file: filepath } },
+          () => extractFromPhoto(filepath, targetLang, client))
         out.push(extraction)
         await db.query('UPDATE lesson_media SET processed = true, raw_extraction = $1 WHERE id = $2', [JSON.stringify(extraction), photo.id])
       }
@@ -838,7 +873,8 @@ export async function processLesson(lessonId, ownerId) {
       await setProgress(lessonId, 'Расшифровка аудио...')
       for (const audio of audios) {
         const filepath = join(config.uploadDir, audio.file_path)
-        transcription = await transcribeAudio(filepath, client)
+        transcription = await tracked({ kind: 'transcribe', lessonId, items: 1, meta: { file: filepath } },
+          () => transcribeAudio(filepath, client))
         await db.query('UPDATE lesson_media SET processed = true WHERE id = $1', [audio.id])
       }
     }

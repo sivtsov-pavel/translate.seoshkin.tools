@@ -730,7 +730,7 @@ function Operations() {
   const { rows, totals, byKind } = data
   const money = (n) => '$' + Number(n || 0).toFixed(3)
   const secs = (ms) => ms == null ? '—' : (ms >= 1000 ? `${(ms / 1000).toFixed(1)} с` : `${ms} мс`)
-  const KIND = { image: '🖼 картинка', exercises: '✏️ упражнения', translate: '🌍 перевод', extract: '📷 разбор фото', upload: '⬆️ загрузка' }
+  const KIND = { image: '🖼 картинка', exercises: '✏️ упражнения', translate: '🌍 перевод', extract: '📷 разбор фото', transcribe: '🎧 расшифровка аудио', upload: '⬆️ загрузка' }
 
   return (
     <div>
