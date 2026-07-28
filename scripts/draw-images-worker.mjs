@@ -75,7 +75,9 @@ const langFilter = lang ? `AND l.target_lang = '${lang.replace(/[^a-z]/gi, '')}'
 const groupFilter = mode === 'photos'
   ? `drawn = 0 AND with_img > 0`      // есть только фото — заменяем на рисовашку
   : mode === 'align'
-    ? `drawn > 0 AND drawn < n`       // у части экземпляров рисовашка есть, у остальных нет
+    // Есть рисовашка И есть экземпляры вообще без картинки. Слова с фото сюда не попадают:
+    // заменять фото — дело режима photos, а не выравнивания.
+    ? `drawn > 0 AND n > with_img`
     : `with_img = 0`                  // нет картинки вообще ни у одного экземпляра
 
 const rows = JSON.parse(prodSql(`
@@ -153,8 +155,12 @@ try {
     process.stdout.write(`[${i + 1}/${todo.length}] ${w.word_de} … (осталось ~${eta} мин) `)
     try {
       if (mode === 'align') {
-        await db.query('UPDATE words SET image_url = $1 WHERE id = ANY($2::int[]) AND (image_url IS NULL OR image_url NOT ILIKE $3)',
-          [w.drawn_url, w.ids, '%.webp%'])
+        // ТОЛЬКО реально пустым. Раньше условие было «у кого нет рисовашки», под него
+        // попадали слова с фото Unsplash — и выравнивание молча заменяло фото рисовашкой
+        // (5 слов, замечено Павлом). Замена фото — это осознанное действие, у него свой
+        // режим --mode photos; выравнивание должно лишь заполнять пустоту.
+        await db.query('UPDATE words SET image_url = $1 WHERE id = ANY($2::int[]) AND image_url IS NULL',
+          [w.drawn_url, w.ids])
         await logOp({ lessonId: w.lesson_id, status: 'ok', items: 1, durationMs: Date.now() - t0,
           message: 'выравнивание дублей (без генерации)', meta: { word_de: w.word_de, word_id: w.id, mode } })
         ok++; console.log('✓ выровнено')
