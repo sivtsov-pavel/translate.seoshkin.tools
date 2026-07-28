@@ -70,6 +70,27 @@ export async function exercisesRoutes(fastify) {
     return { ...rows[0], op: { ...adminOp } }
   })
 
+  // Сколько упражнений урока ещё ждёт СЕГОДНЯ. Лёгкий счётчик: финиш-экран по нему решает,
+  // показывать ли «Продолжить упражнения». Раньше эта кнопка висела на условии «урок не
+  // пройден», а урок помечается пройденным всегда при конце партии — и кнопка была
+  // недостижима: ученик упирался в тупик, хотя в уроке оставались десятки упражнений.
+  fastify.get('/api/exercises/remaining', { preHandler: [fastify.authenticate] }, async (request) => {
+    const { id: userId } = request.user
+    const lessonId = parseInt(request.query.lesson_id)
+    if (!lessonId) return { count: 0 }
+    const today = new Date().toISOString().slice(0, 10)
+    const { rows } = await db.query(
+      `SELECT count(*)::int AS count
+         FROM exercises e
+         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+         LEFT JOIN exercise_deferrals d ON d.exercise_id = e.id AND d.user_id = $1
+        WHERE e.lesson_id = $2
+          AND d.exercise_id IS NULL
+          AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $3`,
+      [userId, lessonId, today])
+    return { count: rows[0]?.count ?? 0 }
+  })
+
   // Упражнения на сегодня — прогресс берётся из user_exercise_progress для каждого юзера отдельно
   fastify.get('/api/exercises/today', {
     preHandler: [fastify.authenticate],

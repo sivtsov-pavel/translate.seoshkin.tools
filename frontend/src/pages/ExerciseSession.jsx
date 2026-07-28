@@ -46,6 +46,8 @@ export default function ExerciseSession() {
   const [continuing, setContinuing] = useState(false)
   const [lessonDone, setLessonDone] = useState(false) // упражнений на сегодня больше нет — урок пройден
   const [tails, setTails]         = useState(0)     // «хвосты» — пропущенные упражнения этого урока
+  // Сколько упражнений урока ещё ждёт СЕГОДНЯ — по нему решаем, показывать ли «Продолжить»
+  const [remaining, setRemaining]  = useState(0)
   const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
   const [lessonFlow, setLessonFlow] = useState(null) // позиция в курсе + следующий урок (финиш-экран)
   const [betweenFan, setBetweenFan] = useState(false) // мини-веер после каждого упражнения (выбор: дальше/другой тип/тренер)
@@ -162,6 +164,8 @@ export default function ExerciseSession() {
       let n = 0
       try { const d = await api.get(`/exercises/deferred?lesson_id=${lessonId}`); n = Array.isArray(d) ? d.length : 0 } catch {}
       setTails(n)
+      // Партия кончилась — но в уроке могут ждать ещё десятки упражнений.
+      try { const r = await api.get(`/exercises/remaining?lesson_id=${lessonId}`); setRemaining(r?.count ?? 0) } catch {}
       setLessonDone(true) // урок «пройден» по упражнениям; если n>0 — предложим добить хвосты
     } else if (lessonId || inTails) {
       setLessonDone(true) // хвосты пройдены / тип урока
@@ -252,11 +256,13 @@ export default function ExerciseSession() {
             </div>
           )}
 
-          {/* Практика по типу не завершена — догрузить следующую партию */}
-          {!lessonDone && (
+          {/* Есть что продолжать — главная кнопка. Условие было «урок не пройден», но урок
+              помечается пройденным при каждом конце партии, и кнопка не появлялась вовсе:
+              ученик упирался в «На главную», хотя в уроке ждали десятки упражнений. */}
+          {(!lessonDone || remaining > 0) && (
             <button onClick={continuePractice} disabled={continuing}
               style={{ width: '100%', padding: '15px', borderRadius: 14, border: 'none', background: 'var(--blue)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-              {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'} →`}
+              {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'}${remaining > 0 ? ` (${remaining})` : ''} →`}
             </button>
           )}
 
