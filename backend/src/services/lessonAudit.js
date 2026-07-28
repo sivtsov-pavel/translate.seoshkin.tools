@@ -50,7 +50,13 @@ export function checkExercise(ex) {
   }
 
   if (ex.type === 'fill_blank') {
-    if (!/_{2,}/.test(String(p.sentence || ''))) bad('blocker', `нет пропуска: «${p.sentence}»`)
+    // Пропуск — ровно «___». Меньше или больше трёх подчёркиваний браузер чинит на лету
+    // (frontend/src/utils/fillblank.js), поэтому ученик такое упражнение решит, а вот
+    // печатный лист делит строку строго по «___» и молча выбрасывает предложение.
+    // Отсюда две разные оценки: пропуска нет вовсе — блокер, пропуск не той длины — замечание.
+    const sentence = String(p.sentence || '')
+    if (!/_/.test(sentence)) bad('blocker', `нет пропуска: «${sentence}»`)
+    else if (!sentence.includes('___')) bad('warn', `пропуск не «___»: «${sentence}» — печатный лист его пропустит`)
     if (!String(p.blank || '').trim()) bad('blocker', 'пустой ответ')
     const opts = Array.isArray(p.options) ? p.options : []
     if (opts.length < 2) bad('blocker', `вариантов ${opts.length}`)

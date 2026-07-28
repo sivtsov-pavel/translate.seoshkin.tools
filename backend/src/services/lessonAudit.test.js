@@ -16,9 +16,15 @@ describe('checkExercise — «Добавь букву»', () => {
 })
 
 describe('checkExercise — «Заполни пропуск»', () => {
-  it('нет пропуска — блокер (реальный случай: два подчёркивания вместо трёх)', () => {
-    const r = checkExercise(ex({ type: 'fill_blank', payload: { sentence: 'Ich __ jeden Morgen.', blank: 'jogge', options: ['jogge', 'gehe'] } }))
+  it('пропуска нет вовсе — блокер', () => {
+    const r = checkExercise(ex({ type: 'fill_blank', payload: { sentence: 'Ich jogge jeden Morgen.', blank: 'jogge', options: ['jogge', 'gehe'] } }))
     expect(levels(r)).toContain('blocker')
+  })
+
+  it('два подчёркивания вместо трёх — замечание, не блокер: браузер чинит, печатный лист теряет', () => {
+    const r = checkExercise(ex({ type: 'fill_blank', payload: { sentence: 'Ich __ jeden Morgen.', blank: 'jogge', options: ['jogge', 'gehe'] } }))
+    expect(levels(r)).toContain('warn')
+    expect(levels(r)).not.toContain('blocker')
   })
 
   it('верного ответа нет среди вариантов — блокер', () => {

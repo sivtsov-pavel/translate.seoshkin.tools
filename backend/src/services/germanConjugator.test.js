@@ -1,12 +1,14 @@
-// Тест конъюгатора Präsens. Запуск: node backend/src/services/germanConjugator.test.js
+// Тест конъюгатора Präsens.
+//
+// Раньше файл был самодельным раннером с `process.exit()` в конце: под vitest такой выход
+// считается падением набора, и файл горел красным, даже когда все 23 проверки проходили.
+// Красный «на пустом месте» опаснее отсутствия теста — на него перестают смотреть.
+import { describe, it, expect } from 'vitest'
 import { conjugatePresent } from './germanConjugator.js'
 
-let pass = 0, fail = 0
-const eq = (got, exp, name) => {
-  const ok = JSON.stringify(got) === JSON.stringify(exp)
-  if (ok) { pass++ } else { fail++; console.log(`❌ ${name}\n   ожидал: ${JSON.stringify(exp)}\n   получил: ${JSON.stringify(got)}`) }
-}
+const eq = (got, exp, name) => it(name, () => expect(got).toEqual(exp))
 
+describe('conjugatePresent', () => {
 // Регулярный
 eq(conjugatePresent('fragen'), { ich: 'frage', du: 'fragst', er: 'fragt', wir: 'fragen', ihr: 'fragt', sie: 'fragen' }, 'fragen')
 eq(conjugatePresent('spielen'), { ich: 'spiele', du: 'spielst', er: 'spielt', wir: 'spielen', ihr: 'spielt', sie: 'spielen' }, 'spielen')
@@ -47,6 +49,4 @@ eq(conjugatePresent('zeichnen'), { ich: 'zeichne', du: 'zeichnest', er: 'zeichne
 
 // möchten — Konjunktiv II: er möchte (без -t!)
 eq(conjugatePresent('möchten'), { ich: 'möchte', du: 'möchtest', er: 'möchte', wir: 'möchten', ihr: 'möchtet', sie: 'möchten' }, 'möchten')
-
-console.log(`\n${fail === 0 ? '✅ ВСЕ ТЕСТЫ ПРОШЛИ' : '❌ ЕСТЬ ПАДЕНИЯ'}: ${pass} pass, ${fail} fail`)
-process.exit(fail === 0 ? 0 : 1)
+})

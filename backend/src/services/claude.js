@@ -106,36 +106,66 @@ const LEARN_LANGS = {
     exNoun: { sentence: 'Die ___ trinkt Milch.', blank: 'Katze', options: ['Katze', 'Maus', 'Blume'] },
     exVerb: { sentence: 'Ich ___ den Lehrer.', blank: 'frage', options: ['frage', 'antworte', 'sehe'] },
     exMask: { word: 'Hund', masked: 'H_nd', tr: 'собака' },
+    artHint: " Если у существительного не было артикля — добавь правильный (род определи сам).",
+    exKeepVerb: "leben → leben, НЕ das Leben",
+    exProper: "Polen, Russland, München — без артикля; die Türkei, die Schweiz, die USA, der Iran — с артиклем, как принято",
+    exBaseForm: "kein/keine/keinen → kein, mein/meine → mein",
+    exFunc: "ich, wir, mich, mein, kein, für, mit, wo, welche, nicht",
     askRu: 'Wie heißt das auf Russisch' },
   es: { name: 'испанский', adjN: 'испанские', tts: 'es-ES',
     nounRule: 'существительные с артиклем (el/la/los/las)',
     exNoun: { sentence: 'La ___ bebe leche.', blank: 'gata', options: ['gata', 'ratona', 'flor'] },
     exVerb: { sentence: 'Yo ___ al profesor.', blank: 'pregunto', options: ['pregunto', 'respondo', 'veo'] },
     exMask: { word: 'perro', masked: 'p_rro', tr: 'собака' },
+    artHint: " Если у существительного не было артикля — добавь правильный (род определи сам).",
+    exKeepVerb: "vivir → vivir, НЕ la vida",
+    exProper: "Polonia, Rusia, Múnich — без артикля; los Países Bajos, El Salvador — с артиклем, как принято",
+    exBaseForm: "vivo/vives → vivir, mío/mía → mi",
+    exFunc: "yo, nosotros, me, mi, ningún, para, con, dónde, cuál, no",
     askRu: 'Cómo se dice en ruso' },
   fr: { name: 'французский', adjN: 'французские', tts: 'fr-FR',
     nounRule: 'существительные с артиклем (le/la/les)',
     exNoun: { sentence: 'Le ___ boit du lait.', blank: 'chat', options: ['chat', 'souris', 'fleur'] },
     exVerb: { sentence: 'Je ___ le professeur.', blank: 'demande', options: ['demande', 'réponds', 'vois'] },
     exMask: { word: 'chien', masked: 'ch_en', tr: 'собака' },
+    artHint: " Если у существительного не было артикля — добавь правильный (род определи сам).",
+    exKeepVerb: "vivre → vivre, НЕ la vie",
+    exProper: "Pologne, Russie, Munich; la France, les Pays-Bas — с артиклем, как принято",
+    exBaseForm: "vis/vit → vivre, mien/mienne → mon",
+    exFunc: "je, nous, moi, mon, aucun, pour, avec, où, quel, ne",
     askRu: 'Comment dit-on en russe' },
   it: { name: 'итальянский', adjN: 'итальянские', tts: 'it-IT',
     nounRule: 'существительные с артиклем (il/la/lo)',
     exNoun: { sentence: 'Il ___ beve latte.', blank: 'gatto', options: ['gatto', 'topo', 'fiore'] },
     exVerb: { sentence: 'Io ___ il professore.', blank: 'chiedo', options: ['chiedo', 'rispondo', 'vedo'] },
     exMask: { word: 'cane', masked: 'c_ne', tr: 'собака' },
+    artHint: " Если у существительного не было артикля — добавь правильный (род определи сам).",
+    exKeepVerb: "vivere → vivere, НЕ la vita",
+    exProper: "Polonia, Russia, Monaco; gli Stati Uniti, i Paesi Bassi — с артиклем, как принято",
+    exBaseForm: "vivo/vivi → vivere, mio/mia → mio",
+    exFunc: "io, noi, mi, mio, nessun, per, con, dove, quale, non",
     askRu: 'Come si dice in russo' },
   en: { name: 'английский', adjN: 'английские', tts: 'en-US',
     nounRule: 'существительные',
     exNoun: { sentence: 'The ___ drinks milk.', blank: 'cat', options: ['cat', 'mouse', 'flower'] },
     exVerb: { sentence: 'I ___ the teacher.', blank: 'ask', options: ['ask', 'answer', 'see'] },
     exMask: { word: 'dog', masked: 'd_g', tr: 'собака' },
+    artHint: " Артикль к существительному НЕ добавляй: в английском словаре слово стоит без «the» и «a».",
+    exKeepVerb: "to work → work, НЕ the work",
+    exProper: "Poland, Russia, Munich — без артикля; the USA, the Netherlands — с артиклем, как принято",
+    exBaseForm: "works/working → work, mine → my",
+    exFunc: "I, we, me, my, no, for, with, where, which, not",
     askRu: 'How do you say it in Russian' },
   pt: { name: 'португальский', adjN: 'португальские', tts: 'pt-PT',
     nounRule: 'существительные с артиклем (o/a)',
     exNoun: { sentence: 'O ___ bebe leite.', blank: 'gato', options: ['gato', 'rato', 'flor'] },
     exVerb: { sentence: 'Eu ___ o professor.', blank: 'pergunto', options: ['pergunto', 'respondo', 'vejo'] },
     exMask: { word: 'cão', masked: 'c_o', tr: 'собака' },
+    artHint: " Если у существительного не было артикля — добавь правильный (род определи сам).",
+    exKeepVerb: "viver → viver, НЕ a vida",
+    exProper: "Polónia, Rússia, Munique; os Estados Unidos, os Países Baixos — с артиклем, как принято",
+    exBaseForm: "vivo/vives → viver, meu/minha → meu",
+    exFunc: "eu, nós, me, meu, nenhum, para, com, onde, qual, não",
     askRu: 'Como se diz em russo' },
 }
 const TL = (code) => LEARN_LANGS[code] || LEARN_LANGS.de
@@ -478,18 +508,32 @@ export const CANON_THEMES = [
 
 // Классификация + НОРМАЛИЗАЦИЯ слов: существительные → с артиклем, глаголы → инфинитив,
 // каждое слово → РОВНО в одну канонической тему. Основа чистого банка без свалки.
+// Батч классификации. Ответ на одно слово — строка JSON примерно на 30 токенов, при
+// max_tokens 3000 в ответ влезает около 90 слов. Раньше все слова уходили одним запросом:
+// урок на 116 слов (реальный, «Kapitel 17») обрезался на середине ответа, и хвост слов
+// молча не попадал ни в один набор. Ошибки при этом не было — просто тишина.
+const CLASSIFY_BATCH = 50
+
 export async function classifyWordsToThemes(words, targetLang = 'de', client = platformClient) {
   if (!words.length) return []
+  if (words.length > CLASSIFY_BATCH) {
+    const out = []
+    for (let i = 0; i < words.length; i += CLASSIFY_BATCH) {
+      out.push(...await classifyWordsToThemes(words.slice(i, i + CLASSIFY_BATCH), targetLang, client))
+    }
+    return out
+  }
   const list = words.map((w, i) => `${i}: ${w.de}${w.tr ? ' — ' + w.tr : ''}`).join('\n')
-  const prompt = `Есть слова на ${TL(targetLang).name} языке. Для КАЖДОГО слова:
-1) Нормализуй форму "de": существительное — с артиклем (der/die/das — определи род сам, ты знаешь язык), глагол — инфинитив с маленькой буквы, остальное — как есть. Если у существительного не было артикля — добавь правильный.
-   НЕ МЕНЯЙ часть речи: глагол остаётся глаголом (leben → leben, НЕ das Leben), существительное — существительным.
-   ИСКЛЮЧЕНИЕ — имена собственные: страны и города БЕЗ артикля (Polen, Russland, Ägypten, München), КРОМЕ стран, которые в языке всегда с артиклем (die Türkei, die Schweiz, die USA, die Niederlande, der Iran, die Ukraine и т.п.). НИКОГДА не пиши "das Polen" или "das Russland".
-   Формы одного слова (kein/keine/keinen, mein/meine) — приводи к базовой форме (kein, mein).
+  const L = TL(targetLang)
+  const prompt = `Есть слова на ${L.name} языке. Для КАЖДОГО слова:
+1) Нормализуй форму "de" по правилам ${L.name} языка: ${L.nounRule}; глагол — инфинитив с маленькой буквы; остальное — как есть.${L.artHint}
+   НЕ МЕНЯЙ часть речи: глагол остаётся глаголом (${L.exKeepVerb}), существительное — существительным.
+   ИСКЛЮЧЕНИЕ — имена собственные: страны и города пиши так, как принято в ${L.name} языке (${L.exProper}).
+   Разные формы одного слова приводи к базовой (${L.exBaseForm}).
 2) Дай перевод "tr" на русский (если не задан или неточен — исправь).
 3) Отнеси РОВНО к одной теме из списка (строкой в точности как в списке): ${CANON_THEMES.join(', ')}. Если ничего не подходит — "Разное".
-   Ориентируйся на СМЫСЛ слова, а не на созвучие: das Dach (крыша) — «Дом и быт», а не «Города и страны»; draußen/drinnen — «Места и направления».
-   Местоимения, артикли, предлоги, союзы, частицы, вопросительные слова, падежи и др. служебные/грамматические слова (ich, wir, mich, mein, kein, für, mit, wo, welche, nicht) — ВСЕГДА тема «Грамматика», не «Разное».
+   Ориентируйся на СМЫСЛ слова, а не на созвучие: крыша — «Дом и быт», а не «Города и страны»; снаружи/внутри — «Места и направления».
+   Местоимения, артикли, предлоги, союзы, частицы, вопросительные слова и др. служебные/грамматические слова (${L.exFunc}) — ВСЕГДА тема «Грамматика», не «Разное».
 Верни СТРОГО JSON без markdown: {"items":[{"i":0,"de":"...","tr":"...","theme":"..."}]}
 Слова:
 ${list}`

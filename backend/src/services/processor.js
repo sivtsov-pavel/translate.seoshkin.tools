@@ -8,6 +8,7 @@ import { generateWordImage, isFunctionWord } from './imageGen.js'
 import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
 import { logOperation, textProvider } from './opLog.js'
 import { normalizeIncomingWord } from './wordNormalize.js'
+import { bareWord, articlePattern } from './articles.js'
 import { auditLesson } from './lessonAudit.js'
 
 // Сопоставление сгенерированного word_de со словом урока: GPT иногда возвращает слово
@@ -1135,7 +1136,9 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
   const items = await classifyWordsToThemes(clean, targetLang, client)
   if (!items.length) return { added: 0, duplicates: 0, themes: [] }
 
-  const bare = s => String(s).toLowerCase().replace(/^(der|die|das|ein|eine)\s+/, '')
+  // Артикли берём по языку курса: раньше здесь был жёстко немецкий список, и в
+  // английском наборе «the table» не совпадало с «table» — дедуп их пропускал.
+  const bare = s => bareWord(s, targetLang)
 
   // Предложения из тетрадки/фото — реальные, идут в упражнения. Каждое несёт свои слова
   // (words: [de]), по их теме и определяем, в какой набор сохранить предложение.
@@ -1186,7 +1189,7 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
       const { rows: ex } = await db.query(
         `SELECT 1 FROM words w JOIN lessons l ON l.id = w.lesson_id
          WHERE l.is_set AND l.owner_id = $1 AND l.target_lang = $3
-           AND regexp_replace(lower(w.word_de), '^(der|die|das|ein|eine)\\s+', '') = $2 LIMIT 1`,
+           AND regexp_replace(lower(w.word_de), '^(${articlePattern(targetLang)})\\s+', '') = $2 LIMIT 1`,
         [ownerId, norm, targetLang])
       if (ex.length) { dup++; continue }
       const wordDe = normalizeIncomingWord(it.de, knownSet)
