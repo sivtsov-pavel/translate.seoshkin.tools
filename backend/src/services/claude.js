@@ -420,6 +420,12 @@ export async function generateLetterFill(words) {
 // и отбрасываем то, что починить нечем. Дальше — перемешивание вариантов ответа.
 function sanitizeExercise(ex) {
   if (!ex || typeof ex !== 'object') return null
+  // Пропуск: модель ставит то два подчёркивания, то четыре. Фронт делит предложение
+  // строго по «___», поэтому «Ich __ jeden Morgen.» осталось бы без пропуска вовсе.
+  // Нормализуем на входе, чтобы в базе лежали чистые данные, а не чинились при показе.
+  if (ex.type === 'fill_blank' && typeof ex.payload?.sentence === 'string') {
+    ex = { ...ex, payload: { ...ex.payload, sentence: ex.payload.sentence.replace(/_{2,}/g, '___') } }
+  }
   if (ex.type === 'letter_fill') {
     const payload = normalizeLetterFill(ex.payload)
     if (!payload) return null // слово нечем маскировать — упражнения не будет
