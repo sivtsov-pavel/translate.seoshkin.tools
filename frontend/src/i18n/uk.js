@@ -121,6 +121,8 @@ export const uk = {
     repeatAll: 'Повторити все',
     lessonWords: 'Слова уроку',
     openWords: 'Усі слова уроку',
+    reportTitle: 'Звіт по уроку',
+    printTitle: 'Роздрукувати урок',
     listen: 'Прослухати',
     lessons: 'Уроки',
 

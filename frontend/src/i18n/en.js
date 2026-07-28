@@ -121,6 +121,8 @@ export const en = {
     repeatAll: 'Review all',
     lessonWords: 'Lesson words',
     openWords: 'All lesson words',
+    reportTitle: 'Lesson report',
+    printTitle: 'Print lesson',
     listen: 'Listen',
     lessons: 'Lessons',
 

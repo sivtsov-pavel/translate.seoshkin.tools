@@ -124,6 +124,8 @@ export const ru = {
     repeatAll: 'Повторить всё',
     lessonWords: 'Слова урока',
     openWords: 'Все слова урока',
+    reportTitle: 'Отчёт по уроку',
+    printTitle: 'Распечатать урок',
     listen: 'Прослушать',
     lessons: 'Уроки',
 

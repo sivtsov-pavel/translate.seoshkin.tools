@@ -121,6 +121,8 @@ export const tr = {
     repeatAll: 'Hepsini tekrar et',
     lessonWords: 'Ders kelimeleri',
     openWords: 'Dersin tüm kelimeleri',
+    reportTitle: 'Ders raporu',
+    printTitle: 'Dersi yazdır',
     listen: 'Dinle',
     lessons: 'Dersler',
 

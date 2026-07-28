@@ -123,6 +123,8 @@ export const ar = {
     repeatAll: 'مراجعة الكل',
     lessonWords: 'كلمات الدرس',
     openWords: 'كل كلمات الدرس',
+    reportTitle: 'تقرير الدرس',
+    printTitle: 'طباعة الدرس',
     listen: 'استمع',
     lessons: 'الدروس',
 

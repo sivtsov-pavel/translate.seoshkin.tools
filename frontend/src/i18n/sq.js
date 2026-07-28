@@ -121,6 +121,8 @@ export const sq = {
     repeatAll: 'Përsërit gjithçka',
     lessonWords: 'Fjalët e mësimit',
     openWords: 'Të gjitha fjalët e mësimit',
+    reportTitle: 'Raporti i mësimit',
+    printTitle: 'Printo mësimin',
     listen: 'Dëgjo',
     lessons: 'Mësimet',
 

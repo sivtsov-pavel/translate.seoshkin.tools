@@ -121,6 +121,8 @@ export const bg = {
     repeatAll: 'Прегледай всичко',
     lessonWords: 'Думи от урока',
     openWords: 'Всички думи от урока',
+    reportTitle: 'Отчет за урока',
+    printTitle: 'Отпечатай урока',
     listen: 'Слушай',
     lessons: 'Уроци',
 

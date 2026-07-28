@@ -124,6 +124,8 @@ export const de = {
     repeatAll: 'Alles üben',
     lessonWords: 'Wörter der Lektion',
     openWords: 'Alle Wörter der Lektion',
+    reportTitle: 'Lektionsbericht',
+    printTitle: 'Lektion drucken',
     listen: 'Anhören',
     lessons: 'Lektionen',
 

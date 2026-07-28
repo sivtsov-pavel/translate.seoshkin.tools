@@ -121,6 +121,8 @@ export const fr = {
     repeatAll: 'Tout revoir',
     lessonWords: 'Mots de la leçon',
     openWords: 'Tous les mots de la leçon',
+    reportTitle: 'Rapport de la leçon',
+    printTitle: 'Imprimer la leçon',
     listen: 'Écouter',
     lessons: 'Leçons',
 

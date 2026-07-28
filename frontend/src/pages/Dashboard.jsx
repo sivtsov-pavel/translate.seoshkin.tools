@@ -757,16 +757,28 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
       )}
 
       <div className="dl-detail-controls">
+        {/* Служебные действия — иконками с подсказкой при наведении: подписи съедали строку,
+            и кнопка слов уезжала на следующую. */}
         {wordsCount > 0 && (
-          <button className="dl-ctrl-btn" onClick={handleListen} disabled={listening}>
-            <Volume2 size={15} /> {t.dashboard.listen}
+          <button className="dl-ctrl-btn" onClick={handleListen} disabled={listening}
+            title={t.dashboard.listen} aria-label={t.dashboard.listen}>
+            <Volume2 size={15} />
           </button>
         )}
-        <button className="dl-ctrl-btn" onClick={handleReset}><RotateCcw size={15} /> {t.dashboard.reset || 'Сбросить'}</button>
+        <button className="dl-ctrl-btn" onClick={handleReset}
+          title={t.dashboard.reset || 'Сбросить'} aria-label={t.dashboard.reset || 'Сбросить'}>
+          <RotateCcw size={15} />
+        </button>
         {user?.role === 'owner' && wordsCount > 0 && (
           <>
-            <button className="dl-ctrl-btn" onClick={() => navigate(`/lesson-report/${id}`)}><BarChart3 size={15} /></button>
-            <button className="dl-ctrl-btn" onClick={() => window.open(`/print/${id}`, '_blank')}><Printer size={15} /></button>
+            <button className="dl-ctrl-btn" onClick={() => navigate(`/lesson-report/${id}`)}
+              title={t.dashboard.reportTitle || 'Отчёт по уроку'} aria-label={t.dashboard.reportTitle || 'Отчёт по уроку'}>
+              <BarChart3 size={15} />
+            </button>
+            <button className="dl-ctrl-btn" onClick={() => window.open(`/print/${id}`, '_blank')}
+              title={t.dashboard.printTitle || 'Распечатать урок'} aria-label={t.dashboard.printTitle || 'Распечатать урок'}>
+              <Printer size={15} />
+            </button>
           </>
         )}
         {/* Вторая кнопка зачёта («карандаш · N») убрана — она дублировала «Зачёт по уроку»
