@@ -83,13 +83,49 @@ async function ask(prompt, { model = 'gpt-4o-mini', max_tokens = 4096, client = 
 }
 
 // ─── Целевые (изучаемые) языки — мульти-таргет ──────────────────────────────
+// ВАЖНО: у каждого языка свои ПРИМЕРЫ для промптов. Раньше примеры внутри
+// EXERCISES_PROMPT были жёстко немецкими («Die ___ trinkt Milch», «Wie heißt das auf
+// Russisch»), и модель копировала их язык: в испанском курсе рождались предложения
+// вида «Die abeja ist klein», в английском — варианты [Kamera, Fernglas, Linse].
+// Аудит 28.07.2026 нашёл 270 таких упражнений. Пример на нужном языке — самая
+// действенная часть промпта, поэтому он обязан меняться вместе с языком.
 const LEARN_LANGS = {
-  de: { name: 'немецкий', adjN: 'немецкие', tts: 'de-DE', nounRule: 'существительные ВСЕГДА с артиклем (der/die/das) и с большой буквы' },
-  es: { name: 'испанский', adjN: 'испанские', tts: 'es-ES', nounRule: 'существительные с артиклем (el/la/los/las)' },
-  fr: { name: 'французский', adjN: 'французские', tts: 'fr-FR', nounRule: 'существительные с артиклем (le/la/les)' },
-  it: { name: 'итальянский', adjN: 'итальянские', tts: 'it-IT', nounRule: 'существительные с артиклем (il/la/lo)' },
-  en: { name: 'английский', adjN: 'английские', tts: 'en-US', nounRule: 'существительные' },
-  pt: { name: 'португальский', adjN: 'португальские', tts: 'pt-PT', nounRule: 'существительные с артиклем (o/a)' },
+  de: { name: 'немецкий', adjN: 'немецкие', tts: 'de-DE',
+    nounRule: 'существительные ВСЕГДА с артиклем (der/die/das) и с большой буквы',
+    exNoun: { sentence: 'Die ___ trinkt Milch.', blank: 'Katze', options: ['Katze', 'Maus', 'Blume'] },
+    exVerb: { sentence: 'Ich ___ den Lehrer.', blank: 'frage', options: ['frage', 'antworte', 'sehe'] },
+    exMask: { word: 'Hund', masked: 'H_nd', tr: 'собака' },
+    askRu: 'Wie heißt das auf Russisch' },
+  es: { name: 'испанский', adjN: 'испанские', tts: 'es-ES',
+    nounRule: 'существительные с артиклем (el/la/los/las)',
+    exNoun: { sentence: 'La ___ bebe leche.', blank: 'gata', options: ['gata', 'ratona', 'flor'] },
+    exVerb: { sentence: 'Yo ___ al profesor.', blank: 'pregunto', options: ['pregunto', 'respondo', 'veo'] },
+    exMask: { word: 'perro', masked: 'p_rro', tr: 'собака' },
+    askRu: 'Cómo se dice en ruso' },
+  fr: { name: 'французский', adjN: 'французские', tts: 'fr-FR',
+    nounRule: 'существительные с артиклем (le/la/les)',
+    exNoun: { sentence: 'Le ___ boit du lait.', blank: 'chat', options: ['chat', 'souris', 'fleur'] },
+    exVerb: { sentence: 'Je ___ le professeur.', blank: 'demande', options: ['demande', 'réponds', 'vois'] },
+    exMask: { word: 'chien', masked: 'ch_en', tr: 'собака' },
+    askRu: 'Comment dit-on en russe' },
+  it: { name: 'итальянский', adjN: 'итальянские', tts: 'it-IT',
+    nounRule: 'существительные с артиклем (il/la/lo)',
+    exNoun: { sentence: 'Il ___ beve latte.', blank: 'gatto', options: ['gatto', 'topo', 'fiore'] },
+    exVerb: { sentence: 'Io ___ il professore.', blank: 'chiedo', options: ['chiedo', 'rispondo', 'vedo'] },
+    exMask: { word: 'cane', masked: 'c_ne', tr: 'собака' },
+    askRu: 'Come si dice in russo' },
+  en: { name: 'английский', adjN: 'английские', tts: 'en-US',
+    nounRule: 'существительные',
+    exNoun: { sentence: 'The ___ drinks milk.', blank: 'cat', options: ['cat', 'mouse', 'flower'] },
+    exVerb: { sentence: 'I ___ the teacher.', blank: 'ask', options: ['ask', 'answer', 'see'] },
+    exMask: { word: 'dog', masked: 'd_g', tr: 'собака' },
+    askRu: 'How do you say it in Russian' },
+  pt: { name: 'португальский', adjN: 'португальские', tts: 'pt-PT',
+    nounRule: 'существительные с артиклем (o/a)',
+    exNoun: { sentence: 'O ___ bebe leite.', blank: 'gato', options: ['gato', 'rato', 'flor'] },
+    exVerb: { sentence: 'Eu ___ o professor.', blank: 'pergunto', options: ['pergunto', 'respondo', 'vejo'] },
+    exMask: { word: 'cão', masked: 'c_o', tr: 'собака' },
+    askRu: 'Como se diz em russo' },
 }
 const TL = (code) => LEARN_LANGS[code] || LEARN_LANGS.de
 export function targetTtsLocale(code) { return TL(code).tts }
@@ -324,7 +360,7 @@ export async function generateLessonMeta(words = [], grammarPoints = [], targetL
   return { title: (data.title || '').trim(), description: (data.description || '').trim() }
 }
 
-const EXERCISES_PROMPT = (t) => `На основе слов и грамматики урока (${t.name} язык, A1) создай упражнения для школьника. Объясняй максимально просто и понятно, как для маленьких детей.
+export const EXERCISES_PROMPT = (t) => `На основе слов и грамматики урока (${t.name} язык, A1) создай упражнения для школьника. Объясняй максимально просто и понятно, как для маленьких детей.
 
 ⚠️ ГЛАВНЫЙ ИСТОЧНИК — РЕАЛЬНЫЕ ПРЕДЛОЖЕНИЯ УРОКА:
 - В конспекте есть поле "sentences" — это реальные предложения из учебника/тетради/доски, которые класс разбирал.
@@ -342,7 +378,7 @@ const EXERCISES_PROMPT = (t) => `На основе слов и граммати�
 Для каждого слова создай 5 упражнений — по одному каждого типа:
 1. flashcard — карточка "слово изучаемого языка ↔ перевод"
 2. fill_blank — короткое предложение на ${t.name} языке с пропуском ___ на месте слова. ⚠️ В ПРОПУСК (blank) и в options ставь слово в той ФОРМЕ, что реально нужна в предложении, а НЕ словарную:
-   • существительное — БЕЗ артикля (если артикль нужен по грамматике, оставь его в предложении ПЕРЕД ___, не дублируй в пропуске), но с ЗАГЛАВНОЙ буквы (в немецком все существительные с большой);
+   • существительное — БЕЗ артикля (если артикль нужен по грамматике, оставь его в предложении ПЕРЕД ___, не дублируй в пропуске), регистр — по правилу языка: ${t.nounRule};
    • глагол — СПРЯГАЙ под подлежащее предложения (напр. «Ich ___ den Lehrer» → blank «frage», НЕ «fragen»; «Wir ___» → «fragen»);
    • прилагательное/другое — в нужной форме для этого предложения.
    Предложение с подставленным blank должно быть ГРАММАТИЧЕСКИ ВЕРНЫМ. options — РОВНО 3 слова на ${t.name} языке в ТАКОЙ ЖЕ форме: правильное (в точности = blank) и 2 похожих отвлекающих. НЕ русские!
@@ -352,13 +388,15 @@ const EXERCISES_PROMPT = (t) => `На основе слов и граммати�
 
 Верни ТОЛЬКО JSON массив без markdown:
 [
-  {"type": "flashcard", "word_de": "слово", "payload": {"question": "немецкое слово", "answer": "русский перевод"}},
-  {"type": "fill_blank", "word_de": "Katze", "payload": {"sentence": "Die ___ trinkt Milch.", "blank": "Katze", "options": ["Katze","Maus","Blume"]}},
-  {"type": "fill_blank", "word_de": "fragen", "payload": {"sentence": "Ich ___ den Lehrer.", "blank": "frage", "options": ["frage","antworte","sehe"]}},
-  {"type": "multiple_choice", "word_de": "слово", "payload": {"question": "Wie heißt das auf Russisch: слово?", "options": ["вар1","вар2","вар3","вар4"], "correct": 0}},
-  {"type": "sentence_write", "word_de": "слово", "payload": {"word_de": "слово", "translation_ru": "перевод", "hint_ru": "Напиши простое предложение со словом «слово». Например: приветствие, описание, вопрос.", "example": "Пример правильного предложения на немецком"}},
-  {"type": "letter_fill", "word_de": "слово", "payload": {"word_de": "Hund", "translation_ru": "собака", "masked": "H_nd", "answer": "Hund"}}
-]`
+  {"type": "flashcard", "word_de": "слово", "payload": {"question": "слово на ${t.name} языке", "answer": "русский перевод"}},
+  {"type": "fill_blank", "word_de": "${t.exNoun.blank}", "payload": {"sentence": "${t.exNoun.sentence}", "blank": "${t.exNoun.blank}", "options": ${JSON.stringify(t.exNoun.options)}}},
+  {"type": "fill_blank", "word_de": "${t.exVerb.blank}", "payload": {"sentence": "${t.exVerb.sentence}", "blank": "${t.exVerb.blank}", "options": ${JSON.stringify(t.exVerb.options)}}},
+  {"type": "multiple_choice", "word_de": "слово", "payload": {"question": "${t.askRu}: слово?", "options": ["вар1","вар2","вар3","вар4"], "correct": 0}},
+  {"type": "sentence_write", "word_de": "слово", "payload": {"word_de": "слово", "translation_ru": "перевод", "hint_ru": "Напиши простое предложение со словом «слово». Например: приветствие, описание, вопрос.", "example": "Пример правильного предложения на ${t.name} языке"}},
+  {"type": "letter_fill", "word_de": "слово", "payload": {"word_de": "${t.exMask.word}", "translation_ru": "${t.exMask.tr}", "masked": "${t.exMask.masked}", "answer": "${t.exMask.word}"}}
+]
+
+⚠️ Примеры выше даны на ${t.name} языке НАРОЧНО — весь изучаемый текст должен быть именно на нём.`
 
 const LETTER_FILL_PROMPT = `Для каждого немецкого слова создай упражнение letter_fill.
 Правила маски: замени 1-2 буквы ВНУТРИ слова на "_", первую букву всегда оставляй видимой, артикль der/die/das не трогай.

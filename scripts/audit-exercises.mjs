@@ -109,6 +109,37 @@ for (const e of rows) {
   }
 }
 
+// ── Язык контента соответствует языку курса ───────────────────────────────────
+// Реальный случай: в АНГЛИЙСКОМ курсе (уроки 501, 511) варианты ответов оказались
+// немецкими — «camera» при вариантах [Kamera, Fernglas, Linse]. Модель сгенерировала
+// не на том языке, и это не заметили месяцами. Проверка ловит такое сразу.
+const LANG_MARKERS = {
+  de: { re: /[äöüßÄÖÜ]|\b(der|die|das|und|nicht|ich|ist)\b/i, name: 'немецкие' },
+  es: { re: /[ñáéíóúÑ¿¡]|\b(el|la|los|las|que|con|para|pero)\b/i, name: 'испанские' },
+}
+// Что считаем текстом на изучаемом языке (перевод на русский проверять не надо).
+const targetTexts = (e) => {
+  const p = e.payload || {}
+  if (e.type === 'fill_blank') return [p.sentence, p.blank, ...(p.options || [])]
+  if (e.type === 'sentence_write') return [p.example]
+  if (e.type === 'flashcard') return [p.question]
+  return []
+}
+
+for (const e of rows) {
+  const foreign = Object.entries(LANG_MARKERS).filter(([code]) => code !== e.target_lang)
+  for (const t of targetTexts(e)) {
+    if (!t || typeof t !== 'string') continue
+    for (const [, m] of foreign) {
+      if (m.re.test(t)) {
+        add('чужой язык', 'блокер', `упр#${e.id} урок ${e.lesson_id}`,
+          `курс «${e.target_lang}», а в тексте ${m.name} слова: «${String(t).slice(0, 60)}»`)
+        break
+      }
+    }
+  }
+}
+
 // ── Немецкая грамматика: род по суффиксу ──────────────────────────────────────
 // Суффиксальные правила в немецком почти безисключительны — на них можно опираться.
 // Оставлены только правила, у которых практически нет исключений. Первая версия
