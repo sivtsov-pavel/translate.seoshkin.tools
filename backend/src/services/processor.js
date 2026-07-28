@@ -760,7 +760,11 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
          VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
          DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
                        media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-        [lessonId, ownerId, wordDe, (w.translation_ru || '').trim() || null,
+        // Перевода нет — пишем само слово, а не NULL: колонка NOT NULL, и одно слово без
+        // перевода из 192 обрывало запись целиком (урок 18: успели лечь 50 слов, остальные
+        // потерялись, урок ушёл в «ошибка» и пропал у учеников). Заглушку «слово = перевод»
+        // enrichLesson ниже заменяет настоящим переводом — этот приём в проекте уже принят.
+        [lessonId, ownerId, wordDe, (w.translation_ru || '').trim() || wordDe,
          w.example_sentence || null, source, w.media_id || null])
     }
 
@@ -850,7 +854,8 @@ export async function processNewMedia(lessonId) {
          VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
          DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
                        media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-        [lessonId, ownerId, w.word_de, w.translation_ru, w.example_sentence || null, src, mediaId])
+        [lessonId, ownerId, w.word_de, (w.translation_ru || '').trim() || wordDe,
+         w.example_sentence || null, src, mediaId])
     }
     await saveSentences(lessonId, cons.sentences, src) // реальные предложения урока
   }
@@ -896,7 +901,7 @@ export async function saveCameraWords(lessonId, words) {
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
          VALUES ($1,$2,$3,$4,'camera') ON CONFLICT (lesson_id, word_de) DO NOTHING`,
-        [lessonId, ownerId, wordDe, (w.tr || '').trim() || null])
+        [lessonId, ownerId, wordDe, (w.tr || '').trim() || wordDe])
     }
     // Упражнения только для слов урока БЕЗ упражнений (новые)
     const { rows: wordRows } = await db.query(
@@ -1037,7 +1042,7 @@ export async function processLesson(lessonId, ownerId) {
            ON CONFLICT (lesson_id, word_de)
            DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
                          media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-          [lessonId, ownerId, wordDe, word.translation_ru, word.example_sentence || null, source, mediaId]
+          [lessonId, ownerId, wordDe, (word.translation_ru || '').trim() || wordDe, word.example_sentence || null, source, mediaId]
         )
       }
       await saveSentences(lessonId, cons.sentences, source) // реальные предложения урока
@@ -1218,7 +1223,7 @@ export async function distributeWordsToSets(rawWords, ownerId, targetLang = 'de'
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
          VALUES ($1, $2, $3, $4, 'camera') ON CONFLICT (lesson_id, word_de) DO NOTHING`,
-        [setId, ownerId, wordDe, it.tr])
+        [setId, ownerId, wordDe, (it.tr || '').trim() || wordDe])
       added++
     }
     affected.push(setId)

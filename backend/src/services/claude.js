@@ -325,6 +325,24 @@ async function mergeChunk(extractions, transcription = null, existingWords = [],
       })
     }
   }
+  // 🛟 Та же страховка для ПРЕДЛОЖЕНИЙ. На плотных уроках модель их просто выбрасывает:
+  // в уроке 18 распознавание нашло 97 предложений на 13 страницах, а сведение вернуло ноль,
+  // и учитель видел «Предложений не распознано». Предложения — основа упражнений
+  // «напиши предложение» и диктанта по фразе, терять их нельзя.
+  // Перевода у подобранных нет (vision отдаёт их строками) — его дописывает enrichLesson.
+  const seenText = new Set((merged.sentences || [])
+    .map(x => String(typeof x === 'string' ? x : x?.text || '').trim().toLowerCase().slice(0, 80))
+    .filter(Boolean))
+  for (const e of extractions) {
+    for (const raw of (e.example_sentences || [])) {
+      const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim()
+      const key = text.toLowerCase().slice(0, 80)
+      if (text.length < 4 || !key || seenText.has(key)) continue
+      seenText.add(key)
+      ;(merged.sentences ||= []).push({ text, translation_ru: null })
+    }
+  }
+
   return merged
 }
 

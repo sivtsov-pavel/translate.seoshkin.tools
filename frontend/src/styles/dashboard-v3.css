@@ -136,9 +136,6 @@
 
 .dl-detail-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--line); padding: 14px 18px 16px; }
 .dl-ctrl-btn { display: flex; align-items: center; gap: 6px; background: var(--bg); border: none; border-radius: 10px; padding: 8px 12px; font-size: 12px; color: var(--ink); cursor: pointer; }
-.dl-ctrl-pencil { display: flex; align-items: center; gap: 6px; background: var(--yellow-soft); border: 1.5px solid var(--gold); border-radius: 10px; padding: 8px 12px; font-size: 12px; color: var(--gold-dark); font-weight: 700; cursor: pointer; }
-.dl-ctrl-words { font-size: 12px; color: var(--ink); margin-left: auto; }
-.dl-ctrl-words b { background: var(--bg); border-radius: 8px; padding: 1px 7px; margin-left: 4px; }
 .dl-ctrl-chevron { color: var(--blue); }
 
 .dl-word-list { padding: 0 18px 18px; display: flex; flex-direction: column; }
@@ -173,3 +170,15 @@
 .dl-fab-camera { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .dl-fab-repeat { padding: 13px 20px; border-radius: 999px; background: var(--blue); color: #fff; border: none; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; width: auto; height: auto; }
 .dl-fab-repeat span { background: rgba(0,0,0,0.18); border-radius: 999px; padding: 1px 9px; font-size: 13px; }
+
+/* Все слова урока — раскрывающая кнопка. Отдельный вид, потому что рядом стоят кнопки
+   действий: если она выглядит так же, никто не понимает, что список можно развернуть.
+   Стрелка в круглом бейдже и подпись «показать/скрыть» читаются как «тут раскрывается». */
+.dl-ctrl-words-btn { display: flex; align-items: center; gap: 8px; background: var(--accent-soft);
+  border: 1.5px dashed var(--accent); border-radius: 999px; padding: 7px 14px 7px 8px;
+  font-size: 12.5px; color: var(--accent); font-weight: 700; cursor: pointer; }
+.dl-ctrl-words-btn:hover { background: var(--surface); }
+.dl-ctrl-words-btn .dl-chev { display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  flex-shrink: 0; transition: transform .15s; }
+.dl-ctrl-words-btn .dl-hint { font-weight: 500; opacity: .75; }

@@ -600,7 +600,9 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
   const [exOpen, setExOpen] = useState(true)
   // Слова урока показываем сразу развёрнутыми: карточка открывается только для выбранного
   // урока, так что лишних запросов нет. Свёрнутый список ученики просто не находили.
-  const [wordsOpen, setWordsOpen] = useState(true)
+  // Слова свёрнуты по умолчанию: раскрытый список — это десятки строк, из-за которых
+  // карточка уезжает и автопрокрутка к текущему уроку промахивается.
+  const [wordsOpen, setWordsOpen] = useState(false)
   const [words, setWords] = useState(null)
   const [listening, setListening] = useState(false)
 
@@ -668,9 +670,10 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
           </div>
         </div>
         <div className="dl-detail-controls">
-          <span className="dl-ctrl-words">{t.dashboard.lessonWords} <b>{wordsCount}</b></span>
-          <button className="dl-linklike dl-ctrl-chevron" onClick={toggleWords}>
-            {wordsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          <button className="dl-ctrl-words-btn" onClick={toggleWords}>
+            <span className="dl-chev">{wordsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span>
+            {t.dashboard.openWords || 'Все слова урока'} · {wordsCount}
+            <span className="dl-hint">{wordsOpen ? (t.common.hide || 'скрыть') : (t.common.show || 'показать')}</span>
           </button>
         </div>
         {wordsOpen && (
@@ -748,6 +751,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
           </div>
           <button className="dl-pass-btn" onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}>
             <CheckCircle2 size={16} /> {t.dashboard.exam || 'Зачёт по уроку'}
+            {lesson.total > 0 && <> · {lesson.total}</>}
           </button>
         </>
       )}
@@ -765,14 +769,12 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
             <button className="dl-ctrl-btn" onClick={() => window.open(`/print/${id}`, '_blank')}><Printer size={15} /></button>
           </>
         )}
-        {/* Раньше был просто карандаш с числом — никто не понимал, что это зачёт по уроку */}
-        <button className="dl-ctrl-pencil" title={t.dashboard.examTitle || 'Зачёт по уроку — все упражнения подряд'}
-          onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}>
-          <Pencil size={14} /> {t.dashboard.examShort || 'Зачёт'} · {lesson.total || 0}
-        </button>
-        <span className="dl-ctrl-words">{t.dashboard.lessonWords} <b>{wordsCount}</b></span>
-        <button className="dl-linklike dl-ctrl-chevron" onClick={toggleWords}>
-          {wordsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        {/* Вторая кнопка зачёта («карандаш · N») убрана — она дублировала «Зачёт по уроку»
+            выше, а число упражнений теперь стоит в самой кнопке зачёта. */}
+        <button className="dl-ctrl-words-btn" onClick={toggleWords}>
+          <span className="dl-chev">{wordsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span>
+          {t.dashboard.openWords || 'Все слова урока'} · {wordsCount}
+          <span className="dl-hint">{wordsOpen ? (t.common.hide || 'скрыть') : (t.common.show || 'показать')}</span>
         </button>
       </div>
 

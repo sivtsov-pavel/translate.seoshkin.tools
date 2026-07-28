@@ -122,6 +122,7 @@ export const ar = {
     exam: 'اختبار الدرس',
     repeatAll: 'مراجعة الكل',
     lessonWords: 'كلمات الدرس',
+    openWords: 'كل كلمات الدرس',
     listen: 'استمع',
     lessons: 'الدروس',
 
@@ -525,7 +526,7 @@ export const ar = {
     changePwdLabel: 'تغيير كلمة المرور (اتركه فارغًا لعدم التغيير)',
     newPwdPlaceholder: 'كلمة مرور جديدة (حد أدنى 6 أحرف)',
     hide: 'إخفاء',
-    show: 'عرض',
+    show: 'إظهار',
   },
   courses: {
     title: 'الدورات',

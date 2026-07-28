@@ -120,6 +120,7 @@ export const bg = {
     exam: 'Тест по урока',
     repeatAll: 'Прегледай всичко',
     lessonWords: 'Думи от урока',
+    openWords: 'Всички думи от урока',
     listen: 'Слушай',
     lessons: 'Уроци',
 
@@ -516,8 +517,8 @@ export const bg = {
     fullNamePlaceholder: 'Пълно име',
     changePwdLabel: 'СМЕНИ ПАРОЛАТА (остави празно, за да не сменяш)',
     newPwdPlaceholder: 'Нова парола (мин. 6 символа)',
-    hide: 'Скрий',
-    show: 'Покажи',
+    hide: 'скрий',
+    show: 'покажи',
   },
   courses: {
     title: 'Курсове',

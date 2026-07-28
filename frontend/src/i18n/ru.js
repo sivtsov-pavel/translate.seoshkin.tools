@@ -123,6 +123,7 @@ export const ru = {
     exam: 'Зачёт по уроку',
     repeatAll: 'Повторить всё',
     lessonWords: 'Слова урока',
+    openWords: 'Все слова урока',
     listen: 'Прослушать',
     lessons: 'Уроки',
 
@@ -536,8 +537,8 @@ export const ru = {
     fullNamePlaceholder: 'Полное имя',
     changePwdLabel: 'СМЕНИТЬ ПАРОЛЬ (оставь пустым чтобы не менять)',
     newPwdPlaceholder: 'Новый пароль (мин. 6 символов)',
-    hide: 'Скрыть',
-    show: 'Показать',
+    hide: 'скрыть',
+    show: 'показать',
   },
   courses: {
     title: 'Курсы',

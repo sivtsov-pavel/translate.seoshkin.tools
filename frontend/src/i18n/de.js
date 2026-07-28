@@ -123,6 +123,7 @@ export const de = {
     exam: 'Lektionstest',
     repeatAll: 'Alles üben',
     lessonWords: 'Wörter der Lektion',
+    openWords: 'Alle Wörter der Lektion',
     listen: 'Anhören',
     lessons: 'Lektionen',
 
@@ -533,8 +534,8 @@ export const de = {
     fullNamePlaceholder: 'Vollständiger Name',
     changePwdLabel: 'PASSWORT ÄNDERN (leer lassen, um nicht zu ändern)',
     newPwdPlaceholder: 'Neues Passwort (min. 6 Zeichen)',
-    hide: 'Verstecken',
-    show: 'Anzeigen',
+    hide: 'ausblenden',
+    show: 'anzeigen',
   },
   courses: {
     title: 'Kurse',

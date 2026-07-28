@@ -120,6 +120,7 @@ export const uk = {
     exam: 'Залік з уроку',
     repeatAll: 'Повторити все',
     lessonWords: 'Слова уроку',
+    openWords: 'Усі слова уроку',
     listen: 'Прослухати',
     lessons: 'Уроки',
 
@@ -526,8 +527,8 @@ export const uk = {
     fullNamePlaceholder: 'Повне ім\'я',
     changePwdLabel: 'ЗМІНИТИ ПАРОЛЬ (залиш пустим, щоб не змінювати)',
     newPwdPlaceholder: 'Новий пароль (мін. 6 символів)',
-    hide: 'Сховати',
-    show: 'Показати',
+    hide: 'сховати',
+    show: 'показати',
   },
   courses: {
     title: 'Курси',

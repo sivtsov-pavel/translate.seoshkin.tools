@@ -120,6 +120,7 @@ export const sq = {
     exam: 'Testi i mësimit',
     repeatAll: 'Përsërit gjithçka',
     lessonWords: 'Fjalët e mësimit',
+    openWords: 'Të gjitha fjalët e mësimit',
     listen: 'Dëgjo',
     lessons: 'Mësimet',
 
@@ -527,8 +528,8 @@ export const sq = {
     fullNamePlaceholder: 'Emri i plotë',
     changePwdLabel: 'NDYSHO FJALËKALIMIN (lëre bosh për të mos ndryshuar)',
     newPwdPlaceholder: 'Fjalëkalimi i ri (min. 6 karaktere)',
-    hide: 'Fshi',
-    show: 'Trego',
+    hide: 'fshih',
+    show: 'shfaq',
   },
   courses: {
     title: 'Kurset',

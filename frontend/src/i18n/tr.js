@@ -120,6 +120,7 @@ export const tr = {
     exam: 'Ders sınavı',
     repeatAll: 'Hepsini tekrar et',
     lessonWords: 'Ders kelimeleri',
+    openWords: 'Dersin tüm kelimeleri',
     listen: 'Dinle',
     lessons: 'Dersler',
 
@@ -521,8 +522,8 @@ export const tr = {
     fullNamePlaceholder: 'Tam ad',
     changePwdLabel: 'ŞİFRE DEĞİŞTİR (değiştirmemek için boş bırak)',
     newPwdPlaceholder: 'Yeni şifre (en az 6 karakter)',
-    hide: 'Gizle',
-    show: 'Göster',
+    hide: 'gizle',
+    show: 'göster',
   },
   courses: {
     title: 'Kurslar',

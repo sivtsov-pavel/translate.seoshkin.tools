@@ -120,6 +120,7 @@ export const fr = {
     exam: 'Test de la leçon',
     repeatAll: 'Tout revoir',
     lessonWords: 'Mots de la leçon',
+    openWords: 'Tous les mots de la leçon',
     listen: 'Écouter',
     lessons: 'Leçons',
 
@@ -521,8 +522,8 @@ export const fr = {
     fullNamePlaceholder: 'Nom complet',
     changePwdLabel: 'CHANGER LE MOT DE PASSE (laisser vide pour ne pas changer)',
     newPwdPlaceholder: 'Nouveau mot de passe (min. 6 caractères)',
-    hide: 'Cacher',
-    show: 'Afficher',
+    hide: 'masquer',
+    show: 'afficher',
   },
   courses: {
     title: 'Cours',
