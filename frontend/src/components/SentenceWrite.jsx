@@ -5,6 +5,7 @@ import { getTranslation } from '../utils/translation.js'
 import AvatarReaction from './AvatarReaction.jsx'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import TapText from './TapText.jsx'
+import { shouldAutoFocus } from '../utils/device.js'
 
 export default function SentenceWrite({ exercise, onAnswer, payloadTranslations, showOriginal, lessonTitle, typeLabel }) {
   const [sentence, setSentence] = useState('')
@@ -72,7 +73,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
             onChange={e => setSentence(e.target.value)}
             placeholder={t.exercise.sentencePlaceholder}
             rows={3}
-            autoFocus
+            autoFocus={shouldAutoFocus()}
             style={{ width: '100%', fontSize: 16, resize: 'vertical', marginBottom: 12, boxSizing: 'border-box' }}
           />
           {error && <p style={{ color: 'var(--red)', marginBottom: 8 }}>{error}</p>}

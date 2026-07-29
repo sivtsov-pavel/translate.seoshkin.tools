@@ -6,6 +6,7 @@ import { ExerciseActions } from './ExerciseActions.jsx'
 import { playCorrect, playWrong } from '../utils/sound.js'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import { checkDictation, answerVariants, spokenForm } from '../utils/dictation.js'
+import { shouldAutoFocus } from '../utils/device.js'
 
 export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, translations, translationRu, exerciseId, showOriginal }) {
   const { word_de, translation_ru } = payload
@@ -27,7 +28,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
 
   useEffect(() => {
     setTimeout(() => speak(spoken, 'de-DE', 0.8), 300)
-    inputRef.current?.focus()
+    if (shouldAutoFocus()) inputRef.current?.focus() // на телефоне клавиатуру зовёт сам ученик
     setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
   }, [word_de])
 

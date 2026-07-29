@@ -3,6 +3,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
+import { shouldAutoFocus } from '../utils/device.js'
 
 // Строим массив символов слова, скрывая ~40% букв под пропуски ('_'). Детерминированно
 // (одно и то же слово → одна и та же маска), первую букву не прячем, пробелы/дефисы не трогаем.
@@ -61,7 +62,7 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
   useEffect(() => {
     // фокус на первый пропуск + озвучка слова
     const first = blanks[0]
-    if (first != null) setTimeout(() => refs.current[first]?.focus(), 120)
+    if (first != null && shouldAutoFocus()) setTimeout(() => refs.current[first]?.focus(), 120)
     speakAuto(payload.word_de)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payload.word_de])

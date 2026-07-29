@@ -8,6 +8,7 @@ import AvatarReaction from './AvatarReaction.jsx'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import TapText from './TapText.jsx'
 import { normalizeFillBlank } from '../utils/fillblank.js'
+import { shouldAutoFocus } from '../utils/device.js'
 
 export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, typeLabel, imageUrl, payloadTranslations, translations, translationRu, exerciseId, showOriginal }) {
   const [answer, setAnswer] = useState('')
@@ -37,7 +38,7 @@ export default function FillBlank({ payload: rawPayload, onAnswer, lessonTitle, 
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    inputRef.current?.focus()
+    if (shouldAutoFocus()) inputRef.current?.focus() // на телефоне клавиатуру зовёт сам ученик
     setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
   }, [])
 
