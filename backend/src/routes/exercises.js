@@ -881,9 +881,12 @@ export async function exercisesRoutes(fastify) {
     if (!exRows[0]) return reply.status(404).send({ error: 'Упражнение не найдено' })
 
     const ex = exRows[0]
-    const { word_de, translation_ru } = ex.payload
+    const { word_de, translation_ru, example, example_ru } = ex.payload
 
-    const result = await checkSentence(word_de, translation_ru, sentence, lang || 'ru')
+    // Эталон передаём в проверку: упражнение стало ПЕРЕВОДОМ заданной фразы, и оценивать
+    // надо совпадение смысла с эталоном, а не «красоту» вольного сочинения.
+    const result = await checkSentence(word_de, translation_ru, sentence, lang || 'ru',
+      example_ru ? example : null, example_ru || null)
 
     const { rows: progRows } = await db.query(
       `SELECT * FROM user_exercise_progress WHERE user_id = $1 AND exercise_id = $2`,

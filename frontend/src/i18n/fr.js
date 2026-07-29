@@ -211,6 +211,7 @@ export const fr = {
     enterWord: 'Entrez le mot...',
     sentencePlaceholder: 'Écris une phrase en allemand...',
     sentenceExample: 'Exemple',
+    translateToTarget: 'Écris cette phrase en allemand :',
     yourSentence: 'Ta phrase',
     correctedVersion: 'Version corrigée',
     yourAnswer: 'Ta réponse',

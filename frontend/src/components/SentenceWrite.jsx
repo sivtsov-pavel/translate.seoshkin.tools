@@ -15,7 +15,11 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
   const [error, setError] = useState('')
   const { t, lang } = useI18nStore()
   const pTranslations = payloadTranslations || exercise.payload_translations
-  const { word_de, translation_ru, hint_ru, example } = exercise.payload
+  const { word_de, translation_ru, hint_ru, example, example_ru } = exercise.payload
+  // Режим ПЕРЕВОДА: есть русская фраза-задание и эталон. Свободное сочинение на A1 не
+  // работает — ученик ещё не строит фразы сам, а списанный со страницы пример проверка
+  // оценивала на 2 из 5. Старые упражнения без example_ru показываем по-прежнему.
+  const isTranslation = Boolean(example_ru && example)
   const displayTranslation = getTranslation(exercise.translations, lang, exercise.translation_ru || translation_ru)
   const displayHint = getTranslation(pTranslations, lang, hint_ru)
 
@@ -57,11 +61,20 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
           <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)' }}><TapText>{word_de}</TapText></span>
           <span style={{ fontSize: 18, color: 'var(--ink-soft)' }}>— {displayTranslation}</span>
         </div>
-        {displayHint && <p style={{ color: 'var(--accent)', fontSize: 15, margin: 0 }}>{displayHint}</p>}
-        {example && (
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 6, fontStyle: 'italic' }}>
-            {t.exercise.sentenceExample}: <TapText>{example}</TapText>
-          </p>
+        {isTranslation ? (
+          <>
+            <p style={{ color: 'var(--accent)', fontSize: 15, margin: '0 0 8px' }}>
+              {t.exercise.translateToTarget || 'Напиши это предложение по-немецки:'}
+            </p>
+            <div style={{ fontSize: 19, fontWeight: 600, color: 'var(--ink)', padding: '12px 14px', background: 'var(--surface-2)', borderRadius: 12, border: '1px solid var(--line)' }}>
+              {example_ru}
+            </div>
+          </>
+        ) : (
+          <>
+            {displayHint && <p style={{ color: 'var(--accent)', fontSize: 15, margin: 0 }}>{displayHint}</p>}
+            {/* Эталон до ответа не показываем: ученик списывал его и получал низкую оценку. */}
+          </>
         )}
       </div>
 
@@ -108,6 +121,14 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
             {result.feedback_ru}
           </p>
 
+          {/* Эталон показываем ПОСЛЕ ответа: до ответа он был подсказкой, которую ученик
+              списывал и получал за это низкую оценку. */}
+          {isTranslation && (
+            <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, border: '1px solid var(--line)' }}>
+              <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 4 }}>{t.exercise.sentenceExample}:</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}><TapText>{example}</TapText></div>
+            </div>
+          )}
           {result.corrected ? (
             <div style={{ background: 'rgba(78,154,110,0.12)', borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
               <div style={{ fontSize: 13, color: 'var(--good)', marginBottom: 4 }}>{t.exercise.correctedVersion}:</div>

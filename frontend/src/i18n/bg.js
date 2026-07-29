@@ -211,6 +211,7 @@ export const bg = {
     enterWord: 'Въведи думата...',
     sentencePlaceholder: 'Напиши изречение на немски...',
     sentenceExample: 'Пример',
+    translateToTarget: 'Напиши това изречение на немски:',
     yourSentence: 'Твоето изречение',
     correctedVersion: 'Поправен вариант',
     yourAnswer: 'Твоят отговор',

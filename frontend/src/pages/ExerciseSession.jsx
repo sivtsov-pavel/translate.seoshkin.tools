@@ -50,11 +50,14 @@ export default function ExerciseSession() {
   const [remaining, setRemaining]  = useState(0)
   const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
   const [lessonFlow, setLessonFlow] = useState(null) // позиция в курсе + следующий урок (финиш-экран)
-  // Что уже показали в ЭТОЙ сессии. «Продолжить упражнения» перезапрашивает сервер, а тот
-  // отдаёт всё, что доступно на сегодня, — включая только что пройденное, если ответ ещё не
-  // успел изменить расписание или упражнение вернулось по SRS в тот же день. Со стороны это
-  // выглядит как второй круг по тем же карточкам вместо новых.
-  const seenIds = useRef(new Set())
+  // Что уже ОТВЕЧЕНО в этой сессии. «Продолжить упражнения» перезапрашивает сервер, а тот
+  // отдаёт всё доступное на сегодня — включая только что пройденное, если ответ ещё не успел
+  // изменить расписание. Без этой памяти сессия шла по второму кругу.
+  //
+  // Считаем именно ОТВЕТЫ, а не показы: первая версия помечала всю загруженную партию, и
+  // после «Продолжить» отфильтровывалось вообще всё — включая упражнения, до которых ученик
+  // не дошёл. Кнопка тогда «не работала»: урок объявлялся пройденным на 20 упражнениях из 85.
+  const answeredIds = useRef(new Set())
   const [betweenFan, setBetweenFan] = useState(false) // мини-веер после каждого упражнения (выбор: дальше/другой тип/тренер)
   const [pickLessonOpen, setPickLessonOpen] = useState(false) // финиш: раскрыт ли список «Выбрать другой урок»
   const [fanTypesOpen, setFanTypesOpen] = useState(false) // раскрыт ли список «выбрать другой тип» в мини-веере
@@ -104,11 +107,10 @@ export default function ExerciseSession() {
           list.filter(e => VOICE_TYPES.has(e.type)).forEach(e => api.post(`/exercises/${e.id}/defer`, {}).catch(() => {}))
           list = list.filter(e => !VOICE_TYPES.has(e.type))
         }
-        // Уже показанное в этой сессии не повторяем — см. seenIds выше.
-        const fresh = list.filter(e => !seenIds.current.has(e.id))
+        // Уже отвеченное в этой сессии не повторяем — см. answeredIds выше.
+        const fresh = list.filter(e => !answeredIds.current.has(e.id))
         // Педагогический порядок типов: вопрос-ответ → флеш → буква → слово → предложение → проговори → диктант
         const ordered = fresh.sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
-        ordered.forEach(e => seenIds.current.add(e.id))
         setExercises(ordered)
         setCurrent(0)
         return ordered
@@ -141,6 +143,7 @@ export default function ExerciseSession() {
 
   const handleAnswer = async (quality, userAnswer = '') => {
     const ex = exercises[current]
+    answeredIds.current.add(ex.id)
     if (ex.type !== 'sentence_write') {
       try {
         if (!isOnline()) throw new Error('offline')
@@ -184,6 +187,7 @@ export default function ExerciseSession() {
   // Пропустить упражнение в «хвосты» (напр. «проговори слова» ночью)
   const skipExercise = async () => {
     const ex = exercises[current]
+    answeredIds.current.add(ex.id) // отложено — в этой сессии больше не показываем
     try { await api.post(`/exercises/${ex.id}/defer`, {}) } catch {}
     const next = current + 1
     if (next >= exercises.length) endSession()

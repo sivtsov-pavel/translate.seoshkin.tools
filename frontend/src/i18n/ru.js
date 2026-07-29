@@ -215,6 +215,7 @@ export const ru = {
     enterWord: 'Введите слово...',
     sentencePlaceholder: 'Напишите предложение на немецком...',
     sentenceExample: 'Пример',
+    translateToTarget: 'Напиши это предложение по-немецки:',
     yourSentence: 'Ваше предложение',
     correctedVersion: 'Исправленный вариант',
     yourAnswer: 'Твой ответ',

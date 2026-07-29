@@ -450,7 +450,10 @@ export const EXERCISES_PROMPT = (t) => `На основе слов и грамм
    • прилагательное/другое — в нужной форме для этого предложения.
    Предложение с подставленным blank должно быть ГРАММАТИЧЕСКИ ВЕРНЫМ. options — РОВНО 3 слова на ${t.name} языке в ТАКОЙ ЖЕ форме: правильное (в точности = blank) и 2 похожих отвлекающих. НЕ русские!
 3. multiple_choice — выбор правильного русского перевода слова изучаемого языка из 4 вариантов
-4. sentence_write — задание написать своё предложение с этим словом (уровень A1, простое)
+4. sentence_write — ПЕРЕВОД предложения: даём русскую фразу, ученик пишет её на изучаемом языке.
+   Поле "example" — эталон на изучаемом языке, "example_ru" — та же фраза по-русски (её и видит ученик).
+   Фраза короткая (4–8 слов), уровня A1, обязательно содержит изучаемое слово. Свободное сочинение
+   на A1 не работает: ученик ещё не умеет строить фразы сам, а списанный пример оценивался низко.
 5. letter_fill — слово с пропущенными буквами (замени 1-2 буквы внутри слова на "_", первую букву всегда оставляй видимой; артикль оставляй без изменений)
 
 Верни ТОЛЬКО JSON массив без markdown:
@@ -459,7 +462,7 @@ export const EXERCISES_PROMPT = (t) => `На основе слов и грамм
   {"type": "fill_blank", "word_de": "${t.exNoun.blank}", "payload": {"sentence": "${t.exNoun.sentence}", "blank": "${t.exNoun.blank}", "options": ${JSON.stringify(t.exNoun.options)}}},
   {"type": "fill_blank", "word_de": "${t.exVerb.blank}", "payload": {"sentence": "${t.exVerb.sentence}", "blank": "${t.exVerb.blank}", "options": ${JSON.stringify(t.exVerb.options)}}},
   {"type": "multiple_choice", "word_de": "слово", "payload": {"question": "${t.askRu}: слово?", "options": ["вар1","вар2","вар3","вар4"], "correct": 0}},
-  {"type": "sentence_write", "word_de": "слово", "payload": {"word_de": "слово", "translation_ru": "перевод", "hint_ru": "Напиши простое предложение со словом «слово». Например: приветствие, описание, вопрос.", "example": "Пример правильного предложения на ${t.name} языке"}},
+  {"type": "sentence_write", "word_de": "слово", "payload": {"word_de": "слово", "translation_ru": "перевод", "example": "Короткое предложение на ${t.name} языке (A1) с этим словом", "example_ru": "Перевод этого предложения на русский — это и есть задание ученику"}},
   {"type": "letter_fill", "word_de": "слово", "payload": {"word_de": "${t.exMask.word}", "translation_ru": "${t.exMask.tr}", "masked": "${t.exMask.masked}", "answer": "${t.exMask.word}"}}
 ]
 
@@ -641,17 +644,31 @@ export async function generateExercises(words, grammar_points, targetLang = 'de'
 
 const LANG_NAMES = { ru: 'русском', en: 'English', uk: 'українською', de: 'Deutsch', fr: 'français', ar: 'العربية', bg: 'български', tr: 'Türkçe', es: 'español', sq: 'shqip' }
 
-export async function checkSentence(wordDe, translationRu, userSentence, lang = 'ru') {
+export async function checkSentence(wordDe, translationRu, userSentence, lang = 'ru', expected = null, taskRu = null) {
   const langName = LANG_NAMES[lang] || 'русском'
-  const prompt = `You are a German language teacher. A student (level A1) wrote a sentence.
+  // Есть эталон — значит это ПЕРЕВОД заданной фразы, а не свободное сочинение. Оцениваем
+  // соответствие смыслу, а не литературность: ученик A1 не обязан угадать формулировку
+  // слово в слово, и снижать оценку за синоним — значит наказывать за правильный ответ.
+  const task = expected
+    ? `The student was asked to translate this sentence into German: "${taskRu || ''}"
+Reference translation: "${expected}"
+Student's answer: "${userSentence}"
 
-Word to use: "${wordDe}" (${translationRu})
+Evaluate:
+1. Meaning matches the reference (synonyms and different word order are FINE)
+2. Word "${wordDe}" is used in a correct form
+3. Grammar is acceptable for A1
+Be generous: if the meaning is right and the sentence is understandable, quality is 4-5.`
+    : `Word to use: "${wordDe}" (${translationRu})
 Student's sentence: "${userSentence}"
 
 Evaluate:
 1. Word "${wordDe}" is present (or its correct form)
 2. Sentence is grammatically acceptable for A1 level
-3. Meaning is clear
+3. Meaning is clear`
+  const prompt = `You are a German language teacher. A student (level A1) answered an exercise.
+
+${task}
 
 Reply ONLY with JSON (no markdown), feedback in ${langName}:
 {

@@ -213,6 +213,7 @@ export const ar = {
     enterWord: 'أدخل الكلمة...',
     sentencePlaceholder: 'اكتب جملة بالألمانية...',
     sentenceExample: 'مثال',
+    translateToTarget: 'اكتب هذه الجملة بالألمانية:',
     yourSentence: 'جملتك',
     correctedVersion: 'النسخة المصححة',
     yourAnswer: 'إجابتك',

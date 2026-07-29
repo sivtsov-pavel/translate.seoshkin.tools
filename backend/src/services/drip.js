@@ -3,12 +3,25 @@ import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
 import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 
-// «Пройден» = каждое СЛОВО урока отработано хотя бы в одном упражнении (любого типа),
-// а не все 7 упражнений каждого слова. Единое определение для дрипа, дашборда, вех и гейта курса.
+// «Пройден» = по КАЖДОМУ слову урока сделаны карточка И «выбери ответ».
+//
+// Раньше хватало одного касания любым типом, и урок закрывался после одной сессии «выбери
+// ответ»: Павел прошёл выбор ответа в пятом уроке — сразу открылся шестой, хотя слова он,
+// по собственным словам, ещё не помнит. Одно узнавание ничего не закрепляет.
+//
+// Два типа — осознанный минимум, а не «побольше строгости»: карточка показывает слово с
+// переводом (узнавание в лоб), «выбери ответ» требует отличить его от похожих. Письменные
+// типы (диктант, «напиши предложение») в минимум НЕ входят — они тяжелее и догоняются
+// повторениями, иначе урок станет непроходимым за один присест.
+//
 // Требует в запросе алиасы: exercises AS e и LEFT JOIN user_exercise_progress uep (по нужному user_id).
 export const LESSON_PASSED_HAVING = `count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL) > 0
   AND count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND uep.exercise_id IS NOT NULL)
-    = count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)`
+    = count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)
+  AND count(DISTINCT e.word_id) FILTER (WHERE e.type = 'flashcard' AND uep.exercise_id IS NOT NULL)
+    = count(DISTINCT e.word_id) FILTER (WHERE e.type = 'flashcard')
+  AND count(DISTINCT e.word_id) FILTER (WHERE e.type = 'multiple_choice' AND uep.exercise_id IS NOT NULL)
+    = count(DISTINCT e.word_id) FILTER (WHERE e.type = 'multiple_choice')`
 
 // ISO-день недели (1=Пн … 7=Вс) для даты (UTC)
 function isoWeekday(date) {

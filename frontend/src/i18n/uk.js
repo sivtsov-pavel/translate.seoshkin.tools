@@ -211,6 +211,7 @@ export const uk = {
     enterWord: 'Введіть слово...',
     sentencePlaceholder: 'Напишіть речення німецькою...',
     sentenceExample: 'Приклад',
+    translateToTarget: 'Напиши це речення німецькою:',
     yourSentence: 'Ваше речення',
     correctedVersion: 'Виправлений варіант',
     yourAnswer: 'Твоя відповідь',

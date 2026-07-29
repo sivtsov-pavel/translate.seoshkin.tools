@@ -215,6 +215,7 @@ export const de = {
     enterWord: 'Wort eingeben...',
     sentencePlaceholder: 'Schreibe einen Satz auf Deutsch...',
     sentenceExample: 'Beispiel',
+    translateToTarget: 'Schreibe diesen Satz auf Deutsch:',
     yourSentence: 'Dein Satz',
     correctedVersion: 'Korrigierte Version',
     yourAnswer: 'Deine Antwort',

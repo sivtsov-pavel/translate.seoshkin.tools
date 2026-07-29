@@ -211,6 +211,7 @@ export const sq = {
     enterWord: 'Shkruaj fjalën...',
     sentencePlaceholder: 'Shkruaj fjali në gjermanisht...',
     sentenceExample: 'Shembull',
+    translateToTarget: 'Shkruaje këtë fjali në gjermanisht:',
     yourSentence: 'Fjalia juaj',
     correctedVersion: 'Versioni i korrigjuar',
     yourAnswer: 'Përgjigja jote',

@@ -211,6 +211,7 @@ export const tr = {
     enterWord: 'Kelimeyi girin...',
     sentencePlaceholder: 'Almanca cümle yazın...',
     sentenceExample: 'Örnek',
+    translateToTarget: 'Bu cümleyi Almanca yaz:',
     yourSentence: 'Senin cümlen',
     correctedVersion: 'Düzeltilmiş versiyon',
     yourAnswer: 'Cevabın',
