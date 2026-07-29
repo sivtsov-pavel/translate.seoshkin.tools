@@ -4,7 +4,8 @@ import { useOnline } from '../components/OfflineGuard.jsx'
 import { getOfflinePhrases, isOnline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
 import { SpeakButton } from '../hooks/useSpeech.jsx'
-import { useSpeechRecognition, speechSimilarity, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
+import { useSpeechRecognition, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
+import { speechSimilarity } from '../utils/speechMatch.js'
 
 const CATEGORIES = [
   'Приветствия', 'Прощание', 'Знакомство', 'В школе', 'Числа и время',

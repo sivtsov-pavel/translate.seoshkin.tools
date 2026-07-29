@@ -28,18 +28,9 @@ function levenshtein(a, b) {
   return dp[m][n]
 }
 
-// Возвращает [0..1] — насколько transcript похож на expected
-export function speechSimilarity(transcript, expected) {
-  const a = normalizeWord(transcript)
-  const b = normalizeWord(expected)
-  if (!a || !b) return 0
-  if (a === b) return 1
-  // Принимаем если expected является частью transcript (длинные фразы)
-  if (a.includes(b) || b.includes(a)) return 0.9
-  const dist = levenshtein(a, b)
-  const maxLen = Math.max(a.length, b.length)
-  return maxLen === 0 ? 1 : 1 - dist / maxLen
-}
+// speechSimilarity переехала в utils/speechMatch.js: сравнение перестало быть чисто
+// побуквенным (распознавание на Android отдаёт кириллицу), и ему нужна транскрипция —
+// хуку про микрофон об этом знать незачем.
 
 // Хук для работы с микрофоном: start() → listening → onResult(transcript)
 export function useSpeechRecognition({ lang = 'de-DE', onResult } = {}) {
