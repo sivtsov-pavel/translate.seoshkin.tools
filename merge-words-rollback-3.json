@@ -1,0 +1,471 @@
+{
+ "words": [
+  {
+   "id": 6634,
+   "lesson_id": 571,
+   "user_id": 1,
+   "word_de": "Bilder",
+   "translation_ru": "картинки",
+   "example_sentence": "Die Bilder sind schön.",
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "status": "new",
+   "created_at": "2026-07-28T19:54:42.654Z",
+   "image_url": "/uploads/word-images/word_6634.webp?v=1785285589613",
+   "example_sentence_ru": "Картины красивые.",
+   "translations": {},
+   "source": "textbook",
+   "media_id": 562
+  },
+  {
+   "id": 6657,
+   "lesson_id": 571,
+   "user_id": 1,
+   "word_de": "Bücher",
+   "translation_ru": "книги",
+   "example_sentence": "Die Bücher sind hier.",
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "status": "new",
+   "created_at": "2026-07-28T19:54:42.726Z",
+   "image_url": "/uploads/word-images/word_6657.webp?v=1785285875298",
+   "example_sentence_ru": "Книги здесь.",
+   "translations": {},
+   "source": "textbook",
+   "media_id": 564
+  },
+  {
+   "id": 6667,
+   "lesson_id": 571,
+   "user_id": 1,
+   "word_de": "Türen",
+   "translation_ru": "двери",
+   "example_sentence": "Die Türen sind geschlossen.",
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "status": "new",
+   "created_at": "2026-07-28T19:54:42.741Z",
+   "image_url": "/uploads/word-images/word_6667.webp?v=1785286255424",
+   "example_sentence_ru": "Двери закрыты.",
+   "translations": {},
+   "source": "textbook",
+   "media_id": 565
+  }
+ ],
+ "exercises": [
+  {
+   "id": 91749,
+   "lesson_id": 571,
+   "word_id": 6634,
+   "type": "flashcard",
+   "payload": {
+    "answer": "картинки",
+    "question": "Bilder"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.857Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91751,
+   "lesson_id": 571,
+   "word_id": 6634,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 3,
+    "options": [
+     "уроки",
+     "слова",
+     "задания",
+     "картинки"
+    ],
+    "question": "Wie heißt das auf Russisch: Bilder?"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.859Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91753,
+   "lesson_id": 571,
+   "word_id": 6634,
+   "type": "letter_fill",
+   "payload": {
+    "answer": "Bilder",
+    "masked": "B__der",
+    "word_de": "Bilder",
+    "translation_ru": "картинки"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.861Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91750,
+   "lesson_id": 571,
+   "word_id": 6634,
+   "type": "fill_blank",
+   "payload": {
+    "blank": "Bilder",
+    "options": [
+     "Bilder",
+     "Hören",
+     "Sie"
+    ],
+    "sentence": "Sehen Sie die ___ an. Hören Sie."
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.858Z",
+   "image_url": null,
+   "payload_translations": {
+    "ru": "Я вижу картинки."
+   }
+  },
+  {
+   "id": 91752,
+   "lesson_id": 571,
+   "word_id": 6634,
+   "type": "sentence_write",
+   "payload": {
+    "example": "Sehen Sie die Bilder an. Hören Sie.",
+    "hint_ru": "Напиши простое предложение со словом «Bilder». Например: Я вижу картинки.",
+    "word_de": "Bilder",
+    "translation_ru": "картинки"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.860Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91864,
+   "lesson_id": 571,
+   "word_id": 6657,
+   "type": "flashcard",
+   "payload": {
+    "answer": "книги",
+    "question": "Bücher"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.961Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91866,
+   "lesson_id": 571,
+   "word_id": 6657,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 1,
+    "options": [
+     "столицы",
+     "книги",
+     "письма",
+     "дома"
+    ],
+    "question": "Wie heißt das auf Russisch: Bücher?"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.963Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91867,
+   "lesson_id": 571,
+   "word_id": 6657,
+   "type": "sentence_write",
+   "payload": {
+    "example": "Ich habe viele Bücher.",
+    "hint_ru": "Напиши простое предложение со словом «книги».",
+    "word_de": "Bücher",
+    "translation_ru": "книги"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.964Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91868,
+   "lesson_id": 571,
+   "word_id": 6657,
+   "type": "letter_fill",
+   "payload": {
+    "answer": "Bücher",
+    "masked": "Büc_er",
+    "word_de": "Bücher",
+    "translation_ru": "книги"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.965Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91865,
+   "lesson_id": 571,
+   "word_id": 6657,
+   "type": "fill_blank",
+   "payload": {
+    "blank": "Bücher",
+    "options": [
+     "Bücher",
+     "Schulen",
+     "Hefte"
+    ],
+    "sentence": "Ich lese die ___."
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:52.962Z",
+   "image_url": null,
+   "payload_translations": {
+    "ru": "Я читаю книги."
+   }
+  },
+  {
+   "id": 91914,
+   "lesson_id": 571,
+   "word_id": 6667,
+   "type": "flashcard",
+   "payload": {
+    "answer": "двери",
+    "question": "Türen"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.006Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91916,
+   "lesson_id": 571,
+   "word_id": 6667,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 3,
+    "options": [
+     "стены",
+     "крыши",
+     "окна",
+     "двери"
+    ],
+    "question": "Wie heißt das auf Russisch: Türen?"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.009Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91917,
+   "lesson_id": 571,
+   "word_id": 6667,
+   "type": "sentence_write",
+   "payload": {
+    "example": "Die Türen sind geschlossen.",
+    "hint_ru": "Напиши простое предложение со словом «Türen».",
+    "word_de": "Türen",
+    "translation_ru": "двери"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.010Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91918,
+   "lesson_id": 571,
+   "word_id": 6667,
+   "type": "letter_fill",
+   "payload": {
+    "answer": "Türen",
+    "masked": "Tü_en",
+    "word_de": "Türen",
+    "translation_ru": "двери"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.015Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91978,
+   "lesson_id": 571,
+   "word_id": 6634,
+   "type": "dictation",
+   "payload": {
+    "word_de": "Bilder",
+    "translation_ru": "картинки"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.069Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91979,
+   "lesson_id": 571,
+   "word_id": 6634,
+   "type": "speech",
+   "payload": {
+    "word_de": "Bilder",
+    "translation_ru": "картинки"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.070Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 92024,
+   "lesson_id": 571,
+   "word_id": 6657,
+   "type": "dictation",
+   "payload": {
+    "word_de": "Bücher",
+    "translation_ru": "книги"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.116Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 92025,
+   "lesson_id": 571,
+   "word_id": 6657,
+   "type": "speech",
+   "payload": {
+    "word_de": "Bücher",
+    "translation_ru": "книги"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.117Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 92044,
+   "lesson_id": 571,
+   "word_id": 6667,
+   "type": "dictation",
+   "payload": {
+    "word_de": "Türen",
+    "translation_ru": "двери"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.133Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 92045,
+   "lesson_id": 571,
+   "word_id": 6667,
+   "type": "speech",
+   "payload": {
+    "word_de": "Türen",
+    "translation_ru": "двери"
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.134Z",
+   "image_url": null,
+   "payload_translations": {}
+  },
+  {
+   "id": 91915,
+   "lesson_id": 571,
+   "word_id": 6667,
+   "type": "fill_blank",
+   "payload": {
+    "blank": "Türen",
+    "options": [
+     "Türen",
+     "Fenster",
+     "Wände"
+    ],
+    "sentence": "Die ___ sind offen."
+   },
+   "easiness_factor": "2.50",
+   "interval_days": 0,
+   "repetitions": 0,
+   "next_review_date": "2026-07-27T22:00:00.000Z",
+   "created_at": "2026-07-28T19:56:53.007Z",
+   "image_url": null,
+   "payload_translations": {
+    "ru": "Двери открыты."
+   }
+  }
+ ]
+}

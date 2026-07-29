@@ -8,7 +8,7 @@ import { generateWordImage, isFunctionWord } from './imageGen.js'
 import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
 import { logOperation, textProvider } from './opLog.js'
 import { normalizeIncomingWord } from './wordNormalize.js'
-import { bareWord, articlePattern } from './articles.js'
+import { bareWord, articlePattern, articleRe } from './articles.js'
 import { auditLesson } from './lessonAudit.js'
 import { classifyEntry } from './entryKind.js'
 
@@ -757,6 +757,40 @@ export async function extractLessonPreview(lessonId) {
 // Шаг 2 превью: учитель отметил галочками/дописал слова и предложения — коммитим
 // ТОЛЬКО их (INSERT слов/предложений/грамматики), генерируем упражнения для новых слов,
 // затем enrichLesson (переводы/картинки на все языки). Идёт в фоне, статус — как обычно.
+// Добавить слово в урок, считая формы с артиклем и без ОДНИМ словом.
+//
+// Уникальный индекс (lesson_id, word_de) сравнивает строки строго, поэтому «Bilder» и
+// «die Bilder» проходили как разные записи: после дозагрузки тетради в уроке 18 появилось
+// три такие пары — одно слово дважды, у каждого свой комплект из семи упражнений.
+// Ищем по ключу без артикля; форму С артиклем считаем более полной и подтягиваем её.
+async function upsertLessonWord({ lessonId, ownerId, wordDe, translationRu, example, source, mediaId, targetLang }) {
+  const { rows } = await db.query(
+    `SELECT id, word_de FROM words
+      WHERE lesson_id = $1
+        AND regexp_replace(lower(word_de), '^(${articlePattern(targetLang)})\\s+', '') = $2
+      LIMIT 1`,
+    [lessonId, bareWord(wordDe, targetLang)])
+
+  if (!rows[0]) {
+    await db.query(
+      `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
+       DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
+                     media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
+      [lessonId, ownerId, wordDe, translationRu, example || null, source, mediaId || null])
+    return
+  }
+
+  const re = articleRe(targetLang)
+  const upgrade = re.test(wordDe) && !re.test(rows[0].word_de) ? wordDe : rows[0].word_de
+  await db.query(
+    `UPDATE words SET word_de = $2,
+            example_sentence = COALESCE(example_sentence, $3),
+            media_id = COALESCE(media_id, $4)
+      WHERE id = $1`,
+    [rows[0].id, upgrade, example || null, mediaId || null])
+}
+
 export async function commitLessonWords(lessonId, words = [], sentences = [], grammarPoints = []) {
   try {
     const { rows: lrow } = await db.query('SELECT owner_id, target_lang FROM lessons WHERE id=$1', [lessonId])
@@ -797,17 +831,13 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
       const wordDe = normalizeIncomingWord(w.word_de, known)
       if (!wordDe) continue
       const source = w.source === 'extra' ? 'extra' : 'textbook'
-      await db.query(
-        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
-         VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
-         DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
-                       media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-        // Перевода нет — пишем само слово, а не NULL: колонка NOT NULL, и одно слово без
-        // перевода из 192 обрывало запись целиком (урок 18: успели лечь 50 слов, остальные
-        // потерялись, урок ушёл в «ошибка» и пропал у учеников). Заглушку «слово = перевод»
-        // enrichLesson ниже заменяет настоящим переводом — этот приём в проекте уже принят.
-        [lessonId, ownerId, wordDe, (w.translation_ru || '').trim() || wordDe,
-         w.example_sentence || null, source, w.media_id || null])
+      // Перевода нет — пишем само слово, а не NULL: колонка NOT NULL, и одно слово без
+      // перевода из 192 обрывало запись целиком (урок 18: успели лечь 50 слов, остальные
+      // потерялись, урок ушёл в «ошибка» и пропал у учеников). Заглушку «слово = перевод»
+      // enrichLesson ниже заменяет настоящим переводом — этот приём в проекте уже принят.
+      await upsertLessonWord({ lessonId, ownerId, wordDe, targetLang,
+        translationRu: (w.translation_ru || '').trim() || wordDe,
+        example: w.example_sentence, source, mediaId: w.media_id })
     }
 
     const bySource = { textbook: [], extra: [] }
@@ -891,13 +921,11 @@ export async function processNewMedia(lessonId) {
       const wordDe = normalizeIncomingWord(w.word_de, known)
       if (!wordDe) continue
       const mediaId = mediaIdForWord(wordDe, pairs) // с какого скана слово
-      await db.query(
-        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
-         VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (lesson_id, word_de)
-         DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
-                       media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-        [lessonId, ownerId, w.word_de, (w.translation_ru || '').trim() || wordDe,
-         w.example_sentence || null, src, mediaId])
+      // В базу идёт НОРМАЛИЗОВАННАЯ форма (wordDe), а не сырая из распознавания: раньше
+      // здесь вставлялось w.word_de, и вся работа normalizeIncomingWord пропадала.
+      await upsertLessonWord({ lessonId, ownerId, wordDe, targetLang,
+        translationRu: (w.translation_ru || '').trim() || wordDe,
+        example: w.example_sentence, source: src, mediaId })
     }
     await saveSentences(lessonId, cons.sentences, src) // реальные предложения урока
   }
@@ -1078,14 +1106,9 @@ export async function processLesson(lessonId, ownerId) {
         const wordDe = normalizeIncomingWord(word.word_de, known)
         if (!wordDe) continue
         const mediaId = mediaIdForWord(wordDe, pairs) // с какого скана слово
-        await db.query(
-          `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence, source, media_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
-           ON CONFLICT (lesson_id, word_de)
-           DO UPDATE SET example_sentence = COALESCE(EXCLUDED.example_sentence, words.example_sentence),
-                         media_id = COALESCE(words.media_id, EXCLUDED.media_id)`,
-          [lessonId, ownerId, wordDe, (word.translation_ru || '').trim() || wordDe, word.example_sentence || null, source, mediaId]
-        )
+        await upsertLessonWord({ lessonId, ownerId, wordDe, targetLang,
+          translationRu: (word.translation_ru || '').trim() || wordDe,
+          example: word.example_sentence, source, mediaId })
       }
       await saveSentences(lessonId, cons.sentences, source) // реальные предложения урока
       allWords.push(...(cons.words || []))
