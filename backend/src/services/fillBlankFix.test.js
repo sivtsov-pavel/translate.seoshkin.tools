@@ -52,10 +52,12 @@ describe('fixFillBlank', () => {
 
 // Реальные блокеры из аудита базы 29.07: предложение целое, вписывать некуда
 describe('ensureBlank', () => {
-  it('ставит пропуск на слове ответа', () => {
+  it('ставит пропуск на слове ответа и правит варианты под его форму', () => {
     const out = ensureBlank({ sentence: 'Heute ist ein schöner Tag.', blank: 'heute', options: ['heute', 'morgen'] })
     expect(out.sentence).toBe('___ ist ein schöner Tag.')
-    expect(out.blank).toBe('Heute') // форма из предложения, с заглавной
+    expect(out.blank).toBe('Heute')            // форма из предложения, с заглавной
+    expect(out.options).toContain('Heute')     // без этого ответа нет среди вариантов
+    expect(out.options).not.toContain('heute')
   })
 
   it('английский курс тоже', () => {

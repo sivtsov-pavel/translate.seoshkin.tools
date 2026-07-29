@@ -62,7 +62,14 @@ export function ensureBlank(payload) {
   const re = new RegExp(`(^|[^\\p{L}])(${blank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})([^\\p{L}]|$)`, 'iu')
   const m = sentence.match(re)
   if (!m) return payload
-  return { ...payload, sentence: sentence.replace(m[2], '___'), blank: m[2] }
+  const form = m[2]
+  // Ответом становится форма ИЗ предложения («Heute» с заглавной), поэтому её нужно
+  // подставить и в варианты: иначе ответа не окажется среди них и упражнение снова
+  // станет непроходимым — ровно это и вышло при первом заходе.
+  const options = Array.isArray(payload.options)
+    ? payload.options.map(o => String(o).trim().toLowerCase() === form.toLowerCase() ? form : o)
+    : payload.options
+  return { ...payload, sentence: sentence.replace(form, '___'), blank: form, options }
 }
 
 // Один и тот же вариант дважды: выбор превращается в угадайку, а «правильных» кнопок две.
