@@ -98,3 +98,17 @@ describe('dedupeOptions', () => {
     expect(dedupeOptions(p)).toBe(p)
   })
 })
+
+// Аудит 29.07: ответ « wichtig» с пробелом не совпадал с вариантом «wichtig»
+describe('fixFillBlank — пробелы по краям', () => {
+  it('ответ с ведущим пробелом совпадает с вариантом', () => {
+    const out = fixFillBlank({ sentence: 'Das ist ___.', blank: ' wichtig', options: ['wichtig', 'klein'] })
+    expect(out.blank).toBe('wichtig')
+    expect(out.options).toContain('wichtig')
+  })
+
+  it('пробелы в вариантах тоже снимаются', () => {
+    const out = fixFillBlank({ sentence: 'Das ist ___.', blank: 'gut', options: [' gut ', 'klein'] })
+    expect(out.options[0]).toBe('gut')
+  })
+})

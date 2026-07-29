@@ -43,6 +43,11 @@ export function fixFillBlank(payload) {
   const options = Array.isArray(payload.options) ? payload.options.filter(o => typeof o === 'string') : []
   const blank = String(payload.blank || '').trim()
   if (!blank || options.length < 2) return payload
+  // Лишние пробелы по краям делают упражнение непроходимым на ровном месте: ответ
+  // « wichtig» не совпадал с вариантом «wichtig», хотя это одно и то же слово.
+  if (blank !== payload.blank || options.some(o => o !== o.trim())) {
+    return fixFillBlank({ ...payload, blank, options: options.map(o => o.trim()) })
+  }
   if (options.some(o => o.trim() === blank)) return payload
 
   const form = options.find(o => isSameWordForm(o, blank))
