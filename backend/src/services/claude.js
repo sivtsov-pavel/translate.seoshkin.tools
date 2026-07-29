@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
 import { pickSentencesFor } from './sentencePick.js'
+import { salvageJsonObjects } from './jsonSalvage.js'
 import { fixFillBlank, ensureBlank, dedupeOptions } from './fillBlankFix.js'
 import { groundFillBlank, groundSentenceWrite } from './grounding.js'
 import { joinWrappedLines } from './entryKind.js'
@@ -52,6 +53,16 @@ function parseJson(text) {
       const candidate = (clean.startsWith('[') ? '[' : '{') + clean.slice(1, lastComma + 1) + (clean.startsWith('[') ? ']' : '}')
       try { return JSON.parse(candidate) } catch {}
     }
+    // 3) Дефект В СЕРЕДИНЕ ответа. Предыдущие шаги тут бессильны: обрезка хвоста оставляет
+    // поломку на месте. Собираем элементы поштучно — один битый теряется, остальные доходят.
+    // Раньше такой ответ ронял весь батч: набор «Эмоции» остался с 36 словами и НУЛЁМ
+    // упражнений, потому что модель ошиблась в одном элементе из сорока.
+    const salvaged = salvageJsonObjects(clean)
+    if (salvaged.length > 1) {
+      console.warn(`parseJson: ответ повреждён, спасено элементов: ${salvaged.length}`)
+      return salvaged
+    }
+    if (salvaged.length === 1) return salvaged[0]
     throw new Error(`Ошибка парсинга JSON от GPT (${clean.length} символов): ${e.message}`)
   }
 }
