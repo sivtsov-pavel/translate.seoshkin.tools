@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { EXERCISES_PROMPT } from './claude.js'
+import { EXERCISES_PROMPT, sanitizeExercise } from './claude.js'
 
 // В промпте самое действенное — примеры. Раньше они были жёстко немецкими для ВСЕХ
 // языков, и модель копировала их язык: в испанском курсе появлялись предложения
@@ -58,5 +58,35 @@ describe('EXERCISES_PROMPT — примеры должны быть на язы�
   it('маска для «Добавь букву» тоже на языке курса', () => {
     expect(promptFor('es')).toContain('p_rro')
     expect(promptFor('en')).toContain('d_g')
+  })
+})
+
+
+// Аудит базы 29.07 нашёл, что дефекты возвращаются с каждой новой генерацией: функции
+// починки жили в разовом скрипте, а не в санитайзере. Эти проверки держат их на месте.
+describe('sanitizeExercise — брак не доходит до базы', () => {
+  it('пропуск проставляется, если модель его не поставила', () => {
+    const out = sanitizeExercise({ type: 'fill_blank', word_de: 'heute',
+      payload: { sentence: 'Heute ist ein schöner Tag.', blank: 'heute', options: ['heute', 'morgen'] } })
+    expect(out.payload.sentence).toContain('___')
+  })
+
+  it('повтор в вариантах убирается, верный ответ остаётся верным', () => {
+    const out = sanitizeExercise({ type: 'multiple_choice', word_de: 'rot',
+      payload: { question: 'x', options: ['rot', 'rot', 'blau'], correct: 2 } })
+    // Порядок не проверяем: варианты ещё и перемешиваются, чтобы ответ не был всегда первым.
+    expect([...out.payload.options].sort()).toEqual(['blau', 'rot'])
+    expect(out.payload.options[out.payload.correct]).toBe('blau')
+  })
+
+  it('русский эталон в «напиши предложение» отбраковывается целиком', () => {
+    expect(sanitizeExercise({ type: 'sentence_write', word_de: 'die Antwort',
+      payload: { word_de: 'die Antwort', example: 'Ответы на вопросы.' } })).toBe(null)
+  })
+
+  it('нормальное «напиши предложение» проходит', () => {
+    const ok = { type: 'sentence_write', word_de: 'die Antwort',
+      payload: { word_de: 'die Antwort', example: 'Die Antwort ist richtig.', example_ru: 'Ответ верный.' } }
+    expect(sanitizeExercise(ok)).not.toBe(null)
   })
 })

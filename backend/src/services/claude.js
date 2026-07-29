@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
 import { pickSentencesFor } from './sentencePick.js'
-import { fixFillBlank } from './fillBlankFix.js'
+import { fixFillBlank, ensureBlank, dedupeOptions } from './fillBlankFix.js'
 import { groundFillBlank, groundSentenceWrite } from './grounding.js'
 import { joinWrappedLines } from './entryKind.js'
 import { normalizeLetterFill } from './letterFill.js'
@@ -488,7 +488,7 @@ export async function generateLetterFill(words) {
 // Единый выходной фильтр упражнений от модели: чиним битые маски «Добавь букву»
 // (модель регулярно теряет буквы или меняет длину — упражнение становится невыполнимым)
 // и отбрасываем то, что починить нечем. Дальше — перемешивание вариантов ответа.
-function sanitizeExercise(ex) {
+export function sanitizeExercise(ex) {
   if (!ex || typeof ex !== 'object') return null
   // Пропуск: модель ставит то два подчёркивания, то четыре. Фронт делит предложение
   // строго по «___», поэтому «Ich __ jeden Morgen.» осталось бы без пропуска вовсе.
@@ -498,11 +498,22 @@ function sanitizeExercise(ex) {
     if (typeof payload.sentence === 'string') {
       payload = { ...payload, sentence: payload.sentence.replace(/_{2,}/g, '___') }
     }
-    // Ответа нет среди вариантов — упражнение непроходимо. Чаще всего модель кладёт в ответ
-    // словарную форму, а в варианты — ту, что нужна в предложении («schließen» против
-    // «ich schließe»). Правим на входе, чтобы такое не оседало в базе.
-    ex = { ...ex, payload: fixFillBlank(payload) }
+    // Три дефекта, которые модель выдаёт регулярно, — чиним ДО записи в базу. Раньше эти
+    // функции жили только в разовом скрипте, и каждая новая генерация приносила брак заново:
+    //  • пропуск не поставлен вовсе («Heute ist ein schöner Tag.» при ответе «heute»);
+    //  • ответ не совпадает ни с одним вариантом;
+    //  • один и тот же вариант дважды.
+    ex = { ...ex, payload: dedupeOptions(fixFillBlank(ensureBlank(payload))) }
   }
+
+  if (ex.type === 'multiple_choice') {
+    ex = { ...ex, payload: dedupeOptions(ex.payload || {}) }
+  }
+
+  // Пример в «напиши предложение» обязан быть на ИЗУЧАЕМОМ языке — это эталон перевода.
+  // Модель иногда меняет поля местами и кладёт туда русский. Такое упражнение не чиним, а
+  // отбрасываем: добивочный проход сгенерирует слову новое, а брак в базу не попадёт.
+  if (ex.type === 'sentence_write' && /[А-Яа-яЁё]/.test(String(ex.payload?.example || ''))) return null
   if (ex.type === 'letter_fill') {
     const payload = normalizeLetterFill(ex.payload)
     if (!payload) return null // слово нечем маскировать — упражнения не будет
