@@ -11,6 +11,15 @@ import { isValidMask } from './letterFill.js'
 // Уровни: 'blocker' — пройти невозможно; 'warn' — пройти можно, но учит неверно.
 const CORE = ['flashcard', 'fill_blank', 'multiple_choice', 'sentence_write', 'letter_fill']
 
+// Имена собственные диакритикой не выдают язык: «Beyoncé» в немецком упражнении
+// «___ singt schön.» — нормальный вариант ответа, а не испанский текст. Пропускаем строки,
+// где все слова с заглавной: это имя, название или бренд.
+function looksProperNoun(text) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean)
+  if (!words.length || words.length > 3) return false
+  return words.every(w => /^[\p{Lu}\p{N}]/u.test(w))
+}
+
 // Маркеры «чужого» языка. Испанский курс не должен содержать немецких предложений —
 // реальный случай: «Die abeja ist klein» (испанское слово в немецком предложении).
 const LANG_MARKERS = {
@@ -90,7 +99,7 @@ export function checkExercise(ex) {
   for (const [code, re] of Object.entries(LANG_MARKERS)) {
     if (code === ex.target_lang) continue
     for (const t of targetTexts(ex)) {
-      if (typeof t === 'string' && t && re.test(t)) {
+      if (typeof t === 'string' && t && !looksProperNoun(t) && re.test(t)) {
         bad('blocker', `текст не на языке курса (${ex.target_lang}): «${String(t).slice(0, 50)}»`)
         break
       }

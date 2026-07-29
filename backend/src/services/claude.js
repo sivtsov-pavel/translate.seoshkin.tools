@@ -3,6 +3,7 @@ import { platformClient } from './openaiClient.js'
 import { pickSentencesFor } from './sentencePick.js'
 import { fixFillBlank } from './fillBlankFix.js'
 import { groundFillBlank, groundSentenceWrite } from './grounding.js'
+import { joinWrappedLines } from './entryKind.js'
 import { normalizeLetterFill } from './letterFill.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
@@ -337,7 +338,9 @@ async function mergeChunk(extractions, transcription = null, existingWords = [],
     .map(x => String(typeof x === 'string' ? x : x?.text || '').trim().toLowerCase().slice(0, 80))
     .filter(Boolean))
   for (const e of extractions) {
-    for (const raw of (e.example_sentences || [])) {
+    // Строки рукописи приходят по одной, и фраза, не поместившаяся в ширину страницы,
+    // разорвана на два обрывка. Склеиваем до того, как решать, годится ли она.
+    for (const raw of joinWrappedLines(e.example_sentences || [])) {
       const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim()
       const key = text.toLowerCase().slice(0, 80)
       if (text.length < 4 || !key || seenText.has(key)) continue

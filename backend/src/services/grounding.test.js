@@ -34,10 +34,16 @@ describe('groundFillBlank', () => {
     expect(groundFillBlank(p, SENTS)).toBe(p)
   })
 
-  it('длинную фразу не берём — на A1 пропуск в ней теряется', () => {
-    const long = ['Ich suche die Berliner Straße weil ich dort einen alten guten Freund von früher treffen möchte.']
+  it('фраза во всю ширину страницы (16 слов) — берём: это нормальное предложение урока', () => {
+    const wide = ['Ich suche die Berliner Straße weil ich dort einen alten guten Freund von früher treffen möchte.']
+    const out = groundFillBlank({ sentence: 'Ich sehe einen Freund.', blank: 'Freund', options: ['Freund', 'Bruder'] }, wide)
+    expect(out.sentence).toContain('___')
+  })
+
+  it('явно длиннее записанного от руки — не берём', () => {
+    const tooLong = ['Ich suche die Berliner Straße weil ich dort einen alten und sehr guten Freund von früher wieder einmal treffen möchte.']
     const p = { sentence: 'Ich sehe einen Freund.', blank: 'Freund', options: ['Freund', 'Bruder'] }
-    expect(groundFillBlank(p, long)).toBe(p)
+    expect(groundFillBlank(p, tooLong)).toBe(p)
   })
 
   it('вариантов меньше двух — не трогаем', () => {

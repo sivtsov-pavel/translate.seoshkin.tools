@@ -47,3 +47,36 @@ export function classifyEntry(raw) {
 
   return 'word'
 }
+
+// Склейка строк, разорванных переносом в тетради.
+//
+// Распознавание отдаёт каждую строку рукописи отдельно, и предложение, не поместившееся
+// в ширину страницы, приходит двумя обрывками. Из-за этого «Die Dose ist leer» в базе
+// лежало как «die Dose» — а такой обрывок уже не годится ни в упражнение, ни в словарь.
+//
+// Склеиваем в двух случаях:
+//  • строка кончается дефисом — это явный перенос слова, части соединяем БЕЗ пробела;
+//  • строка не закончена по смыслу (нет точки, вопроса, восклицания), а следующая
+//    начинается со строчной буквы — продолжение той же фразы.
+export function joinWrappedLines(lines) {
+  const out = []
+  for (const raw of (lines || [])) {
+    const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim()
+    if (!text) continue
+    const prev = out[out.length - 1]
+    if (prev) {
+      // Перенос слова: «Kühl-» + «schrank» → «Kühlschrank».
+      if (/[-‑–]$/.test(prev)) {
+        out[out.length - 1] = prev.replace(/[-‑–]$/, '') + text.replace(/^[-‑–]\s*/, '')
+        continue
+      }
+      // Незаконченная фраза + продолжение со строчной.
+      if (!/[.!?:;]$/.test(prev) && /^\p{Ll}/u.test(text)) {
+        out[out.length - 1] = `${prev} ${text}`
+        continue
+      }
+    }
+    out.push(text)
+  }
+  return out
+}

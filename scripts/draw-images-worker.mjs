@@ -26,6 +26,7 @@ import { conceptToEnglish, generateImageLocally, localAiHealth } from '../backen
 import { saveOptimizedImage } from '../backend/src/services/imageOptimize.js'
 import { config } from '../backend/src/config.js'
 import { isFunctionWord } from '../backend/src/services/imageGen.js'
+import { classifyEntry } from '../backend/src/services/entryKind.js'
 
 // Скрипт запускается НА МАКЕ, а не в докере. Дефолты в config.js — докерные
 // (host.docker.internal): снаружи контейнера такого хоста нет, и запрос падает с
@@ -109,7 +110,11 @@ const rows = JSON.parse(prodSql(`
 // Служебные слова (предлоги, артикли, числа) иллюстрировать бессмысленно — тот же фильтр,
 // что и в боевой генерации. Но в режиме align мы ничего не рисуем, а раздаём уже готовую
 // картинку дублям — там фильтр не нужен: раз рисовашка есть, пусть будет у всех экземпляров.
-const todo = (mode === 'align' || ids.length) ? rows : rows.filter(r => !isFunctionWord(r.word_de, r.target_lang))
+// Служебные слова и ФРАЗЫ не рисуем: картинка к «Wie viel kostet das?» ничего не объясняет,
+// а две минуты работы ноутбука стоит. Фразы попали в словарь как записи-слова из старых
+// разборов — отсеиваем их тем же классификатором, что и превью.
+const todo = (mode === 'align' || ids.length) ? rows : rows.filter(r =>
+  !isFunctionWord(r.word_de, r.target_lang) && classifyEntry(r.word_de) === 'word')
 const verb = mode === 'align' ? 'к выравниванию' : 'к рисованию'
 console.log(`Режим «${mode}»${lang ? `, язык ${lang}` : ''}: кандидатов ${rows.length}, ${verb} ${todo.length}`)
 if (!todo.length) { console.log('Делать нечего.'); process.exit(0) }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { classifyEntry } from './entryKind.js'
+import { classifyEntry, joinWrappedLines } from './entryKind.js'
 
 describe('classifyEntry — реальные строки из разбора урока 19', () => {
   it('вопрос — предложение', () => {
@@ -54,5 +54,34 @@ describe('classifyEntry — границы', () => {
   it('пустая строка — обрывок', () => {
     expect(classifyEntry('   ')).toBe('fragment')
     expect(classifyEntry(null)).toBe('fragment')
+  })
+})
+
+describe('joinWrappedLines — перенос в тетради', () => {
+  it('дефис в конце — перенос слова, склеиваем без пробела', () => {
+    expect(joinWrappedLines(['Der Kühl-', 'schrank ist neu.'])).toEqual(['Der Kühlschrank ist neu.'])
+  })
+
+  it('фраза не закончена, продолжение со строчной — одно предложение', () => {
+    expect(joinWrappedLines(['Die Dose', 'ist leer.'])).toEqual(['Die Dose ist leer.'])
+  })
+
+  it('законченную фразу не приклеиваем к следующей', () => {
+    expect(joinWrappedLines(['Ich wohne hier.', 'Du kommst spät.']))
+      .toEqual(['Ich wohne hier.', 'Du kommst spät.'])
+  })
+
+  it('следующая с заглавной — новая мысль, не продолжение', () => {
+    expect(joinWrappedLines(['Das ist mein Freund', 'Er ist neu hier.']))
+      .toEqual(['Das ist mein Freund', 'Er ist neu hier.'])
+  })
+
+  it('вопрос закончен — склейки нет', () => {
+    expect(joinWrappedLines(['Wie geht es dir?', 'gut, danke.']))
+      .toEqual(['Wie geht es dir?', 'gut, danke.'])
+  })
+
+  it('пустые строки отбрасываются', () => {
+    expect(joinWrappedLines(['  ', 'Ich bin da.'])).toEqual(['Ich bin da.'])
   })
 })

@@ -49,11 +49,13 @@ function findForm(sentence, word, lang) {
 //   «Die Pause ist vorbei oder fertig. — Перерыв закончен.» — русский перевод через тире;
 //   «die Dose»                                     — обрывок в два слова.
 // Подставь такое — и упражнение станет хуже, чем выдуманное моделью.
-export function isUsableSentence(raw, maxWords = 12) {
+export function isUsableSentence(raw, maxWords = 16) {
   const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim()
   if (!text) return false
   const words = text.split(/\s+/).filter(Boolean)
   // Меньше четырёх слов — после пропуска не останется контекста, по которому можно догадаться.
+  // Верхняя граница щедрая: строка во всю ширину страницы — нормальная фраза урока,
+  // отбрасываем только то, что явно длиннее записанного от руки предложения.
   if (words.length < 4 || words.length > maxWords) return false
   if (/[А-Яа-яЁё]/.test(text)) return false          // перевод затесался в текст
   if (/[()\[\]]/.test(text)) return false            // «(Are you a smoker?)»
@@ -66,7 +68,7 @@ export function isUsableSentence(raw, maxWords = 12) {
  * Пересобирает fill_blank на реальном предложении урока, если оно есть.
  * @returns {object} новый payload или исходный, если подходящей фразы нет
  */
-export function groundFillBlank(payload, sentences, lang = 'de', maxWords = 12) {
+export function groundFillBlank(payload, sentences, lang = 'de', maxWords = 16) {
   if (!payload || typeof payload !== 'object') return payload
   const word = String(payload.blank || payload.word_de || '').trim()
   if (!word) return payload
@@ -91,7 +93,7 @@ export function groundFillBlank(payload, sentences, lang = 'de', maxWords = 12) 
 /**
  * Подставляет реальное предложение как образец в «Напиши предложение».
  */
-export function groundSentenceWrite(payload, sentences, lang = 'de', maxWords = 12) {
+export function groundSentenceWrite(payload, sentences, lang = 'de', maxWords = 16) {
   if (!payload || typeof payload !== 'object') return payload
   const word = String(payload.word_de || '').trim()
   if (!word) return payload

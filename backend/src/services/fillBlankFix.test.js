@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fixFillBlank, isSameWordForm } from './fillBlankFix.js'
+import { fixFillBlank, isSameWordForm, ensureBlank, dedupeOptions } from './fillBlankFix.js'
 
 describe('isSameWordForm', () => {
   it('формы одного глагола', () => {
@@ -47,5 +47,52 @@ describe('fixFillBlank', () => {
   it('мусор на входе не роняет', () => {
     expect(fixFillBlank(null)).toBe(null)
     expect(fixFillBlank({})).toEqual({})
+  })
+})
+
+// Реальные блокеры из аудита базы 29.07: предложение целое, вписывать некуда
+describe('ensureBlank', () => {
+  it('ставит пропуск на слове ответа', () => {
+    const out = ensureBlank({ sentence: 'Heute ist ein schöner Tag.', blank: 'heute', options: ['heute', 'morgen'] })
+    expect(out.sentence).toBe('___ ist ein schöner Tag.')
+    expect(out.blank).toBe('Heute') // форма из предложения, с заглавной
+  })
+
+  it('английский курс тоже', () => {
+    const out = ensureBlank({ sentence: 'Basketball is fun.', blank: 'basketball', options: ['basketball', 'tennis'] })
+    expect(out.sentence).toBe('___ is fun.')
+  })
+
+  it('пропуск уже есть — не трогаем', () => {
+    const p = { sentence: 'Ich ___ hier.', blank: 'wohne' }
+    expect(ensureBlank(p)).toBe(p)
+  })
+
+  it('слова в предложении нет — чинить нечем', () => {
+    const p = { sentence: 'Der Hund schläft.', blank: 'Katze' }
+    expect(ensureBlank(p)).toBe(p)
+  })
+})
+
+describe('dedupeOptions', () => {
+  it('убирает повтор', () => {
+    const out = dedupeOptions({ options: ['heute', 'morgen', 'Heute'] })
+    expect(out.options).toEqual(['heute', 'morgen'])
+  })
+
+  it('индекс верного ответа едет за ним, а не остаётся на месте', () => {
+    const out = dedupeOptions({ options: ['rot', 'rot', 'blau'], correct: 2 })
+    expect(out.options).toEqual(['rot', 'blau'])
+    expect(out.options[out.correct]).toBe('blau')
+  })
+
+  it('после чистки осталось бы меньше двух — не трогаем', () => {
+    const p = { options: ['rot', 'ROT'] }
+    expect(dedupeOptions(p)).toBe(p)
+  })
+
+  it('повторов нет — тот же объект', () => {
+    const p = { options: ['rot', 'blau'] }
+    expect(dedupeOptions(p)).toBe(p)
   })
 })

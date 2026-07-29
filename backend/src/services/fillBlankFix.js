@@ -49,3 +49,40 @@ export function fixFillBlank(payload) {
   if (form) return { ...payload, blank: form.trim() }
   return { ...payload, options: [...options, blank] }
 }
+
+// Пропуск в предложении вовсе не поставлен: «Heute ist ein schöner Tag.» при ответе «heute».
+// Ученик видит целую фразу и не понимает, куда писать — аудит помечает это блокером.
+// Слово в предложении есть, значит упражнение спасается: ставим на него пропуск.
+export function ensureBlank(payload) {
+  if (!payload || typeof payload !== 'object') return payload
+  const sentence = String(payload.sentence || '')
+  if (!sentence || sentence.includes('___')) return payload
+  const blank = String(payload.blank || '').trim()
+  if (!blank) return payload
+  const re = new RegExp(`(^|[^\\p{L}])(${blank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})([^\\p{L}]|$)`, 'iu')
+  const m = sentence.match(re)
+  if (!m) return payload
+  return { ...payload, sentence: sentence.replace(m[2], '___'), blank: m[2] }
+}
+
+// Один и тот же вариант дважды: выбор превращается в угадайку, а «правильных» кнопок две.
+export function dedupeOptions(payload) {
+  if (!payload || !Array.isArray(payload.options)) return payload
+  const seen = new Set()
+  const options = []
+  for (const o of payload.options) {
+    const k = String(o).trim().toLowerCase()
+    if (!k || seen.has(k)) continue
+    seen.add(k); options.push(String(o).trim())
+  }
+  if (options.length === payload.options.length) return payload
+  if (options.length < 2) return payload // чинить нечем — это другой дефект
+  const next = { ...payload, options }
+  // У «выбери ответ» правильный задан ИНДЕКСОМ — после удаления дубля он бы уехал.
+  if (Number.isInteger(payload.correct)) {
+    const right = payload.options[payload.correct]
+    const idx = options.findIndex(o => o.trim().toLowerCase() === String(right).trim().toLowerCase())
+    next.correct = idx >= 0 ? idx : 0
+  }
+  return next
+}
