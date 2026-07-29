@@ -91,12 +91,23 @@ export default function TeacherAnalytics() {
             <tbody>
               {students.map(s => (
                 <tr key={s.id}>
-                  <td style={td}>{s.name}</td>
+                  <td style={td}>
+                    {s.name}
+                    {/* Заходит, но не решает — учителю это важнее любой точности:
+                        такой ученик не «слабый», он ещё не начал. */}
+                    {s.never_started && (
+                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: 'var(--gold-dark)', background: 'var(--yellow-soft)', border: '1px solid var(--gold)', borderRadius: 999, padding: '2px 8px' }}>
+                        не приступал
+                      </span>
+                    )}
+                  </td>
                   <td style={td}>{s.attempts} <span style={{ color: 'var(--ink-soft)', fontSize: 11 }}>{tt.reports.perWeek(s.attempts_7d)}</span></td>
-                  <td style={{ ...td, fontWeight: 700, color: accColor(s.accuracy) }}>{s.accuracy}%</td>
+                  <td style={{ ...td, fontWeight: 700, color: s.never_started ? 'var(--ink-soft)' : accColor(s.accuracy) }}>
+                    {s.never_started ? '—' : `${s.accuracy}%`}
+                  </td>
                   <td style={td}>{s.known}</td>
                   <td style={td}>{s.learning}</td>
-                  <td style={{ ...td, color: 'var(--ink-soft)' }}>{fmtDate(s.last_active)}</td>
+                  <td style={{ ...td, color: 'var(--ink-soft)' }}>{fmtDate(s.last_active || s.last_seen_at)}</td>
                 </tr>
               ))}
             </tbody>

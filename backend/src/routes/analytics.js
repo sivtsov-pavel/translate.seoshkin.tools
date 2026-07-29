@@ -29,20 +29,29 @@ export async function analyticsRoutes(fastify) {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const ownerId = request.user.id
 
-    // Активность учеников по упражнениям моих уроков
+    // Активность учеников школы. Идём ОТ УЧЕНИКОВ, а не от их ответов: раньше запрос начинался
+    // с exercise_attempts, и ученик без единого ответа в отчёт вообще не попадал. Иван Порублёв
+    // заходил в приложение несколько дней подряд и не решил ни одного упражнения — учитель об
+    // этом не знал, потому что в списке его просто не было. Именно такого ученика и нужно
+    // видеть первым: он не «плохо отвечает», он не начал.
+    const teacherSchoolId = request.user.school_id ?? null
+    const scope = ownerId === 1
+      ? ''                                         // супер-админ видит всех учеников платформы
+      : (teacherSchoolId != null ? ` AND u.school_id = ${parseInt(teacherSchoolId)}` : ' AND false')
     const { rows: attempts } = await db.query(`
       SELECT u.id, COALESCE(u.full_name, u.email) AS name,
              COUNT(ea.id)::int AS attempts,
              COUNT(*) FILTER (WHERE ea.is_correct)::int AS correct,
              MAX(ea.attempted_at) AS last_active,
-             COUNT(*) FILTER (WHERE ea.attempted_at > now() - interval '7 days')::int AS attempts_7d
-      FROM exercise_attempts ea
-      JOIN exercises e ON e.id = ea.exercise_id
-      JOIN lessons l ON l.id = e.lesson_id
-      JOIN users u ON u.id = ea.user_id
-      WHERE l.owner_id = $1 AND u.role = 'student'
-      GROUP BY u.id, name
-      ORDER BY attempts DESC`, [ownerId])
+             COUNT(*) FILTER (WHERE ea.attempted_at > now() - interval '7 days')::int AS attempts_7d,
+             u.last_seen_at
+      FROM users u
+      LEFT JOIN exercise_attempts ea ON ea.user_id = u.id
+        AND EXISTS (SELECT 1 FROM exercises e JOIN lessons l ON l.id = e.lesson_id
+                     WHERE e.id = ea.exercise_id AND l.owner_id = $1)
+      WHERE u.role = 'student'${scope}
+      GROUP BY u.id, name, u.last_seen_at
+      ORDER BY attempts DESC, u.last_seen_at DESC NULLS LAST`, [ownerId])
 
     // Слова known/learning по ученику (среди моих слов)
     const { rows: wordStatus } = await db.query(`
@@ -60,6 +69,8 @@ export async function analyticsRoutes(fastify) {
       id: s.id, name: s.name, attempts: s.attempts, correct: s.correct,
       accuracy: s.attempts ? Math.round(s.correct / s.attempts * 100) : 0,
       last_active: s.last_active, attempts_7d: s.attempts_7d,
+      // Заходил, но не решал — отдельное состояние: это не «слабый ученик», а «не начал».
+      last_seen_at: s.last_seen_at, never_started: s.attempts === 0,
       known: wsMap[s.id]?.known || 0, learning: wsMap[s.id]?.learning || 0,
     }))
 
