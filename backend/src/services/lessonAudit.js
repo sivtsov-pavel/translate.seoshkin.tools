@@ -128,6 +128,16 @@ export function checkExercise(ex) {
 // Проверка одного слова. w: { id, word_de, target_lang }
 export function checkWord(w) {
   const out = []
+
+  // Само слово на РУССКОМ вместо изучаемого языка. Проверка первая, потому что применима
+  // ко всем курсам: в английском уроке «Национальности» лежали «поляк», «Китай», «США» —
+  // ученик получал карточку, где и вопрос, и ответ по-русски. Прежние правила смотрели
+  // только немецкий род и заглавную букву, и такое проходило мимо аудита.
+  if (/[А-Яа-яЁё]/.test(String(w.word_de || ''))) {
+    out.push({ level: 'blocker', kind: 'язык', id: w.id, text: `«${w.word_de}» — по-русски вместо ${w.target_lang}` })
+    return out
+  }
+
   if (w.target_lang !== 'de') return out
   const m = String(w.word_de || '').match(ART_RE)
   if (!m) return out

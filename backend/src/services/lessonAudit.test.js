@@ -114,3 +114,21 @@ describe('auditLesson — сводка по уроку', () => {
     expect(auditLesson({}).ok).toBe(true)
   })
 })
+
+// Аудит базы 29.07: в английском уроке «Национальности» лежали русские слова,
+// и ни одно правило их не замечало — проверялись только немецкий род и заглавная.
+describe('checkWord — слово не на языке курса', () => {
+  it('русское слово в английском курсе — блокер', () => {
+    const r = checkWord({ id: 1, word_de: 'поляк', target_lang: 'en' })
+    expect(r.map(i => i.level)).toContain('blocker')
+  })
+
+  it('русское слово в немецком курсе — тоже', () => {
+    expect(checkWord({ id: 2, word_de: 'Китай', target_lang: 'de' }).length).toBe(1)
+  })
+
+  it('нормальные слова проходят', () => {
+    expect(checkWord({ id: 3, word_de: 'Poland', target_lang: 'en' })).toHaveLength(0)
+    expect(checkWord({ id: 4, word_de: 'der Tisch', target_lang: 'de' })).toHaveLength(0)
+  })
+})
