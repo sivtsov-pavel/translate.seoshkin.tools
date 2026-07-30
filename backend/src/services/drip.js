@@ -120,7 +120,9 @@ export async function playableLessonIds(userId, schoolId, targetLang = null) {
     `SELECT DISTINCT e.lesson_id
      FROM exercises e
      JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
-     WHERE e.lesson_id = ANY($2)`,
+     WHERE e.lesson_id = ANY($2)
+     UNION
+     SELECT lesson_id FROM user_lesson_unlocked WHERE user_id = $1 AND lesson_id = ANY($2)`,
     [userId, courseLessonIds])
   const touchedSet = new Set(touchedRows.map(r => r.lesson_id))
 
@@ -153,6 +155,18 @@ export async function playableLessonIds(userId, schoolId, targetLang = null) {
       doneIdx++
     }
   }
+
+  // Фиксируем факт открытия: то, что человеку однажды показали как доступное, закрывать
+  // нельзя, даже если правила прохождения потом изменятся. Пишем в фоне и молча — это
+  // журнал доступа, а не часть ответа; упавшая запись не должна ломать выдачу уроков.
+  const toRecord = [...playable].filter(id => courseLessonIds.includes(id) && !touchedSet.has(id))
+  if (toRecord.length) {
+    db.query(
+      `INSERT INTO user_lesson_unlocked (user_id, lesson_id)
+       SELECT $1, unnest($2::int[]) ON CONFLICT DO NOTHING`,
+      [userId, toRecord]).catch(() => {})
+  }
+
   return { playable, needsSchedule, passed: passedSet }
 }
 

@@ -16,6 +16,11 @@
 // фраза, вписывать туда должен ученик.
 const HAS_GAP = /\.{3}|…|_{2,}/
 
+// Личное местоимение в начале строки — признак предложения, а не словарной единицы.
+// Длина такое не ловит: «ich heiße Pablo» — три слова, но это предложение, и карточка
+// с диктантом ему не нужны. Языки те же, что поддерживает приложение.
+const PERSONAL_PRONOUN_START = /^(ich|du|er|sie|es|wir|ihr|i|you|he|she|we|they|yo|tú|él|ella|nosotros|ellos)$/i
+
 /**
  * @returns {'sentence'|'fragment'|'word'}
  *   sentence — строку надо предложить как предложение урока;
@@ -44,6 +49,11 @@ export function classifyEntry(raw) {
   // Порог 4: устойчивые выражения («noch nicht», «zu Hause», «guten Tag») остаются словами,
   // а «Kannst du mir helfen» — уже фраза.
   if (words.length >= 4) return 'sentence'
+
+  // Короткое предложение из двух-трёх слов порог длины не ловит: «ich heiße Pablo»
+  // проходило как слово и получало карточку с диктантом. Признак надёжнее длины —
+  // личное местоимение в начале: где есть подлежащее, там предложение.
+  if (words.length >= 2 && PERSONAL_PRONOUN_START.test(words[0])) return 'sentence'
 
   return 'word'
 }
