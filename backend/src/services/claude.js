@@ -6,6 +6,7 @@ import { fixFillBlank, ensureBlank, dedupeOptions } from './fillBlankFix.js'
 import { groundFillBlank, groundSentenceWrite } from './grounding.js'
 import { joinWrappedLines } from './entryKind.js'
 import { normalizeLetterFill } from './letterFill.js'
+import { logOperation } from './opLog.js'
 
 // Клиент по умолчанию — платформенный (общий ключ .env). Функции пути генерации урока
 // принимают необязательный параметр `client`, чтобы работать на ключе владельца урока
@@ -660,6 +661,26 @@ export async function generateExercises(words, grammar_points, targetLang = 'de'
         }
       } catch (e) { console.error('generateExercises top-up:', e.message) }
     }
+  }
+  // После двух добивочных проходов слова всё ещё могут остаться без нужных типов: модель
+  // дважды вернула брак, санитайзер его отбросил. Раньше это проходило молча и всплывало
+  // только при следующем аудите — теперь видно в журнале операций сразу.
+  const haveFinal = new Map()
+  for (const ex of allExercises) {
+    const k = exWordKey(ex.word_de)
+    if (!haveFinal.has(k)) haveFinal.set(k, new Set())
+    haveFinal.get(k).add(ex.type)
+  }
+  const stillMissing = words.filter(w => {
+    const set = haveFinal.get(exWordKey(w.word_de)) || new Set()
+    return CORE_EXERCISE_TYPES.some(t => !set.has(t))
+  })
+  if (stillMissing.length) {
+    await logOperation({
+      kind: 'exercises', status: 'warning',
+      message: `после добивки без полного набора осталось слов: ${stillMissing.length}`,
+      meta: { words: stillMissing.slice(0, 20).map(w => w.word_de) },
+    }).catch(() => {})
   }
   return allExercises
 }

@@ -93,6 +93,11 @@ export async function playableLessonIds(userId, schoolId, targetLang = null) {
     'SELECT course_id, weekdays, start_date FROM course_schedules WHERE user_id = $1', [userId])
   const scMap = new Map(scRows.map(s => [s.course_id, s]))
 
+  // Локальная дата ученика — та же система отсчёта, что у push-уведомлений (runDripPush).
+  // Без этого для UTC+2 после 22:00 пуш «открылся новый урок» уходил, а API урок ещё не отдавал.
+  const { rows: tzRows } = await db.query('SELECT timezone FROM users WHERE id = $1', [userId])
+  const localToday = new Date(localParts(tzRows[0]?.timezone, new Date()).date + 'T00:00:00Z')
+
   const courseLessonIds = rows.filter(l => l.course_id && !l.is_set).map(l => l.id)
   // «Пройден» = каждое слово урока отработано хотя бы в одном упражнении (см. LESSON_PASSED_HAVING).
   const { rows: passedRows } = await db.query(
@@ -105,6 +110,20 @@ export async function playableLessonIds(userId, schoolId, targetLang = null) {
     [userId, courseLessonIds])
   const passedSet = new Set(passedRows.map(r => r.lesson_id))
 
+  // Уроки, в которых ученик УЖЕ занимался (есть хотя бы одно выполненное упражнение).
+  // Нужны гейту: правила прохождения со временем ужесточаются, и без этого набора любое
+  // ужесточение отнимает доступ у того, кто честно занимался. Живой случай 30.07.2026:
+  // после введения правила «карточка И выбери-ответ по каждому слову» у трёх учеников с
+  // расписанием первый урок перестал считаться пройденным, цепочка порвалась на первом
+  // звене — и вместо пятнадцати уроков остался доступен один. Занимался — урок твой.
+  const { rows: touchedRows } = await db.query(
+    `SELECT DISTINCT e.lesson_id
+     FROM exercises e
+     JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+     WHERE e.lesson_id = ANY($2)`,
+    [userId, courseLessonIds])
+  const touchedSet = new Set(touchedRows.map(r => r.lesson_id))
+
   for (const [cid, lessons] of byCourse) {
     const sc = scMap.get(cid)
     if (!sc) { needsSchedule.push(cid); continue }
@@ -112,13 +131,24 @@ export async function playableLessonIds(userId, schoolId, targetLang = null) {
     // ними) всегда доступны — их у ученика не отнять; календарь лишь ограничивает забег ВПЕРЁД
     // (нельзя перескочить дальше текущего быстрее расписания). Защищает от рассинхрона, когда
     // прогресс обогнал календарь (напр. расписание пересоздали позже прохождения).
+    // Календарь считаем от той же даты, что и push-уведомления (runDripPush) — по ЛОКАЛЬНОЙ
+    // дате ученика. Иначе для UTC+2 после 22:00 пуш «открылся новый урок» уже ушёл, а API
+    // этот урок ещё не отдаёт.
     const passedCount = lessons.filter(l => passedSet.has(l.id)).length
-    const opened = Math.max(unlockedCount(sc.start_date, sc.weekdays), passedCount + 1)
+    const openedByCalendar = unlockedCount(sc.start_date, sc.weekdays, localToday)
+    // Начатые уроки тоже поднимают потолок календаря: иначе занимавшийся дальше ученик
+    // упрётся в календарь и не увидит урок, который сам же начал.
+    const reachedIdx = lessons.reduce((max, l, i) =>
+      (passedSet.has(l.id) || touchedSet.has(l.id)) ? i : max, -1)
+    const opened = Math.max(openedByCalendar, passedCount + 1, reachedIdx + 1)
     let doneIdx = 0, prevPassed = true
     for (const l of lessons) {
       const calendarOpen = doneIdx < opened
-      const gateOpen = doneIdx === 0 || prevPassed
-      if (calendarOpen && gateOpen) playable.add(l.id)
+      // Урок остаётся доступным, если он пройден или начат — доступ, однажды полученный,
+      // не отнимаем (см. комментарий к touchedSet).
+      const earned = passedSet.has(l.id) || touchedSet.has(l.id)
+      const gateOpen = doneIdx === 0 || prevPassed || earned
+      if ((calendarOpen && gateOpen) || earned) playable.add(l.id)
       prevPassed = passedSet.has(l.id)
       doneIdx++
     }

@@ -764,10 +764,14 @@ export async function extractLessonPreview(lessonId) {
 // три такие пары — одно слово дважды, у каждого свой комплект из семи упражнений.
 // Ищем по ключу без артикля; форму С артиклем считаем более полной и подтягиваем её.
 async function upsertLessonWord({ lessonId, ownerId, wordDe, translationRu, example, source, mediaId, targetLang }) {
+  // ORDER BY, а не просто LIMIT 1: если в уроке лежат ОБЕ формы («Tisch» и «der Tisch»),
+  // выбор строки без сортировки недетерминирован и прогоны расходятся между собой.
+  // Каноническая форма — с артиклем; при равенстве самая старая запись.
   const { rows } = await db.query(
     `SELECT id, word_de FROM words
       WHERE lesson_id = $1
         AND regexp_replace(lower(word_de), '^(${articlePattern(targetLang)})\\s+', '') = $2
+      ORDER BY (word_de ~* '^(${articlePattern(targetLang)})\\s') DESC, id
       LIMIT 1`,
     [lessonId, bareWord(wordDe, targetLang)])
 
@@ -783,12 +787,27 @@ async function upsertLessonWord({ lessonId, ownerId, wordDe, translationRu, exam
 
   const re = articleRe(targetLang)
   const upgrade = re.test(wordDe) && !re.test(rows[0].word_de) ? wordDe : rows[0].word_de
+  // NOT EXISTS обязателен: если в уроке уже есть строка с этой формой (дубль, приехавший
+  // копированием учебника или восстановлением старого бэкапа), переименование упрётся в
+  // уникальный индекс (lesson_id, word_de) и уронит обработку всего урока. В таком случае
+  // форму не меняем — слово уже представлено правильной записью, а дубли лечит отдельный
+  // скрипт слияния (backend/scripts).
   await db.query(
     `UPDATE words SET word_de = $2,
             example_sentence = COALESCE(example_sentence, $3),
             media_id = COALESCE(media_id, $4)
+      WHERE id = $1
+        AND NOT EXISTS (
+          SELECT 1 FROM words w2
+           WHERE w2.lesson_id = $5 AND lower(w2.word_de) = lower($2) AND w2.id <> $1)`,
+    [rows[0].id, upgrade, example || null, mediaId || null, lessonId])
+  // Пример и картинку дописываем всегда, даже если форму сменить не удалось: они не
+  // участвуют в уникальном индексе, а терять их из-за дубля неправильно.
+  await db.query(
+    `UPDATE words SET example_sentence = COALESCE(example_sentence, $2),
+            media_id = COALESCE(media_id, $3)
       WHERE id = $1`,
-    [rows[0].id, upgrade, example || null, mediaId || null])
+    [rows[0].id, example || null, mediaId || null])
 }
 
 export async function commitLessonWords(lessonId, words = [], sentences = [], grammarPoints = []) {
