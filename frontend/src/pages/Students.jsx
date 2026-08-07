@@ -108,9 +108,9 @@ function StudentCard({ student: st, s, onEdit, classes = [], onAssign }) {
           {/* Класс ученика — назначить/переназначить */}
           {classes.length > 0 && (
             <select value={st.class_id || ''} onChange={e => onAssign?.(st.id, parseInt(e.target.value))}
-              title={t.students.classTitle}
+              title={s.classTitle}
               style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--surface-2)', fontSize: 12.5, maxWidth: 150 }}>
-              <option value="">{t.students.noClass}</option>
+              <option value="">{s.noClass}</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}

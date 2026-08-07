@@ -297,6 +297,7 @@ function WordsTable({ words, visibleLangs, q }) {
 const ALL_LANGS = ['ru', 'en', 'de', 'uk', 'fr', 'tr', 'ar', 'bg', 'es', 'sq']
 
 function LessonsTable({ lessons, visibleLangs, q, isOwner, onUpdate }) {
+  const t = useI18nStore(s => s.t)
   const [editingId, setEditingId] = useState(null)
   const [editTrans, setEditTrans] = useState({})
   const [saving, setSaving]       = useState(false)
@@ -450,6 +451,7 @@ function InterfaceTable({ rows, visibleLangs, q }) {
 }
 
 function Empty({ q }) {
+  const t = useI18nStore(s => s.t)
   return (
     <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-soft)', fontSize: 14 }}>
       {q ? t.translations.nothingFor(q) : t.translations.noData}

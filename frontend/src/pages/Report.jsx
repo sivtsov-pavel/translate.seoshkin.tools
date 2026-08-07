@@ -51,6 +51,7 @@ export default function Report() {
 }
 
 function ReportInner() {
+  const t = useI18nStore(s => s.t)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const adminOp = useAdminOpStore()
