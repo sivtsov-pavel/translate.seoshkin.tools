@@ -4,7 +4,7 @@ import { api, uploadFiles } from '../api/client.js'
 import { useOnline, OfflineNotice } from '../components/OfflineGuard.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import PreviewScreen from '../components/PreviewScreen.jsx'
-import { NSTR } from '../i18n/newLesson.js'
+import { NSTR, MANUAL_STR } from '../i18n/newLesson.js'
 
 
 // Раздел требует сервер/ИИ: guard-обёртка отдельным компонентом, чтобы ранний
@@ -27,6 +27,7 @@ function NewLessonInner() {
   const [nextNumber, setNextNumber] = useState(null) // автономер следующего урока
   const [lessonId, setLessonId] = useState(null)     // урок уже создан, ждёт превью/подтверждения
   const [preview, setPreview] = useState(null)        // { words:[{...,checked}], sentences:[{...,checked}], grammar_points }
+  const [manualWords, setManualWords] = useState('')  // «слово — перевод», по строке — надёжный путь без распознавания
   const [newWordDe, setNewWordDe] = useState('')
   const [newWordTr, setNewWordTr] = useState('')
   const [newSentence, setNewSentence] = useState('')
@@ -35,6 +36,7 @@ function NewLessonInner() {
   const courseId  = searchParams.get('course_id')
   const { t, lang } = useI18nStore()
   const N = NSTR[lang] || NSTR.en
+  const M = MANUAL_STR[lang] || MANUAL_STR.en
   const pollRef   = useRef(null)
 
   // Курсы для привязки: чтобы урок из раздела «Уроки» не оставался «одиночкой» вне курса
@@ -110,6 +112,16 @@ function NewLessonInner() {
     }, 3000)
   }
 
+  // «der Hund — собака» / «der Hund - собака» / «der Hund: собака»; строка без перевода —
+  // тоже слово (перевод дорисует обогащение). Что напечатал учитель — то и попадёт в урок.
+  const parseManualWords = (text) => String(text || '').split('\n')
+    .map(l => l.trim()).filter(Boolean)
+    .map(l => {
+      const [de, ...rest] = l.split(/\s+[—–-]\s+|\s*:\s+/)
+      return { word_de: (de || '').trim(), translation_ru: rest.join(' ').trim(), example_sentence: null, source: 'textbook', media_id: null }
+    })
+    .filter(w => w.word_de)
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -179,12 +191,24 @@ function NewLessonInner() {
         setPreview({
           // По умолчанию берём только НОВЫЕ слова: повторы уже пройдены и упражнения
           // на них есть, а служебные («die», «an», куски подписей к заданиям) в словаре
-          // не нужны. Учитель может отметить их вручную — блоки видны.
-          words: (data.words || []).map(w => ({ ...w, checked: w.isNew !== false && !w.isFunction })),
+          // не нужны. Слова с 🚩 (нет в словаре — вероятно, ошибка распознавания) тоже
+          // не отмечаем: учитель поправит или сознательно примет. Ручной список идёт
+          // первым и отмечен всегда — его печатал человек.
+          words: [
+            ...parseManualWords(manualWords).map(w => ({ ...w, isNew: true, checked: true })),
+            ...(data.words || []).map(w => ({ ...w, checked: w.isNew !== false && !w.isFunction && !w.gate })),
+          ],
           sentences: (data.sentences || []).map(s => ({ ...s, checked: true })),
           grammar_points: data.grammar_points || [],
         })
         setStatus('preview')
+      } else if (parseManualWords(manualWords).length > 0) {
+        // Только ручной список — распознавание не участвует вовсе: сразу коммитим слова.
+        // Аудио (если есть) уже загружено и расшифруется кнопкой «Обработать всё» в уроке.
+        setStatus('processing')
+        setProgress(t.lessons.savingLesson)
+        await api.post(`/lessons/${lesson.id}/confirm`, { words: parseManualWords(manualWords), sentences: [], grammar_points: [] })
+        startPolling(lesson.id)
       } else {
         // Только аудио/без медиа — как раньше, разбор без превью (текст+транскрипция)
         setStatus('processing')
@@ -328,6 +352,18 @@ function NewLessonInner() {
         </div>
         <PhotoGrid items={extraPhotos} onRemove={removeExtraPhoto} disabled={isProcessing} label={N.selected(extraPhotos.length)} />
 
+        {/* ⌨️ Ручной список слов — стопроцентный путь без распознавания */}
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{M.label}</label>
+          <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginBottom: 6 }}>{M.hint}</div>
+          <textarea value={manualWords} onChange={e => setManualWords(e.target.value)} placeholder={M.ph}
+            disabled={isProcessing} rows={4}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, fontFamily: 'inherit', resize: 'vertical' }} />
+          {parseManualWords(manualWords).length > 0 && (
+            <div style={{ fontSize: 12, color: 'var(--good)', marginTop: 4 }}>{M.count(parseManualWords(manualWords).length)}</div>
+          )}
+        </div>
+
         <div style={{ marginBottom: 8 }}>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>{t.lessons.audio}</label>
           <DropZone onFiles={addAudio} onDrop={e => handleDrop(e, 'audio')} accept="audio/*" idKey="audio" multiple={false} label={t.lessons.audioHint} disabled={isProcessing} />
@@ -368,13 +404,20 @@ function NewLessonInner() {
           </div>
         )}
 
-        <button type="submit" disabled={(photos.length === 0 && extraPhotos.length === 0) || isProcessing}
-          style={{ width: '100%', padding: '14px 32px', fontSize: 16, fontWeight: 700,
-            background: (photos.length === 0 && extraPhotos.length === 0) || isProcessing ? 'var(--surface-2)' : 'var(--accent)',
-            color: (photos.length === 0 && extraPhotos.length === 0) || isProcessing ? 'var(--ink-soft)' : 'var(--accent-ink)',
-            border: 'none', borderRadius: 12, cursor: (photos.length === 0 && extraPhotos.length === 0) || isProcessing ? 'not-allowed' : 'pointer' }}>
-          {isProcessing ? statusLabel : t.lessons.processBtn}
-        </button>
+        {/* Урок можно создать из фото ИЛИ из ручного списка слов */}
+        {(() => {
+          const noInput = photos.length === 0 && extraPhotos.length === 0 && parseManualWords(manualWords).length === 0
+          const off = noInput || isProcessing
+          return (
+            <button type="submit" disabled={off}
+              style={{ width: '100%', padding: '14px 32px', fontSize: 16, fontWeight: 700,
+                background: off ? 'var(--surface-2)' : 'var(--accent)',
+                color: off ? 'var(--ink-soft)' : 'var(--accent-ink)',
+                border: 'none', borderRadius: 12, cursor: off ? 'not-allowed' : 'pointer' }}>
+              {isProcessing ? statusLabel : t.lessons.processBtn}
+            </button>
+          )
+        })()}
       </form>
 
       <style>{`@keyframes pulse-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }`}</style>

@@ -884,6 +884,30 @@ ${list}`,
   return results
 }
 
+// Грамматическая проверка предложений из тетради (гейт «Чистый вход», 08.08.2026).
+// Детерминированный слой (wordGate.checkSentenceText) ловит разорванные слова, а сюда
+// попадает то, что из валидных слов, но криво собрано («In habe zwei Bücher»).
+// Консервативно: сомнение = предложение нормальное. Ошибка вызова (нет кредитов) — не
+// блокирует: вернём все как пригодные, гейт деградирует мягко.
+export async function checkSentencesGrammar(texts, targetLang = 'de', client = platformClient) {
+  if (!texts.length) return texts.map(() => true)
+  try {
+    const list = texts.map((t, i) => `${i}: ${JSON.stringify(t)}`).join('\n')
+    const text = await ask(
+      `Ты — корректор учебника (${TL(targetLang).name} язык, A1). Ниже предложения, распознанные с фото тетради.
+Помечай ok=false ТОЛЬКО при явной поломке: грамматическая ошибка, обрывок без смысла, склейка двух предложений, потерянные слова. Разговорные и простые фразы — нормальные. Сомневаешься — ok=true.
+Ответь ТОЛЬКО JSON-массивом: [{"i": 0, "ok": true}, ...] — по объекту на каждый номер.
+
+${list}`, { max_tokens: 2000, client })
+    const parsed = parseJson(text)
+    const map = new Map((Array.isArray(parsed) ? parsed : []).map(v => [v.i, v.ok !== false]))
+    return texts.map((_, i) => map.has(i) ? map.get(i) : true)
+  } catch (e) {
+    console.error('checkSentencesGrammar:', e.message)
+    return texts.map(() => true)
+  }
+}
+
 const LESSON_LANGS = ['de', 'en', 'uk', 'fr', 'ar', 'bg', 'tr', 'es', 'sq']
 
 // Переводим заголовки уроков на 9 языков (включая de — немецкий и sq — албанский)

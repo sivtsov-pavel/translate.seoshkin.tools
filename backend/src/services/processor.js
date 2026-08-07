@@ -1,7 +1,9 @@
 import { join } from 'path'
 import { config } from '../config.js'
 import { db } from '../db/index.js'
-import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme, classifyWordsToThemes, CORE_EXERCISE_TYPES, usage, resetUsage, usageCostUSD } from './claude.js'
+import { extractFromPhoto, mergeLesson, generateExercises, generateLessonMeta, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonMeta, groupWordsByTheme, classifyWordsToThemes, checkSentencesGrammar, CORE_EXERCISE_TYPES, usage, resetUsage, usageCostUSD } from './claude.js'
+import { checkWord, checkSentenceText } from './wordGate.js'
+import { buildMask, isValidMask } from './letterFill.js'
 import { transcribeAudio } from './whisper.js'
 import { fetchImageUrl, downloadAndSave } from './unsplash.js'
 import { generateWordImage, isFunctionWord } from './imageGen.js'
@@ -81,7 +83,23 @@ export async function auditLessonAndLog(lessonId, userId = null) {
       db.query(`SELECT w.id, w.word_de, l.target_lang
                 FROM words w JOIN lessons l ON l.id = w.lesson_id WHERE w.lesson_id = $1`, [lessonId]),
     ])
-    const r = auditLesson({ exercises, words })
+    let r = auditLesson({ exercises, words })
+    // Авторемонт детерминированных блокеров сразу после аудита: невыполнимую маску
+    // «Добавь букву» чиним пересборкой (buildMask) — не ждём, пока на неё наткнётся ученик.
+    // Только детерминированное: ИИ здесь не вызывается (правило про расход баланса).
+    let repaired = 0
+    for (const b of r.blockers) {
+      if (b.kind !== 'letter_fill') continue
+      const ex = exercises.find(e => e.id === b.id)
+      const answer = ex?.payload?.answer || ex?.payload?.word_de
+      if (!answer || isValidMask(ex.payload?.masked, answer)) continue
+      const masked = buildMask(answer)
+      if (!masked || !isValidMask(masked, answer)) continue
+      await db.query(`UPDATE exercises SET payload = jsonb_set(payload, '{masked}', to_jsonb($1::text)) WHERE id = $2`, [masked, ex.id])
+      ex.payload = { ...ex.payload, masked }
+      repaired++
+    }
+    if (repaired) r = auditLesson({ exercises, words }) // отчёт после ремонта, не до
     await logOperation({
       kind: 'audit', lessonId, userId, provider: 'none',
       status: r.blockers.length ? 'error' : 'ok',
@@ -136,21 +154,43 @@ async function tracked({ kind, lessonId, items = null, message = null, meta = {}
 // Дедуп по тексту в рамках урока. Служебные пустые/короткие обрывки пропускаем.
 async function saveSentences(lessonId, sentences, source) {
   if (!Array.isArray(sentences)) return
+  // Гейт «Чистый вход» (08.08.2026): предложение из разбора — источник упражнений, поэтому
+  // мусор режем на входе. Разорванные/несловарные (checkSentenceText) не сохраняем вовсе;
+  // грамматику проверяет ИИ-слой ниже — кривое остаётся в базе с is_usable=false.
+  const targetLang = (await db.query('SELECT target_lang FROM lessons WHERE id=$1', [lessonId])).rows[0]?.target_lang || 'de'
+  const inserted = []
+  let dropped = 0
   for (const s of sentences) {
     const text = (typeof s === 'string' ? s : s?.text || '').trim()
     if (!text || text.length < 4) continue
+    const gate = await checkSentenceText(text, targetLang)
+    if (!gate.ok) { dropped++; continue }
     const tr = (typeof s === 'object' && s) ? (s.translation_ru || null) : null
-    await db.query(
+    const { rows } = await db.query(
       `INSERT INTO lesson_sentences (lesson_id, text, translation_ru, source)
        SELECT $1, $2, $3, $4
-       WHERE NOT EXISTS (SELECT 1 FROM lesson_sentences WHERE lesson_id = $1 AND lower(text) = lower($2))`,
+       WHERE NOT EXISTS (SELECT 1 FROM lesson_sentences WHERE lesson_id = $1 AND lower(text) = lower($2))
+       RETURNING id, text`,
       [lessonId, text, tr, source])
+    if (rows[0]) inserted.push(rows[0])
+  }
+  if (inserted.length) {
+    const verdicts = await checkSentencesGrammar(inserted.map(r => r.text), targetLang)
+    const badIds = inserted.filter((_, i) => !verdicts[i]).map(r => r.id)
+    if (badIds.length) await db.query('UPDATE lesson_sentences SET is_usable = FALSE WHERE id = ANY($1::int[])', [badIds])
+    dropped += badIds.length
+  }
+  if (dropped) {
+    await logOperation({ kind: 'sentence_gate', lessonId, provider: 'none',
+      message: `гейт предложений: отсеяно ${dropped} из ${sentences.length}`, items: dropped }).catch(() => {})
   }
 }
 
-// Реальные предложения урока — для генерации упражнений из них
+// Реальные предложения урока — для генерации упражнений из них.
+// Только прошедшие гейт: непригодное (is_usable=false) в упражнения не подставляем.
 async function getLessonSentences(lessonId) {
-  const { rows } = await db.query('SELECT text FROM lesson_sentences WHERE lesson_id = $1 ORDER BY id', [lessonId])
+  const { rows } = await db.query(
+    'SELECT text FROM lesson_sentences WHERE lesson_id = $1 AND COALESCE(is_usable, TRUE) ORDER BY id', [lessonId])
   return rows.map(r => r.text)
 }
 
@@ -720,11 +760,15 @@ export async function extractLessonPreview(lessonId) {
         //  • isFunction — служебное (артикли, местоимения, предлоги) либо кусок подписи
         //    к заданию вроде «Sehen Sie die Bilder an» — такие в словарь не нужны.
         const seenIn = knownByWord.get(wordKeyNorm(w.word_de)) || null
+        // Словарный гейт: несловарное слово («Hommian», «Peda») в превью помечается 🚩
+        // и по умолчанию НЕ выбрано — учитель может поправить или сознательно принять
+        const wg = await checkWord(w.word_de, targetLang, w.translation_ru || '')
         words.push({
           word_de: w.word_de, translation_ru: w.translation_ru || '',
           example_sentence: w.example_sentence || null, source: src, media_id: mediaId,
           isNew: !seenIn, seenIn,
           isFunction: kind === 'fragment' || isFunctionWord(w.word_de, targetLang),
+          ...(wg.ok ? {} : { gate: { bad: wg.bad, suggest: wg.suggest } }),
         })
         existingWords.push(w.word_de) // между textbook/extra в одном превью тоже не дублировать
       }
@@ -987,6 +1031,13 @@ export async function saveCameraWords(lessonId, words) {
       if (!w || !w.de) continue
       const wordDe = normalizeIncomingWord(w.de, knownCam)
       if (!wordDe) continue
+      // Словарный гейт: OCR камеры тоже приносит несуществующие слова — их не сохраняем
+      const wg = await checkWord(wordDe, targetLang, (w.tr || '').trim())
+      if (!wg.ok) {
+        await logOperation({ kind: 'word_gate', lessonId, provider: 'none',
+          message: `камера: несловарное «${wordDe}» пропущено`, items: 1 }).catch(() => {})
+        continue
+      }
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
          VALUES ($1,$2,$3,$4,'camera') ON CONFLICT (lesson_id, word_de) DO NOTHING`,
@@ -1121,13 +1172,23 @@ export async function processLesson(lessonId, ownerId) {
       const { rows: existRows } = await db.query('SELECT word_de FROM words WHERE lesson_id=$1', [lessonId])
       const cons = await mergeLesson(ex, text, existRows.map(r => r.word_de), targetLang, client)
       const known = await knownWordsFor(targetLang)
+      const gateSkipped = []
       for (const word of (cons.words || [])) {
         const wordDe = normalizeIncomingWord(word.word_de, known)
         if (!wordDe) continue
+        // Путь без превью — человека нет, поэтому несловарное слово не вставляем молча,
+        // а пропускаем и пишем в журнал: лучше слово без карточки, чем карточка про «Hommian»
+        const wg = await checkWord(wordDe, targetLang, (word.translation_ru || '').trim())
+        if (!wg.ok) { gateSkipped.push(wordDe); continue }
         const mediaId = mediaIdForWord(wordDe, pairs) // с какого скана слово
         await upsertLessonWord({ lessonId, ownerId, wordDe, targetLang,
           translationRu: (word.translation_ru || '').trim() || wordDe,
           example: word.example_sentence, source, mediaId })
+      }
+      if (gateSkipped.length) {
+        await logOperation({ kind: 'word_gate', lessonId, userId: ownerId, provider: 'none',
+          message: `словарный гейт: пропущено ${gateSkipped.length} несловарных`, items: gateSkipped.length,
+          meta: { words: gateSkipped.slice(0, 30) } }).catch(() => {})
       }
       await saveSentences(lessonId, cons.sentences, source) // реальные предложения урока
       allWords.push(...(cons.words || []))
@@ -1219,6 +1280,9 @@ export async function processLesson(lessonId, ownerId) {
       "UPDATE lessons SET status = 'done', progress = $1 WHERE id = $2",
       [`Готово! Слов: ${consolidated.words.length}, упражнений: ${exercises.length + consolidated.words.length}`, lessonId]
     )
+
+    // Аудит был подключён только к confirm-пути — уроки «просто process» его не проходили
+    await auditLessonAndLog(lessonId, ownerId)
 
     return {
       lessonId,

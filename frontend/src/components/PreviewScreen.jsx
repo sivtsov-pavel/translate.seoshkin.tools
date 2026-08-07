@@ -6,7 +6,12 @@
 //  • дозагрузка тетради в готовый урок (LessonList) — слова добавляются к существующим.
 // Раньше превью жило внутри NewLesson, и дозагрузка шла мимо него: фото распознавались
 // и все слова заходили в урок молча, вместе с повторами и подписями к заданиям.
+import { useI18nStore } from '../store/i18n.js'
+import { MANUAL_STR } from '../i18n/newLesson.js'
+
 export default function PreviewScreen({ preview, error, N, onToggleWord, onToggleGroup, onToggleSentence, newWordDe, setNewWordDe, newWordTr, setNewWordTr, onAddWord, newSentence, setNewSentence, onAddSentence, onConfirm, onCancel }) {
+  const { lang } = useI18nStore()
+  const M = MANUAL_STR[lang] || MANUAL_STR.en
   const wordsChecked = preview.words.filter(w => w.checked).length
   // Индекс сохраняем: переключение галочки идёт по позиции в общем списке
   const withIdx = preview.words.map((w, idx) => ({ w, idx }))
@@ -59,7 +64,14 @@ export default function PreviewScreen({ preview, error, N, onToggleWord, onToggl
                   <span style={{ fontSize: 13, flexShrink: 0 }} title={w.source === 'extra' ? N.fromExtra : N.fromBook}>{srcTag(w.source)}</span>
                   <span style={{ fontWeight: 600 }}>{w.word_de}</span>
                   <span style={{ color: 'var(--ink-soft)' }}>— {w.translation_ru || '…'}</span>
-                  {w.seenIn && <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--ink-soft)', flexShrink: 0 }}>{w.seenIn.title}</span>}
+                  {/* 🚩 словарный гейт: слова нет в hunspell — вероятно, распознавание ошиблось */}
+                  {w.gate && (
+                    <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--red)', flexShrink: 0 }}
+                      title={(w.gate.suggest || []).join(', ')}>
+                      🚩 {M.gateFlag}{w.gate.suggest?.length ? `: ${w.gate.suggest[0]}?` : ''}
+                    </span>
+                  )}
+                  {w.seenIn && <span style={{ marginLeft: w.gate ? 0 : 'auto', fontSize: 11.5, color: 'var(--ink-soft)', flexShrink: 0 }}>{w.seenIn.title}</span>}
                 </label>
               ))}
             </div>
