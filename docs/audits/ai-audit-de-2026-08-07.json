@@ -1,0 +1,2570 @@
+[
+ {
+  "id": 68295,
+  "why": "«Station» в контексте больничного расписания = отделение/обход врача, а не «станция» — выбран неверный смысл слова для медицинского контекста",
+  "lesson_id": 30,
+  "type": "sentence_write"
+ },
+ {
+  "id": 68330,
+  "why": "'das Russland' — грамматическая ошибка, названия стран типа Russland не употребляются с артиклем",
+  "lesson_id": 30,
+  "type": "sentence_write"
+ },
+ {
+  "id": 68416,
+  "why": "Перевод 'Рыболовство имеет много рыб' — корявая калька, так по-русски не говорят",
+  "lesson_id": 31,
+  "type": "sentence_write"
+ },
+ {
+  "id": 68444,
+  "why": "Пропущен артикль: должно быть 'Der Brief ist ein Substantiv.'",
+  "lesson_id": 31,
+  "type": "fill_blank"
+ },
+ {
+  "id": 68489,
+  "why": "Два независимых предложения слиты без запятой/союза: 'Er ist traurig sein Hund ist weg' — синтаксическая ошибка",
+  "lesson_id": 31,
+  "type": "fill_blank"
+ },
+ {
+  "id": 68633,
+  "why": "В примере пропущена отделяемая приставка 'an': 'Ich schaue einen Film' — это глагол schauen, а не заявленный anschauen",
+  "lesson_id": 32,
+  "type": "sentence_write"
+ },
+ {
+  "id": 68668,
+  "why": "Пример не про слово 'danken' — это диалог про имя (та же фраза, что в другом упражнении про heißen), к тому же вместо 'Danke' написано 'Dank'",
+  "lesson_id": 32,
+  "type": "sentence_write"
+ },
+ {
+  "id": 68981,
+  "why": "'Ich bin endlich.' — незаконченное, бессмысленное предложение, endlich не может так стоять без остального смысла",
+  "lesson_id": 33,
+  "type": "fill_blank"
+ },
+ {
+  "id": 69342,
+  "why": "gemütlich = уютный, а в примере переведено как 'удобный' (это bequem) — рассинхрон с переводом слова",
+  "lesson_id": 34,
+  "type": "sentence_write"
+ },
+ {
+  "id": 69360,
+  "why": "'Ich habe eins Auto.' — грамматическая ошибка, перед существительным нужен артикль 'ein', а не числительное 'eins'",
+  "lesson_id": 34,
+  "type": "fill_blank"
+ },
+ {
+  "id": 69362,
+  "why": "'Ich sehe eins Vogel.' — грамматическая ошибка, нужен винительный падеж 'einen Vogel'",
+  "lesson_id": 34,
+  "type": "sentence_write"
+ },
+ {
+  "id": 69580,
+  "why": "'Мне нравятся лук' — ошибка согласования в русском, 'лук' единственное число, нужно 'нравится'",
+  "lesson_id": 35,
+  "type": "sentence_write"
+ },
+ {
+  "id": 69997,
+  "why": "'Я его имею' — неестественный и двусмысленный (жаргонный) перевод 'Ich habe ihn'",
+  "lesson_id": 37,
+  "type": "sentence_write"
+ },
+ {
+  "id": 70178,
+  "why": "'Ученик старательный' — неверный род перевода, Schülerin женского рода, нужно 'Ученица'",
+  "lesson_id": 39,
+  "type": "sentence_write"
+ },
+ {
+  "id": 70183,
+  "why": "В переводе оставлено непереведённое английское слово: 'Участник punctual'",
+  "lesson_id": 39,
+  "type": "sentence_write"
+ },
+ {
+  "id": 70608,
+  "why": "'einen schönen Stimme' — ошибка согласования рода, Stimme женского рода, нужно 'eine schöne Stimme'",
+  "lesson_id": 122,
+  "type": "sentence_write"
+ },
+ {
+  "id": 70643,
+  "why": "В переводе оставлено непереведённое английское слово: 'appointment'",
+  "lesson_id": 122,
+  "type": "sentence_write"
+ },
+ {
+  "id": 70663,
+  "why": "В переводе слитный обрывок английского и русского: 'былawake' вместо 'был бодрствующим'",
+  "lesson_id": 122,
+  "type": "sentence_write"
+ },
+ {
+  "id": 76696,
+  "why": "'Er ist ledige...' — грамматическая ошибка, предикативное прилагательное после sein не склоняется, нужно 'ledig'",
+  "lesson_id": 550,
+  "type": "fill_blank"
+ },
+ {
+  "id": 76820,
+  "why": "'du möchtest' (хотел бы, вежливая форма) переведено как 'ты хочешь' — расхождение с заявленным переводом слова",
+  "lesson_id": 550,
+  "type": "sentence_write"
+ },
+ {
+  "id": 83472,
+  "why": "Перевод 'У меня восемьдесят евро' потерял 'семь' — siebenundachtzig это 87, а не 80",
+  "lesson_id": 551,
+  "type": "sentence_write"
+ },
+ {
+  "id": 83500,
+  "why": "'Ein Bier kostet der Euro.' — грамматическая ошибка, после kostet не может стоять именительный падеж с артиклем",
+  "lesson_id": 551,
+  "type": "fill_blank"
+ },
+ {
+  "id": 83764,
+  "why": "'fünf und fünfzig' написано раздельно тремя словами вместо единого числительного 'fünfundfünfzig'",
+  "lesson_id": 551,
+  "type": "sentence_write"
+ },
+ {
+  "id": 83792,
+  "why": "'шестидесяти два евро' — ошибка склонения в русском, нужно 'шестьдесят два евро'",
+  "lesson_id": 551,
+  "type": "sentence_write"
+ },
+ {
+  "id": 83855,
+  "why": "'семьдесят два птиц' — ошибка согласования в русском, нужно 'семьдесят две птицы' (жен. род, ед.ч. после 2)",
+  "lesson_id": 551,
+  "type": "sentence_write"
+ },
+ {
+  "id": 83911,
+  "why": "Перевод 'У меня восемьдесят книг' потерял 'два' — zweiundachtzig это 82, а не 80",
+  "lesson_id": 551,
+  "type": "sentence_write"
+ },
+ {
+  "id": 83953,
+  "why": "Перевод 'Я вижу восемьдесят яблок' потерял 'девять' — neunundachtzig это 89, а не 80",
+  "lesson_id": 551,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86194,
+  "why": "'Furzehen' — несуществующее немецкое слово",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86196,
+  "why": "'Furzehen' — несуществующее немецкое слово, к тому же пропуск в примере не заполнен ('Ich _ meine neue Wohnung')",
+  "lesson_id": 570,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86197,
+  "why": "'Furzehen' — несуществующее немецкое слово",
+  "lesson_id": 570,
+  "type": "letter_fill"
+ },
+ {
+  "id": 86199,
+  "why": "'Funfzig' написано без умлаута, должно быть 'Fünfzig'",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86204,
+  "why": "'Agyptern' — неверный падеж (дательный вместо именительного) и пропущен умлаут, нужно 'Ägypter'",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86206,
+  "why": "Пример не заполнен, содержит буквальный пропуск: 'Die _ sind sehr freundlich.'",
+  "lesson_id": 570,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86209,
+  "why": "'Mull' без умлаута — это другое слово (марля), а не 'Müll' (мусор)",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86251,
+  "why": "'Мой горло холодное' — ошибка согласования рода в русском (нужно 'Моё горло'), плюс перевод 'горло' не соответствует заявленному 'шея'",
+  "lesson_id": 570,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86364,
+  "why": "В предложении опечатка: 'In habe' вместо 'Ich habe'",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86366,
+  "why": "В предложении опечатка: 'In habe' вместо 'Ich habe'",
+  "lesson_id": 570,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86482,
+  "why": "В предложении опечатка: 'In habe' вместо 'Ich habe'",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86484,
+  "why": "В предложении опечатка: 'In habe' вместо 'Ich habe'",
+  "lesson_id": 570,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86533,
+  "why": "«kein Orangen» — нужно «keine Orangen»",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86550,
+  "why": "example_ru не соответствует «Ich liebe Kuchen»",
+  "lesson_id": 570,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86639,
+  "why": "«Das ist Überraschung.» — пропущен артикль",
+  "lesson_id": 570,
+  "type": "fill_blank"
+ },
+ {
+  "id": 86929,
+  "why": "«Fur» без умлаута — должно быть «für»",
+  "lesson_id": 570,
+  "type": "sentence_write"
+ },
+ {
+  "id": 86973,
+  "why": "«Sie heißt... Dank.» — нужно heißen; «Dank» вместо «Danke»",
+  "lesson_id": 31,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87020,
+  "why": "«Моя счастливое число» — нужно «Моё»",
+  "lesson_id": 31,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87326,
+  "why": "«Das Schlüssel» — нужно «Der Schlüssel»",
+  "lesson_id": 33,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87369,
+  "why": "«Ich lieben sind ___.» — бессмыслица",
+  "lesson_id": 33,
+  "type": "fill_blank"
+ },
+ {
+  "id": 87371,
+  "why": "тот же испорченный текст в примере",
+  "lesson_id": 33,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87412,
+  "why": "«den Herr» — нужно «den Herrn»",
+  "lesson_id": 33,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87426,
+  "why": "«___ Sie _ie ih i.» — искажённый текст",
+  "lesson_id": 33,
+  "type": "fill_blank"
+ },
+ {
+  "id": 87428,
+  "why": "«Schreiben Sie _ie ih i.» — искажён",
+  "lesson_id": 33,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87514,
+  "why": "«im Deutschkurse» — нужно «Deutschkurs»",
+  "lesson_id": 34,
+  "type": "fill_blank"
+ },
+ {
+  "id": 87582,
+  "why": "«das ein Kleid» — два артикля подряд",
+  "lesson_id": 35,
+  "type": "fill_blank"
+ },
+ {
+  "id": 87616,
+  "why": "«зарядное устройство» ≠ Ladekabel (кабель)",
+  "lesson_id": 36,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87927,
+  "why": "«Ich habe achtzehn Jahre.» — нужно «Ich bin ... alt»",
+  "lesson_id": 39,
+  "type": "sentence_write"
+ },
+ {
+  "id": 87978,
+  "why": "«die Gemüse» — нужно «das Gemüse»",
+  "lesson_id": 40,
+  "type": "fill_blank"
+ },
+ {
+  "id": 87981,
+  "why": "ответ «die Gemüse» с неверным артиклем",
+  "lesson_id": 40,
+  "type": "letter_fill"
+ },
+ {
+  "id": 88024,
+  "why": "Mathe — предмет, не «задание» (Aufgabe)",
+  "lesson_id": 40,
+  "type": "fill_blank"
+ },
+ {
+  "id": 88198,
+  "why": "«das Polen» — страна без артикля",
+  "lesson_id": 122,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88203,
+  "why": "«das Ägypten» — страна без артикля",
+  "lesson_id": 122,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88268,
+  "why": "example_ru не соответствует переводу Volkshochschule",
+  "lesson_id": 124,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88273,
+  "why": "example_ru теряет смысл Deutschkurs",
+  "lesson_id": 124,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88311,
+  "why": "«Buch gelesen» — пропущен артикль",
+  "lesson_id": 124,
+  "type": "fill_blank"
+ },
+ {
+  "id": 88313,
+  "why": "«morgen Buch» — пропущен артикль",
+  "lesson_id": 124,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88366,
+  "why": "«tausen» — опечатка, «tausend»",
+  "lesson_id": 523,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88471,
+  "why": "бессвязный набор фрагментов",
+  "lesson_id": 523,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88481,
+  "why": "«Das Tüte» — неверный род + бессвязный текст",
+  "lesson_id": 523,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88489,
+  "why": "тот же бессвязный стем",
+  "lesson_id": 523,
+  "type": "fill_blank"
+ },
+ {
+  "id": 88491,
+  "why": "тот же бессвязный пример",
+  "lesson_id": 523,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88629,
+  "why": "«Повара добрая» — согласование",
+  "lesson_id": 550,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88631,
+  "why": "«Peschänke» — искажённое «Geschenke»",
+  "lesson_id": 550,
+  "type": "fill_blank"
+ },
+ {
+  "id": 88633,
+  "why": "пример на испорченном слове, перевод «Пещанки»",
+  "lesson_id": 550,
+  "type": "sentence_write"
+ },
+ {
+  "id": 88634,
+  "why": "то же испорченное слово в letter_fill",
+  "lesson_id": 550,
+  "type": "letter_fill"
+ },
+ {
+  "id": 88668,
+  "why": "«Flücht» не существует",
+  "lesson_id": 550,
+  "type": "sentence_write"
+ },
+ {
+  "id": 91755,
+  "why": "«an dem Tisch» — нужно «auf dem Tisch»",
+  "lesson_id": 571,
+  "type": "fill_blank"
+ },
+ {
+  "id": 92656,
+  "why": "«Das ist Ihrer Hund.» — нужно «Ihr Hund»",
+  "lesson_id": 573,
+  "type": "fill_blank"
+ },
+ {
+  "id": 92749,
+  "why": "«Das Euro» — нужно «Der Euro»",
+  "lesson_id": 573,
+  "type": "sentence_write"
+ },
+ {
+  "id": 92754,
+  "why": "«Äu» не слово, перевод «айо» бессмыслен",
+  "lesson_id": 573,
+  "type": "sentence_write"
+ },
+ {
+  "id": 92768,
+  "why": "«Die Europa» — без артикля",
+  "lesson_id": 573,
+  "type": "sentence_write"
+ },
+ {
+  "id": 92992,
+  "why": "то же «Äu» в letter_fill",
+  "lesson_id": 573,
+  "type": "letter_fill"
+ },
+ {
+  "id": 93005,
+  "why": "пропуск — одна буква «n», упражнение сломано",
+  "lesson_id": 573,
+  "type": "fill_blank"
+ },
+ {
+  "id": 102194,
+  "why": "«Штрассе» — транслитерация вместо «улица»",
+  "lesson_id": 571,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102212,
+  "why": "«die Bergen» — нужно «die Berge»",
+  "lesson_id": 571,
+  "type": "fill_blank"
+ },
+ {
+  "id": 102234,
+  "why": "слово «reinkommt» против «reinkommen» в примере",
+  "lesson_id": 571,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102244,
+  "why": "слово «komme» против «kommen Sie»",
+  "lesson_id": 571,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102269,
+  "why": "«ein trennbare Verb» — нужно «trennbares»",
+  "lesson_id": 571,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102288,
+  "why": "слово «Hause» против «Haus» в примере",
+  "lesson_id": 571,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102293,
+  "why": "«Ich musst lernen.» — нужно «muss»",
+  "lesson_id": 571,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102331,
+  "why": "«wegen» без дополнения",
+  "lesson_id": 571,
+  "type": "fill_blank"
+ },
+ {
+  "id": 102401,
+  "why": "«Du soll» — нужно «sollst»",
+  "lesson_id": 571,
+  "type": "fill_blank"
+ },
+ {
+  "id": 102494,
+  "why": "«etwas Gute» — нужно «etwas Gutes»",
+  "lesson_id": 571,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102705,
+  "why": "«Baume» — нужно «Bäume»",
+  "lesson_id": 573,
+  "type": "fill_blank"
+ },
+ {
+  "id": 102722,
+  "why": "«Собака ленивый» — согласование",
+  "lesson_id": 573,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102762,
+  "why": "«Das Schatz» — нужно «Der Schatz»",
+  "lesson_id": 573,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102797,
+  "why": "Русский перевод «Я пекусь пирог» грамматически неверен, должно быть «Я пеку пирог»",
+  "lesson_id": 573,
+  "type": "sentence_write"
+ },
+ {
+  "id": 102881,
+  "why": "В предложении пропущено подлежащее: «Was backst heute?» вместо «Was backst du heute?»",
+  "lesson_id": 573,
+  "type": "fill_blank"
+ },
+ {
+  "id": 121794,
+  "why": "«Die Apfel sind rot» неверно: мн.ч. от Apfel — Äpfel (с умлаутом)",
+  "lesson_id": 409,
+  "type": "sentence_write"
+ },
+ {
+  "id": 121961,
+  "why": "example_ru «Я ношу куртку» не переводит пример «Entschuldigung, ist das Ihre Jacke?»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 121991,
+  "why": "example_ru «Слушайте. Говорите.» не соответствует примеру «Sehen Sie die Bilder an. Hören Sie.»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122001,
+  "why": "«Ich habe neun Jahre» — не немецкая конструкция возраста, нужно «Ich bin neun Jahre alt»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122011,
+  "why": "example_ru «Это мой друг» не связан с примером про куртку",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122016,
+  "why": "В примере глагол «zahle» (платить), а не заявленное слово «Zahlen» (числа)",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122047,
+  "why": "example_ru «Я в комнате» не переводит пример «Wo ist Zimmer zweiundzwanzig?»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122057,
+  "why": "example_ru не соответствует примеру «Kreuzen Sie bitte hier an.»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122077,
+  "why": "example_ru «Я должен учиться» не переводит пример «Wo muss ich ankreuzen?»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122082,
+  "why": "example_ru «Они счастливы» не связан с примером про женитьбу",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122092,
+  "why": "example_ru про кино не связан с примером",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122102,
+  "why": "example_ru про домашние задания не связан с примером",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122117,
+  "why": "example_ru «Это правильно» теряет «Nein, ich bin ledig...»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122140,
+  "why": "«Place» — не немецкое слово, правильно «Platz»",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122142,
+  "why": "Пример «Wo ist der Place?» содержит несуществующее слово «Place»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122147,
+  "why": "example_ru про «22 книги» не переводит пример про номер комнаты",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122162,
+  "why": "example_ru про кино не связан с примером",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122172,
+  "why": "example_ru не связан с примером",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122177,
+  "why": "example_ru не передаёт пример «Nein, ich bin ledig...»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122192,
+  "why": "example_ru «Женщина дружелюбная» не связан с примером про картинки",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122207,
+  "why": "example_ru «Вы устали?» не связан с примером про картинки",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122217,
+  "why": "example_ru искажает смысл инструкции «Schreiben Sie J j Y y.»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122222,
+  "why": "example_ru не переводит инструкцию «Lesen Sie. Markieren Sie J y.»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122247,
+  "why": "example_ru не переводит пример-вопрос про куртку",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122262,
+  "why": "example_ru искажает смысл «живу в Германии с января 2005»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122277,
+  "why": "example_ru добавляет содержание, которого нет в примере",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122297,
+  "why": "example_ru не связан с примером про куртку",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122307,
+  "why": "example_ru путает «zahle» (платить) со словом «Zahlen» (числа)",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122342,
+  "why": "Слово «rechnen» отсутствует в примере",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122367,
+  "why": "example_ru меняет вопрос на утверждение",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122372,
+  "why": "example_ru не связан с примером про отметку крестиком",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122377,
+  "why": "example_ru «Я здесь» не переводит пример",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122392,
+  "why": "example_ru про куртку не связан с примером про ankreuzen",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122397,
+  "why": "example_ru меняет вопрос на утверждение с другим лицом",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122402,
+  "why": "example_ru не соответствует структуре и лицу примера",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122412,
+  "why": "example_ru не соответствует структуре примера",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122435,
+  "why": "«Place» — не немецкое слово",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122437,
+  "why": "Пример содержит несуществующее слово «Place»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122442,
+  "why": "example_ru не переводит пример про номер комнаты",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122457,
+  "why": "example_ru меняет содержание вопроса",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122473,
+  "why": "example_ru меняет содержание",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122488,
+  "why": "example_ru «Я есть на реке» не связан с примером",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122501,
+  "why": "В options дважды «spazieren»",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122503,
+  "why": "example_ru в настоящем времени, пример — в прошедшем",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122541,
+  "why": "«für mein Sohn» — нужно «für meinen Sohn» (винительный)",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122543,
+  "why": "«für mein Sohn» вместо «für meinen Sohn»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122548,
+  "why": "«für mein Sohn» вместо «für meinen Sohn»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122553,
+  "why": "«für mein Sohn» вместо «für meinen Sohn»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122558,
+  "why": "«für mein Sohn» вместо «für meinen Sohn»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122563,
+  "why": "example_ru не связан с примером про «Okoye»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122568,
+  "why": "Слово «meinem» отсутствует в примере",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122573,
+  "why": "example_ru не связан с примером «Ich war beim Gericht.»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122578,
+  "why": "example_ru не связан с примером, другое лицо",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122581,
+  "why": "нужно «mit Freunden», а не «mit Freunde»",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122583,
+  "why": "«mit Freunde» вместо «mit Freunden»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122588,
+  "why": "«mit Freunde» вместо «mit Freunden»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122593,
+  "why": "«mit Freunde» вместо «mit Freunden»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122598,
+  "why": "«mit Kinder» — нужно «mit Kindern»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122619,
+  "why": "example_ru в будущем времени, пример — в прошедшем",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122622,
+  "why": "«für mein Sohn» — нужно «für meinen Sohn»",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122624,
+  "why": "«für mein Sohn» вместо «für meinen Sohn»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122634,
+  "why": "example_ru «Погода хорошая» не связан с примером",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122684,
+  "why": "Путаница «sie»/«Sie»: формальное Sie vs «она»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122709,
+  "why": "Слово «ihr» не совпадает с формой «Ihre» в примере",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122737,
+  "why": "В options только 2 варианта",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122742,
+  "why": "В options только 2 варианта",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122752,
+  "why": "Слово «lese» (1 лицо) против императива «Lesen» в упражнении",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122754,
+  "why": "example_ru не переводит инструкцию, несоответствие лица",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122814,
+  "why": "example_ru искажает смысл «Ich zahle die Rechnung»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122822,
+  "why": "Перевод «sprechen» как «языки» неверен",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122824,
+  "why": "Перевод «sprechen» как «языки» неверен",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122864,
+  "why": "«meinen Vorname» — нужно «meinen Vornamen» (слабое склонение)",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122869,
+  "why": "«meinen Nachname» — нужно «meinen Nachnamen»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122884,
+  "why": "example_ru не связан с примером",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122904,
+  "why": "Слово «meine» не совпадает с формой «meinem»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122909,
+  "why": "example_ru не переводит конкретный пример",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122914,
+  "why": "example_ru не связан с примером про город",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122919,
+  "why": "example_ru не связан с примером про город",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122927,
+  "why": "Город одновременно «у моря» и «в горах» без союза",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 122939,
+  "why": "example_ru не переводит пример про город",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122944,
+  "why": "example_ru не переводит пример про город",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 122972,
+  "why": "«Landschaft» наравне со своими частными случаями",
+  "lesson_id": 618,
+  "type": "fill_blank"
+ },
+ {
+  "id": 123046,
+  "why": "«über welchem Thema» — нужно «über welches Thema»",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123068,
+  "why": "Перевод «я родился» не соответствует «ich bin»",
+  "lesson_id": 618,
+  "type": "letter_fill"
+ },
+ {
+  "id": 123075,
+  "why": "«Es gibt dort Landschaft.» неестественно",
+  "lesson_id": 618,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123621,
+  "why": "«Ich habe gelesen viele Bücher» — неверный порядок слов",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 123688,
+  "why": "«Ich sehe jemand» — нужно «jemanden»",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123698,
+  "why": "example_ru не связан с «Du machst uns Angst.»",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123711,
+  "why": "«kenne beiden Jungen» — нужно «beide»",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 123773,
+  "why": "Слово «Teurer» не совпадает с ответом «teuer»",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 123775,
+  "why": "translation_ru «дорогой» не соответствует «teurer»/«дороже»",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123790,
+  "why": "example_ru «Щипцы ржавчины нет» — некорректная русская фраза",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123796,
+  "why": "Слово «Freunden» отсутствует в примере",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123802,
+  "why": "example_ru не связан с примером про «kreuze...an»",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123818,
+  "why": "2 варианта, «früht» — несуществующее слово",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 123823,
+  "why": "«Hommian» не немецкое слово, предложение бессвязно",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 123826,
+  "why": "example_ru не связан с примером, «Hommian» не немецкое",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123849,
+  "why": "«Hommian» — должно быть «Hamster»",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 123860,
+  "why": "«Hommian» вообще не переведено (translation_ru = «Hommian»)",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 123865,
+  "why": "«Sie kreuzt an das Wort.» — неверный порядок; word_de/translation_ru пустые",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124006,
+  "why": "«wem geht es gut?» с маленькой буквы; example_ru не соответствует",
+  "lesson_id": 619,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124034,
+  "why": "Нужно «Ich ärgere mich über die Schule» (возвратное)",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 124124,
+  "why": "«Ich bedeute das Wort» семантически некорректно",
+  "lesson_id": 619,
+  "type": "fill_blank"
+ },
+ {
+  "id": 124193,
+  "why": "«köpfe» с маленькой буквы — нужно «Köpfe»",
+  "lesson_id": 620,
+  "type": "fill_blank"
+ },
+ {
+  "id": 124195,
+  "why": "example_ru не переводит вторую часть примера",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124220,
+  "why": "example_ru не является переводом примера",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124225,
+  "why": "«Kannst du mir bitte zuvor Flaschenöffner?» — предложение без глагола",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124251,
+  "why": "«Links und Rechts die Störung Es gibt draußen eine Störung drinnen.» — бессвязный набор фрагментов",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124259,
+  "why": "тот же бессвязный текст в пропуске",
+  "lesson_id": 620,
+  "type": "fill_blank"
+ },
+ {
+  "id": 124261,
+  "why": "тот же сломанный пример",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124286,
+  "why": "«Ich liebe den Strand und baden» — нужно das Baden / zu baden",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124291,
+  "why": "«den Stift gegeben?» — нужен инфинитив geben",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124294,
+  "why": "ответ в пропуск — geben, не gegeben",
+  "lesson_id": 620,
+  "type": "fill_blank"
+ },
+ {
+  "id": 124296,
+  "why": "перевод не связан с примером, пример сломан",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124301,
+  "why": "«eine Apfelschorle gehen?» бессмысленно — нужен trinken",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124304,
+  "why": "предложение сломано — отсутствует глагол",
+  "lesson_id": 620,
+  "type": "fill_blank"
+ },
+ {
+  "id": 124306,
+  "why": "сломанный пример + перевод не связан",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124312,
+  "why": "перевод «открытка» не соответствует Öffner (открыватель)",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 124333,
+  "why": "«Die Leu» — нужно Löwen",
+  "lesson_id": 620,
+  "type": "fill_blank"
+ },
+ {
+  "id": 124335,
+  "why": "«Die Leu leben in Afrika» — нужно Löwen",
+  "lesson_id": 620,
+  "type": "sentence_write"
+ },
+ {
+  "id": 136286,
+  "why": "«Wie heißt Ihre Hausnummer?» — нужно Wie ist/lautet",
+  "lesson_id": 296,
+  "type": "sentence_write"
+ },
+ {
+  "id": 136336,
+  "why": "Briefmarke = почтовая марка, не «печать»",
+  "lesson_id": 296,
+  "type": "sentence_write"
+ },
+ {
+  "id": 136337,
+  "why": "та же ошибка перевода Briefmarke",
+  "lesson_id": 296,
+  "type": "letter_fill"
+ },
+ {
+  "id": 136361,
+  "why": "Gericht в примере «блюдо», перевод «суд» — рассинхрон",
+  "lesson_id": 296,
+  "type": "sentence_write"
+ },
+ {
+  "id": 140110,
+  "why": "«Der Zoll ist hier» — по контексту «таможня», не «дюйм»",
+  "lesson_id": 339,
+  "type": "sentence_write"
+ },
+ {
+  "id": 144168,
+  "why": "пример «я», перевод «мы» — рассинхрон лица",
+  "lesson_id": 621,
+  "type": "sentence_write"
+ },
+ {
+  "id": 144173,
+  "why": "слово «meldest» (ты) против примера «Ich melde» — противоречие",
+  "lesson_id": 621,
+  "type": "sentence_write"
+ },
+ {
+  "id": 149334,
+  "why": "вариант «Munden» — несуществующая форма",
+  "lesson_id": 361,
+  "type": "fill_blank"
+ },
+ {
+  "id": 149364,
+  "why": "sentence пустой, только «___»",
+  "lesson_id": 361,
+  "type": "fill_blank"
+ },
+ {
+  "id": 149369,
+  "why": "«Ich habe schwindlig.» — нужно Mir ist schwindlig",
+  "lesson_id": 361,
+  "type": "fill_blank"
+ },
+ {
+  "id": 149371,
+  "why": "«Ich habe Schwindlig.» — та же ошибка",
+  "lesson_id": 361,
+  "type": "sentence_write"
+ },
+ {
+  "id": 157373,
+  "why": "перевод не связан с примером «Ich habe keine Kinder»",
+  "lesson_id": 304,
+  "type": "sentence_write"
+ },
+ {
+  "id": 157401,
+  "why": "английское «Sister» вместо Schwester в вариантах",
+  "lesson_id": 304,
+  "type": "fill_blank"
+ },
+ {
+  "id": 157451,
+  "why": "«singel» — орфографическая ошибка",
+  "lesson_id": 304,
+  "type": "fill_blank"
+ },
+ {
+  "id": 157461,
+  "why": "«This is my ___, Ben.» — по-английски",
+  "lesson_id": 304,
+  "type": "fill_blank"
+ },
+ {
+  "id": 157463,
+  "why": "пример на английском, перевод не связан",
+  "lesson_id": 304,
+  "type": "sentence_write"
+ },
+ {
+  "id": 157476,
+  "why": "«beste Freund» — нужно bester Freund",
+  "lesson_id": 304,
+  "type": "fill_blank"
+ },
+ {
+  "id": 161832,
+  "why": "«Sie heißt... Nikolov.» — нужно heißen; слово «heiß»/«жарко» не связано",
+  "lesson_id": 314,
+  "type": "sentence_write"
+ },
+ {
+  "id": 161897,
+  "why": "«Die Berge stehen dort» — горы liegen, не stehen",
+  "lesson_id": 314,
+  "type": "sentence_write"
+ },
+ {
+  "id": 161995,
+  "why": "«Hommian» — хомяк это Hamster",
+  "lesson_id": 314,
+  "type": "fill_blank"
+ },
+ {
+  "id": 162532,
+  "why": "перевод добавляет вопрос, которого нет",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162552,
+  "why": "«Ich möchte in die Maxstraße 2.» — нет глагола движения",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162555,
+  "why": "«undsechzig» — несуществующее числительное",
+  "lesson_id": 623,
+  "type": "fill_blank"
+ },
+ {
+  "id": 162557,
+  "why": "та же ошибка в примере",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162562,
+  "why": "перевод теряет «Können Sie wechseln?»",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162567,
+  "why": "«такси служба» — нужно «служба такси»",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162632,
+  "why": "перевод «Я поел» против «habe ich gearbeitet»",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162637,
+  "why": "перевод не соответствует примеру про вокзал",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162707,
+  "why": "рассинхрон времени: пример прошедшее, перевод настоящее",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162710,
+  "why": "«letzte Jahr» — нужно letztes Jahr",
+  "lesson_id": 623,
+  "type": "fill_blank"
+ },
+ {
+  "id": 162712,
+  "why": "та же ошибка",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162717,
+  "why": "«die deutsche Buchstaben» — нужно deutschen; перевод не про буквы",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 162750,
+  "why": "«deutsche» вместо «deutschen»",
+  "lesson_id": 623,
+  "type": "fill_blank"
+ },
+ {
+  "id": 162752,
+  "why": "та же ошибка + перевод не связан",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163035,
+  "why": "«Мне нравиться» — нужно «нравится»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163040,
+  "why": "перевод-вопрос против примера-утверждения",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163075,
+  "why": "перевод не соответствует «не могу это прочитать»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163085,
+  "why": "перевод не связан с примером",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163088,
+  "why": "«___ Sie _ie ih i.» — сломанный текст",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163090,
+  "why": "тот же сломанный пример",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163100,
+  "why": "перевод-утверждение против повеления",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163103,
+  "why": "«Die g_lben ___ lecker.» — лишний пропуск внутри слова",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163118,
+  "why": "word_de не связан с предложением",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163120,
+  "why": "перевод не соответствует повелению",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163135,
+  "why": "«Das Schlüssel» — нужно Den Schlüssel",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163145,
+  "why": "перевод про кофе против пива в прошедшем",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163160,
+  "why": "«Eddie's hat is red.» — по-английски",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163170,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163183,
+  "why": "«Ich brauche nach Hause gehen» — пропущено zu",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163185,
+  "why": "тот же пропуск zu + перевод не связан",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163193,
+  "why": "«Lesen Sie. ___ Sie _ie.» — сломанный текст",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163198,
+  "why": "«Heute Abend ich schlafen.» — порядок слов и форма",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163200,
+  "why": "тот же пример + другое время в переводе",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163210,
+  "why": "перевод про ручку против хлеба",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163258,
+  "why": "«Ich lieben sind lecker.» — бессвязно",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163260,
+  "why": "тот же пример + перевод не связан",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163285,
+  "why": "«den Ziel» — нужно das Ziel",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163288,
+  "why": "«Wir haben gute gemacht.» — бессвязно",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163290,
+  "why": "тот же пример + рассинхрон лица",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163295,
+  "why": "перевод не передаёт «Du machst uns Angst»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163303,
+  "why": "«die Müll» — нужно den Müll",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163315,
+  "why": "«ein Match» против перевода «соотнести»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163335,
+  "why": "«Ich bin rauche nicht.» — лишний bin",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163340,
+  "why": "заглушка «die ... Straße» + перевод не связан",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163345,
+  "why": "перевод про пиццу против носового платка",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163375,
+  "why": "«Я чистю» — нужно «чищу»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163400,
+  "why": "packen переведено как «печём» — путаница с backen",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163401,
+  "why": "та же путаница packen/backen",
+  "lesson_id": 298,
+  "type": "letter_fill"
+ },
+ {
+  "id": 163405,
+  "why": "backe переведено как «упаковываю»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163406,
+  "why": "та же путаница",
+  "lesson_id": 298,
+  "type": "letter_fill"
+ },
+ {
+  "id": 163410,
+  "why": "backt переведено как «пакует»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163411,
+  "why": "та же путаница",
+  "lesson_id": 298,
+  "type": "letter_fill"
+ },
+ {
+  "id": 163415,
+  "why": "translation_ru противоречит собственному example_ru",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163416,
+  "why": "та же путаница",
+  "lesson_id": 298,
+  "type": "letter_fill"
+ },
+ {
+  "id": 163461,
+  "why": "translation_ru противоречит example_ru",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163467,
+  "why": "та же путаница",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163503,
+  "why": "перевод-повеление против вопроса",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163508,
+  "why": "перевод не соответствует вопросу",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163546,
+  "why": "«Ich vorstelle dir...» — приставка не отделена",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163558,
+  "why": "оборванное продолжение примера",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163563,
+  "why": "перевод-утверждение против вопроса",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163581,
+  "why": "бессвязный текст",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163583,
+  "why": "тот же сломанный пример",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163591,
+  "why": "«den Strand und baden» — некорректная координация",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163593,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163633,
+  "why": "пример 1 л. против перевода «Они читают»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163636,
+  "why": "ответ «rufen» — нужна форма «rufe»",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163643,
+  "why": "повелит. Sie против перевода 3 л.",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163659,
+  "why": "«liest» переведено инфинитивом",
+  "lesson_id": 298,
+  "type": "letter_fill"
+ },
+ {
+  "id": 163686,
+  "why": "слово buchen против Buch в упражнении",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163688,
+  "why": "пример не связан со словом buchen",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163713,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163728,
+  "why": "перевод не соответствует «Geld wechseln»",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163746,
+  "why": "«hausgekommen» не существует — nach Hause gekommen",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163748,
+  "why": "та же ошибка",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163768,
+  "why": "пример/перевод/слово рассинхронизированы",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163771,
+  "why": "«die deutsche Buchstaben» — нужно deutschen",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 163783,
+  "why": "рассинхрон времени в переводе",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163788,
+  "why": "«стирал» вместо «вымыл» для gewaschen",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163793,
+  "why": "пример не связан с переводом",
+  "lesson_id": 298,
+  "type": "sentence_write"
+ },
+ {
+  "id": 163800,
+  "why": "packst переведён как «печёшь»",
+  "lesson_id": 298,
+  "type": "fill_blank"
+ },
+ {
+  "id": 164198,
+  "why": "«mit Freunde» — нужно mit Freunden",
+  "lesson_id": 316,
+  "type": "fill_blank"
+ },
+ {
+  "id": 164200,
+  "why": "та же ошибка",
+  "lesson_id": 316,
+  "type": "sentence_write"
+ },
+ {
+  "id": 164278,
+  "why": "«жорская машина» — не русское слово",
+  "lesson_id": 316,
+  "type": "fill_blank"
+ },
+ {
+  "id": 164499,
+  "why": "«eis essen» — Eis с заглавной",
+  "lesson_id": 316,
+  "type": "letter_fill"
+ },
+ {
+  "id": 164721,
+  "why": "вопрос 2 л. против утверждения 1 л. в переводе",
+  "lesson_id": 324,
+  "type": "sentence_write"
+ },
+ {
+  "id": 164797,
+  "why": "«Das Mülleimer» — нужно Der",
+  "lesson_id": 324,
+  "type": "sentence_write"
+ },
+ {
+  "id": 164968,
+  "why": "«das Möbel» ед.ч. нетипично",
+  "lesson_id": 324,
+  "type": "fill_blank"
+ },
+ {
+  "id": 164970,
+  "why": "та же форма",
+  "lesson_id": 324,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165128,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 294,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165133,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 294,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165198,
+  "why": "перевод не соответствует вопросу",
+  "lesson_id": 294,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165241,
+  "why": "«Kursleitnehmer» не существует",
+  "lesson_id": 294,
+  "type": "fill_blank"
+ },
+ {
+  "id": 165251,
+  "why": "«Kurssteilnehmer» — опечатка",
+  "lesson_id": 294,
+  "type": "fill_blank"
+ },
+ {
+  "id": 165263,
+  "why": "перевод не соответствует вопросу",
+  "lesson_id": 294,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165278,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 294,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165293,
+  "why": "перевод не соответствует «Die Pause ist vorbei»",
+  "lesson_id": 294,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165308,
+  "why": "Notizbuch = блокнот, не «тетрадь»",
+  "lesson_id": 294,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165309,
+  "why": "та же ошибка",
+  "lesson_id": 294,
+  "type": "letter_fill"
+ },
+ {
+  "id": 165554,
+  "why": "пример не связан со словом hier",
+  "lesson_id": 340,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165653,
+  "why": "«вперед» неверно для zuvor",
+  "lesson_id": 340,
+  "type": "fill_blank"
+ },
+ {
+  "id": 165655,
+  "why": "перевод неверен, zuvor = ранее",
+  "lesson_id": 340,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165753,
+  "why": "нужно «Ich freue mich auf...»",
+  "lesson_id": 303,
+  "type": "fill_blank"
+ },
+ {
+  "id": 165758,
+  "why": "нужно «träume von...»",
+  "lesson_id": 303,
+  "type": "fill_blank"
+ },
+ {
+  "id": 165805,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 303,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165815,
+  "why": "вопрос против утверждения",
+  "lesson_id": 303,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165830,
+  "why": "перевод не соответствует вопросу",
+  "lesson_id": 303,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165890,
+  "why": "«Собака ленивый» — согласование",
+  "lesson_id": 303,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165895,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 303,
+  "type": "sentence_write"
+ },
+ {
+  "id": 165913,
+  "why": "«liebling» — с заглавной",
+  "lesson_id": 303,
+  "type": "fill_blank"
+ },
+ {
+  "id": 166109,
+  "why": "«Peda» — нужно Pedal",
+  "lesson_id": 315,
+  "type": "fill_blank"
+ },
+ {
+  "id": 166111,
+  "why": "та же ошибка",
+  "lesson_id": 315,
+  "type": "sentence_write"
+ },
+ {
+  "id": 166434,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 305,
+  "type": "sentence_write"
+ },
+ {
+  "id": 166954,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 310,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167029,
+  "why": "«heißt der Alexis» — артикль перед именем",
+  "lesson_id": 310,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167030,
+  "why": "та же ошибка",
+  "lesson_id": 310,
+  "type": "letter_fill"
+ },
+ {
+  "id": 167189,
+  "why": "«Какая номер дома?» + не соответствует примеру",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167199,
+  "why": "перевод не соответствует «Wie heißt der Ort?»",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167209,
+  "why": "перевод подменяет слово, теряется род",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167244,
+  "why": "перевод не соответствует примеру",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167249,
+  "why": "слово bis против bist в примере",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167304,
+  "why": "в example остался незаполненный «___»",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167314,
+  "why": "в example остался «___»",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167374,
+  "why": "пример не содержит слова ihn",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167414,
+  "why": "формальное Sie против «они»",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167434,
+  "why": "перевод примера не совпадает",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167439,
+  "why": "перевод не совпадает",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167469,
+  "why": "слово «in das» не в примере",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167494,
+  "why": "слово «in dem» не в примере",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167509,
+  "why": "артикль «die» переведён как «эта», пример не связан",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167514,
+  "why": "«über» = «о», не «над»",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167529,
+  "why": "«Ich bin n.» — бессмыслица",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167533,
+  "why": "example_ru не переводит пример",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167548,
+  "why": "example_ru не связан",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167558,
+  "why": "example_ru не связан",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167563,
+  "why": "example_ru не связан",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167589,
+  "why": "example_ru не связан",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167628,
+  "why": "при ich нужно mich, не sich",
+  "lesson_id": 338,
+  "type": "fill_blank"
+ },
+ {
+  "id": 167640,
+  "why": "example_ru не связан",
+  "lesson_id": 338,
+  "type": "sentence_write"
+ },
+ {
+  "id": 167677,
+  "why": "sehen требует dich, не dir",
+  "lesson_id": 338,
+  "type": "fill_blank"
+ },
+ {
+  "id": 168121,
+  "why": "example_ru не связан",
+  "lesson_id": 297,
+  "type": "sentence_write"
+ },
+ {
+  "id": 168191,
+  "why": "example_ru не связан",
+  "lesson_id": 297,
+  "type": "sentence_write"
+ },
+ {
+  "id": 168211,
+  "why": "example_ru добавляет лишнее",
+  "lesson_id": 297,
+  "type": "sentence_write"
+ },
+ {
+  "id": 168684,
+  "why": "dein переведено как «ваша»",
+  "lesson_id": 318,
+  "type": "sentence_write"
+ },
+ {
+  "id": 168732,
+  "why": "«land» — с заглавной",
+  "lesson_id": 318,
+  "type": "sentence_write"
+ },
+ {
+  "id": 168859,
+  "why": "рассинхрон числа",
+  "lesson_id": 295,
+  "type": "sentence_write"
+ },
+ {
+  "id": 168993,
+  "why": "Glas = стакан по контексту",
+  "lesson_id": 306,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169018,
+  "why": "example_ru не связан",
+  "lesson_id": 306,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169108,
+  "why": "example_ru не связан",
+  "lesson_id": 306,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169126,
+  "why": "«Superdug» — несуществующее слово",
+  "lesson_id": 306,
+  "type": "fill_blank"
+ },
+ {
+  "id": 169128,
+  "why": "то же",
+  "lesson_id": 306,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169129,
+  "why": "то же",
+  "lesson_id": 306,
+  "type": "letter_fill"
+ },
+ {
+  "id": 169161,
+  "why": "«The Hobbit» и «Hobbit» одновременно в опциях",
+  "lesson_id": 306,
+  "type": "fill_blank"
+ },
+ {
+  "id": 169181,
+  "why": "«Briefland» — несуществующее слово",
+  "lesson_id": 306,
+  "type": "fill_blank"
+ },
+ {
+  "id": 169183,
+  "why": "то же",
+  "lesson_id": 306,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169304,
+  "why": "example_ru меняет смысл",
+  "lesson_id": 306,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169460,
+  "why": "«Äu» не буква — диграф",
+  "lesson_id": 306,
+  "type": "fill_blank"
+ },
+ {
+  "id": 169462,
+  "why": "пример использует Ä, не «der Äu»",
+  "lesson_id": 306,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169463,
+  "why": "тот же баг",
+  "lesson_id": 306,
+  "type": "letter_fill"
+ },
+ {
+  "id": 169709,
+  "why": "возраст через sein, не haben",
+  "lesson_id": 313,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169782,
+  "why": "«Vier und sieben» ≠ 47",
+  "lesson_id": 313,
+  "type": "fill_blank"
+ },
+ {
+  "id": 169784,
+  "why": "та же арифметика + перевод не связан",
+  "lesson_id": 313,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169799,
+  "why": "та же арифметика",
+  "lesson_id": 313,
+  "type": "sentence_write"
+ },
+ {
+  "id": 169862,
+  "why": "подстановка даёт хвост «Jahre alt.»",
+  "lesson_id": 313,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170044,
+  "why": "example_ru не связан",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170049,
+  "why": "рассинхрон лица и смысла",
+  "lesson_id": 623,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170080,
+  "why": "нужно «Die alten Schuhe»",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170082,
+  "why": "та же ошибка + example_ru не связан",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170085,
+  "why": "«das ist! Quatsch» — сломанный синтаксис",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170095,
+  "why": "«der Quadrat» — нужно das",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170097,
+  "why": "то же",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170122,
+  "why": "example_ru меняет предмет и оценку",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170127,
+  "why": "example_ru не связан",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170140,
+  "why": "«Die alte Schuhe» — нужно alten",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170142,
+  "why": "та же ошибка + example_ru не связан",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170150,
+  "why": "рассогласование числа",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170152,
+  "why": "quietschen против quietscht + перевод не связан",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170170,
+  "why": "«Qu je» — опечатка (Oh je)",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170175,
+  "why": "«quadrat» с маленькой буквы",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170202,
+  "why": "schlechte Qualität переведено «хороший»",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170215,
+  "why": "рассогласование числа",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170217,
+  "why": "грам. ошибка + example_ru не связан",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170220,
+  "why": "quietschst не подходит к Schuhe",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170222,
+  "why": "quietschst не в примере + бессмысленный перевод",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170226,
+  "why": "рассогласование + форма quietschet",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170228,
+  "why": "«die alte Schuhe» + перевод не про скрип",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170231,
+  "why": "«Quit tungen» — опечатка",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170233,
+  "why": "то же",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170236,
+  "why": "«Quad rate» — опечатка",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170246,
+  "why": "«QU it tungen» — опечатка",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ },
+ {
+  "id": 170253,
+  "why": "«qu iet schen» — лишние пробелы",
+  "lesson_id": 624,
+  "type": "sentence_write"
+ },
+ {
+  "id": 170262,
+  "why": "лишнее «para», дублирование Schuhe",
+  "lesson_id": 624,
+  "type": "fill_blank"
+ }
+]
