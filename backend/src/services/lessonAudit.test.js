@@ -67,6 +67,13 @@ describe('checkExercise — выбор ответа', () => {
       payload: { question: 'Wie heißt das auf Russisch: das Gespräch?', options: ['письмо', 'разговор'], correct: 1 } }))
     expect(r).toHaveLength(0)
   })
+
+  // Рамка вопроса может быть законно русской — важен язык слова после двоеточия
+  it('русская рамка с немецким словом — не проблема', () => {
+    const r = checkExercise(ex({ type: 'multiple_choice', word_id: 7,
+      payload: { question: 'Как перевести на русский: auch?', options: ['тоже', 'здесь'], correct: 0 } }))
+    expect(r).toHaveLength(0)
+  })
 })
 
 describe('checkExercise — язык курса', () => {
