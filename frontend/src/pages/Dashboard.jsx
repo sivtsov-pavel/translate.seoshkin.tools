@@ -609,7 +609,9 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
   const id = lesson.lesson_id
   const title = getLessonTitle(lesson.lesson_title, lesson.lesson_title_translations, lang) || `#${id}`
   const wordsCount = lesson.words_count || 0
-  const chips = TYPE_ORDER.filter(type => lesson.byType?.[type])
+  // Чип рисуем по общему пулу урока (byTypeTotal), а не только по due-today: иначе
+  // пройденный тип «исчезал» с карточки, хотя внутри урока его упражнения на месте
+  const chips = TYPE_ORDER.filter(type => lesson.byTypeTotal?.[type] || lesson.byType?.[type])
   const typeLabels = {
     flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice,
     sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill,
@@ -736,7 +738,12 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
                 <button key={type} className="dl-ex-btn"
                   onClick={() => navigate(`/exercise-session?lesson_id=${id}&type=${type}`)}>
                   <span className="dl-ex-icon">{type === 'letter_fill' ? <b style={{ fontSize: 11 }}>abc</b> : <IcoC size={16} />}</span>
-                  <span className="dl-ex-count">{lesson.byType[type]}</span>
+                  {/* «повторить сегодня / всего в уроке» — те же числа, что увидит сессия */}
+                  <span className="dl-ex-count">
+                    {lesson.byTypeTotal?.[type]
+                      ? <>{lesson.byType?.[type] || 0}<span style={{ opacity: 0.55, fontWeight: 400 }}>/{lesson.byTypeTotal[type]}</span></>
+                      : lesson.byType?.[type]}
+                  </span>
                   <span className="dl-ex-label">{typeLabels[type]}</span>
                 </button>
               )
@@ -751,7 +758,9 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
           </div>
           <button className="dl-pass-btn" onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}>
             <CheckCircle2 size={16} /> {t.dashboard.exam || 'Зачёт по уроку'}
-            {lesson.total > 0 && <> · {lesson.total}</>}
+            {/* Размер именно зачётной сессии (слова учебника), а не «ждёт сегодня»:
+                раньше число не совпадало со счётчиком внутри зачёта */}
+            {(lesson.exam_total_ex ?? lesson.total) > 0 && <> · {lesson.exam_total_ex ?? lesson.total}</>}
           </button>
         </>
       )}

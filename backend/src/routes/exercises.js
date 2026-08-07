@@ -612,6 +612,25 @@ export async function exercisesRoutes(fastify) {
           lessonsMap[r.lesson_id].mastered_pct = r.total_ex > 0 ? Math.round(r.mastered_ex / r.total_ex * 100) : 0
         }
       }
+      // Всего упражнений по типам (без SRS-фильтра) — чтобы карточка показывала «сегодня/всего»
+      // теми же числами, что видит сессия внутри урока: byType выше считает только due-today,
+      // и у пройденного урока чипы «исчезали», хотя внутри урока упражнения есть.
+      // exam_total_ex — размер зачётной сессии (та же формула, что examClause в /today).
+      const { rows: typeTotals } = await db.query(
+        `SELECT e.lesson_id, e.type, COUNT(*)::int AS cnt,
+                COUNT(*) FILTER (WHERE e.word_id IS NULL OR w.source IS NULL OR w.source = 'textbook')::int AS exam_cnt
+         FROM exercises e
+         LEFT JOIN words w ON w.id = e.word_id
+         WHERE e.lesson_id = ANY($1)
+         GROUP BY e.lesson_id, e.type`,
+        [lessonIds]
+      )
+      for (const r of typeTotals) {
+        const les = lessonsMap[r.lesson_id]
+        if (!les) continue
+        ;(les.byTypeTotal ??= {})[r.type] = r.cnt
+        les.exam_total_ex = (les.exam_total_ex ?? 0) + r.exam_cnt
+      }
     }
     // Последний урок сверху по дате; части/темы одного урока (одна дата) идут подряд по id возр.
     // ВАЖНО: сравниваем как числа-таймстампы (pg отдаёт DATE объектом — строковое сравнение ломалось).

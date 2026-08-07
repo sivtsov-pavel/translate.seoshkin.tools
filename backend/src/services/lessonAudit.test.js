@@ -39,13 +39,33 @@ describe('checkExercise — «Заполни пропуск»', () => {
 
 describe('checkExercise — выбор ответа', () => {
   it('индекс вне списка — блокер', () => {
-    const r = checkExercise(ex({ type: 'multiple_choice', payload: { options: ['а', 'б'], correct: 5 } }))
+    const r = checkExercise(ex({ type: 'multiple_choice', word_id: 7, payload: { options: ['а', 'б'], correct: 5 } }))
     expect(levels(r)).toContain('blocker')
   })
 
   it('повтор вариантов — замечание, не блокер', () => {
-    const r = checkExercise(ex({ type: 'multiple_choice', payload: { options: ['замок', 'замок', 'дверь'], correct: 0 } }))
+    const r = checkExercise(ex({ type: 'multiple_choice', word_id: 7, payload: { options: ['замок', 'замок', 'дверь'], correct: 0 } }))
     expect(levels(r)).toEqual(['warn'])
+  })
+
+  // Реальный случай (урок 12 de): генератор подставил в вопрос русский перевод —
+  // «Wie heißt das auf Russisch: разговор?» показывает ответ сам
+  it('русское слово в вопросе — замечание', () => {
+    const r = checkExercise(ex({ type: 'multiple_choice', word_id: 7,
+      payload: { question: 'Wie heißt das auf Russisch: разговор?', options: ['письмо', 'разговор'], correct: 1 } }))
+    expect(r.some(i => i.text.includes('русское слово в вопросе'))).toBe(true)
+  })
+
+  it('без привязки к слову — замечание (карточка без картинки и перевода)', () => {
+    const r = checkExercise(ex({ type: 'multiple_choice', word_id: null,
+      payload: { question: 'Wie heißt das auf Russisch: Koch?', options: ['повар', 'пекарь'], correct: 0 } }))
+    expect(r.some(i => i.text.includes('нет привязки к слову'))).toBe(true)
+  })
+
+  it('корректное упражнение со словом проходит', () => {
+    const r = checkExercise(ex({ type: 'multiple_choice', word_id: 7,
+      payload: { question: 'Wie heißt das auf Russisch: das Gespräch?', options: ['письмо', 'разговор'], correct: 1 } }))
+    expect(r).toHaveLength(0)
   })
 })
 

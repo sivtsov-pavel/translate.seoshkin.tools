@@ -190,13 +190,17 @@ export default function Layout({ children }) {
       const root = document.documentElement
       if (topbar) { const b = topbar.getBoundingClientRect().bottom; if (b > 0) root.style.setProperty('--topbar-h', Math.ceil(b) + 'px') }
       if (bottomNav) { const h = bottomNav.getBoundingClientRect().height; if (h > 0) root.style.setProperty('--bottom-nav-h', Math.ceil(h) + 'px') }
+      // Реальная высота офлайн-плашки: на узком экране текст переносится и плашка
+      // выше жёсткого отступа — контент уходил под неё
+      const banner = document.querySelector('.offline-banner')
+      root.style.setProperty('--offline-banner-h', banner ? Math.ceil(banner.getBoundingClientRect().height) + 'px' : '0px')
     }
     const scheduleMeasure = () => requestAnimationFrame(() => { measure(); setTimeout(measure, 200) })
     scheduleMeasure()
     window.addEventListener('resize', measure)
     window.addEventListener('orientationchange', scheduleMeasure)
     return () => { window.removeEventListener('resize', measure); window.removeEventListener('orientationchange', scheduleMeasure) }
-  }, [])
+  }, [online])
 
   useEffect(() => {
     const el = drawerRef.current
@@ -445,7 +449,7 @@ export default function Layout({ children }) {
       </header>
 
       {!online && (
-        <div style={{ position: 'fixed', top: 'var(--topbar-h, 56px)', left: 0, right: 0, zIndex: 90, background: '#8a6d1a', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
+        <div className="offline-banner" style={{ position: 'fixed', top: 'var(--topbar-h, 56px)', left: 0, right: 0, zIndex: 90, background: '#8a6d1a', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
           📴 {t.offlineMode?.badge || 'Офлайн — словарь и упражнения работают, прогресс отправится при появлении сети'}
         </div>
       )}
