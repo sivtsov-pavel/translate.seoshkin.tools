@@ -13,7 +13,7 @@
 - Локализация интерфейса: 10 языков, всё работает от локали пользователя.
 
 ## Деплой
-Git flow → сервер. Коммит/пуш → `ssh gcloud-seosite` → `cd /home/seosite/translate && git pull` → `docker compose -f docker-compose.prod.yml build frontend backend && up -d`. Claude деплоит сам.
+Git flow → сервер. Коммит/пуш → `ssh seoshkin-tools-core` → `cd /home/seosite/translate && git pull` → `docker compose -f docker-compose.prod.yml build frontend backend && up -d`. Claude деплоит сам.
 
 ## Домены / nginx
 - Домены приложения: **deutschlernen.ai** (основной) + **translate.seoshkin.tools** (доп.). Оба → одно приложение.
@@ -42,3 +42,10 @@ TWA-манифест до сих пор смотрит на старый дом�
 - Строки интерфейса (i18n `frontend/src/i18n/*.js`) модель пишет сама в файлы — это бесплатно (токены Anthropic, не OpenAI).
 - **Любая операция, тратящая OpenAI-баланс на проде** (перегенерация упражнений, `translateExercisePayloads`/`translateWordsToAllLangs`, vision-импорт, генерация картинок `gpt-image-1`) — СНАЧАЛА оценить объём (кол-во вызовов / модель / примерная цена) и **спросить Павла**, потом запускать.
 - Мы архитекторы/разработчики, а не копирайтеры. Не жечь баланс без явного согласия. Это правило — и для Opus, и для Sonnet (писать в каждый handoff-промт).
+
+## SSH (актуально с 2026-08-09)
+
+- Подключение: `ssh <алиас>` — алиасы в `~/.ssh/config`, по сырому IP не ходим.
+- Этот проект живёт на: `seoshkin-tools-core` (34.107.57.166).
+- ⚠️ Старый сервер 34.179.228.86 (`gcloud-seosite`/`studiotakaya`) удаляется 20.08.2026 — ссылки на него менять на `seoshkin-tools-core` (34.107.57.166).
+- `Permission denied (publickey)` → сначала `ssh-add --apple-load-keychain`, потом всё остальное. Полный порядок — в глобальном `~/.claude/CLAUDE.md`, раздел «🔌 Отказ ssh».
