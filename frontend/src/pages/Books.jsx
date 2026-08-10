@@ -4,7 +4,8 @@ import { api, uploadFiles } from '../api/client.js'
 import { useAuthStore } from '../store/auth.js'
 import { useI18nStore } from '../store/i18n.js'
 
-// Раздел «📚 Книги» (для учителя): загрузка PDF/TXT + обложка. Ученики читают книги в Читалке.
+// Раздел «📚 Книги»: загрузка PDF/TXT + обложка доступна всем участникам школы,
+// книга видна всей школе. Удаление — автор своей книги или учитель. Читают в Читалке.
 export default function Books() {
   const { t } = useI18nStore()
   const { user } = useAuthStore()
@@ -18,11 +19,13 @@ export default function Books() {
   const [busy, setBusy]       = useState(false)
   const [err, setErr]         = useState('')
 
-  // Список — из /reader/books (виден всем: свои книги + книги школы). Загрузка/удаление — только учителю.
+  // Список — из /reader/books (виден всем: свои книги + книги школы).
   const load = () => api.get('/reader/books').then(setBooks).catch(() => {}).finally(() => setLoading(false))
   useEffect(() => { load() }, [])
 
   const isOwner = user?.role === 'owner'
+  // Удалять можно свою книгу; учитель — любую книгу школы
+  const canRemove = (b) => isOwner || b.owner_id === user?.id
 
   const submit = async (e) => {
     e.preventDefault()
@@ -53,17 +56,15 @@ export default function Books() {
     <div style={{ paddingTop: 30 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 12 }}>
         <h1 style={{ margin: 0 }}>📚 Книги</h1>
-        {isOwner && (
-          <button onClick={() => setFormOpen(v => !v)} style={btnPrimary}>
-            {formOpen ? t.common.cancel : t.reader.addBookBtn}
-          </button>
-        )}
+        <button onClick={() => setFormOpen(v => !v)} style={btnPrimary}>
+          {formOpen ? t.common.cancel : t.reader.addBookBtn}
+        </button>
       </div>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 24px' }}>
         {t.reader.booksIntro1}<Link to="/reader" style={{ color: 'var(--accent)' }}>{t.nav.reader}</Link>{t.reader.booksIntro2}
       </p>
 
-      {formOpen && isOwner && (
+      {formOpen && (
         <form onSubmit={submit} style={{ marginBottom: 24, padding: '20px 24px', background: 'var(--surface-2)', borderRadius: 12, border: '1px solid var(--line)' }}>
           <div style={{ marginBottom: 14 }}>
             <label style={lbl}>Название (необязательно — возьмём из имени файла)</label>
@@ -87,7 +88,7 @@ export default function Books() {
 
       {books.length === 0 ? (
         <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 12, border: '1px dashed var(--line)' }}>
-          {t.reader.noBooksYet} {isOwner ? t.reader.noBooksOwner : t.reader.noBooksStudent}
+          {t.reader.noBooksYet} {t.reader.noBooksOwner}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
@@ -104,7 +105,7 @@ export default function Books() {
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
                 <button onClick={() => navigate(`/reader?book=${b.id}`)} style={{ ...btnPrimary, flex: 1, fontSize: 13, padding: '8px 12px' }}>{t.reader.readBtn}</button>
-                {isOwner && (
+                {canRemove(b) && (
                   <button onClick={() => remove(b)} title={t.reader.deleteBookTitle}
                     style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'transparent', color: 'var(--red)', cursor: 'pointer', fontSize: 13 }}>
                     🗑

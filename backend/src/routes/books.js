@@ -14,10 +14,11 @@ export async function booksRoutes(fastify) {
 
   // ── Читалка: книги, доступные пользователю (свои + книги его школы) ───────────
   // Возвращаем позицию закладки, чтобы показать «▶ продолжить» и прогресс на карточке.
+  // owner_id нужен фронту: ученик видит кнопку удаления только у своих книг.
   fastify.get('/api/reader/books', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const schoolId = request.user.school_id ?? null
     const { rows } = await db.query(
-      `SELECT b.id, b.title, b.cover_image_url, b.target_lang, b.source_type, b.char_count,
+      `SELECT b.id, b.title, b.cover_image_url, b.target_lang, b.source_type, b.char_count, b.owner_id,
               COALESCE(bp.para_index, 0) AS para_index
        FROM books b
        LEFT JOIN book_progress bp ON bp.book_id = b.id AND bp.user_id = $1
@@ -60,11 +61,11 @@ export async function booksRoutes(fastify) {
     return { ok: true, para_index: idx }
   })
 
-  // ── Учитель: загрузить книгу (PDF/TXT) + обложка ──────────────────────────────
+  // ── Загрузить книгу (PDF/TXT) + обложка — доступно и ученикам ─────────────────
+  // Книга привязывается к школе загрузившего и видна всей школе (решение Павла 10.08.2026:
+  // «все видят книги и все их загружают в рамках класса минимум»).
   // multipart: поля title, target_lang; файлы file (обязательно) и cover (опц.).
   fastify.post('/api/books', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
-
     let title = '', targetLang = request.headers['x-target-lang'] || 'de'
     let fileBuf = null, fileName = '', coverBuf = null
     try {
@@ -110,9 +111,8 @@ export async function booksRoutes(fastify) {
     return { id: bookId, title, source_type: sourceType, char_count: text.length, para_count: paraCount, cover_image_url: coverUrl }
   })
 
-  // ── Учитель: обновить/добавить обложку отдельно ──────────────────────────────
+  // ── Обновить/добавить обложку — автор своей книги ─────────────────────────────
   fastify.post('/api/books/:id/cover', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const bookId = parseInt(request.params.id)
     const { rows } = await db.query('SELECT id FROM books WHERE id = $1 AND owner_id = $2', [bookId, request.user.id])
     if (!rows[0]) return reply.status(404).send({ error: 'Книга не найдена' })
@@ -126,11 +126,17 @@ export async function booksRoutes(fastify) {
     return { cover_image_url: url }
   })
 
-  // ── Учитель: удалить книгу (каскадом уходит и book_progress) ──────────────────
+  // ── Удалить книгу: автор — свою, учитель — любую книгу своей школы ────────────
+  // (каскадом уходит и book_progress)
   fastify.delete('/api/books/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     const bookId = parseInt(request.params.id)
-    const { rows } = await db.query('DELETE FROM books WHERE id = $1 AND owner_id = $2 RETURNING id', [bookId, request.user.id])
+    const isTeacher = request.user.role === 'owner'
+    const schoolId = request.user.school_id ?? null
+    const { rows } = await db.query(
+      `DELETE FROM books
+       WHERE id = $1 AND (owner_id = $2 OR ($3 AND $4::int IS NOT NULL AND school_id = $4))
+       RETURNING id`,
+      [bookId, request.user.id, isTeacher, schoolId])
     if (!rows[0]) return reply.status(404).send({ error: 'Книга не найдена' })
     return { deleted: true }
   })
