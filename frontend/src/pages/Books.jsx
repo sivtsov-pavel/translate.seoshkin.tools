@@ -71,8 +71,8 @@ export default function Books() {
             <input value={title} onChange={e => setTitle(e.target.value)} placeholder={t.reader.bookTitlePlaceholder} style={inputStyle} />
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={lbl}>Файл книги — PDF или TXT *</label>
-            <input type="file" accept=".pdf,.txt,application/pdf,text/plain" onChange={e => setFile(e.target.files?.[0] || null)} style={{ display: 'block' }} />
+            <label style={lbl}>Файл книги — PDF, EPUB или TXT *</label>
+            <input type="file" accept=".pdf,.epub,.txt,application/pdf,application/epub+zip,text/plain" onChange={e => setFile(e.target.files?.[0] || null)} style={{ display: 'block' }} />
             <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>{t.reader.pdfTextLayerHint}</div>
           </div>
           <div style={{ marginBottom: 16 }}>

@@ -1,7 +1,7 @@
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import { writeFile, unlink, readFile } from 'fs/promises'
-import { join } from 'path'
+import { writeFile, unlink, readFile, rm, mkdir } from 'fs/promises'
+import { join, dirname } from 'path'
 import { randomUUID } from 'crypto'
 import { config } from '../config.js'
 
@@ -49,10 +49,82 @@ export function splitBookParagraphs(text) {
   return out
 }
 
+// ── EPUB ─────────────────────────────────────────────────────────────────────
+// EPUB — это zip с xhtml-главами. Распаковываем CLI-unzip'ом (busybox есть в
+// образе), порядок глав берём из spine в *.opf. XML/HTML разбираем регулярками —
+// для стандартных издательских EPUB этого достаточно, зависимостей не тянем.
+
+// Минимальный декодер HTML-сущностей (+ числовые &#NNN; / &#xHH;)
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', shy: '', mdash: '—', ndash: '–', hellip: '…', laquo: '«', raquo: '»', bdquo: '„', ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’', auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß', eacute: 'é', egrave: 'è', agrave: 'à', ccedil: 'ç' }
+function decodeEntities(s) {
+  return s
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&([a-zA-Z]+);/g, (m, name) => ENTITIES[name] ?? m)
+}
+
+// xhtml-глава → плоский текст: убираем head/style/script, блочные теги = границы абзацев
+function xhtmlToText(html) {
+  return decodeEntities(
+    html
+      .replace(/<(head|style|script)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<(?:\/(?:p|div|h[1-6]|li|blockquote|tr|section|article)|br\s*\/?|hr\s*\/?)>/gi, '\n\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[ \t]{2,}/g, ' ')
+  )
+}
+
+async function extractEpubText(buffer) {
+  const id = randomUUID()
+  const tmpEpub = join(config.uploadDir, `${id}.epub`)
+  const tmpDir = join(config.uploadDir, id)
+  await mkdir(tmpDir, { recursive: true })
+  await writeFile(tmpEpub, buffer)
+  try {
+    await execFileP('unzip', ['-o', '-q', tmpEpub, '-d', tmpDir], { timeout: 60000 })
+    // container.xml → путь к .opf (описанию книги)
+    const container = await readFile(join(tmpDir, 'META-INF/container.xml'), 'utf8')
+    const opfPath = container.match(/full-path="([^"]+)"/)?.[1]
+    if (!opfPath) throw new Error('EPUB: не найден content.opf')
+    const opf = await readFile(join(tmpDir, opfPath), 'utf8')
+    const opfDir = dirname(opfPath)
+    const title = opf.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/)?.[1]?.trim() || ''
+
+    // manifest: id → href; spine: порядок глав
+    const items = {}
+    for (const m of opf.matchAll(/<item\s[^>]*>/g)) {
+      const tag = m[0]
+      const itemId = tag.match(/\bid="([^"]+)"/)?.[1]
+      const href = tag.match(/\bhref="([^"]+)"/)?.[1]
+      const type = tag.match(/media-type="([^"]+)"/)?.[1] || ''
+      if (itemId && href && /xhtml|html/.test(type)) items[itemId] = href
+    }
+    let hrefs = [...opf.matchAll(/<itemref\s[^>]*idref="([^"]+)"/g)].map(m => items[m[1]]).filter(Boolean)
+    if (!hrefs.length) hrefs = Object.values(items) // фолбэк: все главы в порядке manifest
+
+    const chapters = []
+    for (const href of hrefs) {
+      const raw = await readFile(join(tmpDir, opfDir, decodeURIComponent(href)), 'utf8').catch(() => '')
+      const t = xhtmlToText(raw).trim()
+      if (t) chapters.push(t)
+    }
+    return { text: normalize(chapters.join('\n\n')), sourceType: 'epub', title }
+  } finally {
+    await unlink(tmpEpub).catch(() => {})
+    await rm(tmpDir, { recursive: true, force: true }).catch(() => {})
+  }
+}
+
 // Извлекает читаемый текст из загруженного файла книги.
-// PDF → pdftotext (poppler, текстовый слой). TXT/прочее → как UTF-8.
-// Возвращает { text, sourceType }. Для сканов без текстового слоя pdftotext вернёт пусто.
+// PDF → pdftotext (poppler, текстовый слой). EPUB → unzip + разбор xhtml-глав.
+// TXT/прочее → как UTF-8. Возвращает { text, sourceType, title? }.
+// Для сканов без текстового слоя pdftotext вернёт пусто.
 export async function extractBookText(buffer, filename = '') {
+  const isZip = buffer.slice(0, 2).toString('latin1') === 'PK'
+  const isEpub = /\.epub$/i.test(filename) ||
+    (isZip && buffer.slice(0, 100).toString('latin1').includes('application/epub+zip'))
+  if (isEpub) return extractEpubText(buffer)
+
   const isPdf = /\.pdf$/i.test(filename) || buffer.slice(0, 5).toString('latin1') === '%PDF-'
   if (!isPdf) {
     return { text: normalize(buffer.toString('utf8')), sourceType: 'txt' }

@@ -86,12 +86,13 @@ export async function booksRoutes(fastify) {
     }
     if (!fileBuf) return reply.status(400).send({ error: 'Файл книги не получен' })
 
-    // Извлекаем текст (PDF → pdftotext, TXT → как есть)
-    const { text, sourceType } = await extractBookText(fileBuf, fileName)
+    // Извлекаем текст (PDF → pdftotext, EPUB → unzip+xhtml, TXT → как есть)
+    const { text, sourceType, title: extractedTitle } = await extractBookText(fileBuf, fileName)
     if (!text || text.length < 20) {
-      return reply.status(400).send({ error: 'Не удалось извлечь текст. Для PDF нужен текстовый слой (не скан), либо загрузи TXT.' })
+      return reply.status(400).send({ error: 'Не удалось извлечь текст. Для PDF нужен текстовый слой (не скан), либо загрузи EPUB или TXT.' })
     }
-    if (!title) title = (fileName.replace(/\.[^.]+$/, '') || 'Книга').slice(0, 200)
+    // Название: введённое → из метаданных EPUB → из имени файла
+    if (!title) title = (extractedTitle || fileName.replace(/\.[^.]+$/, '') || 'Книга').slice(0, 200)
     const paraCount = splitBookParagraphs(text).length
 
     // Сначала создаём запись (нужен id для имени файла обложки), затем сохраняем обложку
