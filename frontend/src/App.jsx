@@ -56,6 +56,14 @@ function HomeRoute() {
   return token ? <Layout><Dashboard /></Layout> : <Landing />
 }
 
+// Вход в класс по ссылке-приглашению должен работать и БЕЗ аккаунта:
+// без токена JoinClass сам показывает форму регистрации и после неё
+// присоединяет к классу. С токеном — обычная страница внутри Layout.
+function JoinRoute() {
+  const { token } = useAuthStore()
+  return token ? <Layout><JoinClass /></Layout> : <JoinClass />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -97,8 +105,8 @@ export default function App() {
         <Route path="/catalog"    element={<ProtectedRoute><Layout><Catalog /></Layout></ProtectedRoute>} />
         <Route path="/my-words"   element={<ProtectedRoute><Layout><PersonalVocab /></Layout></ProtectedRoute>} />
         <Route path="/sets"       element={<ProtectedRoute><Layout><Sets /></Layout></ProtectedRoute>} />
-        <Route path="/join"       element={<ProtectedRoute><Layout><JoinClass /></Layout></ProtectedRoute>} />
-        <Route path="/join/:code" element={<ProtectedRoute><Layout><JoinClass /></Layout></ProtectedRoute>} />
+        <Route path="/join"       element={<JoinRoute />} />
+        <Route path="/join/:code" element={<JoinRoute />} />
         {/* Печатный лист урока — без Layout: чистая страница под A4 */}
         <Route path="/print/:lessonId" element={<ProtectedRoute><PrintSheet /></ProtectedRoute>} />
         <Route path="/docs"    element={<Docs />} />

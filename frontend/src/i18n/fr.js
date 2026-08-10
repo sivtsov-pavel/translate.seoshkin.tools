@@ -999,6 +999,10 @@ export const fr = {
     codePlaceholder: 'CODE DE CLASSE',
     joining: 'J\'arrive…',
     joinBtn: 'Rejoindre la classe',
+    joinAuthHint: 'Crée un compte et rejoins la classe aussitôt',
+    joinRegisterBtn: 'Créer un compte et rejoindre la classe',
+    joinLoginBtn: 'Se connecter et rejoindre',
+    goLessons: '▶ Vers les leçons',
   },
   translations: {
     title: '🌍 Traductions',

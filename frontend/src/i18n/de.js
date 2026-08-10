@@ -1018,6 +1018,10 @@ export const de = {
     codePlaceholder: 'KLASSENKODE',
     joining: 'Tritt bei…',
     joinBtn: 'In die Klasse eintreten',
+    joinAuthHint: 'Erstelle ein Konto und du bist sofort in der Klasse',
+    joinRegisterBtn: 'Konto erstellen und Klasse beitreten',
+    joinLoginBtn: 'Anmelden und beitreten',
+    goLessons: '▶ Zu den Lektionen',
   },
   translations: {
     title: '🌍 Übersetzungen',

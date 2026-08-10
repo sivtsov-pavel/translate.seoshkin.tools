@@ -773,6 +773,10 @@ export const ru = {
     codePlaceholder: 'КОД КЛАССА',
     joining: 'Вхожу…',
     joinBtn: 'Войти в класс',
+    joinAuthHint: 'Создай аккаунт — и сразу окажешься в классе',
+    joinRegisterBtn: 'Создать аккаунт и войти в класс',
+    joinLoginBtn: 'Войти и присоединиться',
+    goLessons: '▶ К занятиям',
   },
   // Переводы (панель учителя)
   translations: {

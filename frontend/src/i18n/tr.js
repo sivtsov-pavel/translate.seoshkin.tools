@@ -999,6 +999,10 @@ export const tr = {
     codePlaceholder: 'SINIF KODU',
     joining: 'Giriş yapıyorum…',
     joinBtn: 'Sınıfa katıl',
+    joinAuthHint: 'Hesap oluştur, hemen sınıfa katıl',
+    joinRegisterBtn: 'Hesap oluştur ve sınıfa katıl',
+    joinLoginBtn: 'Giriş yap ve katıl',
+    goLessons: '▶ Derslere git',
   },
   translations: {
     title: '🌍 Çeviriler',

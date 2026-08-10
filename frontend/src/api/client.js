@@ -17,7 +17,9 @@ async function request(method, url, body) {
     body: body ? JSON.stringify(body) : undefined,
   })
 
-  if (res.status === 401) {
+  // 401 на /auth/* — это «неверный пароль» и т.п.: отдаём ошибку форме,
+  // редиректить на /login нельзя (теряется страница, например /join/:code)
+  if (res.status === 401 && !url.startsWith('/auth/')) {
     localStorage.removeItem('token')
     window.location.href = '/login'
     throw new Error('Unauthorized')

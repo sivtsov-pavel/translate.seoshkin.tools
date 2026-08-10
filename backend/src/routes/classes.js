@@ -1,5 +1,6 @@
 import { db } from '../db/index.js'
 import { randomBytes } from 'crypto'
+import { invalidateSchoolContext } from '../plugins/auth.js'
 
 // Классы внутри школы (мультиарендность SaaS). Учитель/школа-админ создаёт классы,
 // ученик присоединяется по коду-приглашению. Scoping — по school_id из auth-контекста.
@@ -60,6 +61,7 @@ export async function classesRoutes(fastify) {
       [c.id, request.user.id, 'student'])
     // Привязываем ученика к школе класса, если он ещё без школы
     await db.query('UPDATE users SET school_id=COALESCE(school_id,$1) WHERE id=$2', [c.school_id, request.user.id])
+    invalidateSchoolContext(request.user.id) // иначе до 5 минут не видит книги/материалы школы
     return { ok: true, class: { id: c.id, name: c.name } }
   })
 
@@ -79,6 +81,7 @@ export async function classesRoutes(fastify) {
       [cr[0].id, userId, 'student'])
     // Привязываем ученика к школе этого класса (переназначение школы допускаем)
     await db.query('UPDATE users SET school_id=$1 WHERE id=$2', [cr[0].school_id, userId])
+    invalidateSchoolContext(userId) // иначе до 5 минут не видит книги/материалы школы
     return { ok: true }
   })
 

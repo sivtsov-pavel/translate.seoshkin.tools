@@ -10,6 +10,12 @@ const SEEN_TTL = 10 * 60 * 1000
 const schoolCache = new Map()
 const SCHOOL_TTL = 5 * 60 * 1000
 
+// Сбросить кеш школы пользователя. Звать при любой смене school_id —
+// иначе новый ученик до 5 минут не видит материалы школы (книги и т.п.)
+export function invalidateSchoolContext(userId) {
+  schoolCache.delete(userId)
+}
+
 async function authPlugin(fastify) {
   fastify.register(jwt, { secret: config.jwtSecret })
 

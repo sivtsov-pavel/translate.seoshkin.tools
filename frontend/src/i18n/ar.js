@@ -1002,6 +1002,10 @@ export const ar = {
     codePlaceholder: 'كود الصف',
     joining: 'أدخل…',
     joinBtn: 'الانضمام إلى الصف',
+    joinAuthHint: 'أنشئ حسابًا وستنضم إلى الصف فورًا',
+    joinRegisterBtn: 'إنشاء حساب والانضمام إلى الصف',
+    joinLoginBtn: 'تسجيل الدخول والانضمام',
+    goLessons: '▶ إلى الدروس',
   },
   translations: {
     title: '🌍 الترجمات',

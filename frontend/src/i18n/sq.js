@@ -1011,6 +1011,10 @@ export const sq = {
     codePlaceholder: 'KODI I KLASËS',
     joining: 'Po hyj…',
     joinBtn: 'Hyr në klasë',
+    joinAuthHint: 'Krijo një llogari dhe hyn menjëherë në klasë',
+    joinRegisterBtn: 'Krijo llogari dhe hyr në klasë',
+    joinLoginBtn: 'Hyr dhe bashkohu',
+    goLessons: '▶ Te mësimet',
   },
   translations: {
     title: '🌍 Përkthime',

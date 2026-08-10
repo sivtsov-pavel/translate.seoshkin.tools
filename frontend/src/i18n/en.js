@@ -1012,6 +1012,10 @@ export const en = {
     codePlaceholder: 'CLASS CODE',
     joining: 'Joining…',
     joinBtn: 'Join the class',
+    joinAuthHint: 'Create an account and you will join the class right away',
+    joinRegisterBtn: 'Create account & join the class',
+    joinLoginBtn: 'Log in & join',
+    goLessons: '▶ Go to lessons',
   },
   translations: {
     title: '🌍 Translations',

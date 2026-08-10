@@ -1011,6 +1011,10 @@ export const uk = {
     codePlaceholder: 'КОД КЛАСУ',
     joining: 'Входжу…',
     joinBtn: 'Увійти в клас',
+    joinAuthHint: 'Створи акаунт — і одразу опинишся в класі',
+    joinRegisterBtn: 'Створити акаунт і увійти в клас',
+    joinLoginBtn: 'Увійти та приєднатися',
+    goLessons: '▶ До занять',
   },
   translations: {
     title: '🌍 Переклади',

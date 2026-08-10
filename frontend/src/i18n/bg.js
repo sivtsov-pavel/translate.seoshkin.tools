@@ -994,6 +994,10 @@ export const bg = {
     codePlaceholder: 'КОД НА КЛАСА',
     joining: 'Влизам…',
     joinBtn: 'Влез в класа',
+    joinAuthHint: 'Създай акаунт и веднага ще си в класа',
+    joinRegisterBtn: 'Създай акаунт и влез в класа',
+    joinLoginBtn: 'Влез и се присъедини',
+    goLessons: '▶ Към уроците',
   },
   translations: {
     title: '🌍 Преводи',

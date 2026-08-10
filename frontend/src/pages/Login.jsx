@@ -22,7 +22,9 @@ export default function Login() {
     try {
       const { token, user } = await api.post('/auth/login', { email, password })
       login(token, user)
-      navigate('/')
+      // Если пришёл по ссылке-приглашению в класс — возвращаем дожать вход в класс
+      const pendingJoin = sessionStorage.getItem('pendingJoinCode')
+      navigate(pendingJoin ? `/join/${pendingJoin}` : '/')
     } catch (err) {
       setError(err.message)
     } finally {

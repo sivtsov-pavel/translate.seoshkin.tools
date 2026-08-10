@@ -1000,6 +1000,10 @@ export const es = {
     codePlaceholder: 'CÓDIGO DE CLASE',
     joining: 'Entrando…',
     joinBtn: 'Unirse a la clase',
+    joinAuthHint: 'Crea una cuenta y entrarás a la clase al instante',
+    joinRegisterBtn: 'Crear cuenta y unirse a la clase',
+    joinLoginBtn: 'Iniciar sesión y unirse',
+    goLessons: '▶ A las lecciones',
   },
   translations: {
     title: '🌍 Traducciones',

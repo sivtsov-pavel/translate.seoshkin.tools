@@ -34,7 +34,9 @@ export default function Register() {
     try {
       const { token, user } = await api.post('/auth/register', { email, password, role })
       login(token, user)
-      navigate('/')
+      // Если пришёл по ссылке-приглашению в класс — возвращаем дожать вход в класс
+      const pendingJoin = sessionStorage.getItem('pendingJoinCode')
+      navigate(pendingJoin ? `/join/${pendingJoin}` : '/')
     } catch (err) {
       setError(err.message)
     } finally {
