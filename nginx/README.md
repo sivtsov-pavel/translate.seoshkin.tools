@@ -2,19 +2,18 @@
 
 **Это источник истины для входных доменов приложения.** Правим ТОЛЬКО здесь, в git.
 
-⚠️ **НО: автоматически на сервер эти файлы НЕ попадают** (обнаружено 28.07.2026).
-В шлюз смонтирован один файл `/var/www/translate.seoshkin.tools/nginx.conf`, а не каталог
-отсюда. После правки конфига его нужно перенести руками:
+После переезда на `seoshkin-tools-core` (август 2026) каталог `nginx/` смонтирован в шлюз
+**целиком** (`/home/seosite/translate/nginx` → `/etc/nginx/conf.d/translate`), склейка файлов
+руками больше НЕ нужна. Применить правку:
 
 ```bash
-ssh gcloud-seosite 'cd /home/seosite/translate && \
-  cp /var/www/translate.seoshkin.tools/nginx.conf /var/www/translate.seoshkin.tools/nginx.conf.bak-$(date +%Y%m%d) && \
-  cat nginx/translate.seoshkin.tools.conf nginx/deutschlernen.ai.conf > /var/www/translate.seoshkin.tools/nginx.conf && \
-  docker exec seoshkin_nginx nginx -t && docker exec seoshkin_nginx nginx -s reload'
+ssh seoshkin-tools-core 'cd /home/seosite/translate && git pull && \
+  docker exec ecosystem_router nginx -t && docker exec ecosystem_router nginx -s reload'
 ```
 
-Из-за этого расхождения файлы однажды разъехались, и в Android-приложении перестал
-работать вход. Задача на устранение передана Флабу (см. `docs/handoff/`).
+⚠️ **После каждого деплоя с пересозданием контейнеров** (`build` + `up -d`) шлюзу нужен
+`nginx -s reload`: nginx кеширует IP контейнеров при загрузке конфига, у пересозданных
+контейнеров IP новые → сайт отдаёт 502, пока шлюз не перечитает конфиг (наступили 10.08.2026).
 
 ## ⛔ Правила (чтобы не перетереть и не сломать прод)
 
@@ -33,11 +32,10 @@ ssh gcloud-seosite 'cd /home/seosite/translate && \
 Интернет :80/:443
       │
       ▼
-seoshkin_nginx  (docker-контейнер, проект seoshkin: /var/www/seoshkin.com/docker-compose.yml)
-  ├─ conf.d/default.conf       ← seoshkin.com
-  ├─ conf.d/studiotakaya.conf  ← studiotakaya
-  ├─ conf.d/translate.conf     ← /home/seosite/translate/nginx/translate.seoshkin.tools.conf
-  └─ conf.d/deutschlernen.conf ← /home/seosite/translate/nginx/deutschlernen.ai.conf
+ecosystem_router  (docker-контейнер nginx:alpine, общий шлюз всех проектов сервера)
+  ├─ conf.d/translate/ ← /home/seosite/translate/nginx/ (каталог целиком, оба домена)
+  ├─ conf.d/arina/, conf.d/sport/, … ← nginx/ других проектов
+  └─ /etc/letsencrypt ← /var/www/seoshkin.com/certbot/conf (общий certbot-store)
         │  (оба server_name → одно приложение)
         ▼
   translate-frontend-1:80  (проект translate: /home/seosite/translate/docker-compose.prod.yml)
@@ -57,9 +55,8 @@ seoshkin_nginx  (docker-контейнер, проект seoshkin: /var/www/seos
 
 1. Создать `nginx/<домен>.conf` по образцу `deutschlernen.ai.conf` (сначала только 80-блок,
    443 закомментирован). `git push`.
-2. На сервере: `cd /home/seosite/translate && git pull`.
-3. Прописать монтирование файла в `/var/www/seoshkin.com/docker-compose.yml` (volumes сервиса
-   nginx) и пересоздать шлюз: `docker compose up -d nginx`.
+2. На сервере: `cd /home/seosite/translate && git pull` (каталог уже смонтирован в шлюз —
+   отдельное монтирование прописывать не нужно).
 4. Выпустить серт (webroot):
    ```
    sudo docker run --rm \
@@ -70,7 +67,7 @@ seoshkin_nginx  (docker-контейнер, проект seoshkin: /var/www/seos
      --email sivtsov.pavel@gmail.com --agree-tos --no-eff-email --non-interactive
    ```
 5. Раскомментировать 443-блок в `nginx/<домен>.conf`, `git push`, на сервере `git pull` +
-   `docker exec seoshkin_nginx nginx -t && docker exec seoshkin_nginx nginx -s reload`.
+   `docker exec ecosystem_router nginx -t && docker exec ecosystem_router nginx -s reload`.
 
 ## 🔮 Вывод проекта translate на свой сервер (в будущем)
 

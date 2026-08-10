@@ -13,11 +13,11 @@
 - Локализация интерфейса: 10 языков, всё работает от локали пользователя.
 
 ## Деплой
-Git flow → сервер. Коммит/пуш → `ssh seoshkin-tools-core` → `cd /home/seosite/translate && git pull` → `docker compose -f docker-compose.prod.yml build frontend backend && up -d`. Claude деплоит сам.
+Git flow → сервер. Коммит/пуш → `ssh seoshkin-tools-core` → `cd /home/seosite/translate && git pull` → `docker compose -f docker-compose.prod.yml build frontend backend && up -d` → **обязательно** `docker exec ecosystem_router nginx -s reload` (шлюз кеширует IP контейнеров — без reload сайт отдаёт 502). Claude деплоит сам.
 
 ## Домены / nginx
 - Домены приложения: **deutschlernen.ai** (основной) + **translate.seoshkin.tools** (доп.). Оба → одно приложение.
-- Конфиги доменов — в **`nginx/`** (git = источник истины), монтируются в общий шлюз `seoshkin_nginx`. Правила, топология, как добавить домен и как восстановить после перетирания — в **`nginx/README.md`**. НЕ править конфиги на сервере вручную.
+- Конфиги доменов — в **`nginx/`** (git = источник истины), каталог целиком смонтирован в общий шлюз `ecosystem_router` (бывший `seoshkin_nginx` — умер при переезде). Правила, топология, как добавить домен и как восстановить после перетирания — в **`nginx/README.md`**. НЕ править конфиги на сервере вручную.
 
 ## 🛠 Эксплуатация
 **`docs/OPERATIONS.md`** — инструменты и регулярные операции: аудит качества материала,
