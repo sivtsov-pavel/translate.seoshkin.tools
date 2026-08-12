@@ -247,18 +247,30 @@ body.novice-mode .exercise-card [data-word-tile] {
    Вырез рисуем не маской, а кольцом цвета фона вокруг кнопки: маска на разных
    движках ведёт себя по-разному и ломается на тёмной теме. */
 .novice-tabbar--notch {
-  grid-template-columns: 1fr 1fr 78px 1fr 1fr;
+  grid-template-columns: 1fr 1fr 84px 1fr 1fr;
   align-items: end;
+  overflow: visible;
+  /* Настоящее углубление: маска вырезает полукруг сверху по центру полосы —
+     кнопка садится в выемку, как на присланном примере. Радиус чуть больше
+     кнопки, чтобы между ней и краем оставался просвет. */
+  -webkit-mask: radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px);
+  mask: radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px);
+  border-top: none;
 }
 .novice-notch { position: relative; height: 100%; }
+
+/* Кнопка ВЫСТУПАЕТ над полосой и несёт вокруг себя кольцо цвета фона страницы —
+   именно это и читается как вырез в баре (тот же приём, что на присланном примере).
+   Настоящую выемку рисовать маской не стали: маски по-разному ведут себя на движках
+   и рвутся в тёмной теме. */
 .novice-fab {
-  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
-  width: 62px; height: 62px; border-radius: 50%;
+  position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%);
+  width: 58px; height: 58px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: var(--accent); color: var(--accent-ink);
-  border: 6px solid var(--bg);            /* это и создаёт «вырез» в полосе */
-  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, .55);
-  text-decoration: none;
+  border: none;
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .6);
+  text-decoration: none; z-index: 2;
 }
 .novice-fab.is-active { background: #9A5CD8; color: #fff; }
 
@@ -273,17 +285,10 @@ body.novice-mode .exercise-question-block {
   margin-bottom: 14px !important;
 }
 
-/* Название урока и тип упражнения — тихой строкой под шапкой, а не плашкой
-   внутри карточки: плашка ломала верх и «отклеивала» картинку. */
-body.novice-mode .exercise-card-header,
-body.novice-mode .exercise-type-label {
-  background: transparent !important;
-  border: none !important;
-  padding: 0 0 10px !important;
-  font-size: 12.5px !important;
-  color: var(--ink-soft) !important;
-  text-align: center;
-}
+/* Название урока и тип упражнения показываем ОДИН раз — строкой под шапкой
+   (.novice-ex-head). Прежний заголовок внутри карточки скрываем, иначе он
+   дублируется и ломает верх карточки. */
+body.novice-mode .exercise-card-header { display: none !important; }
 
 /* Строка «тип упражнения · урок» под шапкой */
 .novice-ex-head {
@@ -292,4 +297,21 @@ body.novice-mode .exercise-type-label {
   font-weight: 600;
   color: var(--ink-soft);
   padding: 6px 16px 2px;
+}
+
+/* Диоды «рта» робота: в покое тусклые и ровные, во время речи бегут волной */
+.robot-led {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  transition: background .2s;
+}
+.robot-led--on {
+  background: #E8B024;
+  animation: robot-talk .62s ease-in-out infinite;
+}
+@keyframes robot-talk {
+  0%, 100% { height: 6px;  opacity: .55; }
+  50%      { height: 17px; opacity: 1; }
 }

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { speak } from '../hooks/useSpeech.jsx'
+import { speak, speakWithEvents } from '../hooks/useSpeech.jsx'
+import SpeakingRobot from './SpeakingRobot.jsx'
+import WordImage from './WordImage.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import { getTranslation } from '../utils/translation.js'
 import { ExerciseActions } from './ExerciseActions.jsx'
@@ -8,12 +10,14 @@ import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import { checkDictation, answerVariants, spokenForm } from '../utils/dictation.js'
 import { shouldAutoFocus } from '../utils/device.js'
 
-export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, translations, translationRu, exerciseId, showOriginal }) {
+export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, translations, translationRu, exerciseId, showOriginal, imageUrl }) {
   const { word_de, translation_ru } = payload
   const [input, setInput]     = useState('')
   const [checked, setChecked] = useState(false)
   const [correct, setCorrect] = useState(false)
   const [caseHint, setCaseHint] = useState(false) // ответ верный, но перепутан регистр (заглавная)
+  // Робот светится диодами, пока идёт озвучка: видно, что сейчас говорят
+  const [speaking, setSpeaking] = useState(false)
   const inputRef              = useRef(null)
   const { t, lang }           = useI18nStore()
 
@@ -27,7 +31,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
   const spoken = spokenForm(word_de)
 
   useEffect(() => {
-    setTimeout(() => speak(spoken, 'de-DE', 0.8), 300)
+    setTimeout(() => speakWithEvents(spoken, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) }), 300)
     if (shouldAutoFocus()) inputRef.current?.focus() // на телефоне клавиатуру зовёт сам ученик
     setTimeout(() => inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100)
   }, [word_de])
@@ -55,6 +59,14 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
     <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
 
+      {/* Картинка слова: в диктанте её не было вовсе — не передавалась из сессии.
+          С ней слышимое связывается со смыслом, а не только с написанием. */}
+      {imageUrl && <WordImage imageUrl={imageUrl} wordDe={spoken} bleed />}
+
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 14px' }}>
+        <SpeakingRobot speaking={speaking} size={78} />
+      </div>
+
       <div style={{ textAlign: 'center', padding: '20px 16px', background: 'var(--surface-2)', borderRadius: 16 }}>
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
           {t.exercise.translationLabel}
@@ -63,7 +75,7 @@ export default function Dictation({ payload, onAnswer, lessonTitle, typeLabel, t
           {displayTranslation}
         </div>
         <button
-          onClick={() => speak(spoken, 'de-DE', 0.8)}
+          onClick={() => speakWithEvents(spoken, 'de-DE', { onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) })}
           style={{ marginTop: 12, padding: '4px 14px', borderRadius: 20, border: 'none', background: 'transparent', color: 'var(--accent)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
           ◄ {t.exercise.listenAgain}
         </button>

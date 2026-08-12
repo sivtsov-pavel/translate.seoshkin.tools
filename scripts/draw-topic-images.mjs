@@ -41,10 +41,25 @@ const prodSql = (sql) => execFileSync('ssh', [SSH_HOST,
   JSON.stringify(sql.replace(/\s+/g, ' ').trim()),
 ], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim()
 
-const pushFile = (localPath, remoteName) => execFileSync('ssh', [SSH_HOST,
-  `cd ${PROD_DIR} && ${DC} exec -T backend sh -c ` +
-  JSON.stringify(`mkdir -p /data/uploads/topic-images && cat > /data/uploads/topic-images/${remoteName}`),
-], { input: readFileSync(localPath) })
+// Домашний интернет и ssh иногда отваливаются на полчаса работы. Одна неудачная
+// отправка не должна убивать прогон: повторяем три раза с паузой.
+const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+async function pushFile(localPath, remoteName) {
+  const data = readFileSync(localPath)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      execFileSync('ssh', ['-o', 'ConnectTimeout=15', '-o', 'ServerAliveInterval=10', SSH_HOST,
+        `cd ${PROD_DIR} && ${DC} exec -T backend sh -c ` +
+        JSON.stringify(`mkdir -p /data/uploads/topic-images && cat > /data/uploads/topic-images/${remoteName}`),
+      ], { input: data })
+      return
+    } catch (e) {
+      if (attempt === 3) throw e
+      console.log(`\n   ssh не ответил (попытка ${attempt}/3), жду 20 с…`)
+      await sleep(20000)
+    }
+  }
+}
 
 // ── Что рисуем ────────────────────────────────────────────────────────────────
 const where = ids.length ? `t.id = ANY(ARRAY[${ids.join(',')}]::int[])` : 't.image_url IS NULL'
@@ -80,7 +95,18 @@ const dbIp = execFileSync('ssh', [SSH_HOST,
 const tunnel = spawn('ssh', ['-N', '-L', `55433:${dbIp}:5432`, SSH_HOST], { stdio: 'ignore' })
 await new Promise(r => setTimeout(r, 2500))
 const db = new pg.Client({ host: '127.0.0.1', port: 55433, user: 'german_app', database: 'german_learning', password })
+// Без этого обработчика разрыв туннеля валит весь процесс: pg бросает
+// unhandled 'error', и полчаса работы теряются.
+db.on('error', (e) => console.error('\n   соединение с базой оборвалось:', e.message))
 await db.connect()
+
+// Переподключение: туннель мог умереть вместе с ssh
+async function ensureDb() {
+  try { await db.query('SELECT 1'); return true } catch {}
+  console.log('   переподключаюсь к базе…')
+  try { await db.end().catch(() => {}) } catch {}
+  return false
+}
 
 const tmp = mkdtempSync(join(tmpdir(), 'topic-'))
 
@@ -107,10 +133,16 @@ try {
       const base = `topic_${t.id}`
       await sharp(buf).resize(960, 540, { fit: 'cover' }).webp({ quality: 82 })
         .toFile(join(tmp, `${base}.webp`))
-      pushFile(join(tmp, `${base}.webp`), `${base}.webp`)
+      await pushFile(join(tmp, `${base}.webp`), `${base}.webp`)
 
       const url = `/uploads/topic-images/${base}.webp?v=${Date.now()}`
-      await db.query('UPDATE phrase_topics SET image_url = $1 WHERE id = $2', [url, t.id])
+      try {
+        await db.query('UPDATE phrase_topics SET image_url = $1 WHERE id = $2', [url, t.id])
+      } catch (e) {
+        // Картинка уже на сервере; строку допишем при следующем запуске
+        console.log(`\n   база не ответила (${e.message}) — тема ${t.id} останется в очереди`)
+        await ensureDb()
+      }
 
       ok++
       console.log(`✓ ${concept} (${((Date.now() - t0) / 1000).toFixed(0)}s)`)

@@ -3,7 +3,7 @@
 export default function ExerciseCardHeader({ typeLabel, lessonTitle }) {
   if (!typeLabel && !lessonTitle) return null
   return (
-    <div style={{ width: '100%', marginBottom: 10 }}>
+    <div className="exercise-card-header" style={{ width: '100%', marginBottom: 10 }}>
       {typeLabel && (
         <div style={{ fontSize: 11, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 3 }}>
           {typeLabel}
