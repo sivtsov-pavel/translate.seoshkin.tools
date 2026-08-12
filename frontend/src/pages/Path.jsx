@@ -59,7 +59,7 @@ export default function Path() {
 
   const go = (n) => {
     if (n?.__url) return navigate(n.__url)   // строка внутри плашки станции
-    if (n.kind === 'lesson') return navigate(`/lesson/${n.lesson_id}`)
+    if (n.kind === 'lesson') return navigate(`/exercise-session?lesson_id=${n.lesson_id}`)
     if (n.type === 'exam')    return navigate(`/exercise-session?lesson_id=${n.lesson_id}&exam=1`)
     if (n.type === 'wordset') return navigate(`/exercise-session?lesson_id=${n.lesson_id}`)
     if (n.type === 'phraseset') return navigate(`/phrases/${n.topic_id}`)
@@ -255,6 +255,12 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
 // спряжение и падежи, для наборов — сам набор. Тап по карте больше никуда не проваливает.
 function NodeCard({ n, title, details, t, go, pct }) {
   const isLesson = n.kind === 'lesson'
+  // Что это за узел: без подписи по одному названию непонятно, урок это,
+  // набор слов или станция речи.
+  const kindLabel = isLesson
+    ? `${t.path.kindLesson} ${n.number ?? ''}`.trim()
+    : ({ speech: t.path.cpSpeech, grammar: t.path.cpGrammar, wordset: t.path.cpWordset,
+         phraseset: t.path.cpPhraseset, exam: t.path.cpExam })[n.type] || ''
   const steps = details?.steps || []
   const byType = (type) => steps.find(s => s.type === type)
 
@@ -271,7 +277,8 @@ function NodeCard({ n, title, details, t, go, pct }) {
 
   return (
     <div style={{ width: 208, padding: '12px 14px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)', boxShadow: '0 12px 30px -24px rgba(0,0,0,.6)' }}>
-      <div style={{ fontSize: 13.5, fontWeight: 800, lineHeight: 1.25 }}>{title}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{kindLabel}</div>
+      <div style={{ fontSize: 13.5, fontWeight: 800, lineHeight: 1.25, marginTop: 2 }}>{title}</div>
       <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>
         {isLesson ? `${n.ex_done}/${n.ex_total}` : `${n.done}/${n.total}`} · {pct}%
       </div>
@@ -299,6 +306,17 @@ function NodeCard({ n, title, details, t, go, pct }) {
           background: C.accent, color: C.accentInk, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
         {t.path.start}
       </button>
+
+      {/* Полный список упражнений урока — карточка урока со всеми шагами,
+          словами, зачётом и печатью */}
+      {isLesson && (
+        <button onClick={() => go({ __url: `/lesson/${n.lesson_id}` })}
+          style={{ marginTop: 7, width: '100%', padding: '9px 12px', borderRadius: 12,
+            border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          {t.path.chooseExercise}
+        </button>
+      )}
     </div>
   )
 }

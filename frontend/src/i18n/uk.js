@@ -910,6 +910,9 @@ export const uk = {
     cpShortExam: 'Залік',
     cpSpeechHint: 'Слухай, повторюй, говори вголос',
     cpGrammarHint: 'Форми слів: дієвідміни й відмінки',
+    chooseExercise: 'Вибір вправи',
+    cpPhraseset: 'Набір фраз',
+    kindLesson: 'Урок',
   },
   phrases: {
     title: 'Фрази',

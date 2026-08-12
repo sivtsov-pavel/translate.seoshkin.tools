@@ -910,6 +910,9 @@ export const sq = {
     cpShortExam: 'Test',
     cpSpeechHint: 'Dëgjo, përsërit, fol me zë',
     cpGrammarHint: 'Format e fjalëve: zgjedhimi dhe rasat',
+    chooseExercise: 'Zgjidh ushtrimin',
+    cpPhraseset: 'Set frazash',
+    kindLesson: 'Mësimi',
   },
   phrases: {
     title: 'Fraza',

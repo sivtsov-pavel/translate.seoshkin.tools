@@ -898,6 +898,9 @@ export const tr = {
     cpShortExam: 'Sınav',
     cpSpeechHint: 'Dinle, tekrarla, yüksek sesle konuş',
     cpGrammarHint: 'Kelime biçimleri: çekim ve hâller',
+    chooseExercise: 'Alıştırma seç',
+    cpPhraseset: 'Cümle seti',
+    kindLesson: 'Ders',
   },
   phrases: {
     title: 'Cümleler',

@@ -898,6 +898,9 @@ export const fr = {
     cpShortExam: 'Test',
     cpSpeechHint: 'Écoute, répète, parle à voix haute',
     cpGrammarHint: 'Formes des mots : conjugaison et cas',
+    chooseExercise: 'Choisir un exercice',
+    cpPhraseset: 'Série de phrases',
+    kindLesson: 'Leçon',
   },
   phrases: {
     title: 'Phrases',

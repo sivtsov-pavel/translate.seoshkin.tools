@@ -911,6 +911,9 @@ export const en = {
     cpShortExam: 'Exam',
     cpSpeechHint: 'Listen, repeat, speak aloud',
     cpGrammarHint: 'Word forms: conjugation and cases',
+    chooseExercise: 'Choose exercise',
+    cpPhraseset: 'Phrase set',
+    kindLesson: 'Lesson',
   },
   phrases: {
     title: 'Phrases',

@@ -917,6 +917,9 @@ export const de = {
     cpShortExam: 'Test',
     cpSpeechHint: 'Hören, nachsprechen, laut sprechen',
     cpGrammarHint: 'Wortformen: Konjugation und Fälle',
+    chooseExercise: 'Übung wählen',
+    cpPhraseset: 'Satzreihe',
+    kindLesson: 'Lektion',
   },
   phrases: {
     title: 'Sätze',

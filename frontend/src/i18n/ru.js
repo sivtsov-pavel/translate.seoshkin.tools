@@ -667,6 +667,9 @@ export const ru = {
     cpShortExam: 'Зачёт',
     cpSpeechHint: 'Слушай, повторяй, говори вслух',
     cpGrammarHint: 'Формы слов: спряжение и падежи',
+    chooseExercise: 'Выбор упражнения',
+    cpPhraseset: 'Набор фраз',
+    kindLesson: 'Урок',
   },
   phrases: {
     title: 'Фразы',

@@ -901,6 +901,9 @@ export const ar = {
     cpShortExam: 'اختبار',
     cpSpeechHint: 'استمع، كرّر، تكلّم بصوت عالٍ',
     cpGrammarHint: 'صيغ الكلمات: التصريف والحالات',
+    chooseExercise: 'اختر تمرينًا',
+    cpPhraseset: 'مجموعة جمل',
+    kindLesson: 'الدرس',
   },
   phrases: {
     title: 'الجمل',

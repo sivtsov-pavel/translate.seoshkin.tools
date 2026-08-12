@@ -893,6 +893,9 @@ export const bg = {
     cpShortExam: 'Изпит',
     cpSpeechHint: 'Слушай, повтаряй, говори на глас',
     cpGrammarHint: 'Форми на думите: спрежение и падежи',
+    chooseExercise: 'Избери упражнение',
+    cpPhraseset: 'Набор фрази',
+    kindLesson: 'Урок',
   },
   phrases: {
     title: 'Фрази',
