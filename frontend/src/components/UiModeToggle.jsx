@@ -21,16 +21,16 @@ export default function UiModeToggle({ compact = false }) {
 
   return (
     <button
+      className="dl-mode-toggle"
       onClick={async () => { await toggle(user); window.location.assign('/') }}
       title={label}
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        padding: compact ? '8px 10px' : '5px 10px', borderRadius: 999,
+        padding: compact ? '8px 10px' : '6px 12px', borderRadius: 999,
         border: '1px solid var(--line)', background: 'var(--surface)', cursor: 'pointer',
         fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', whiteSpace: 'nowrap',
         width: compact ? '100%' : 'auto',
       }}>
-      <span>{mode === 'novice' ? '🌱' : '🎓'}</span>
       <span>{label}</span>
     </button>
   )

@@ -155,3 +155,22 @@ body.novice-mode .exercise-card-content button { min-height: 44px; }
 .novice-rail-inner { height: 100%; }
 .novice-rail-bottom { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
 .novice-rail-mode { padding: 6px 4px 2px; }
+
+/* ── Шапка в режиме новичка ───────────────────────────────────────────────────
+   В макете шапка — тихая полоса без рамок: фон, лёгкая линия снизу и «голые»
+   иконки. У нас кнопки были в рамках-квадратах, отчего верх выглядел тяжёлым.
+   Стили кнопок заданы инлайном, поэтому правила идут с !important. */
+body.novice-mode .layout-topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}
+body.novice-mode .layout-topbar button {
+  border: none !important;
+  background: transparent !important;
+}
+/* Тумблер режима — единственная кнопка с обводкой, но лёгкой */
+body.novice-mode .layout-topbar button.dl-mode-toggle {
+  border: 1px solid var(--line) !important;
+  background: var(--surface-2) !important;
+}
