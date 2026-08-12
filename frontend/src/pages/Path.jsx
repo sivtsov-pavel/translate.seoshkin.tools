@@ -313,6 +313,21 @@ function NodeCard({ n, title, details, t, go, pct }) {
         {t.path.start}
       </button>
 
+      {/* Пропустить станцию: непройденное уходит в хвосты и вернётся позже.
+          Речь ночью не сделаешь — но и терять её нельзя. */}
+      {n.kind === 'checkpoint' && (n.type === 'speech' || n.type === 'grammar') && (
+        <button onClick={async () => {
+          const lid = n.lesson_id ?? (n.lesson_ids || [])[0]
+          try { await api.post('/path/checkpoint/defer', { type: n.type, lesson_id: lid }) } catch {}
+          go({ __url: '/' })
+        }}
+          style={{ marginTop: 7, width: '100%', padding: '9px 12px', borderRadius: 12,
+            border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink-soft)',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          {t.phrases.skip} → {t.path.tails}
+        </button>
+      )}
+
       {/* Полный список упражнений урока — карточка урока со всеми шагами,
           словами, зачётом и печатью */}
       {isLesson && (

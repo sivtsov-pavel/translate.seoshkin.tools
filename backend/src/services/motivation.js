@@ -3,7 +3,7 @@ import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
 import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 import { LESSON_PASSED_HAVING } from './drip.js'
-import { shouldNudge, pickNudge, firstName } from './nudges.js'
+import { shouldNudge, pickNudge, pickTailsNudge, firstName } from './nudges.js'
 
 // Русская форма слова по числу: 1 день / 2 дня / 5 дней
 function plural(n, one, few, many) {
@@ -153,7 +153,25 @@ export async function runNudges() {
 
     const allDone = (pending[0]?.n || 0) === 0 && passed.length > 0
     const name = firstName(u.full_name)
-    const { title, body } = pickNudge(name, countToday, allDone)
+
+    // Хвосты важнее общего «пора учиться»: человек уже занимался, просто отложил
+    // часть заданий. Напоминаем о них первым сообщением дня, дальше — обычные тексты.
+    const { rows: tailRows } = await db.query(
+      `SELECT
+         (SELECT count(*)::int FROM exercise_deferrals d
+           WHERE d.user_id = $1
+             AND NOT EXISTS (SELECT 1 FROM exercise_attempts a
+                              WHERE a.exercise_id = d.exercise_id AND a.user_id = $1)) AS ex,
+         (SELECT count(*)::int FROM phrase_deferrals pd
+           LEFT JOIN user_phrase_progress up ON up.phrase_id = pd.phrase_id AND up.user_id = $1
+           WHERE pd.user_id = $1
+             AND NOT (COALESCE(up.step_listen, FALSE) AND COALESCE(up.step_build, FALSE))) AS ph`,
+      [u.id])
+    const tails = (tailRows[0]?.ex || 0) + (tailRows[0]?.ph || 0)
+
+    const { title, body } = (tails > 0 && countToday === 0)
+      ? pickTailsNudge(name, tails, 0)
+      : pickNudge(name, countToday, allDone)
 
     // Прошёл всё — предлагаем повторить случайный из пройденных, иначе ведём на главную
     let url = '/'

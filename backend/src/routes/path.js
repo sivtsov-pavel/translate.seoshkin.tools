@@ -317,4 +317,47 @@ export async function pathRoutes(fastify) {
       minutes: Math.max(3, Math.round(((totalEx - doneEx) * 8) / 60)),
     }
   })
+
+  // Пропустить станцию целиком: всё её непройденное уходит в хвосты и вернётся
+  // позже. Без этого станцию можно было только пройти или обойти молча — а Павлу
+  // нужно «сейчас все спят, речь сделаю утром».
+  fastify.post('/api/path/checkpoint/defer', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object', required: ['type', 'lesson_id'],
+        properties: {
+          type: { type: 'string', enum: ['speech', 'grammar'] },
+          lesson_id: { type: 'integer' },
+        },
+      },
+    },
+  }, async (request) => {
+    const userId = request.user.id
+    const { type, lesson_id } = request.body
+    const kinds = type === 'speech' ? ['dictation', 'speech'] : ['conjugation', 'declension']
+
+    // Упражнения станции, которых ученик ещё не касался
+    const { rowCount: exCount } = await db.query(
+      `INSERT INTO exercise_deferrals (user_id, exercise_id)
+       SELECT $1, e.id FROM exercises e
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+       WHERE e.lesson_id = $2 AND e.type = ANY($3::text[]) AND uep.exercise_id IS NULL
+       ON CONFLICT DO NOTHING`, [userId, lesson_id, kinds])
+
+    // Фразы урока — часть речевой станции
+    let phraseCount = 0
+    if (type === 'speech') {
+      const r = await db.query(
+        `INSERT INTO phrase_deferrals (user_id, phrase_id)
+         SELECT $1, p.id FROM phrases p
+         JOIN phrase_topics t ON t.id = p.topic_id
+         LEFT JOIN user_phrase_progress up ON up.phrase_id = p.id AND up.user_id = $1
+         WHERE t.lesson_id = $2
+           AND NOT (COALESCE(up.step_listen, FALSE) AND COALESCE(up.step_build, FALSE))
+         ON CONFLICT DO NOTHING`, [userId, lesson_id])
+      phraseCount = r.rowCount
+    }
+    return { deferred: exCount + phraseCount }
+  })
 }
