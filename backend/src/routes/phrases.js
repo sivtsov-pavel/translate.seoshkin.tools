@@ -41,19 +41,31 @@ export async function phrasesRoutes(fastify) {
     return loadTopic(rows[0].id, request.user.id, request.query.lang || 'ru')
   })
 
-  // Каталог: опубликованные общие наборы + свои черновики
+  // Каталог наборов. Видно: опубликованные общие, свои личные и наборы уроков своей
+  // школы. Последнее важно — наборы уроков создаются черновиками, и без этого условия
+  // 316 сгенерированных фраз не увидел бы никто, включая их автора.
   fastify.get('/api/phrase-topics', { preHandler: [fastify.authenticate] }, async (request) => {
     const lang = request.query.lang || 'ru'
+    const target = request.headers['x-target-lang'] || null
     const { rows } = await db.query(
-      `SELECT t.id, t.title, t.title_i18n, t.emoji, t.level, t.image_url,
+      `SELECT t.id, t.title, t.title_i18n, t.emoji, t.level, t.image_url, t.lang,
+              l.lesson_number, l.id AS lesson_id,
               (SELECT count(*)::int FROM phrases p WHERE p.topic_id = t.id) AS total,
               (SELECT count(*)::int FROM phrases p
                  JOIN user_phrase_progress up ON up.phrase_id = p.id AND up.user_id = $1
                 WHERE p.topic_id = t.id AND up.step_listen AND up.step_build) AS done
        FROM phrase_topics t
-       WHERE (t.published OR t.owner_id = $1)
-         AND EXISTS (SELECT 1 FROM phrases p WHERE p.topic_id = t.id)
-       ORDER BY t.level, t.title`, [request.user.id])
+       LEFT JOIN lessons l ON l.id = t.lesson_id
+       WHERE EXISTS (SELECT 1 FROM phrases p WHERE p.topic_id = t.id)
+         AND ($3::text IS NULL OR t.lang = $3)
+         AND (
+           t.published
+           OR t.owner_id = $1
+           OR ($2::int IS NOT NULL AND t.school_id = $2)
+           OR l.owner_id = $1
+         )
+       ORDER BY l.lesson_number NULLS LAST, t.title`,
+      [request.user.id, request.user.school_id ?? null, target])
     return rows.map(({ title_i18n, ...r }) => ({ ...r, title_local: title_i18n?.[lang] || null }))
   })
 

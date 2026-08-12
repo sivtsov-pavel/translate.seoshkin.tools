@@ -293,6 +293,11 @@ export default function Dashboard() {
               <div className="dl-game-tile-title">{t.dashboard.allCardsTitle}</div>
               <div className="dl-game-tile-sub">{t.dashboard.allCardsDesc}</div>
             </button>
+            <button className="dl-game-tile" onClick={() => navigate('/exercise-session?type=conjugation')}>
+              <span className="dl-ico"><Layers size={19} /></span>
+              <div className="dl-game-tile-title">{t.dashboard.conjugationTitle}</div>
+              <div className="dl-game-tile-sub">{t.dashboard.conjugationDesc}</div>
+            </button>
           </div>
         )}
         <div className="dl-games-list">

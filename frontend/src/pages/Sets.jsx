@@ -21,6 +21,10 @@ export default function Sets() {
   const navigate = useNavigate()
   const { lang } = useI18nStore()
   const [sets, setSets] = useState(null)
+  // Два вида наборов на одной странице: слова по темам и фразы. Отдельный раздел
+  // заводить не стали — учить и то и другое ученик приходит в одно место.
+  const [tab, setTab] = useState('words')
+  const [topics, setTopics] = useState(null)
 
   useEffect(() => {
     api.get('/lessons')
@@ -28,6 +32,11 @@ export default function Sets() {
         .sort((a, b) => (b.words_total || 0) - (a.words_total || 0))))
       .catch(() => setSets([]))
   }, [])
+
+  useEffect(() => {
+    if (tab !== 'phrases' || topics) return
+    api.get(`/phrase-topics?lang=${lang}`).then(setTopics).catch(() => setTopics([]))
+  }, [tab, lang])
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '18px 16px 60px' }}>
@@ -38,13 +47,53 @@ export default function Sets() {
         </div>
       </div>
 
-      {!sets && <div style={{ color: 'var(--ink-soft)' }}>{t.common.loading}</div>}
-      {sets && sets.length === 0 && (
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+        {[['words', `📚 ${t.sets.tabWords}`], ['phrases', `🗣 ${t.sets.tabPhrases}`]].map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            style={{
+              padding: '9px 18px', borderRadius: 999, cursor: 'pointer', fontWeight: 700, fontSize: 14,
+              border: `1px solid ${tab === key ? 'var(--accent)' : 'var(--line)'}`,
+              background: tab === key ? 'var(--accent)' : 'var(--surface)',
+              color: tab === key ? 'var(--accent-ink)' : 'var(--ink-soft)',
+            }}>{label}</button>
+        ))}
+      </div>
+
+      {tab === 'phrases' && (
+        <>
+          {!topics && <div style={{ color: 'var(--ink-soft)' }}>{t.common.loading}</div>}
+          {topics && topics.length === 0 && (
+            <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 14, border: '1px dashed var(--line)' }}>
+              {t.phrases.empty}
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+            {topics?.map(topic => (
+              <div key={topic.id} onClick={() => navigate(`/phrases/${topic.id}`)} style={{
+                cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16,
+                padding: '18px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 40, lineHeight: 1 }}>{topic.emoji || '🗣'}</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{topic.title}</div>
+                {topic.title_local && (
+                  <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{topic.title_local}</div>
+                )}
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
+                  {topic.level} · {topic.done}/{topic.total}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tab === 'words' && !sets && <div style={{ color: 'var(--ink-soft)' }}>{t.common.loading}</div>}
+      {tab === 'words' && sets && sets.length === 0 && (
         <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--ink-soft)', background: 'var(--surface-2)', borderRadius: 14, border: '1px dashed var(--line)' }}>
           Наборы ещё собираются. Обнови страницу через минуту.
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+      <div style={{ display: tab === 'words' ? 'grid' : 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
         {sets?.map(s => {
           // Иконку берём по русскому ключу темы, а подпись — локализованную
           const icon = iconFor(s.set_theme)

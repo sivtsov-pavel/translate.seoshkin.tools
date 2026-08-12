@@ -87,6 +87,10 @@ export default function ExerciseSession() {
     } catch (e) { console.error('mark learning', e) }
   }
   const lessonId                  = searchParams.get('lesson_id')
+  // Набор фраз урока — отдельная карточка в ряду типов. В CORE_EXERCISE_TYPES фразы
+  // намеренно не входят (там математика «слово × тип»), поэтому и здесь они живут
+  // отдельным блоком и в счёт упражнений урока не попадают.
+  const [phraseSet, setPhraseSet] = useState(null)
   const type                      = searchParams.get('type')
   const exam                      = searchParams.get('exam')
 
@@ -118,6 +122,11 @@ export default function ExerciseSession() {
   }
 
   // Загрузка «хвостов» урока (пропущенные упражнения) — отдельная сессия
+  useEffect(() => {
+    if (!lessonId) { setPhraseSet(null); return }
+    api.get(`/lessons/${lessonId}/phrases`).then(setPhraseSet).catch(() => setPhraseSet(null))
+  }, [lessonId])
+
   const loadTails = () => api.get(`/exercises/deferred?lesson_id=${lessonId}`).then(exs => {
     const ordered = [...(exs || [])].sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
     setExercises(ordered); setCurrent(0); setInTails(true); setFinished(false); setLessonDone(false)
@@ -405,6 +414,13 @@ export default function ExerciseSession() {
                 style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: fanTypesOpen ? 6 : 10 }}>
                 {t.exercise.fanOtherType || 'Выбрать другой тип'} {fanTypesOpen ? '▴' : '▾'}
               </button>
+              {phraseSet?.stats?.total > 0 && (
+                <button onClick={() => navigate(`/phrases/lesson/${lessonId}`)}
+                  style={{ width: '100%', padding: '12px 13px', borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+                  <span>🗣 {t.phrases.lessonSet}</span>
+                  <span style={{ color: 'var(--ink-soft)', flexShrink: 0 }}>{phraseSet.stats.done}/{phraseSet.stats.total}</span>
+                </button>
+              )}
               {fanTypesOpen && (
                 <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {typeAgg.map(r => {

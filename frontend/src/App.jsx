@@ -30,6 +30,7 @@ import Tutors from './pages/Tutors.jsx'
 import TextReader from './pages/TextReader.jsx'
 import Books from './pages/Books.jsx'
 import Report from './pages/Report.jsx'
+import PhraseSet from './pages/PhraseSet.jsx'
 import Phrasebook from './pages/Phrasebook.jsx'
 import Translations from './pages/Translations.jsx'
 import Settings from './pages/Settings.jsx'
@@ -87,6 +88,8 @@ export default function App() {
         <Route path="/books"       element={<ProtectedRoute><Layout><Books      /></Layout></ProtectedRoute>} />
         <Route path="/report"      element={<ProtectedRoute><Layout><Report       /></Layout></ProtectedRoute>} />
         <Route path="/phrasebook"    element={<ProtectedRoute><Layout><Phrasebook    /></Layout></ProtectedRoute>} />
+        <Route path="/phrases/:id"                element={<ProtectedRoute><Layout><PhraseSet /></Layout></ProtectedRoute>} />
+        <Route path="/phrases/lesson/:lessonId"   element={<ProtectedRoute><Layout><PhraseSet /></Layout></ProtectedRoute>} />
         <Route path="/translations"  element={<ProtectedRoute><Layout><Translations  /></Layout></ProtectedRoute>} />
         <Route path="/settings"      element={<ProtectedRoute><Layout><Settings      /></Layout></ProtectedRoute>} />
         <Route path="/chat"          element={<ProtectedRoute><Layout><Chat           /></Layout></ProtectedRoute>} />
