@@ -51,6 +51,15 @@ const A_RE = new RegExp(`^(${PRON}(?:\\s*/\\s*${PRON})+)\\s+(.+)$`)
 // B: строка целиком состоит из местоимений/притяжательных через слэш («sie / Sie»)
 const B_RE = new RegExp(`^(?:${PRON}|${POSS})(?:\\s*/\\s*(?:${PRON}|${POSS}))+$`)
 
+// Немецкое существительное без артикля — половина слова: в исходной записи артикля нет
+// («Kunde/Kundin»), а восстановить его правилом нельзя. Такие пары задаём явно.
+const PAIR_OVERRIDES = {
+  'Kunde/Kundin': [
+    { word_de: 'der Kunde',  translation_ru: 'клиент' },
+    { word_de: 'die Kundin', translation_ru: 'клиентка' },
+  ],
+}
+
 const classify = (de) => {
   const s = String(de || '').trim()
   if (B_RE.test(s)) return 'B'
@@ -123,9 +132,12 @@ for (const w of slashWords) {
     if (inf) planA.push({ ...w, form: m[2], infinitive: inf.infinitive, inf_word_id: inf.id, inf_lesson_id: inf.lesson_id })
     else skipA.push({ ...w, form: m[2] })
   } else if (klass === 'C') {
+    const override = PAIR_OVERRIDES[String(w.word_de).trim()]
     const parts = String(w.word_de).split('/').map(s => s.trim()).filter(Boolean)
     const trParts = String(w.translation_ru || '').split('/').map(s => s.trim()).filter(Boolean)
-    if (parts.length === 2) {
+    if (override) {
+      planC.push({ ...w, keep: override[0], create: override[1] })
+    } else if (parts.length === 2) {
       planC.push({
         ...w,
         keep:   { word_de: parts[0], translation_ru: trParts.length === 2 ? trParts[0] : w.translation_ru },
