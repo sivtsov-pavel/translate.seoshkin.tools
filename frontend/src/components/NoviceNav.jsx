@@ -5,6 +5,7 @@ import {
   BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X, Compass,
 } from 'lucide-react'
 import { useI18nStore } from '../store/i18n.js'
+import { useAuthStore } from '../store/auth.js'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 import UiModeToggle from './UiModeToggle.jsx'
 
@@ -34,11 +35,13 @@ const SIDE_EXTRA = (t) => [
   { to: '/ai-trainer', C: Bot,       shape: SHAPE.circle, tone: 'c', label: t.nav.aiTrainer || 'Тренер' },
 ]
 
-const MORE = (t) => [
+const MORE = (t, isOwner) => [
   { to: '/reader',     C: Languages,      shape: SHAPE.circle,  tone: 'd', label: t.nav.reader },
   { to: '/books',      C: Library,        shape: SHAPE.square,  tone: 'b', label: t.nav.books || 'Книги' },
   { to: '/ai-trainer', C: Bot,            shape: SHAPE.circle,  tone: 'c', label: t.nav.aiTrainer || 'Тренер' },
-  { to: '/lessons',    C: BookText,       shape: SHAPE.square,  tone: 'a', label: t.nav.lessons },
+  // «Уроки» показываем только учителю: ученик видит их как второй путь и начинает
+  // проходить задания оттуда, мимо дороги на главной.
+  ...(isOwner ? [{ to: '/lessons', C: BookText, shape: SHAPE.square, tone: 'a', label: t.nav.lessons }] : []),
   { to: '/phrasebook', C: MessageCircle,  shape: SHAPE.diamond, tone: 'c', label: t.nav.phrasebook || 'Разговорник' },
   { to: '/grammar',    C: GraduationCap,  shape: SHAPE.square,  tone: 'd', label: t.nav.grammar || 'Грамматика' },
   { to: '/chat',       C: MessagesSquare, shape: SHAPE.circle,  tone: 'b', label: t.nav.chat || 'Чат' },
@@ -62,6 +65,8 @@ function Shape({ C, shape, tone, size = 'md', active = false }) {
 
 export default function NoviceNav() {
   const { t } = useI18nStore()
+  const { user } = useAuthStore()
+  const isOwner = user?.role === 'owner'
   const location = useLocation()
   const navigate = useNavigate()
   const [moreOpen, setMoreOpen] = useState(false)
@@ -135,7 +140,7 @@ export default function NoviceNav() {
               <SpeakTranslationToggle />
             </div>
 
-            {MORE(t).map(item => (
+            {MORE(t, isOwner).map(item => (
               <button key={item.to} className="novice-more-row"
                 onClick={() => { setMoreOpen(false); navigate(item.to) }}>
                 <Shape C={item.C} shape={item.shape} tone={item.tone} size="lg" />

@@ -128,7 +128,9 @@ export async function pathRoutes(fastify) {
        LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
        WHERE l.is_set = true AND l.target_lang = $2
        GROUP BY l.id
-       ORDER BY count(e.id) DESC`, [userId, target])
+       -- Сначала непройденные: новые наборы (а они добавляются с каждым уроком)
+       -- всплывают на дорогу сами, а закрытые уходят в конец очереди.
+       ORDER BY (count(uep.exercise_id) >= count(e.id)) ASC, count(e.id) DESC`, [userId, target])
 
     // Собираем дорогу: урок → речевая станция → (каждые 3 урока) грамматика и набор слов
     const road = []
