@@ -36,6 +36,10 @@ export default function Path() {
   // «Показать все уроки» — по умолчанию видно окно вокруг текущего (принцип макета:
   // один следующий шаг), но список целиком тоже нужен.
   const [showAll, setShowAll] = useState(() => localStorage.getItem('path_show_all') === '1')
+  // Тап по узлу раскрывает его, а не проваливает в упражнение: карта должна быть
+  // интерактивной — сначала видно, что внутри станции, и уже оттуда выбираешь.
+  const [selected, setSelected] = useState(null)   // ключ выбранного узла
+  const [details, setDetails] = useState(null)     // содержимое станции (грузим по тапу)
 
   useEffect(() => {
     api.get(`/path${showAll ? '?all=1' : ''}`).then(setData).catch(() => setData({ error: true }))
@@ -54,6 +58,7 @@ export default function Path() {
   const short = CP_SHORT(t)
 
   const go = (n) => {
+    if (n?.__url) return navigate(n.__url)   // строка внутри плашки станции
     if (n.kind === 'lesson') return navigate(`/lesson/${n.lesson_id}`)
     if (n.type === 'exam')    return navigate(`/exercise-session?lesson_id=${n.lesson_id}&exam=1`)
     if (n.type === 'wordset') return navigate(`/exercise-session?lesson_id=${n.lesson_id}`)
@@ -86,7 +91,8 @@ export default function Path() {
 
       {/* Дорога: изогнутая нить, узлы смещены по змейке — как было в прежней карте.
           Кривая Безье идёт от кружка к кружку и обтекает их, а не ломается углами. */}
-      <PathRoad items={items} short={short} lang={lang} t={t} go={go} />
+      <PathRoad items={items} short={short} lang={lang} t={t} go={go}
+        selected={selected} setSelected={setSelected} details={details} setDetails={setDetails} />
 
       <button onClick={() => { const v = !showAll; setShowAll(v); localStorage.setItem('path_show_all', v ? '1' : '0') }}
         style={{ width: '100%', marginTop: 24, padding: '11px 16px', borderRadius: 14, border: '1px solid var(--line)',
@@ -123,7 +129,23 @@ function Tile({ icon, value, label }) {
 // Геометрия как в прежней карте уроков: узлы расставлены змейкой по сетке 320px,
 // между ними — кубическая кривая Безье, поэтому линия течёт плавно и обтекает
 // кружки, а не ломается прямыми углами.
-function PathRoad({ items, short, lang, t, go }) {
+function PathRoad({ items, short, lang, t, go, selected, setSelected, details, setDetails }) {
+  // Ключ узла: у уроков он по lesson_id, у станций — по типу и цели
+  const keyOf = (n, i) => `${n.kind}-${n.type || 'lesson'}-${n.lesson_id ?? n.topic_id ?? i}`
+
+  // Раскрываем узел и подгружаем, что внутри станции (три озвучки, падежи и т.п.)
+  const openNode = async (n, i) => {
+    const k = keyOf(n, i)
+    if (selected === k) { setSelected(null); setDetails(null); return }
+    setSelected(k); setDetails(null)
+    if (n.kind === 'checkpoint' && (n.type === 'speech' || n.type === 'grammar')) {
+      const lid = n.lesson_id ?? (n.lesson_ids || [])[0]
+      if (lid) {
+        try { setDetails(await api.get(`/path/lesson/${lid}`)) } catch { setDetails({ error: true }) }
+      }
+    }
+  }
+
   const GAP_Y = 118
   const X_PATTERN = [160, 92, 228, 120, 200, 160]
 
@@ -158,64 +180,125 @@ function PathRoad({ items, short, lang, t, go }) {
       </svg>
 
       {points.map(({ n, x, y }, i) => {
+        const k = keyOf(n, i)
         const isLesson = n.kind === 'lesson'
-        const isCurrent = isLesson && n.state === 'current'
+        const isOpen = selected ? selected === k : (isLesson && n.state === 'current')
         const isDone = n.state === 'done'
         const locked = n.state === 'locked'
         const color = isLesson ? '#9A5CD8' : (C[n.type] || C.speech)
-        const size = isCurrent ? 104 : isLesson ? 62 : 58
+        const size = isOpen ? 104 : isLesson ? 62 : 58
 
-        // Подпись внутри круга: у станции это её название с переносом по словам,
-        // у урока — номер. Отдельной подписи под кружком больше нет: от неё дорога
-        // разъезжалась, а половина станций оставалась вовсе без имени.
-        const inner = isLesson
-          ? (isDone ? '✓' : (n.number ?? '•'))
+        // Форма станции: наборы — квадрат, грамматика и зачёт — ромб, речь и уроки — круг.
+        // Те же фигуры, что в навигации: форма читается быстрее подписи.
+        const shape = isLesson || n.type === 'speech' ? 'circle'
+          : (n.type === 'wordset' || n.type === 'phraseset') ? 'square' : 'diamond'
+        const radius = shape === 'circle' ? '50%' : shape === 'square' ? '16px' : '14px'
+
+        const title = isLesson
+          ? (getLessonTitle(n.title, n.title_translations, lang) || `${t.path.lesson} ${n.number ?? ''}`)
           : (n.type === 'wordset' || n.type === 'phraseset'
               ? (getLessonTitle(n.title, n.title_translations, lang) || n.title || short[n.type])
-              : short[n.type])
+              : t.path[{ speech: 'cpSpeech', grammar: 'cpGrammar', exam: 'cpExam' }[n.type]])
+
+        const inner = isLesson ? (isDone ? '✓' : (n.number ?? '•')) : short[n.type]
+        const pct = isLesson
+          ? Math.round((n.progress || 0) * 100)
+          : (n.total ? Math.round((n.done / n.total) * 100) : 0)
 
         return (
-          <div key={`${n.kind}-${n.lesson_id ?? n.topic_id ?? i}-${i}`}
-            style={{ position: 'absolute', left: `${(x / 320) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)' }}>
+          <div key={k}
+            style={{ position: 'absolute', left: `${(x / 320) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button onClick={() => !locked && go(n)} disabled={locked}
+              <button onClick={() => !locked && openNode(n, i)} disabled={locked}
                 style={{
-                  width: size, height: size, borderRadius: '50%', flex: 'none',
+                  width: size, height: size, borderRadius: radius, flex: 'none',
+                  transform: shape === 'diamond' ? 'rotate(45deg)' : 'none',
                   cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.55 : 1,
-                  background: isCurrent
-                    ? `conic-gradient(${C.accent} 0 ${Math.round((n.progress || 0) * 100)}%, var(--surface-2) ${Math.round((n.progress || 0) * 100)}%)`
+                  background: isOpen
+                    ? `conic-gradient(${C.accent} 0 ${pct}%, var(--surface-2) ${pct}%)`
                     : isDone ? C.done : 'var(--surface)',
-                  border: isCurrent ? 'none'
+                  border: isOpen ? 'none'
                     : `3px ${isDone || isLesson ? 'solid' : 'dashed'} ${isDone ? C.doneBorder : isLesson ? 'var(--line)' : color}`,
                   color: isDone ? C.doneInk : isLesson ? 'var(--ink)' : color,
-                  boxShadow: isCurrent ? `0 0 0 8px ${C.accent}2E` : 'none',
+                  boxShadow: isOpen ? `0 0 0 8px ${C.accent}2E` : 'none',
                   display: 'grid', placeItems: 'center', padding: 4,
                   fontSize: isLesson ? 19 : 10.5, fontWeight: 800, lineHeight: 1.15,
-                  wordBreak: 'break-word', hyphens: 'auto', textAlign: 'center',
+                  wordBreak: 'break-word', textAlign: 'center', transition: 'width .18s, height .18s',
                 }}>
-                {isCurrent
-                  ? <span style={{ width: 84, height: 84, borderRadius: '50%', background: '#9A5CD8', color: '#fff', display: 'grid', placeItems: 'center', fontSize: 28 }}>{n.number ?? '•'}</span>
-                  : <span style={{ display: 'block', maxWidth: size - 14 }}>{inner}</span>}
+                <span style={{
+                  transform: shape === 'diamond' ? 'rotate(-45deg)' : 'none',
+                  display: 'grid', placeItems: 'center',
+                  ...(isOpen ? {
+                    width: size - 20, height: size - 20, borderRadius: shape === 'circle' ? '50%' : 12,
+                    background: isLesson ? '#9A5CD8' : color, color: '#fff',
+                    fontSize: isLesson ? 26 : 12,
+                  } : { maxWidth: size - 14 }),
+                }}>
+                  {isOpen ? (isLesson ? (n.number ?? '•') : short[n.type]) : inner}
+                </span>
               </button>
 
-              {/* Плашка справа от активного узла — что за урок и что дальше */}
-              {isCurrent && (
-                <div style={{ width: 190, padding: '12px 14px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)' }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, lineHeight: 1.25 }}>
-                    {getLessonTitle(n.title, n.title_translations, lang) || `${t.path.lesson} ${n.number ?? ''}`}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{n.ex_done}/{n.ex_total}</div>
-                  <button onClick={() => go(n)}
-                    style={{ marginTop: 9, width: '100%', padding: '9px 12px', borderRadius: 12, border: 'none',
-                      background: C.accent, color: C.accentInk, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                    {t.path.start}
-                  </button>
-                </div>
+              {/* Плашка раскрытого узла: что внутри и кнопки — из неё и выбираешь */}
+              {isOpen && (
+                <NodeCard n={n} title={title} details={details} t={t} go={go} pct={pct} />
               )}
             </div>
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// Плашка раскрытого узла: название, что внутри и кнопки.
+// Для станции «речь» это три занятия (фразы, диктант, произношение), для грамматики —
+// спряжение и падежи, для наборов — сам набор. Тап по карте больше никуда не проваливает.
+function NodeCard({ n, title, details, t, go, pct }) {
+  const isLesson = n.kind === 'lesson'
+  const steps = details?.steps || []
+  const byType = (type) => steps.find(s => s.type === type)
+
+  const rows = []
+  if (n.kind === 'checkpoint' && n.type === 'speech' && details) {
+    if (details.phrases?.total) rows.push({ label: t.phrases.lessonSet, done: details.phrases.done, total: details.phrases.total, go: `/phrases/lesson/${n.lesson_id}` })
+    const d = byType('dictation'); if (d) rows.push({ label: t.exercise.dictation, done: d.done, total: d.total, go: `/exercise-session?lesson_id=${n.lesson_id}&type=dictation` })
+    const sp = byType('speech');   if (sp) rows.push({ label: t.exercise.speech || 'Произношение', done: sp.done, total: sp.total, go: `/exercise-session?lesson_id=${n.lesson_id}&type=speech` })
+  }
+  if (n.kind === 'checkpoint' && n.type === 'grammar' && details) {
+    const c = byType('conjugation'); if (c) rows.push({ label: t.exercise.conjugation, done: c.done, total: c.total, go: `/exercise-session?lesson_id=${details.lesson.id}&type=conjugation` })
+    const dc = byType('declension'); if (dc) rows.push({ label: t.exercise.declension || 'Падежи', done: dc.done, total: dc.total, go: `/exercise-session?lesson_id=${details.lesson.id}&type=declension` })
+  }
+
+  return (
+    <div style={{ width: 208, padding: '12px 14px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)', boxShadow: '0 12px 30px -24px rgba(0,0,0,.6)' }}>
+      <div style={{ fontSize: 13.5, fontWeight: 800, lineHeight: 1.25 }}>{title}</div>
+      <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>
+        {isLesson ? `${n.ex_done}/${n.ex_total}` : `${n.done}/${n.total}`} · {pct}%
+      </div>
+
+      {/* Что внутри станции */}
+      {rows.length > 0 && (
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {rows.map(r => (
+            <button key={r.label} onClick={() => go({ __url: r.go })}
+              style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '8px 10px', borderRadius: 10,
+                border: '1px solid var(--line)', background: 'var(--surface-2)', cursor: 'pointer', fontSize: 12.5, fontWeight: 700 }}>
+              <span>{r.label}</span>
+              <span style={{ color: r.done >= r.total ? 'var(--good)' : 'var(--ink-soft)' }}>{r.done}/{r.total}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {n.kind === 'checkpoint' && !rows.length && details === null && (n.type === 'speech' || n.type === 'grammar') && (
+        <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>…</div>
+      )}
+
+      <button onClick={() => go(n)}
+        style={{ marginTop: 10, width: '100%', padding: '9px 12px', borderRadius: 12, border: 'none',
+          background: C.accent, color: C.accentInk, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+        {t.path.start}
+      </button>
     </div>
   )
 }
