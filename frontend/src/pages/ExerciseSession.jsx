@@ -241,6 +241,19 @@ export default function ExerciseSession() {
     setContinuing(true)
     let more = []
     try { more = await loadExercises() } catch { more = [] }
+
+    // Сессия могла быть ограничена типами («Начать» на карте даёт два главных).
+    // Они кончились — не упираемся в пустоту, а берём остальные упражнения урока.
+    if ((!more || !more.length) && searchParams.get('types') && lessonId) {
+      try {
+        const rest = await api.get(`/exercises/today?lesson_id=${lessonId}`)
+        if (Array.isArray(rest) && rest.length) {
+          setExercises(rest); setCurrent(0); setFinished(false); setContinuing(false)
+          return
+        }
+      } catch {}
+    }
+
     setContinuing(false)
     if (more && more.length) setFinished(false)
     else setLessonDone(true)
@@ -253,7 +266,9 @@ export default function ExerciseSession() {
   if (finished) {
     const hasTails = lessonDone && tails > 0 && !exam           // остались пропущенные (хвосты)
     // «Полный финиш урока» — показываем веер продолжения. Не для практики по типу и не для зачёт-режима.
-    const showFan = lessonDone && !exam && !type
+    // Веер показываем и после короткой сессии с карты: там сессия ограничена
+    // типами, урок ещё не закрыт, и без веера ученик упирался в одну кнопку.
+    const showFan = !exam && !type && (lessonDone || Boolean(searchParams.get('types')))
     const next = lessonFlow?.next
     const total = lessonFlow?.total || 0
     const pct = total ? Math.round((lessonFlow.passed / total) * 100) : 0

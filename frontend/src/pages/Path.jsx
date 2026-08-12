@@ -166,7 +166,11 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   }, '')
 
   const height = points[points.length - 1].y + 90
-  const doneCount = points.filter(p => p.n.state === 'done').length
+  // Доля закрашенной нити — по позиции последнего пройденного узла. Если считать
+  // количеством, непройденные станции между уроками рвут линию, хотя путь пройден.
+  let lastDone = -1
+  points.forEach((p, i) => { if (p.n.state === 'done') lastDone = i })
+  const filled = points.length > 1 ? (lastDone + 0.5) / points.length : 0
 
   return (
     <div style={{ position: 'relative', height, margin: '0 -4px' }}>
@@ -176,7 +180,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
         <path d={d} fill="none" stroke="#3FBF8F" strokeWidth="7" strokeLinecap="round"
           style={{
             strokeDasharray: 4000,
-            strokeDashoffset: 4000 - (4000 * (doneCount + 0.4)) / points.length,
+            strokeDashoffset: 4000 - 4000 * Math.max(0, filled),
             transition: 'stroke-dashoffset .6s ease-out',
           }} />
       </svg>
