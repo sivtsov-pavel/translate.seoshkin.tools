@@ -35,7 +35,7 @@ export const en = {
     learningWords: 'Learning',
     logout: 'Log out',
     appName: 'Deutsch Lernen 🇩🇪',
-    reader: 'Reader',
+    reader: 'Translator',
     more: 'More',
     themeLight: 'Light',
     themeDark: 'Dark',

@@ -4,6 +4,7 @@ import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import './index.css'
+import './styles/novice.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import './store/theme.js'  // инициализирует тему из localStorage при загрузке
 window.__APP_BUILD = '20260720'

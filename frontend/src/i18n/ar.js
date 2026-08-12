@@ -37,7 +37,7 @@ export const ar = {
     learningWords: 'أتعلم',
     logout: 'خروج',
     appName: 'الألمانية 🇩🇪',
-    reader: "قارئ",
+    reader: "المترجم",
     more: "المزيد",
     themeLight: "فاتح",
     themeDark: "داكن",

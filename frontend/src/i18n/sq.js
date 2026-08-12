@@ -35,7 +35,7 @@ export const sq = {
     learningWords: 'Duke mësuar',
     logout: 'Dil',
     appName: 'Gjermanisht 🇩🇪',
-    reader: 'Lexues',
+    reader: 'Përkthyesi',
     more: 'Më shumë',
     themeLight: 'E ndritshme',
     themeDark: 'E errët',

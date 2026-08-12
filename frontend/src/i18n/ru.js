@@ -36,7 +36,7 @@ export const ru = {
     learningWords: 'Изучаю',
     logout: 'Выйти',
     appName: 'Немецкий 🇩🇪',
-    reader: 'Читалка',
+    reader: 'Переводчик',
     more: 'Ещё',
     themeLight: 'Светлая',
     themeDark: 'Тёмная',

@@ -36,7 +36,7 @@ export const de = {
     learningWords: 'Lerne',
     logout: 'Abmelden',
     appName: 'Deutsch Lernen 🇩🇪',
-    reader: "Lesegerät",
+    reader: "Übersetzer",
     more: "Mehr",
     themeLight: "Hell",
     themeDark: "Dunkel",

@@ -35,7 +35,7 @@ export const bg = {
     learningWords: 'Уча',
     logout: 'Изход',
     appName: 'Немски 🇩🇪',
-    reader: "Четец",
+    reader: "Преводач",
     more: "Още",
     themeLight: "Светла",
     themeDark: "Тъмна",

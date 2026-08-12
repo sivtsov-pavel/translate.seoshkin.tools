@@ -21,6 +21,7 @@ import { useCourseGateStore } from '../store/courseGate.js'
 import ProcessingBadge from './ProcessingBadge.jsx'
 import { api } from '../api/client.js'
 import { useUiModeStore } from '../store/uiMode.js'
+import NoviceNav from './NoviceNav.jsx'
 import LangSwitcher from './LangSwitcher.jsx'
 import TargetSwitcher from './TargetSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
@@ -46,6 +47,15 @@ const NIcon = ({ C, size = 18 }) => C ? <C size={size} strokeWidth={1.8} style={
 export default function Layout({ children }) {
   useKeyboardInset()
   const { user, logout, refreshUser, impersonating, stopImpersonate } = useAuthStore()
+  // Режим новичка меняет не только главный экран, но и всю навигацию: пять пунктов
+  // вместо большого меню (макет 2a). Метка на body двигает отступы контента под таб-бар
+  // и боковую панель.
+  const { resolve: resolveUiMode } = useUiModeStore()
+  const novice = resolveUiMode(user) === 'novice'
+  useEffect(() => {
+    document.body.classList.toggle('novice-mode', novice)
+    return () => document.body.classList.remove('novice-mode')
+  }, [novice])
   const returnToAdmin = () => { stopImpersonate(); window.location.href = '/admin' }
   const tgt = targetMeta()
   const { t, lang } = useI18nStore()
@@ -464,7 +474,7 @@ export default function Layout({ children }) {
       </nav>
 
       {/* Узкая иконочная полоса (планшет 641-1023px) */}
-      <nav className="layout-narrow-strip" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', position: 'fixed', top: 3, left: 0, bottom: 0, zIndex: 100, width: 60, background: 'var(--surface)', borderRight: '1px solid var(--line)', paddingTop: 10, gap: 4, overflowY: 'auto' }}>
+      {!novice && <nav className="layout-narrow-strip" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', position: 'fixed', top: 3, left: 0, bottom: 0, zIndex: 100, width: 60, background: 'var(--surface)', borderRight: '1px solid var(--line)', paddingTop: 10, gap: 4, overflowY: 'auto' }}>
         <Link to="/" title={t.nav.today} style={{ fontSize: 22, textDecoration: 'none', marginBottom: 4, lineHeight: 1 }}>{tgt.flag}</Link>
         <div style={{ width: 32, height: 1, background: 'var(--line)', marginBottom: 2 }} />
         {[
@@ -494,7 +504,7 @@ export default function Layout({ children }) {
         <button onClick={() => setOpen(v => !v)} title={t.nav.menu} style={{ width: 44, height: 44, borderRadius: 12, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--ink-soft)' }}>
           <MoreVertical size={20} />
         </button>
-      </nav>
+      </nav>}
 
       {/* Десктопный мини-хедер (≥1024px) */}
       <header className="layout-desktop-topbar">
@@ -531,7 +541,7 @@ export default function Layout({ children }) {
       )}
 
       {/* Нижняя навигация (мобиль ≤640px) */}
-      <nav className="bottom-nav">
+      {!novice && <nav className="bottom-nav">
         {[
           { to: '/', C: Home, label: t.nav.today },
           { to: '/vocabulary', C: BookOpen, label: t.nav.vocabulary },
@@ -551,7 +561,9 @@ export default function Layout({ children }) {
           <Menu size={22} />
           <span>{t.nav.more}</span>
         </button>
-      </nav>
+      </nav>}
+
+      {novice && <NoviceNav />}
 
       {/* Онбординг-тур — по кнопке 🧭 и раз при первом входе. onMenu — тур сам открывает меню для шагов по разделам */}
       {tourRun && <Tour onClose={endTour} onMenu={setOpen} />}

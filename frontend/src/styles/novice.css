@@ -1,0 +1,72 @@
+/* Навигация и карточки режима «новичок» — макет 2a/2b из docs/design_novichok.
+   Геометрия из хендоффа: таб-бар 92px, рельс 96px, сайдбар 230px, зона нажатия ≥44px.
+   Цвета берём из тем проекта (var(--…)), чтобы экран работал и в светлой теме. */
+
+/* ── Телефон: таб-бар ─────────────────────────────────────────────────────── */
+.novice-tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 8px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+}
+.novice-tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-height: 44px; padding: 4px 2px; border: none; background: none; cursor: pointer;
+  font-size: 11px; font-weight: 600; color: var(--ink-soft); text-decoration: none;
+  line-height: 1.15; text-align: center;
+}
+.novice-tab.is-active { color: var(--accent); }
+.novice-tab-ico { font-size: 19px; line-height: 1; }
+
+/* ── Планшет и ПК: боковая панель ─────────────────────────────────────────── */
+.novice-rail { display: none; }
+
+@media (min-width: 834px) {
+  .novice-tabbar { display: none; }
+  .novice-rail {
+    display: block; position: fixed; top: 0; left: 0; bottom: 0; z-index: 95;
+    width: 96px; background: var(--surface); border-right: 1px solid var(--line);
+  }
+  .novice-rail-inner { display: flex; flex-direction: column; gap: 6px; padding: 74px 10px 16px; }
+  .novice-rail-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 12px 0; border-radius: 16px; border: none; background: none; cursor: pointer;
+    color: var(--ink-soft); text-decoration: none; font-size: 11px; font-weight: 600;
+    min-height: 44px; text-align: center;
+  }
+  .novice-rail-item.is-active { background: var(--surface-2); color: var(--accent); }
+  .novice-rail-ico { font-size: 21px; line-height: 1; }
+}
+
+/* ПК: панель шире, подписи в строку — как в макете (сайдбар 230px) */
+@media (min-width: 1200px) {
+  .novice-rail { width: 230px; }
+  .novice-rail-inner { padding: 74px 14px 16px; }
+  .novice-rail-item { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 13px 16px; font-size: 14px; }
+  .novice-rail-ico { font-size: 19px; }
+}
+
+/* ── «Ещё» — шторка снизу ─────────────────────────────────────────────────── */
+.novice-more-overlay { position: fixed; inset: 0; z-index: 230; background: rgba(20, 18, 14, 0.45); }
+.novice-more-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 231;
+  background: var(--surface); border-radius: 22px 22px 0 0; padding: 10px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+  max-height: 70vh; overflow-y: auto; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25);
+}
+.novice-more-handle { width: 44px; height: 4px; border-radius: 2px; background: var(--line); margin: 4px auto 12px; }
+.novice-more-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px;
+  padding: 12px 8px; border: none; background: none; cursor: pointer;
+  font-size: 15px; font-weight: 600; color: var(--ink); text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.novice-more-row:last-child { border-bottom: none; }
+
+/* ── Отступы контента под навигацию ───────────────────────────────────────── */
+body.novice-mode .main-content { padding-bottom: 104px; }
+@media (min-width: 834px) {
+  body.novice-mode .main-content { padding-bottom: 24px; padding-left: 96px; }
+}
+@media (min-width: 1200px) {
+  body.novice-mode .main-content { padding-left: 230px; }
+}

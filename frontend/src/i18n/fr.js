@@ -35,7 +35,7 @@ export const fr = {
     learningWords: "J'apprends",
     logout: 'Déconnexion',
     appName: 'Allemand 🇩🇪',
-    reader: "Lecteur",
+    reader: "Traducteur",
     more: "Plus",
     themeLight: "Claire",
     themeDark: "Sombre",

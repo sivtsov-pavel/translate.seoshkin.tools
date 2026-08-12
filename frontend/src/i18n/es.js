@@ -35,7 +35,7 @@ export const es = {
     learningWords: 'Aprendiendo',
     logout: 'Salir',
     appName: 'Alemán 🇩🇪',
-    reader: "Lector",
+    reader: "Traductor",
     more: "Más",
     themeLight: "Claro",
     themeDark: "Oscuro",

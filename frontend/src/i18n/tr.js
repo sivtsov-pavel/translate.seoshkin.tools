@@ -35,7 +35,7 @@ export const tr = {
     learningWords: 'Öğreniyorum',
     logout: 'Çıkış',
     appName: 'Almanca 🇩🇪',
-    reader: "Okuyucu",
+    reader: "Çevirmen",
     more: "Daha",
     themeLight: "Açık",
     themeDark: "Koyu",

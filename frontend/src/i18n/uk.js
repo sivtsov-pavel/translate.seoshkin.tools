@@ -35,7 +35,7 @@ export const uk = {
     learningWords: 'Вивчаю',
     logout: 'Вийти',
     appName: 'Deutsch Lernen 🇩🇪',
-    reader: "Читалка",
+    reader: "Перекладач",
     more: "Ще",
     themeLight: "Світла",
     themeDark: "Темна",
