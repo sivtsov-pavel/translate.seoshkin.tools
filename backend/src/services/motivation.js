@@ -3,6 +3,7 @@ import { db } from '../db/index.js'
 import { sendToUser } from './push.js'
 import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 import { LESSON_PASSED_HAVING } from './drip.js'
+import { shouldNudge, pickNudge, firstName } from './nudges.js'
 
 // Русская форма слова по числу: 1 день / 2 дня / 5 дней
 function plural(n, one, few, many) {
@@ -102,10 +103,79 @@ export async function runMilestones() {
   }
 }
 
+
+// 📣 «Пульс»: пока ученик сегодня не занимался — раз в два часа мотивационное
+// сообщение по имени. Позанимался — до вечера тишина, а вечером одно предложение
+// закрепить пройденное со случайным уже пройденным уроком.
+//
+// Рамки (окно 9–21 локального времени, интервал 2 часа, максимум 4 в день) живут
+// в nudges.js и покрыты тестами: без них это восемь пушей в день и отключённые
+// уведомления. Тик общий, 15 минут.
+export async function runNudges() {
+  const now = new Date()
+  const { rows: users } = await db.query(
+    `SELECT DISTINCT u.id, u.full_name, u.motivation, u.timezone, u.notify_prefs
+     FROM users u JOIN push_subscriptions p ON p.user_id = u.id
+     WHERE u.role = 'student'`)
+
+  for (const u of users) {
+    const prefs = sanitizeNotifyPrefs(u.notify_prefs)
+    if (!prefs.nudges?.on) continue
+
+    const local = localParts(u.timezone, now)
+    const m = u.motivation || {}
+    const sameDay = m.nudgeDate === local.date
+    const countToday = sameDay ? (m.nudgeCount || 0) : 0
+    const lastNudgeMinutes = sameDay ? (m.nudgeMinutes ?? null) : null
+
+    // Занимался ли сегодня — по попыткам, а не по «зашёл в приложение»
+    const { rows: att } = await db.query(
+      `SELECT count(*)::int AS n FROM exercise_attempts
+       WHERE user_id = $1 AND attempted_at >= now() - interval '20 hours'
+         AND (attempted_at AT TIME ZONE 'UTC')::date >= (now() AT TIME ZONE 'UTC')::date`, [u.id])
+    const studiedToday = (att[0]?.n || 0) > 0
+
+    if (!shouldNudge({ localMinutes: local.minutes, lastNudgeMinutes, countToday, studiedToday })) continue
+
+    // Всё ли пройдено: если да — зовём закреплять и ведём на случайный пройденный урок
+    const { rows: passed } = await db.query(
+      `SELECT e.lesson_id FROM exercises e
+       JOIN lessons l ON l.id = e.lesson_id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+       WHERE l.status = 'done'
+       GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, [u.id])
+
+    const { rows: pending } = await db.query(
+      `SELECT count(*)::int AS n FROM exercises e
+       JOIN lessons l ON l.id = e.lesson_id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+       WHERE l.status = 'done' AND uep.exercise_id IS NULL`, [u.id])
+
+    const allDone = (pending[0]?.n || 0) === 0 && passed.length > 0
+    const name = firstName(u.full_name)
+    const { title, body } = pickNudge(name, countToday, allDone)
+
+    // Прошёл всё — предлагаем повторить случайный из пройденных, иначе ведём на главную
+    let url = '/'
+    if (allDone && passed.length) {
+      const pick = passed[Math.floor(Math.random() * passed.length)]
+      url = `/lesson/${pick.lesson_id}`
+    }
+
+    try { await sendToUser(u.id, { title, body, icon: '/icons/icon-192.png', url }) } catch {}
+
+    await db.query(
+      `UPDATE users SET motivation = motivation || jsonb_build_object(
+         'nudgeDate', $2::text, 'nudgeCount', $3::int, 'nudgeMinutes', $4::int) WHERE id = $1`,
+      [u.id, local.date, countToday + 1, local.minutes])
+  }
+}
+
 export function startMotivationCron() {
   // Тик каждые 15 мин (UTC); внутри — по локальному времени юзера:
   // вечернее/серия — в его вечернее время, вехи — в утреннем слоте (раз в день).
   cron.schedule('*/15 * * * *', () => runEveningReminders().catch(e => console.error('evening reminder:', e.message)), { timezone: 'UTC' })
   cron.schedule('*/15 * * * *', () => runMilestones().catch(e => console.error('milestones:', e.message)), { timezone: 'UTC' })
+  cron.schedule('*/15 * * * *', () => runNudges().catch(e => console.error('nudges:', e.message)), { timezone: 'UTC' })
   console.log('Motivation cron запущен (тик 15 мин, по локальному времени юзера)')
 }

@@ -7,6 +7,9 @@ export const DEFAULT_NOTIFY_PREFS = {
   morning:    { on: true, time: '09:00' },
   evening:    { on: true, time: '21:30' },
   milestones: { on: true },
+  // «Пульс» — мотивационные напоминания днём, пока ученик не позанимался.
+  // Окно и лимит заданы в nudges.js, здесь только выключатель.
+  nudges:     { on: true },
 }
 
 // Валидна ли IANA-таймзона (напр. 'Europe/Berlin'). Пустая/кривая → false.
@@ -66,5 +69,6 @@ export function sanitizeNotifyPrefs(input) {
     }
   }
   if (src.milestones && typeof src.milestones.on === 'boolean') out.milestones.on = src.milestones.on
+  if (src.nudges && typeof src.nudges.on === 'boolean') out.nudges.on = src.nudges.on
   return out
 }
