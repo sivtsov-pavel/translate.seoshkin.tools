@@ -5,8 +5,10 @@ import { api } from '../api/client.js'
 import { isOnline, getOfflineExercises, answerOffline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
+import { useUiModeStore } from '../store/uiMode.js'
 import { getLessonTitle } from '../utils/translation.js'
 import Flashcard from '../components/Flashcard.jsx'
+import FlashcardNovice from '../components/FlashcardNovice.jsx'
 import FillBlank from '../components/FillBlank.jsx'
 import MultipleChoice from '../components/MultipleChoice.jsx'
 import SentenceWrite from '../components/SentenceWrite.jsx'
@@ -75,8 +77,12 @@ export default function ExerciseSession() {
   const toggleOrigView = () => setOrigView(v => { localStorage.setItem('exercise_orig_view', v ? '0' : '1'); return !v })
   const navigate                  = useNavigate()
   const [searchParams]            = useSearchParams()
+  // В режиме новичка карточка слова другая (макет 2b): фото на весь блок, чип рода,
+  // пример «в предложении». Остальные типы пока общие для обоих режимов.
+  const { resolve: resolveUiMode } = useUiModeStore()
   const { t, lang }               = useI18nStore()
   const { user }                  = useAuthStore()
+  const novice = resolveUiMode(user) === 'novice'
   const showOriginal = user?.role === 'owner' && origView
 
   // Пометить слово текущего упражнения «в изучение» (сложные/интересные слова)
@@ -526,7 +532,9 @@ export default function ExerciseSession() {
       {/* Контент упражнения — заполняет оставшееся место */}
       <div className="exercise-session-content" ref={contentRef}>
       <ExerciseErrorBoundary resetKey={ex.id} onSkip={() => { const n = current + 1; if (n >= exercises.length) endSession(); else setCurrent(n) }}>
-        {ex.type === 'flashcard'       && <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} />}
+        {ex.type === 'flashcard' && (novice
+          ? <FlashcardNovice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} exampleSentence={ex.example_sentence} exampleSentenceRu={ex.example_sentence_ru} />
+          : <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} />)}
         {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} payloadTranslations={ex.payload_translations} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
         {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} showOriginal={showOriginal} />}
         {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} payloadTranslations={ex.payload_translations} showOriginal={showOriginal} />}

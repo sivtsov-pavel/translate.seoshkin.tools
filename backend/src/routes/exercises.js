@@ -108,6 +108,8 @@ export async function exercisesRoutes(fastify) {
     const SELECT = `
         SELECT e.*,
                w.word_de, w.translation_ru, COALESCE(w.translations, '{}') AS translations,
+               -- Пример из словаря: карточка слова показывает слово «в предложении» (макет 2b)
+               w.example_sentence, w.example_sentence_ru,
                COALESCE(e.payload_translations, '{}') AS payload_translations,
                COALESCE(
                  (SELECT w2.image_url FROM words w2
