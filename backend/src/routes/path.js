@@ -128,13 +128,12 @@ export async function pathRoutes(fastify) {
        LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
        WHERE l.is_set = true AND l.target_lang = $2
        GROUP BY l.id
-       -- Сначала непройденные: новые наборы (а они добавляются с каждым уроком)
-       -- всплывают на дорогу сами, а закрытые уходят в конец очереди.
-       ORDER BY (count(uep.exercise_id) >= count(e.id)) ASC, count(e.id) DESC`, [userId, target])
+       -- Порядок стабильный (по id): каждый набор закреплён за своей позицией на
+       -- дороге, иначе станции прыгали бы между заходами.
+       ORDER BY l.id`, [userId, target])
 
     // Собираем дорогу: урок → речевая станция → (каждые 3 урока) грамматика и набор слов
     const road = []
-    let setIdx = 0
     section.forEach((node, i) => {
       road.push({ kind: 'lesson', ...node })
 
@@ -150,6 +149,22 @@ export async function pathRoutes(fastify) {
         })
       }
 
+      // Набор слов — после КАЖДОГО урока и по глобальному номеру урока, а не по
+      // позиции в разделе: наборы создаются ради того, чтобы их проходили, поэтому
+      // каждый закреплён за своим уроком и за курс встречается каждый.
+      if (wordSets.length) {
+        const globalIndex = from + i
+        const ws = wordSets[globalIndex % wordSets.length]
+        if (ws && ws.total > 0) {
+          road.push({
+            kind: 'checkpoint', type: 'wordset', lesson_id: ws.id,
+            title: ws.title, title_translations: ws.title_translations,
+            done: ws.done, total: ws.total,
+            state: ws.done >= ws.total ? 'done' : 'open',
+          })
+        }
+      }
+
       // Каждые три урока — грамматическая станция по этим трём
       if ((i + 1) % 3 === 0) {
         const group = section.slice(Math.max(0, i - 2), i + 1)
@@ -162,16 +177,6 @@ export async function pathRoutes(fastify) {
             kind: 'checkpoint', type: 'grammar', lesson_ids: group.map(n => n.lesson_id),
             done: g.done, total: g.total,
             state: g.done >= g.total ? 'done' : 'open',
-          })
-        }
-        // И тематический набор слов — они уже собраны и названы
-        const ws = wordSets[setIdx++ % Math.max(1, wordSets.length)]
-        if (ws) {
-          road.push({
-            kind: 'checkpoint', type: 'wordset', lesson_id: ws.id,
-            title: ws.title, title_translations: ws.title_translations,
-            done: ws.done, total: ws.total,
-            state: ws.done >= ws.total && ws.total > 0 ? 'done' : 'open',
           })
         }
       }
