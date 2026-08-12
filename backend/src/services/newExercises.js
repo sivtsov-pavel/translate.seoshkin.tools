@@ -18,15 +18,17 @@ export function pickNewExerciseIds(rows) {
     .map(r => r.id)
 }
 
-// Нетронутые упражнения пройденных уроков вместе с меткой «самое свежее из тронутых в уроке»
-export async function fetchUntouchedInPassed(userId, passedLessonIds) {
-  if (!passedLessonIds?.length) return []
+// Нетронутые упражнения тех уроков, где ученик уже работал, с меткой «самое свежее
+// из тронутых в этом уроке». Берём по всем урокам целевого языка, а не только по
+// пройденным: новое должно всплывать и в уроке, начатом наполовину.
+export async function fetchUntouchedWithTouchMark(userId, targetLang = 'de') {
   const { rows } = await db.query(
     `WITH touched AS (
        SELECT e.lesson_id, max(e.created_at) AS last_touched_at
        FROM exercises e
        JOIN user_exercise_progress u ON u.exercise_id = e.id AND u.user_id = $1
-       WHERE e.lesson_id = ANY($2::int[])
+       JOIN lessons l ON l.id = e.lesson_id
+       WHERE l.target_lang = $2
        GROUP BY e.lesson_id
      )
      SELECT e.id, e.created_at, t.last_touched_at
@@ -34,12 +36,14 @@ export async function fetchUntouchedInPassed(userId, passedLessonIds) {
      JOIN touched t ON t.lesson_id = e.lesson_id
      LEFT JOIN user_exercise_progress u ON u.exercise_id = e.id AND u.user_id = $1
      WHERE u.exercise_id IS NULL`,
-    [userId, passedLessonIds])
+    [userId, targetLang])
   return rows
 }
 
-// Итог: id упражнений, которые появились в пройденных уроках уже после работы ученика
-// с этими уроками. Их поток «сегодня» показывает, несмотря на общий запрет.
-export async function newExerciseIdsInPassedLessons(userId, passedLessonIds) {
-  return pickNewExerciseIds(await fetchUntouchedInPassed(userId, passedLessonIds))
+// Итог: id упражнений, появившихся в уроках уже после того, как ученик с ними работал.
+// Поток «сегодня» показывает их вопреки общему запрету и ставит В НАЧАЛО очереди —
+// иначе пять склонений тонут среди сотен упражнений урока и при дневном лимите
+// ученик до них просто не доходит.
+export async function newExerciseIds(userId, targetLang = 'de') {
+  return pickNewExerciseIds(await fetchUntouchedWithTouchMark(userId, targetLang))
 }

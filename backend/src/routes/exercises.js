@@ -161,9 +161,11 @@ export async function exercisesRoutes(fastify) {
            GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, [userId, target])
         const passedIds = pr.map(r => r.lesson_id)
         params.push(passedIds); const pp = params.length
-        params.push(await newExerciseIdsInPassedLessons(userId, passedIds)); const np = params.length
+        params.push(await newExerciseIds(userId, target)); const np = params.length
         if (!lesson_id) passedClause = `AND (NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${pp}::int[])) OR e.id = ANY($${np}::int[]))`
-        ownerOrder = `(e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
+        // Новое — первым: иначе оно тонет среди сотен упражнений урока и при дневном лимите
+        // до него не доходит очередь.
+        ownerOrder = `(e.id = ANY($${np}::int[])) DESC, (e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
       }
       query = SELECT + `
         WHERE ${lesson_id ? '$2::date IS NOT NULL' : 'COALESCE(uep.next_review_date, CURRENT_DATE) <= $2'}
@@ -195,10 +197,11 @@ export async function exercisesRoutes(fastify) {
         // повторения). Исключение — открыт конкретный урок (lesson_id): там показываем всё.
         // Второе исключение — упражнения, ДОБАВЛЕННЫЕ в пройденный урок позже (склонения,
         // наборы фраз): иначе они не всплыли бы в потоке никогда.
-        params.push(await newExerciseIdsInPassedLessons(userId, [...passed])); const np = params.length
+        params.push(await newExerciseIds(userId, target)); const np = params.length
         if (!lesson_id) passedClause = `AND (NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${pp}::int[])) OR e.id = ANY($${np}::int[]))`
-        // Порядок: непройденные уроки (текущий) первыми, потом повторения пройденных; внутри по номеру.
-        studentOrder = `(e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
+        // Порядок: сперва новое (добавленное в уроки после работы ученика), затем непройденные
+        // уроки (текущий), потом повторения пройденных; внутри по номеру.
+        studentOrder = `(e.id = ANY($${np}::int[])) DESC, (e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
       }
       query = SELECT + `
         WHERE l.status = 'done'
