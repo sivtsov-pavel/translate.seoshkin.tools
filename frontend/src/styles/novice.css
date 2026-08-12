@@ -238,3 +238,58 @@ body.novice-mode .exercise-card [data-word-tile] {
   padding: 12px 18px !important;
   font-size: 17px !important;
 }
+
+/* ── Вырез в таб-баре с кнопкой ИИ-тренера ────────────────────────────────────
+   Как на присланном примере: полоса снизу «расступается» по центру, и в вырезе
+   стоит круглая кнопка. Тренер — главное действие приложения, из ряда значков
+   он терялся.
+
+   Вырез рисуем не маской, а кольцом цвета фона вокруг кнопки: маска на разных
+   движках ведёт себя по-разному и ломается на тёмной теме. */
+.novice-tabbar--notch {
+  grid-template-columns: 1fr 1fr 78px 1fr 1fr;
+  align-items: end;
+}
+.novice-notch { position: relative; height: 100%; }
+.novice-fab {
+  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+  width: 62px; height: 62px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent); color: var(--accent-ink);
+  border: 6px solid var(--bg);            /* это и создаёт «вырез» в полосе */
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, .55);
+  text-decoration: none;
+}
+.novice-fab.is-active { background: #9A5CD8; color: #fff; }
+
+/* Карточка не должна упираться в шапку: сверху воздух, как в макете */
+body.novice-mode .exercise-session-content > div { padding-top: 12px !important; }
+
+/* Серая подложка под словом («вопрос-блок») в макете не нужна: слово и так
+   главный элемент, а лишний фон дробит карточку на полосы. */
+body.novice-mode .exercise-question-block {
+  background: transparent !important;
+  padding: 0 !important;
+  margin-bottom: 14px !important;
+}
+
+/* Название урока и тип упражнения — тихой строкой под шапкой, а не плашкой
+   внутри карточки: плашка ломала верх и «отклеивала» картинку. */
+body.novice-mode .exercise-card-header,
+body.novice-mode .exercise-type-label {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 0 10px !important;
+  font-size: 12.5px !important;
+  color: var(--ink-soft) !important;
+  text-align: center;
+}
+
+/* Строка «тип упражнения · урок» под шапкой */
+.novice-ex-head {
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 6px 16px 2px;
+}

@@ -63,7 +63,9 @@ export default function FlashcardNovice({
 
   return (
     <div style={{ width: '100%' }}>
-      <div className="exercise-card" style={{ borderRadius: 28, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 14 }}>
+      <div className="exercise-card" onClick={!revealed ? () => setRevealed(true) : undefined}
+        style={{ borderRadius: 28, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)',
+          marginBottom: 14, cursor: revealed ? 'default' : 'pointer', userSelect: 'none' }}>
         <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
           onReactionEnd={() => onAnswer(gradeRef.current)} />
 
@@ -90,12 +92,12 @@ export default function FlashcardNovice({
           </div>
 
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={() => speak(payload.question)}
+            <button onClick={(e) => { e.stopPropagation(); speak(payload.question) }}
               style={{ flex: 1, minHeight: 52, borderRadius: 15, border: 'none', background: '#9A5CD8', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
               🔊 {t.exercise.listen || 'Слушать'}
             </button>
             {wordId && (
-              <button onClick={addToStudy} disabled={inStudy}
+              <button onClick={(e) => { e.stopPropagation(); addToStudy() }} disabled={inStudy}
                 title={t.exercise?.addToStudyHint || 'Добавить слово в изучение'}
                 style={{ width: 52, height: 52, borderRadius: 15, border: '1px solid var(--line)', background: inStudy ? 'var(--good-soft, rgba(34,197,94,.12))' : 'var(--surface-2)', color: inStudy ? 'var(--good)' : 'var(--ink-soft)', fontSize: 19, cursor: inStudy ? 'default' : 'pointer' }}>
                 ★

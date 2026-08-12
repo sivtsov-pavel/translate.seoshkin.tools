@@ -76,9 +76,25 @@ export default function NoviceNav() {
 
   return (
     <>
-      {/* Телефон: четыре крупные кнопки, последняя — троеточие «Ещё» */}
-      <nav className="novice-tabbar novice-tabbar--4">
-        {main.map(item => (
+      {/* Телефон: две кнопки слева, две справа и вырез по центру — в нём круглая
+          кнопка ИИ-тренера. Тренер главное действие приложения, поэтому он вынесен
+          из ряда и виден всегда. */}
+      <nav className="novice-tabbar novice-tabbar--notch">
+        {main.slice(0, 2).map(item => (
+          <Link key={item.to} to={item.to} className={`novice-tab ${isActive(item.to) ? 'is-active' : ''}`}>
+            <Shape C={item.C} shape={item.shape} tone={item.tone} active={isActive(item.to)} />
+            <span>{item.label}</span>
+          </Link>
+        ))}
+
+        <div className="novice-notch">
+          <Link to="/ai-trainer" className={`novice-fab ${isActive('/ai-trainer') ? 'is-active' : ''}`}
+            aria-label={t.nav.aiTrainer || 'Тренер'} title={t.nav.aiTrainer || 'Тренер'}>
+            <Bot size={26} strokeWidth={2} />
+          </Link>
+        </div>
+
+        {main.slice(2).map(item => (
           <Link key={item.to} to={item.to} className={`novice-tab ${isActive(item.to) ? 'is-active' : ''}`}>
             <Shape C={item.C} shape={item.shape} tone={item.tone} active={isActive(item.to)} />
             <span>{item.label}</span>

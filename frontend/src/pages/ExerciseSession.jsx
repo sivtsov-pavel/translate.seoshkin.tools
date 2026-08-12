@@ -536,6 +536,14 @@ export default function ExerciseSession() {
 
       {/* Контент упражнения — заполняет оставшееся место */}
       <div className="exercise-session-content" ref={contentRef}>
+      {/* Тип упражнения и урок — тихой строкой ПОД ШАПКОЙ, а не плашкой внутри
+          карточки: внутри она ломала верх и «отклеивала» картинку от края. */}
+      {novice && (typeLabel || lessonTitle) && (
+        <div className="novice-ex-head">
+          {typeLabel}{typeLabel && lessonTitle ? ' · ' : ''}{lessonTitle}
+        </div>
+      )}
+
       <ExerciseErrorBoundary resetKey={ex.id} onSkip={() => { const n = current + 1; if (n >= exercises.length) endSession(); else setCurrent(n) }}>
         {ex.type === 'flashcard' && (novice
           ? <FlashcardNovice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} exampleSentence={ex.example_sentence} exampleSentenceRu={ex.example_sentence_ru} />

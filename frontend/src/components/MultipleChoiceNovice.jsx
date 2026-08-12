@@ -55,7 +55,7 @@ export default function MultipleChoiceNovice({
       {/* Слово с картинкой — крупным блоком, как в макете */}
       <div className="exercise-card" style={{ borderRadius: 26, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 16 }}>
         {imageUrl && <WordImage imageUrl={imageUrl} wordDe={word} bleed />}
-        <div style={{ padding: '18px 20px' }}>
+        <div style={{ padding: '16px 20px 18px' }}>
           <div className="exercise-word-de" style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em' }} dir="ltr">{word}</div>
           <button onClick={() => speak(word)}
             style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
