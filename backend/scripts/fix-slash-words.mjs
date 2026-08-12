@@ -123,6 +123,23 @@ const planA = []   // формы спряжения на удаление
 const skipA = []   // формы, чей инфинитив не найден — не трогаем
 const planB = []   // дубли местоимений на схлопывание + переименования
 const planC = []   // пары на разделение
+const planDup = [] // пары, обе половины которых в уроке уже есть — запись просто лишняя
+
+// Что уже лежит в затронутых уроках: пара «Kunde/Kundin» в уроке, где «der Kunde»
+// и «die Kundin» уже заведены отдельно, — не пара на разделение, а дубль.
+const lessonIds = [...new Set(slashWords.map(w => w.lesson_id).filter(Boolean))]
+const { rows: lessonWords } = lessonIds.length
+  ? await db.query('SELECT id, lesson_id, word_de FROM words WHERE lesson_id = ANY($1)', [lessonIds])
+  : { rows: [] }
+const wordsInLesson = new Map() // lesson_id -> Map(word_de -> id)
+for (const w of lessonWords) {
+  if (!wordsInLesson.has(w.lesson_id)) wordsInLesson.set(w.lesson_id, new Map())
+  wordsInLesson.get(w.lesson_id).set(w.word_de.trim(), w.id)
+}
+const existsInLesson = (lessonId, wordDe, exceptId = null) => {
+  const id = wordsInLesson.get(lessonId)?.get(String(wordDe).trim())
+  return id && id !== exceptId ? id : null
+}
 
 for (const w of slashWords) {
   const klass = classify(w.word_de)
@@ -135,15 +152,18 @@ for (const w of slashWords) {
     const override = PAIR_OVERRIDES[String(w.word_de).trim()]
     const parts = String(w.word_de).split('/').map(s => s.trim()).filter(Boolean)
     const trParts = String(w.translation_ru || '').split('/').map(s => s.trim()).filter(Boolean)
-    if (override) {
-      planC.push({ ...w, keep: override[0], create: override[1] })
-    } else if (parts.length === 2) {
-      planC.push({
-        ...w,
-        keep:   { word_de: parts[0], translation_ru: trParts.length === 2 ? trParts[0] : w.translation_ru },
-        create: { word_de: parts[1], translation_ru: trParts.length === 2 ? trParts[1] : w.translation_ru },
-      })
-    } else skipA.push({ ...w, form: '(больше двух частей — руками)' })
+    let pair = null
+    if (override) pair = { keep: override[0], create: override[1] }
+    else if (parts.length === 2) pair = {
+      keep:   { word_de: parts[0], translation_ru: trParts.length === 2 ? trParts[0] : w.translation_ru },
+      create: { word_de: parts[1], translation_ru: trParts.length === 2 ? trParts[1] : w.translation_ru },
+    }
+    if (!pair) { skipA.push({ ...w, form: '(больше двух частей — руками)' }); continue }
+
+    const keepBusy   = existsInLesson(w.lesson_id, pair.keep.word_de, w.id)
+    const createBusy = existsInLesson(w.lesson_id, pair.create.word_de, w.id)
+    if (keepBusy && createBusy) planDup.push({ ...w, ...pair, keepBusy, createBusy })
+    else planC.push({ ...w, ...pair, keepBusy, createBusy })
   }
 }
 
@@ -189,7 +209,34 @@ for (const g of planB) {
 
 console.log(`\nC. Пары на разделение: ${planC.length} (тратит OpenAI, стадия --apply-pairs)`)
 for (const w of planC) {
-  console.log(`   урок ${w.lesson_number ?? '—'} · «${w.word_de}» → «${w.keep.word_de}» + «${w.create.word_de}» (упражнений сейчас ${w.ex_count})`)
+  const note = w.keepBusy ? ` · «${w.keep.word_de}» в уроке уже есть → запись станет «${w.create.word_de}»`
+    : w.createBusy ? ` · «${w.create.word_de}» в уроке уже есть → запись станет «${w.keep.word_de}»` : ''
+  console.log(`   урок ${w.lesson_number ?? '—'} · «${w.word_de}» → «${w.keep.word_de}» + «${w.create.word_de}» (упражнений сейчас ${w.ex_count})${note}`)
+}
+
+if (planDup.length) {
+  console.log(`\nD. Лишние записи — обе половины в уроке уже заведены: ${planDup.length}`)
+  for (const w of planDup) {
+    console.log(`   урок ${w.lesson_number ?? '—'} · «${w.word_de}» (${w.ex_count} упр.) — есть «${w.keep.word_de}» (${w.keepBusy}) и «${w.create.word_de}» (${w.createBusy}) → удалить`)
+  }
+}
+
+// Слова без единого упражнения в затронутых уроках: либо появились разделением, либо
+// осиротели, если прошлый запуск оборвался между разделением и генерацией.
+const finishLessons = [...new Set([
+  ...planC.map(w => w.lesson_id),
+  ...(process.argv.find(a => a.startsWith('--lessons='))?.split('=')[1]?.split(',').map(Number) || []),
+].filter(Boolean))]
+const { rows: orphans } = finishLessons.length
+  ? await db.query(
+      `SELECT w.id, w.lesson_id, w.word_de, w.translation_ru FROM words w
+       WHERE w.lesson_id = ANY($1)
+         AND NOT EXISTS (SELECT 1 FROM exercises e WHERE e.word_id = w.id)
+       ORDER BY w.lesson_id, w.id`, [finishLessons])
+  : { rows: [] }
+if (orphans.length) {
+  console.log(`\nE. Слова без упражнений в уроках ${finishLessons.join(', ')}: ${orphans.length} — будут добиты на стадии --apply-pairs`)
+  for (const w of orphans) console.log(`   урок ${w.lesson_id} · ${w.word_de}`)
 }
 
 if (MODE === 'plan') {
@@ -262,36 +309,46 @@ if (MODE === 'apply') {
 // ── Применение C: разделение пар (тратит OpenAI) ──────────────────────────────
 
 if (MODE === 'pairs') {
-  if (!planC.length) { console.log('\nПар для разделения нет.'); process.exit(0) }
+  if (!planC.length && !planDup.length && !orphans.length) { console.log('\nДелать нечего.'); process.exit(0) }
 
-  const snap = await snapshot(planC.map(w => w.id))
+  const snap = await snapshot([...planC.map(w => w.id), ...planDup.map(w => w.id)])
   writeFileSync(ROLLBACK, JSON.stringify(snap, null, 2))
-  console.log(`\nОткат записан: ${ROLLBACK}`)
+  console.log(`\nОткат записан: ${ROLLBACK} (слов ${snap.words.length}, упражнений ${snap.exercises.length})`)
 
   resetUsage()
   const touched = [] // слова, которым нужны свежие упражнения
 
+  // D: обе половины в уроке уже есть — склеенная запись просто лишняя
+  if (planDup.length) {
+    const { rowCount } = await db.query('DELETE FROM words WHERE id = ANY($1)', [planDup.map(w => w.id)])
+    console.log(`D: удалено лишних записей ${rowCount}`)
+  }
+
   for (const p of planC) {
-    // Половина первая — переименовываем существующую запись (id сохраняется)
+    // Занятость проверена при построении плана: если одна из половин в уроке уже есть,
+    // наша запись становится ТОЙ, которой не хватает, и ничего не создаётся.
+    const becomes = p.keepBusy ? p.create : p.keep
+    const other   = p.keepBusy ? null : (p.createBusy ? null : p.create)
+
     await db.query('UPDATE words SET word_de = $1, translation_ru = $2, translations = \'{}\'::jsonb WHERE id = $3',
-      [p.keep.word_de, p.keep.translation_ru, p.id])
+      [becomes.word_de, becomes.translation_ru, p.id])
 
-    // Половина вторая — новая запись в том же уроке
-    const ins = await db.query(
-      `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (lesson_id, word_de) DO NOTHING
-       RETURNING id`,
-      [p.lesson_id, p.user_id, p.create.word_de, p.create.translation_ru, p.source || 'textbook'])
-    const newId = ins.rows[0]?.id || null
-    if (!newId) console.log(`   «${p.create.word_de}» уже есть в уроке ${p.lesson_id} — новая запись не создавалась`)
+    let newId = null
+    if (other) {
+      const ins = await db.query(
+        `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, source)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (lesson_id, word_de) DO NOTHING
+         RETURNING id`,
+        [p.lesson_id, p.user_id, other.word_de, other.translation_ru, p.source || 'textbook'])
+      newId = ins.rows[0]?.id || null
+    }
 
-    // Старые упражнения половины первой держат в payload склеенный текст — сносим,
-    // сгенерируем заново вместе с упражнениями для новой половины.
+    // Старые упражнения держат в payload склеенный текст — сносим, сгенерируем заново.
     await db.query('DELETE FROM exercises WHERE word_id = $1', [p.id])
 
     touched.push({ lesson_id: p.lesson_id, target_lang: p.target_lang || 'de',
-      words: [{ id: p.id, ...p.keep }, ...(newId ? [{ id: newId, ...p.create }] : [])] })
+      words: [{ id: p.id, ...becomes }, ...(newId ? [{ id: newId, ...other }] : [])] })
   }
 
   // Генерация упражнений — по урокам, чтобы промпт видел контекст урока
@@ -299,6 +356,12 @@ if (MODE === 'pairs') {
   for (const t of touched) {
     if (!byLesson.has(t.lesson_id)) byLesson.set(t.lesson_id, { target_lang: t.target_lang, words: [] })
     byLesson.get(t.lesson_id).words.push(...t.words)
+  }
+  // Сироты: слова без упражнений в затронутых уроках (в т.ч. после оборвавшегося запуска)
+  for (const o of orphans) {
+    if (touched.some(t => t.words.some(w => w.id === o.id))) continue
+    if (!byLesson.has(o.lesson_id)) byLesson.set(o.lesson_id, { target_lang: 'de', words: [] })
+    byLesson.get(o.lesson_id).words.push({ id: o.id, word_de: o.word_de, translation_ru: o.translation_ru })
   }
 
   for (const [lessonId, { target_lang, words }] of byLesson) {
