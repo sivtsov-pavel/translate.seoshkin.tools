@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import AppInstallBlock from '../components/AppInstallBlock.jsx'
 import { useSearchParams } from 'react-router-dom'
 import { useSettingsStore, applyVisual } from '../store/settings.js'
 import { useAuthStore } from '../store/auth.js'
@@ -384,6 +385,7 @@ export default function Settings() {
       {tab === 0 && <ProfileTab />}
 
       {tab === 1 && <>
+      <AppInstallBlock />
       {/* ── Обучение ── */}
       <Section icon="🎯" title={t.settings.sectionLearning}>
         <Row
