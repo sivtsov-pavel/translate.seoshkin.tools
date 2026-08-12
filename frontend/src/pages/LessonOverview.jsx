@@ -44,7 +44,7 @@ export default function LessonOverview() {
 
   useEffect(() => {
     if (!wordsOpen || words) return
-    api.get(`/words?lesson_id=${id}`).then(setWords).catch(() => setWords([]))
+    api.get(`/lessons/${id}/words`).then(setWords).catch(() => setWords([]))
   }, [wordsOpen])
 
   if (!data) return <div style={{ padding: 24, color: 'var(--ink-soft)' }}>{t.common.loading}</div>
