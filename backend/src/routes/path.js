@@ -79,6 +79,112 @@ export async function pathRoutes(fastify) {
     // ?all=1 — показать все уроки одной дорогой, а не окно вокруг текущего
     const section = request.query.all === '1' ? nodes : nodes.slice(from, from + SECTION_SIZE)
 
+    // ── Чекпойнты между уроками ───────────────────────────────────────────────
+    // Идея Павла: урок разгружаем до ядра (слова и их узнавание), а речь, грамматику
+    // и тематические наборы выносим на отдельные станции дороги. Станция стоит НА пути,
+    // а не «где-то в разделе» — иначе её просто не делают.
+    const lessonIds = section.map(n => n.lesson_id)
+    const stationProgress = new Map()   // lesson_id -> {speech:{done,total}, grammar:{...}}
+    if (lessonIds.length) {
+      const { rows: st } = await db.query(
+        `SELECT e.lesson_id, e.type,
+                count(*)::int AS total,
+                count(uep.exercise_id)::int AS done
+         FROM exercises e
+         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+         WHERE e.lesson_id = ANY($2::int[])
+           AND e.type IN ('dictation','speech','conjugation','declension')
+         GROUP BY e.lesson_id, e.type`, [userId, lessonIds])
+      for (const r of st) {
+        const kind = (r.type === 'dictation' || r.type === 'speech') ? 'speech' : 'grammar'
+        const cur = stationProgress.get(r.lesson_id) || { speech: { done: 0, total: 0 }, grammar: { done: 0, total: 0 } }
+        cur[kind].done += r.done
+        cur[kind].total += r.total
+        stationProgress.set(r.lesson_id, cur)
+      }
+    }
+
+    // Фразы урока — часть речевой станции
+    const { rows: phraseRows } = lessonIds.length
+      ? await db.query(
+          `SELECT t.lesson_id,
+                  count(p.id)::int AS total,
+                  count(*) FILTER (WHERE up.step_listen AND up.step_build)::int AS done
+           FROM phrase_topics t
+           JOIN phrases p ON p.topic_id = t.id
+           LEFT JOIN user_phrase_progress up ON up.phrase_id = p.id AND up.user_id = $1
+           WHERE t.lesson_id = ANY($2::int[])
+           GROUP BY t.lesson_id`, [userId, lessonIds])
+      : { rows: [] }
+    const phrasesByLesson = new Map(phraseRows.map(r => [r.lesson_id, r]))
+
+    // Тематические наборы слов — уже существуют с названиями, ставим их станциями
+    const { rows: wordSets } = await db.query(
+      `SELECT l.id, l.title, COALESCE(l.title_translations, '{}') AS title_translations,
+              count(e.id)::int AS total,
+              count(uep.exercise_id)::int AS done
+       FROM lessons l
+       JOIN exercises e ON e.lesson_id = l.id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+       WHERE l.is_set = true AND l.target_lang = $2
+       GROUP BY l.id
+       ORDER BY count(e.id) DESC`, [userId, target])
+
+    // Собираем дорогу: урок → речевая станция → (каждые 3 урока) грамматика и набор слов
+    const road = []
+    let setIdx = 0
+    section.forEach((node, i) => {
+      road.push({ kind: 'lesson', ...node })
+
+      const sp = stationProgress.get(node.lesson_id)?.speech || { done: 0, total: 0 }
+      const ph = phrasesByLesson.get(node.lesson_id)
+      const speechTotal = sp.total + (ph?.total || 0)
+      if (speechTotal > 0) {
+        const speechDone = sp.done + (ph?.done || 0)
+        road.push({
+          kind: 'checkpoint', type: 'speech', lesson_id: node.lesson_id,
+          title: null, done: speechDone, total: speechTotal,
+          state: speechDone >= speechTotal ? 'done' : (node.state === 'locked' ? 'locked' : 'open'),
+        })
+      }
+
+      // Каждые три урока — грамматическая станция по этим трём
+      if ((i + 1) % 3 === 0) {
+        const group = section.slice(Math.max(0, i - 2), i + 1)
+        const g = group.reduce((acc, n) => {
+          const gp = stationProgress.get(n.lesson_id)?.grammar || { done: 0, total: 0 }
+          return { done: acc.done + gp.done, total: acc.total + gp.total }
+        }, { done: 0, total: 0 })
+        if (g.total > 0) {
+          road.push({
+            kind: 'checkpoint', type: 'grammar', lesson_ids: group.map(n => n.lesson_id),
+            done: g.done, total: g.total,
+            state: g.done >= g.total ? 'done' : 'open',
+          })
+        }
+        // И тематический набор слов — они уже собраны и названы
+        const ws = wordSets[setIdx++ % Math.max(1, wordSets.length)]
+        if (ws) {
+          road.push({
+            kind: 'checkpoint', type: 'wordset', lesson_id: ws.id,
+            title: ws.title, title_translations: ws.title_translations,
+            done: ws.done, total: ws.total,
+            state: ws.done >= ws.total && ws.total > 0 ? 'done' : 'open',
+          })
+        }
+      }
+    })
+
+    // Сундук в конце раздела — зачёт по последнему уроку раздела
+    const lastLesson = section[section.length - 1]
+    if (lastLesson) {
+      road.push({
+        kind: 'checkpoint', type: 'exam', lesson_id: lastLesson.lesson_id,
+        done: section.filter(n => n.state === 'done').length, total: section.length,
+        state: section.every(n => n.state === 'done') ? 'done' : 'open',
+      })
+    }
+
     // Метрики верхних плиток
     const { rows: streakRows } = await db.query(
       `SELECT DISTINCT (a.attempted_at AT TIME ZONE 'UTC')::date AS d
@@ -104,6 +210,7 @@ export async function pathRoutes(fastify) {
         total: section.length,
       },
       nodes: section,
+      road,
       total_lessons: nodes.length,
       done_lessons: nodes.filter(n => n.state === 'done').length,
       stats: {

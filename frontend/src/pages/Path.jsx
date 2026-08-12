@@ -40,7 +40,10 @@ export default function Path() {
     )
   }
 
-  const { nodes, section, stats } = data
+  const { nodes, section, stats, road } = data
+  // Дорога — уроки вперемежку со станциями (речь, грамматика, наборы слов, зачёт).
+  // Станция стоит НА пути, а не в стороне: иначе диктант и произношение просто не делают.
+  const items = road?.length ? road : nodes.map(n => ({ kind: 'lesson', ...n }))
   const current = nodes.find(n => n.state === 'current')
 
   return (
@@ -70,7 +73,9 @@ export default function Path() {
 
       {/* Дорога: узлы чередуются влево-вправо, между ними коннекторы */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {nodes.map((n, i) => {
+        {items.map((n, i) => {
+          if (n.kind === 'checkpoint') return <Checkpoint key={`cp-${n.type}-${i}`} node={n} t={t} lang={lang} navigate={navigate} />
+
           const shift = n.state === 'current' ? 40 : (i % 3 === 0 ? -48 : i % 3 === 1 ? 0 : 44)
           const title = getLessonTitle(n.title, n.title_translations, lang) || `${t.path.lesson} ${n.number ?? ''}`
           return (
@@ -179,6 +184,52 @@ function Tile({ icon, value, label }) {
       <div style={{ fontSize: 18 }}>{icon}</div>
       <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>{value}</div>
       <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{label}</div>
+    </div>
+  )
+}
+
+// Станция на дороге: речь, грамматика, набор слов или зачёт-сундук.
+// Форма и цвет разные — как в макете, где узлы различаются фигурой, а не только подписью.
+const CP = {
+  speech:  { icon: '🎤', color: '#2F8296', labelKey: 'cpSpeech' },
+  grammar: { icon: '🧩', color: '#9A5CD8', labelKey: 'cpGrammar' },
+  wordset: { icon: '🎒', color: '#2E7D63', labelKey: 'cpWordset' },
+  exam:    { icon: '🏆', color: '#E8B024', labelKey: 'cpExam' },
+}
+
+function Checkpoint({ node, t, lang, navigate }) {
+  const meta = CP[node.type] || CP.speech
+  const done = node.state === 'done'
+  const label = node.type === 'wordset'
+    ? (getLessonTitle(node.title, node.title_translations, lang) || t.path[meta.labelKey])
+    : t.path[meta.labelKey]
+
+  const go = () => {
+    if (node.type === 'exam')    return navigate(`/exercise-session?lesson_id=${node.lesson_id}&exam=1`)
+    if (node.type === 'wordset') return navigate(`/exercise-session?lesson_id=${node.lesson_id}`)
+    if (node.type === 'speech')  return navigate(`/checkpoint/speech/${node.lesson_id}`)
+    return navigate(`/checkpoint/grammar/${(node.lesson_ids || []).join(',')}`)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ width: 5, height: 26, borderRadius: 3, margin: '6px 0', background: done ? '#3FBF8F' : 'var(--line)' }} />
+      <button onClick={go}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderRadius: 18,
+          border: `2px ${done ? 'solid' : 'dashed'} ${done ? '#3FBF8F' : meta.color}`,
+          background: done ? 'rgba(63,191,143,0.12)' : 'var(--surface)',
+          cursor: 'pointer', minWidth: 210, textAlign: 'left',
+        }}>
+        <span style={{
+          width: 42, height: 42, borderRadius: 12, flex: 'none', display: 'grid', placeItems: 'center',
+          background: done ? '#2E7D63' : `${meta.color}22`, fontSize: 20,
+        }}>{done ? '✓' : meta.icon}</span>
+        <span style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{label}</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>{node.done}/{node.total}</div>
+        </span>
+      </button>
     </div>
   )
 }
