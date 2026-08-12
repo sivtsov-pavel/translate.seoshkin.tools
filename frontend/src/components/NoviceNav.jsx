@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Backpack, BookOpen, Languages, MoreHorizontal, Library, Bot,
-  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings,
+  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X,
 } from 'lucide-react'
 import { useI18nStore } from '../store/i18n.js'
+import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 
 // Навигация режима «новичок» (макет 2a, docs/design_novichok).
 //
@@ -85,7 +86,19 @@ export default function NoviceNav() {
         <>
           <div className="novice-more-overlay" onClick={() => setMoreOpen(false)} />
           <div className="novice-more-sheet">
+            {/* Крестик обязателен: свайпа вниз у шторки нет, и закрыть её можно было
+                только тычком мимо — Павел на этом и споткнулся. */}
+            <button className="novice-more-close" onClick={() => setMoreOpen(false)} aria-label="✕">
+              <X size={20} />
+            </button>
             <div className="novice-more-handle" />
+
+            {/* Озвучка — сюда, а не в дальние настройки: этими двумя тумблерами
+                пользуются во время занятия, а не раз в жизни. */}
+            <div className="novice-more-sound">
+              <AutoSpeakToggle pill />
+              <SpeakTranslationToggle />
+            </div>
             {MORE(t).map(item => (
               <button key={item.to} className="novice-more-row"
                 onClick={() => { setMoreOpen(false); navigate(item.to) }}>
