@@ -1,7 +1,7 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
 import { playableLessonIds, LESSON_PASSED_HAVING } from '../services/drip.js'
-import { newExerciseIdsInPassedLessons } from '../services/newExercises.js'
+import { newExerciseIds } from '../services/newExercises.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { generateWordImage } from '../services/imageGen.js'
