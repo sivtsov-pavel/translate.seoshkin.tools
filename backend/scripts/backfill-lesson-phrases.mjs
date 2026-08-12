@@ -5,10 +5,13 @@
 // 💸 Тратит OpenAI (gpt-4o): один вызов на урок, ориентир $0.01 за урок.
 //    Без --apply печатает только план и смету, ничего не меняя.
 //
-//   node scripts/backfill-lesson-phrases.mjs                     # план
-//   node scripts/backfill-lesson-phrases.mjs --apply --limit=3   # сначала три урока
-//   node scripts/backfill-lesson-phrases.mjs --apply             # все
+//   node scripts/backfill-lesson-phrases.mjs                         # план
+//   node scripts/backfill-lesson-phrases.mjs --lang=de --apply --limit=3
+//   node scripts/backfill-lesson-phrases.mjs --lang=de --apply       # все немецкие
 //   node scripts/backfill-lesson-phrases.mjs --apply --level=A0
+//
+// Фильтры: --lang=de|en|es, --with-sets (включить уроки-наборы), --level=A0|A1|A2.
+// Алфавитные уроки («Буква B») и уроки короче четырёх слов пропускаются всегда.
 import { db } from '../src/db/index.js'
 import { generateLessonPhrases } from '../src/services/phrases.js'
 import { resetUsage, usageCostUSD } from '../src/services/claude.js'
@@ -17,15 +20,22 @@ import { logOperation } from '../src/services/opLog.js'
 const APPLY = process.argv.includes('--apply')
 const LIMIT = parseInt(process.argv.find(a => a.startsWith('--limit='))?.split('=')[1] || '0', 10)
 const LEVEL = process.argv.find(a => a.startsWith('--level='))?.split('=')[1] || 'A1'
+const LANG  = process.argv.find(a => a.startsWith('--lang='))?.split('=')[1] || null
+const WITH_SETS = process.argv.includes('--with-sets')
 
+// Уроки-алфавит («Буква B» из пяти слов) исключаем: связных бытовых фраз из набора
+// букв не выходит, а платить за них всё равно пришлось бы.
 const { rows: lessons } = await db.query(`
   SELECT l.id, l.lesson_number, l.title, l.target_lang,
          (SELECT count(*)::int FROM words w WHERE w.lesson_id = l.id) AS words
   FROM lessons l
   WHERE l.status = 'done'
     AND NOT EXISTS (SELECT 1 FROM phrase_topics t WHERE t.lesson_id = l.id)
-    AND (SELECT count(*) FROM words w WHERE w.lesson_id = l.id) >= 2
-  ORDER BY l.lesson_number NULLS LAST, l.id`)
+    AND (SELECT count(*) FROM words w WHERE w.lesson_id = l.id) >= 4
+    AND l.title !~* '^(буква|letter|letra)\\s'
+    AND ($1::text IS NULL OR l.target_lang = $1)
+    AND ($2::bool OR l.is_set = false)
+  ORDER BY l.lesson_number NULLS LAST, l.id`, [LANG, WITH_SETS])
 
 const targets = LIMIT ? lessons.slice(0, LIMIT) : lessons
 console.log(`\nУроков без набора фраз: ${lessons.length}${LIMIT ? `, берём ${targets.length}` : ''}`)
