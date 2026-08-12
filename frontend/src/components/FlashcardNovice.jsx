@@ -62,7 +62,7 @@ export default function FlashcardNovice({
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
       <div className="exercise-card" style={{ borderRadius: 28, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 14 }}>
         <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
           onReactionEnd={() => onAnswer(gradeRef.current)} />

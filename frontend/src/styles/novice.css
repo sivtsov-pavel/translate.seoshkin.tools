@@ -184,3 +184,57 @@ body.novice-mode .layout-topbar button.dl-mode-toggle {
    поэтому берём акцентный цвет приложения. */
 .novice-tab--more { color: var(--accent); font-weight: 800; }
 .novice-tab--more .nv-shape { box-shadow: 0 0 0 3px rgba(232, 176, 36, 0.28); }
+
+/* Карточка упражнения в режиме новичка занимает всю ширину контейнера.
+   Свой max-width у компонентов давал двойные поля: контейнер уже отступает. */
+body.novice-mode .exercise-session-content > div { padding: 0 14px 14px; }
+body.novice-mode .exercise-card { width: 100%; margin-left: 0; margin-right: 0; }
+
+@media (min-width: 700px) {
+  /* На широком экране карточка не растягивается на всю ширину — читать неудобно */
+  body.novice-mode .exercise-session-content > div { max-width: 620px; margin: 0 auto; }
+}
+
+/* ── Остальные типы упражнений в стиле макета ─────────────────────────────────
+   Переписывать девять рабочих компонентов ради оформления дорого и рискованно,
+   поэтому вид задаём слоем: у всех карточек одинаковые скругления, поля и
+   крупные элементы управления. Стили внутри компонентов инлайновые — отсюда
+   !important, иначе правила не применятся. */
+
+body.novice-mode .exercise-card {
+  border: 1px solid var(--line) !important;
+  border-radius: 26px !important;
+  background: var(--surface) !important;
+  overflow: hidden !important;
+}
+body.novice-mode .exercise-card-content { padding: 20px !important; }
+
+/* Кнопки-ответы и элементы управления внутри карточки — крупные и мягкие */
+body.novice-mode .exercise-card button,
+body.novice-mode .exercise-session-content > div > button {
+  border-radius: 16px !important;
+  min-height: 52px;
+  font-size: 16px !important;
+}
+/* Мелкие круглые кнопки (звук, подсказка) не растягиваем */
+body.novice-mode .exercise-card button[style*="border-radius: 50%"],
+body.novice-mode .exercise-card button[style*="borderRadius: 50%"] {
+  min-height: 0;
+  border-radius: 50% !important;
+}
+
+/* Поля ввода — как в макете: высокие, со скруглением */
+body.novice-mode .exercise-card input[type="text"],
+body.novice-mode .exercise-card textarea {
+  border-radius: 14px !important;
+  min-height: 48px;
+  font-size: 16px !important;
+}
+
+/* Плитки слов в «собери предложение» */
+body.novice-mode .exercise-card .tap-word,
+body.novice-mode .exercise-card [data-word-tile] {
+  border-radius: 14px !important;
+  padding: 12px 18px !important;
+  font-size: 17px !important;
+}

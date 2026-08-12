@@ -51,7 +51,7 @@ export default function MultipleChoiceNovice({
   const ok = selected === correctIdx
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 2px 20px' }}>
+    <div style={{ width: '100%', paddingBottom: 16 }}>
       {/* Слово с картинкой — крупным блоком, как в макете */}
       <div className="exercise-card" style={{ borderRadius: 26, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 16 }}>
         {imageUrl && <WordImage imageUrl={imageUrl} wordDe={word} bleed />}
