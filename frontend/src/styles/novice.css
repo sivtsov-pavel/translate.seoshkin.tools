@@ -16,7 +16,7 @@
   line-height: 1.15; text-align: center;
 }
 .novice-tab.is-active { color: var(--accent); }
-.novice-tab-ico { font-size: 19px; line-height: 1; }
+.novice-tab-ico { display: flex; align-items: center; justify-content: center; height: 22px; }
 
 /* ── Планшет и ПК: боковая панель ─────────────────────────────────────────── */
 .novice-rail { display: none; }
@@ -35,7 +35,7 @@
     min-height: 44px; text-align: center;
   }
   .novice-rail-item.is-active { background: var(--surface-2); color: var(--accent); }
-  .novice-rail-ico { font-size: 21px; line-height: 1; }
+  .novice-rail-ico { display: flex; align-items: center; justify-content: center; height: 24px; }
 }
 
 /* ПК: панель шире, подписи в строку — как в макете (сайдбар 230px) */
@@ -43,7 +43,7 @@
   .novice-rail { width: 230px; }
   .novice-rail-inner { padding: 74px 14px 16px; }
   .novice-rail-item { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 13px 16px; font-size: 14px; }
-  .novice-rail-ico { font-size: 19px; }
+  .novice-rail-ico { height: 20px; }
 }
 
 /* ── «Ещё» — шторка снизу ─────────────────────────────────────────────────── */
