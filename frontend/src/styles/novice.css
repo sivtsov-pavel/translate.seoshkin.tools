@@ -327,3 +327,21 @@ body.novice-mode .exercise-card-header { display: none !important; }
   0%, 100% { height: 6px;  opacity: .55; }
   50%      { height: 17px; opacity: 1; }
 }
+
+/* Картинка внутри карточки не должна упираться в края — за это отвечает сам
+   компонент. Здесь снимаем прежний «bleed»: WordImage растягивался в край,
+   из-за чего слово прилипало к фото, а под ним оставалась серая полоса. */
+body.novice-mode .exercise-card .word-image--bleed,
+body.novice-mode .exercise-card [class*="bleed"] {
+  border-radius: 20px !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+/* В светлой теме карточка не должна быть «белым листом» на бежевом фоне:
+   подложку картинки делаем на тон мягче, границы — тоньше. */
+:root:not([data-theme="dark"]) body.novice-mode .exercise-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 10px 30px -26px rgba(60, 50, 20, .5);
+}

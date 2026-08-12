@@ -18,6 +18,8 @@ export default function MultipleChoiceNovice({
   const { t, lang } = useI18nStore()
   const [selected, setSelected] = useState(null)
   const answeredRef = useRef(false)
+  // После ответа подкручиваем к фидбеку: иначе кнопка «Дальше» остаётся за экраном
+  const resultRef = useRef(null)
 
   // Варианты берём на локали ученика, порядок перемешиваем один раз
   const { options, correctIdx } = useMemo(() => {
@@ -40,6 +42,7 @@ export default function MultipleChoiceNovice({
     if (selected !== null) return
     setSelected(idx)
     if (idx === correctIdx) playCorrect(); else playWrong()
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 120)
   }
 
   const next = () => {
@@ -53,13 +56,21 @@ export default function MultipleChoiceNovice({
   return (
     <div style={{ width: '100%', paddingBottom: 16 }}>
       {/* Слово с картинкой — крупным блоком, как в макете */}
-      <div className="exercise-card" style={{ borderRadius: 26, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 16 }}>
-        {imageUrl && <WordImage imageUrl={imageUrl} wordDe={word} bleed />}
-        <div style={{ padding: '16px 20px 18px' }}>
-          <div className="exercise-word-de" style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em' }} dir="ltr">{word}</div>
+      <div className="exercise-card" style={{ borderRadius: 26, background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 16, padding: 20 }}>
+        {/* Картинка — внутри карточки, со своими полями и скруглением (макет 2b):
+            в край она упиралась и «приклеивала» к себе слово. Подложка заполняет
+            свободное место, если картинка не квадратная. */}
+        {imageUrl && (
+          <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
+            display: 'grid', placeItems: 'center', marginBottom: 18, aspectRatio: '4 / 3' }}>
+            <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+          </div>
+        )}
+        <div style={{ textAlign: 'center' }}>
+          <div className="exercise-word-de" style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.02em' }} dir="ltr">{word}</div>
           <button onClick={() => speak(word)}
-            style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
-              borderRadius: 15, border: 'none', background: '#9A5CD8', color: '#fff', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ margin: '14px auto 0', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px',
+              borderRadius: 15, border: 'none', background: '#9A5CD8', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             🔊 {t.exercise.listen || 'Слушать'}
             {/* Эквалайзер из макета: полоски разной высоты рядом с кнопкой звука */}
             <span style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 18 }}>
@@ -110,6 +121,8 @@ export default function MultipleChoiceNovice({
           </span>
         </div>
       )}
+
+      <div ref={resultRef} />
 
       {selected !== null && (
         <button onClick={next}

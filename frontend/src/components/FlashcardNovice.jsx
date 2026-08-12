@@ -66,18 +66,22 @@ export default function FlashcardNovice({
       <div className="exercise-card" onClick={!revealed ? () => setRevealed(true) : undefined}
         style={{ borderRadius: 28, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)',
           marginBottom: 14, cursor: revealed ? 'default' : 'pointer', userSelect: 'none' }}>
-        <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
-          onReactionEnd={() => onAnswer(gradeRef.current)} />
+        {/* Реакция аватара — поверх карточки, картинку рисуем сами: в макете она
+            лежит ВНУТРИ карточки со своими полями, а не в край. */}
+        <div style={{ padding: 20, paddingBottom: 0 }}>
+          <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
+            display: 'grid', placeItems: 'center', aspectRatio: '4 / 3' }}>
+            <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
+              onReactionEnd={() => onAnswer(gradeRef.current)} />
+          </div>
+        </div>
 
-        {/* Картинку рисует AvatarReaction (WordImage bleed) — на всю ширину блока.
-            Своего <img> здесь быть не должно: получался дубль одной и той же картинки. */}
-
-        <div className="exercise-card-content" style={{ padding: '18px 22px 22px' }}>
+        <div className="exercise-card-content" style={{ padding: '18px 22px 22px', textAlign: 'center' }}>
           <div className="exercise-word-de" style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.02em' }} dir="ltr">
             <TapText>{payload.question}</TapText>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
             {gender && (
               <span style={{ padding: '6px 12px', borderRadius: 999, background: 'var(--accent-soft, rgba(154,92,216,0.18))', color: 'var(--accent)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {gender.article} · {gender.mark}
