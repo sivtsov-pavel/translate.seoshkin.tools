@@ -59,7 +59,9 @@ export default function Path() {
 
   const go = (n) => {
     if (n?.__url) return navigate(n.__url)   // строка внутри плашки станции
-    if (n.kind === 'lesson') return navigate(`/exercise-session?lesson_id=${n.lesson_id}`)
+    // «Начать» — короткая случайная сессия по двум главным типам (узнавание и карточки),
+    // как облегчённый зачёт. Полный список шагов — по кнопке «Выбор упражнения».
+    if (n.kind === 'lesson') return navigate(`/exercise-session?lesson_id=${n.lesson_id}&types=multiple_choice,flashcard&shuffle=1`)
     if (n.type === 'exam')    return navigate(`/exercise-session?lesson_id=${n.lesson_id}&exam=1`)
     if (n.type === 'wordset') return navigate(`/exercise-session?lesson_id=${n.lesson_id}`)
     if (n.type === 'phraseset') return navigate(`/phrases/${n.topic_id}`)

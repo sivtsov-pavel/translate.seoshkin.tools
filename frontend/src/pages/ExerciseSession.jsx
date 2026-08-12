@@ -9,6 +9,7 @@ import { useUiModeStore } from '../store/uiMode.js'
 import { getLessonTitle } from '../utils/translation.js'
 import Flashcard from '../components/Flashcard.jsx'
 import FlashcardNovice from '../components/FlashcardNovice.jsx'
+import MultipleChoiceNovice from '../components/MultipleChoiceNovice.jsx'
 import FillBlank from '../components/FillBlank.jsx'
 import MultipleChoice from '../components/MultipleChoice.jsx'
 import SentenceWrite from '../components/SentenceWrite.jsx'
@@ -106,6 +107,10 @@ export default function ExerciseSession() {
     const qs = new URLSearchParams()
     if (type)      qs.set('type', type)
     if (lessonId)  qs.set('lesson_id', lessonId)
+    // Случайная сессия по нескольким типам — «Начать» на карте
+    const typesParam = searchParams.get('types')
+    if (typesParam) qs.set('types', typesParam)
+    if (searchParams.get('shuffle') === '1') qs.set('shuffle', '1')
     if (exam)      qs.set('exam', '1')
     const url = `/exercises/today${qs.toString() ? '?' + qs : ''}`
     const loadOffline = () => getOfflineExercises({ lessonId, type })
@@ -536,7 +541,9 @@ export default function ExerciseSession() {
           ? <FlashcardNovice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} exampleSentence={ex.example_sentence} exampleSentenceRu={ex.example_sentence_ru} />
           : <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} />)}
         {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} payloadTranslations={ex.payload_translations} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
-        {ex.type === 'multiple_choice' && <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} showOriginal={showOriginal} />}
+        {ex.type === 'multiple_choice' && (novice
+          ? <MultipleChoiceNovice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} />
+          : <MultipleChoice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} wordDe={ex.word_de} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} payloadTranslations={ex.payload_translations} exerciseId={ex.id} showOriginal={showOriginal} />)}
         {ex.type === 'sentence_write'  && <SentenceWrite  key={ex.id} exercise={ex}        onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} payloadTranslations={ex.payload_translations} showOriginal={showOriginal} />}
         {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} />}
         {ex.type === 'dictation'       && <Dictation       key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}

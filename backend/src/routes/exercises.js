@@ -99,6 +99,11 @@ export async function exercisesRoutes(fastify) {
     const { id: userId, role } = request.user
     const today = new Date().toISOString().slice(0, 10)
     const { type, lesson_id, exam } = request.query
+    // «Начать» на карте — случайная сессия по нескольким типам сразу (по умолчанию
+    // два главных: узнавание и карточки). Один type оставляем как было: по нему
+    // ходит практика из дашборда.
+    const types = String(request.query.types || '').split(',').map(x => x.trim()).filter(Boolean)
+    const shuffle = request.query.shuffle === '1'
     const dailyLimit = await getUserDailyLimit(userId)
     // Зачёт по уроку (полная сессия без type): только слова учебника (source='textbook'/NULL) —
     // тетрадные слова (source='extra') раздувают зачёт, сдать его нереально (см. IDEAS.md).
@@ -149,6 +154,7 @@ export async function exercisesRoutes(fastify) {
       if (lesson_id) params.push(parseInt(lesson_id))
       const p = params.length
       params.push(target); const tp = params.length
+      params.push(types.length ? types : null); const typesP = params.length
       // Поток уроков (без type): текущий (первый НЕпройденный) урок первым + не подаём нетронутые
       // упражнения уже пройденных уроков (как у ученика). Пройденные считаем по прогрессу owner.
       // Исключение — уроки, в которых упражнения ПОЯВИЛИСЬ после последней попытки: иначе
@@ -175,8 +181,9 @@ export async function exercisesRoutes(fastify) {
           ${passedClause}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
+          AND ($${typesP}::text[] IS NULL OR e.type = ANY($${typesP}::text[]))
           ${examClause}
-        ORDER BY ${ownerOrder} LIMIT ${limit}`
+        ORDER BY ${shuffle ? 'RANDOM()' : ownerOrder} LIMIT ${limit}`
     } else {
       // Две дорожки прогресса:
       //  • «Обучение по урокам» (обычный поток без type) — строгий дрип: только разблокированные уроки.
@@ -189,6 +196,7 @@ export async function exercisesRoutes(fastify) {
       const p = params.length
       params.push(target); const tp = params.length
       params.push(request.user.school_id ?? null); const sp = params.length // школа ученика (null-safe)
+      params.push(types.length ? types : null); const typesP = params.length
       let gateClause = '', passedClause = '', studentOrder = orderBy
       if (dripGate) {
         const { playable, passed } = await playableLessonIds(userId, request.user.school_id ?? null, target)
@@ -214,8 +222,9 @@ export async function exercisesRoutes(fastify) {
           ${lesson_id ? 'AND $2::date IS NOT NULL' : 'AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2'}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
+          AND ($${typesP}::text[] IS NULL OR e.type = ANY($${typesP}::text[]))
           ${examClause}
-        ORDER BY ${studentOrder} LIMIT ${limit}`
+        ORDER BY ${shuffle ? 'RANDOM()' : studentOrder} LIMIT ${limit}`
     }
 
     const { rows } = await db.query(query, params)
