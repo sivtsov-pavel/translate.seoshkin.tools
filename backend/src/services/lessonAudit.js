@@ -91,6 +91,12 @@ export function checkExercise(ex) {
     if (missing.length) bad('blocker', `нет форм: ${missing.join(', ')}`)
   }
 
+  // Падежи: без любой из четырёх форм упражнение бессмысленно
+  if (ex.type === 'declension') {
+    const missing = ['nom', 'akk', 'dat', 'gen'].filter(k => !String(p.forms?.[k] || '').trim())
+    if (missing.length) bad('blocker', `нет форм: ${missing.join(', ')}`)
+  }
+
   if ((ex.type === 'dictation' || ex.type === 'speech') && !String(p.word_de || '').trim()) {
     bad('blocker', 'пустое слово')
   }

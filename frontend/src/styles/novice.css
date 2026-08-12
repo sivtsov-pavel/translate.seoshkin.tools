@@ -70,3 +70,34 @@ body.novice-mode .main-content { padding-bottom: 104px; }
 @media (min-width: 1200px) {
   body.novice-mode .main-content { padding-left: 230px; }
 }
+
+/* ── Упражнения в режиме новичка (макет 2b) ───────────────────────────────────
+   Логику компонентов не трогаем — только вид. Стили компонентов заданы инлайном,
+   поэтому здесь нужен !important: иначе inline перебьёт правило. Это осознанный
+   компромисс ради того, чтобы не переписывать девять рабочих компонентов ради
+   оформления. */
+
+body.novice-mode .exercise-card {
+  border: 1px solid var(--line) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 10px 30px -24px rgba(0, 0, 0, 0.55);
+}
+
+/* Слово крупнее — в макете это главный элемент карточки (34px) */
+body.novice-mode .exercise-word-de { font-size: 34px !important; letter-spacing: -0.02em; }
+
+body.novice-mode .exercise-question-block {
+  border-radius: 20px !important;
+  padding: 18px 20px !important;
+}
+
+/* Варианты ответа: крупная зона нажатия и мягкие углы, как в макете */
+body.novice-mode .exercise-card > button {
+  border-radius: 20px !important;
+  padding: 18px 18px !important;
+  font-size: 17px !important;
+  min-height: 60px;
+}
+
+/* Кнопки действий под упражнением — ровный ряд с крупной зоной нажатия */
+body.novice-mode .exercise-card-content button { min-height: 44px; }

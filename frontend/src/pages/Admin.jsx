@@ -860,7 +860,7 @@ function HardSpots() {
   if (err) return <div style={{ ...card, color: 'var(--red)' }}>{err}</div>
   if (!data) return <div style={card}>Загрузка…</div>
   const { byType, spots } = data
-  const TYPE = { flashcard: 'Флеш-карта', fill_blank: 'Заполни пропуск', multiple_choice: 'Выбор ответа', sentence_write: 'Напиши предложение', letter_fill: 'Добавь букву', dictation: 'Диктант', speech: 'Произношение', conjugation: 'Склонение' }
+  const TYPE = { flashcard: 'Флеш-карта', fill_blank: 'Заполни пропуск', multiple_choice: 'Выбор ответа', sentence_write: 'Напиши предложение', letter_fill: 'Добавь букву', dictation: 'Диктант', speech: 'Произношение', conjugation: 'Склонение', declension: 'Падежи' }
   const color = (p) => p >= 70 ? 'var(--red)' : p >= 50 ? '#B07D1B' : 'var(--ink)'
 
   return (

@@ -9,7 +9,7 @@ import { useI18nStore } from '../store/i18n.js'
 const typeLabelsFor = (t) => ({
   flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice,
   sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill,
-  dictation: t.exercise.dictation, speech: t.exercise.speech, conjugation: t.exercise.conjugation,
+  dictation: t.exercise.dictation, speech: t.exercise.speech, conjugation: t.exercise.conjugation, declension: t.exercise.declension || 'Падежи',
 })
 const card = { background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 14, padding: 16 }
 const th = { padding: '8px 10px', textAlign: 'left', color: 'var(--ink-soft)', fontWeight: 600, fontSize: 12 }
