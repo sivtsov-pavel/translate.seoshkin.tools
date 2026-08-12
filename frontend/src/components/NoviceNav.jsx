@@ -2,43 +2,63 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Backpack, BookOpen, Languages, MoreHorizontal, Library, Bot,
-  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X,
+  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X, Compass,
 } from 'lucide-react'
 import { useI18nStore } from '../store/i18n.js'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
+import UiModeToggle from './UiModeToggle.jsx'
 
 // Навигация режима «новичок» (макет 2a, docs/design_novichok).
 //
-// Принцип макета: одна навигация на всех платформах — пять пунктов, ничего лишнего.
-// Телефон получает таб-бар снизу, планшет и ПК — ту же пятёрку слева. Всё остальное
-// (грамматика, разговорник, школа, отчёты, игры) живёт за кнопкой «Ещё»: ученику эти
-// разделы нужны редко, а из-за них меню и выглядело «как для учителя».
+// В макете каждый пункт — крупная геометрическая фигура своего цвета: круг, квадрат,
+// ромб. Фигура узнаётся быстрее подписи, поэтому внизу их всего четыре (последняя —
+// троеточие «Ещё»), а остальные разделы живут за ним: те же фигуры, только строкой.
 //
-// Правки Павла 12.08: «Читалка» переименована в «Переводчик» (никто не понимал, что это),
-// «Наборы» подняты в основную пятёрку как важный учебный раздел, «Книги» видны в боковой
-// панели, где места больше.
+// Иконку внутрь фигуры кладём нашу, из lucide: геометрия из макета плюс привычные
+// значки приложения.
+//
+// Правки Павла 12.08: «Читалка» → «Переводчик» (слово никто не понимал), «Наборы»
+// в основные, «Книги» видны в боковой панели, где места больше.
+const SHAPE = { circle: 'circle', square: 'square', diamond: 'diamond' }
+
 const MAIN = (t) => [
-  { to: '/',           C: Home,      label: t.path.title },
-  { to: '/sets',       C: Backpack,  label: t.sets.title.replace(/^[^\p{L}]+/u, '') },
-  { to: '/vocabulary', C: BookOpen,  label: t.nav.vocabulary },
-  { to: '/reader',     C: Languages, label: t.nav.reader },
+  { to: '/',           C: Home,     shape: SHAPE.circle,  tone: 'a', label: t.path.title },
+  { to: '/sets',       C: Backpack, shape: SHAPE.square,  tone: 'b', label: t.sets.title.replace(/^[^\p{L}]+/u, '') },
+  { to: '/vocabulary', C: BookOpen, shape: SHAPE.diamond, tone: 'c', label: t.nav.vocabulary },
 ]
 
-// Боковая панель шире таб-бара, поэтому книги и тренер видны сразу, без «Ещё»
+// Боковая панель шире таб-бара — там сразу видны и переводчик, и книги, и тренер
 const SIDE_EXTRA = (t) => [
-  { to: '/books',      C: Library, label: t.nav.books || 'Книги' },
-  { to: '/ai-trainer', C: Bot,     label: t.nav.aiTrainer || 'Тренер' },
+  { to: '/reader',     C: Languages, shape: SHAPE.circle, tone: 'd', label: t.nav.reader },
+  { to: '/books',      C: Library,   shape: SHAPE.square, tone: 'b', label: t.nav.books || 'Книги' },
+  { to: '/ai-trainer', C: Bot,       shape: SHAPE.circle, tone: 'c', label: t.nav.aiTrainer || 'Тренер' },
 ]
 
 const MORE = (t) => [
-  { to: '/lessons',    C: BookText,       label: t.nav.lessons },
-  { to: '/books',      C: Library,        label: t.nav.books || 'Книги' },
-  { to: '/ai-trainer', C: Bot,            label: t.nav.aiTrainer || 'Тренер' },
-  { to: '/phrasebook', C: MessageCircle,  label: t.nav.phrasebook || 'Разговорник' },
-  { to: '/grammar',    C: GraduationCap,  label: t.nav.grammar || 'Грамматика' },
-  { to: '/chat',       C: MessagesSquare, label: t.nav.chat || 'Чат' },
-  { to: '/settings',   C: Settings,       label: t.nav.tabSettings },
+  { to: '/reader',     C: Languages,      shape: SHAPE.circle,  tone: 'd', label: t.nav.reader },
+  { to: '/books',      C: Library,        shape: SHAPE.square,  tone: 'b', label: t.nav.books || 'Книги' },
+  { to: '/ai-trainer', C: Bot,            shape: SHAPE.circle,  tone: 'c', label: t.nav.aiTrainer || 'Тренер' },
+  { to: '/lessons',    C: BookText,       shape: SHAPE.square,  tone: 'a', label: t.nav.lessons },
+  { to: '/phrasebook', C: MessageCircle,  shape: SHAPE.diamond, tone: 'c', label: t.nav.phrasebook || 'Разговорник' },
+  { to: '/grammar',    C: GraduationCap,  shape: SHAPE.square,  tone: 'd', label: t.nav.grammar || 'Грамматика' },
+  { to: '/chat',       C: MessagesSquare, shape: SHAPE.circle,  tone: 'b', label: t.nav.chat || 'Чат' },
+  { to: '/settings',   C: Settings,       shape: SHAPE.square,  tone: 'c', label: t.nav.tabSettings },
 ]
+
+// Фигура с иконкой внутри. Ромб поворачиваем, иконку внутри — обратно,
+// иначе она ляжет боком.
+function Shape({ C, shape, tone, size = 'md', active = false }) {
+  const px = size === 'lg' ? 46 : size === 'sm' ? 34 : 40
+  const icon = size === 'lg' ? 22 : size === 'sm' ? 17 : 19
+  return (
+    <span className={`nv-shape nv-shape--${shape} nv-tone-${tone} ${active ? 'is-active' : ''}`}
+      style={{ width: px, height: px }}>
+      <span className={shape === SHAPE.diamond ? 'nv-shape-inner nv-shape-inner--diamond' : 'nv-shape-inner'}>
+        <C size={icon} strokeWidth={2} />
+      </span>
+    </span>
+  )
+}
 
 export default function NoviceNav() {
   const { t } = useI18nStore()
@@ -51,37 +71,52 @@ export default function NoviceNav() {
 
   return (
     <>
-      {/* Телефон: таб-бар из пяти кнопок */}
-      <nav className="novice-tabbar">
+      {/* Телефон: четыре крупные кнопки, последняя — троеточие «Ещё» */}
+      <nav className="novice-tabbar novice-tabbar--4">
         {main.map(item => (
           <Link key={item.to} to={item.to} className={`novice-tab ${isActive(item.to) ? 'is-active' : ''}`}>
-            <span className="novice-tab-ico"><item.C size={20} strokeWidth={1.9} /></span>
+            <Shape C={item.C} shape={item.shape} tone={item.tone} active={isActive(item.to)} />
             <span>{item.label}</span>
           </Link>
         ))}
         <button className={`novice-tab ${moreOpen ? 'is-active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
-          <span className="novice-tab-ico"><MoreHorizontal size={20} strokeWidth={1.9} /></span>
+          <Shape C={MoreHorizontal} shape={SHAPE.circle} tone="e" active={moreOpen} />
           <span>{t.nav.more}</span>
         </button>
       </nav>
 
-      {/* Планшет и ПК: та же пятёрка слева + книги и тренер, места хватает */}
+      {/* Планшет и ПК: те же фигуры слева */}
       <nav className="novice-rail">
         <div className="novice-rail-inner">
           {[...main, ...SIDE_EXTRA(t)].map(item => (
             <Link key={item.to} to={item.to} className={`novice-rail-item ${isActive(item.to) ? 'is-active' : ''}`}>
-              <span className="novice-rail-ico"><item.C size={21} strokeWidth={1.9} /></span>
+              <Shape C={item.C} shape={item.shape} tone={item.tone} active={isActive(item.to)} />
               <span className="novice-rail-label">{item.label}</span>
             </Link>
           ))}
           <button className="novice-rail-item" onClick={() => setMoreOpen(true)}>
-            <span className="novice-rail-ico"><MoreHorizontal size={21} strokeWidth={1.9} /></span>
+            <Shape C={MoreHorizontal} shape={SHAPE.circle} tone="e" />
             <span className="novice-rail-label">{t.nav.more}</span>
           </button>
+
+          {/* Низ панели: настройки, тур и тумблер режима. На компьютере старая шапка
+              не показывается, и без этого блока переключиться обратно в «эксперта»
+              было нечем. */}
+          <div className="novice-rail-bottom">
+            <Link to="/settings" className={`novice-rail-item ${isActive('/settings') ? 'is-active' : ''}`}>
+              <Shape C={Settings} shape={SHAPE.square} tone="e" active={isActive('/settings')} />
+              <span className="novice-rail-label">{t.nav.tabSettings}</span>
+            </Link>
+            <button className="novice-rail-item" onClick={() => window.dispatchEvent(new CustomEvent('dl-start-tour'))}>
+              <Shape C={Compass} shape={SHAPE.circle} tone="d" />
+              <span className="novice-rail-label">{t.nav.tourApp || 'Тур'}</span>
+            </button>
+            <div className="novice-rail-mode"><UiModeToggle compact /></div>
+          </div>
         </div>
       </nav>
 
-      {/* «Ещё» — шторка снизу: разделы, нужные редко */}
+      {/* «Ещё» — крупные строки с теми же фигурами */}
       {moreOpen && (
         <>
           <div className="novice-more-overlay" onClick={() => setMoreOpen(false)} />
@@ -99,10 +134,11 @@ export default function NoviceNav() {
               <AutoSpeakToggle pill />
               <SpeakTranslationToggle />
             </div>
+
             {MORE(t).map(item => (
               <button key={item.to} className="novice-more-row"
                 onClick={() => { setMoreOpen(false); navigate(item.to) }}>
-                <item.C size={19} strokeWidth={1.9} />
+                <Shape C={item.C} shape={item.shape} tone={item.tone} size="lg" />
                 <span>{item.label}</span>
               </button>
             ))}

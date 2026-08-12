@@ -23,10 +23,13 @@ export default function Path() {
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const [data, setData] = useState(null)
+  // «Показать все уроки» — по умолчанию видно окно вокруг текущего (принцип макета:
+  // один следующий шаг), но список целиком тоже нужен: Павел им пользовался.
+  const [showAll, setShowAll] = useState(() => localStorage.getItem('path_show_all') === '1')
 
   useEffect(() => {
-    api.get('/path').then(setData).catch(() => setData({ error: true }))
-  }, [])
+    api.get(`/path${showAll ? '?all=1' : ''}`).then(setData).catch(() => setData({ error: true }))
+  }, [showAll])
 
   if (!data) return <div style={{ padding: 24, color: 'var(--ink-soft)' }}>{t.common.loading}</div>
   if (data.error || !data.nodes?.length) {
@@ -94,7 +97,16 @@ export default function Path() {
                       <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.12em' }}>{t.path.lessonShort}</span>
                     </span>
                   </button>
-                  <div style={{ fontSize: 12.5, fontWeight: 600, marginTop: 8, maxWidth: 150 }}>{title}</div>
+                  <div style={{
+                    marginTop: 10, padding: '10px 14px', borderRadius: 14, maxWidth: 240,
+                    background: 'var(--surface)', border: '1px solid var(--line)',
+                    fontSize: 13.5, fontWeight: 700, lineHeight: 1.25,
+                  }}>
+                    {title}
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-soft)', marginTop: 2 }}>
+                      {n.ex_done}/{n.ex_total}
+                    </div>
+                  </div>
                   <button onClick={() => navigate(`/lesson/${n.lesson_id}`)}
                     style={{
                       marginTop: 10, padding: '13px 28px', borderRadius: 14, border: 'none', cursor: 'pointer',
@@ -135,6 +147,15 @@ export default function Path() {
           <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, color: C.chestBorder }}>{t.path.chest}</div>
         </div>
       </div>
+
+      <button onClick={() => { const v = !showAll; setShowAll(v); localStorage.setItem('path_show_all', v ? '1' : '0') }}
+        style={{
+          width: '100%', marginTop: 24, padding: '11px 16px', borderRadius: 14,
+          border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-soft)',
+          fontSize: 14, fontWeight: 700, cursor: 'pointer',
+        }}>
+        {showAll ? t.path.showSection : t.path.showAll}
+      </button>
 
       {/* Фразы текущего урока — второй шаг после упражнений */}
       {current && (

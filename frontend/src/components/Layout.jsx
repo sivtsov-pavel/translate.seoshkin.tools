@@ -22,6 +22,7 @@ import ProcessingBadge from './ProcessingBadge.jsx'
 import { api } from '../api/client.js'
 import { useUiModeStore } from '../store/uiMode.js'
 import NoviceNav from './NoviceNav.jsx'
+import UiModeToggle from './UiModeToggle.jsx'
 import LangSwitcher from './LangSwitcher.jsx'
 import TargetSwitcher from './TargetSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
@@ -52,6 +53,14 @@ export default function Layout({ children }) {
   // и боковую панель.
   const { resolve: resolveUiMode } = useUiModeStore()
   const novice = resolveUiMode(user) === 'novice'
+  // Кнопка тура живёт и в боковой панели новичка — она шлёт событие, а запускает
+  // тур по-прежнему Layout, у которого есть его состояние.
+  useEffect(() => {
+    const h = () => startTour()
+    window.addEventListener('dl-start-tour', h)
+    return () => window.removeEventListener('dl-start-tour', h)
+  }, [])
+
   useEffect(() => {
     document.body.classList.toggle('novice-mode', novice)
     return () => document.body.classList.remove('novice-mode')
@@ -579,28 +588,3 @@ const pill = { display: 'flex', alignItems: 'center', gap: 6, background: 'var(-
 const popRow = { display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 4px', fontSize: 13, color: 'var(--ink)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8 }
 
 
-// Тумблер между двумя дизайнами: «Новичок» — экран «Путь» (одна дорога, один следующий
-// шаг), «Эксперт» — привычный полный интерфейс. По умолчанию учителю эксперт, ученику
-// новичок. Переключает ТОЛЬКО отображение: права и данные те же.
-function UiModeToggle() {
-  const { t } = useI18nStore()
-  const { user } = useAuthStore()
-  const { resolve, toggle, load } = useUiModeStore()
-  const mode = resolve(user)
-
-  useEffect(() => { load(user) }, [])
-
-  return (
-    <button
-      onClick={async () => { await toggle(user); window.location.assign('/') }}
-      title={mode === 'novice' ? t.path.modeNovice : t.path.modeExpert}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999,
-        border: '1px solid var(--line)', background: 'var(--surface)', cursor: 'pointer',
-        fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', whiteSpace: 'nowrap',
-      }}>
-      <span>{mode === 'novice' ? '🌱' : '🎓'}</span>
-      <span>{mode === 'novice' ? t.path.modeNovice : t.path.modeExpert}</span>
-    </button>
-  )
-}

@@ -16,7 +16,7 @@
   line-height: 1.15; text-align: center;
 }
 .novice-tab.is-active { color: var(--accent); }
-.novice-tab-ico { display: flex; align-items: center; justify-content: center; height: 22px; }
+
 
 /* ── Планшет и ПК: боковая панель ─────────────────────────────────────────── */
 .novice-rail { display: none; }
@@ -35,7 +35,7 @@
     min-height: 44px; text-align: center;
   }
   .novice-rail-item.is-active { background: var(--surface-2); color: var(--accent); }
-  .novice-rail-ico { display: flex; align-items: center; justify-content: center; height: 24px; }
+
 }
 
 /* ПК: панель шире, подписи в строку — как в макете (сайдбар 230px) */
@@ -43,7 +43,7 @@
   .novice-rail { width: 230px; }
   .novice-rail-inner { padding: 74px 14px 16px; }
   .novice-rail-item { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 13px 16px; font-size: 14px; }
-  .novice-rail-ico { height: 20px; }
+
 }
 
 /* ── «Ещё» — шторка снизу ─────────────────────────────────────────────────── */
@@ -116,3 +116,42 @@ body.novice-mode .exercise-card-content button { min-height: 44px; }
   display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   padding: 4px 4px 14px; border-bottom: 1px solid var(--line); margin-bottom: 6px;
 }
+
+
+/* ── Фигуры из макета: круг, квадрат, ромб ────────────────────────────────────
+   В макете пункты различаются не только подписью, но и формой с цветом — так
+   нужное находится быстрее, чем чтением слов. Внутрь кладём нашу иконку. */
+.novice-tabbar--4 { grid-template-columns: repeat(4, 1fr); }
+
+.nv-shape {
+  display: flex; align-items: center; justify-content: center; flex: none;
+  transition: transform .15s, box-shadow .15s, background .15s;
+}
+.nv-shape--circle  { border-radius: 50%; }
+.nv-shape--square  { border-radius: 13px; }
+.nv-shape--diamond { border-radius: 12px; transform: rotate(45deg); }
+.nv-shape--diamond .nv-shape-inner--diamond { transform: rotate(-45deg); }
+.nv-shape-inner { display: flex; align-items: center; justify-content: center; }
+
+/* Цвета из токенов хендоффа: фиолетовый, жёлтый, зелёный, бирюзовый, серый */
+.nv-tone-a { background: rgba(154, 92, 216, 0.16); color: #9A5CD8; }
+.nv-tone-b { background: rgba(232, 176, 36, 0.20); color: #B07D1B; }
+.nv-tone-c { background: rgba(63, 191, 143, 0.16); color: #2E7D63; }
+.nv-tone-d { background: rgba(63, 169, 196, 0.16); color: #2F8296; }
+.nv-tone-e { background: var(--surface-2); color: var(--ink-soft); }
+
+/* Активный пункт: фигура наливается цветом — видно с одного взгляда */
+.nv-tone-a.is-active { background: #9A5CD8; color: #fff; }
+.nv-tone-b.is-active { background: #E8B024; color: #3A2A05; }
+.nv-tone-c.is-active { background: #2E7D63; color: #fff; }
+.nv-tone-d.is-active { background: #2F8296; color: #fff; }
+.nv-tone-e.is-active { background: var(--ink-soft); color: var(--surface); }
+
+.novice-tab { gap: 5px; padding-top: 2px; }
+.novice-more-row { gap: 14px; font-size: 16px; min-height: 62px; }
+
+/* Низ боковой панели: настройки, тур, тумблер режима.
+   На компьютере старая шапка скрыта, и без этого блока в «эксперта» не вернуться. */
+.novice-rail-inner { height: 100%; }
+.novice-rail-bottom { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.novice-rail-mode { padding: 6px 4px 2px; }

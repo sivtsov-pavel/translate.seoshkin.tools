@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
-import { getLessonTitle } from '../utils/translation.js'
+import { getLessonTitle, getTranslation } from '../utils/translation.js'
+import {
+  Layers, CheckCircle2, Type, Pencil, SquarePen, Puzzle, Mic, MessageCircle,
+  Printer, ChevronDown, ChevronUp, GraduationCap,
+} from 'lucide-react'
+import { SpeakButton } from '../hooks/useSpeech.jsx'
 
 // Обзор урока в режиме новичка — макет 2b.
 //
@@ -15,9 +20,11 @@ import { getLessonTitle } from '../utils/translation.js'
 const STEP_ORDER = ['flashcard', 'multiple_choice', 'letter_fill', 'fill_blank',
                     'sentence_write', 'conjugation', 'declension', 'dictation', 'speech']
 
+// Иконки проекта (lucide), как во всём интерфейсе — эмодзи здесь выбивались
 const STEP_ICON = {
-  flashcard: '🃏', multiple_choice: '✅', letter_fill: '🔤', fill_blank: '✏️',
-  sentence_write: '📝', conjugation: '🧩', declension: '📐', dictation: '🎧', speech: '🎤',
+  flashcard: Layers, multiple_choice: CheckCircle2, letter_fill: Type, fill_blank: Pencil,
+  sentence_write: SquarePen, conjugation: Puzzle, declension: Puzzle, dictation: Mic,
+  speech: Mic,
 }
 
 export default function LessonOverview() {
@@ -25,10 +32,18 @@ export default function LessonOverview() {
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const [data, setData] = useState(null)
+  // Слова, зачёт и печать были в старой карточке урока — в новом обзоре их не хватало
+  const [words, setWords] = useState(null)
+  const [wordsOpen, setWordsOpen] = useState(false)
 
   useEffect(() => {
     api.get(`/path/lesson/${id}`).then(setData).catch(() => setData({ error: true }))
   }, [id])
+
+  useEffect(() => {
+    if (!wordsOpen || words) return
+    api.get(`/words?lesson_id=${id}`).then(setWords).catch(() => setWords([]))
+  }, [wordsOpen])
 
   if (!data) return <div style={{ padding: 24, color: 'var(--ink-soft)' }}>{t.common.loading}</div>
   if (data.error) return <div style={{ padding: 24, color: 'var(--ink-soft)' }}>{t.phrases.empty}</div>
@@ -90,7 +105,9 @@ export default function LessonOverview() {
                 fontWeight: 800, fontSize: 17,
               }}>{isDone ? '✓' : i + 1}</span>
               <span style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{STEP_ICON[s.type]} {labels[s.type] || s.type}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {STEP_ICON[s.type] ? <StepIcon C={STEP_ICON[s.type]} /> : null}{labels[s.type] || s.type}
+                </div>
                 <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 2 }}>{s.done} / {s.total}</div>
               </span>
             </button>
@@ -110,12 +127,50 @@ export default function LessonOverview() {
               color: phrases.done >= phrases.total ? '#E8F7F0' : 'var(--ink-soft)', fontWeight: 800, fontSize: 17,
             }}>{phrases.done >= phrases.total ? '✓' : ordered.length + 1}</span>
             <span style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>🗣 {t.phrases.lessonSet}</div>
+              <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MessageCircle size={17} strokeWidth={1.9} /> {t.phrases.lessonSet}
+              </div>
               <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 2 }}>{phrases.done} / {phrases.total}</div>
             </span>
           </button>
         )}
       </div>
+
+      {/* Зачёт и печать — были в старой карточке урока, без них обзор неполон */}
+      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+        <button onClick={() => navigate(`/exercise-session?lesson_id=${id}&exam=1`)}
+          style={{ flex: 1, minHeight: 48, borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <GraduationCap size={17} strokeWidth={1.9} /> {t.dashboard.exam || 'Зачёт по уроку'}
+        </button>
+        <button onClick={() => window.open(`/print/${id}`, '_blank')}
+          title={t.dashboard.printTitle || 'Распечатать урок'}
+          style={{ width: 48, minHeight: 48, borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-soft)', cursor: 'pointer' }}>
+          <Printer size={17} strokeWidth={1.9} />
+        </button>
+      </div>
+
+      {/* Слова урока — раскрывающимся списком, как было раньше */}
+      <button onClick={() => setWordsOpen(v => !v)}
+        style={{ width: '100%', marginTop: 10, minHeight: 46, borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        {wordsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        {t.dashboard.openWords || 'Все слова урока'} · {lesson.words_count}
+      </button>
+
+      {wordsOpen && (
+        <div style={{ marginTop: 10, borderRadius: 16, border: '1px solid var(--line)', background: 'var(--surface)', padding: '10px 14px' }}>
+          {(!words || !words.length) && <div style={{ color: 'var(--ink-soft)', fontSize: 14 }}>—</div>}
+          {words?.map(w => (
+            <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--line)', fontSize: 14.5 }}>
+              <span title={w.source === 'extra' ? (t.dashboard.sourceExtraFull || 'из тетради') : (t.dashboard.sourceBook || 'из учебника')} style={{ fontSize: 12, flexShrink: 0 }}>
+                {w.source === 'extra' ? '✏️' : '📖'}
+              </span>
+              <b dir="ltr">{w.word_de}</b>
+              <SpeakButton text={w.word_de} size={13} />
+              <span style={{ color: 'var(--ink-soft)' }}>— {getTranslation(w.translations, lang, w.translation_ru)}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Одна яркая кнопка — принцип макета «один следующий шаг» */}
       <button onClick={() => navigate(currentType ? `/exercise-session?lesson_id=${id}&type=${currentType}` : `/exercise-session?lesson_id=${id}`)}
@@ -127,4 +182,8 @@ export default function LessonOverview() {
       </button>
     </div>
   )
+}
+
+function StepIcon({ C }) {
+  return <C size={17} strokeWidth={1.9} />
 }

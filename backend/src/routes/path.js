@@ -76,7 +76,8 @@ export async function pathRoutes(fastify) {
     const currentIndex = Math.max(0, nodes.findIndex(n => n.state === 'current'))
     const sectionIndex = Math.floor(currentIndex / SECTION_SIZE)
     const from = sectionIndex * SECTION_SIZE
-    const section = nodes.slice(from, from + SECTION_SIZE)
+    // ?all=1 — показать все уроки одной дорогой, а не окно вокруг текущего
+    const section = request.query.all === '1' ? nodes : nodes.slice(from, from + SECTION_SIZE)
 
     // Метрики верхних плиток
     const { rows: streakRows } = await db.query(
