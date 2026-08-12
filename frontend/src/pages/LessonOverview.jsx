@@ -17,7 +17,9 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 //
 // Порядок шагов повторяет учебную логику: сначала знакомство со словами, потом
 // узнавание, потом воспроизведение, в конце — речь и фразы.
-const STEP_ORDER = ['flashcard', 'multiple_choice', 'letter_fill', 'fill_blank',
+// Порядок шагов: сначала «выбери ответ» — узнавание запускается легче, чем
+// вспоминание, и первый шаг не должен пугать. Флеш-карты следом.
+const STEP_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank',
                     'sentence_write', 'conjugation', 'declension', 'dictation', 'speech']
 
 // Иконки проекта (lucide), как во всём интерфейсе — эмодзи здесь выбивались

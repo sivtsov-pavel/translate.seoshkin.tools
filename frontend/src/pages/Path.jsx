@@ -84,81 +84,9 @@ export default function Path() {
         </div>
       </div>
 
-      {/* Дорога */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {items.map((n, i) => {
-          const isLesson = n.kind === 'lesson'
-          const isCurrent = isLesson && n.state === 'current'
-          const isDone = n.state === 'done'
-          const locked = n.state === 'locked'
-          // Змейка: узлы уходят влево-вправо от центра, активный — по центру
-          const shift = isCurrent ? 0 : [-52, 0, 52, 0][i % 4]
-          const color = isLesson ? C.current : C[n.type] || C.speech
-          const label = isLesson
-            ? getLessonTitle(n.title, n.title_translations, lang) || `${t.path.lesson} ${n.number ?? ''}`
-            : (n.type === 'wordset'
-                ? getLessonTitle(n.title, n.title_translations, lang) || short.wordset
-                : n.type === 'phraseset'
-                  ? `${n.emoji || ''} ${n.title}`.trim()
-                  : t.path[{ speech: 'cpSpeech', grammar: 'cpGrammar', exam: 'cpExam' }[n.type]])
-
-          return (
-            <div key={`${n.kind}-${n.lesson_id ?? i}-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-              {i > 0 && (
-                <div style={{ width: 4, height: 22, borderRadius: 2, margin: '5px 0',
-                  background: isDone ? C.doneBorder : 'var(--line)', transform: `translateX(${shift / 2}px)` }} />
-              )}
-
-              {isCurrent ? (
-                // Активный узел: крупный круг с кольцом прогресса и плашкой справа
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', justifyContent: 'center' }}>
-                  <button onClick={() => go(n)}
-                    style={{
-                      width: 104, height: 104, borderRadius: '50%', cursor: 'pointer', border: 'none', flex: 'none',
-                      background: `conic-gradient(${C.accent} 0 ${Math.round((n.progress || 0) * 100)}%, var(--surface-2) ${Math.round((n.progress || 0) * 100)}%)`,
-                      display: 'grid', placeItems: 'center', boxShadow: `0 0 0 8px ${C.accent}2E`,
-                    }}>
-                    <span style={{ width: 84, height: 84, borderRadius: '50%', background: C.current, color: '#fff', display: 'grid', placeItems: 'center' }}>
-                      <span style={{ fontSize: 28, fontWeight: 800 }}>{n.number ?? '•'}</span>
-                    </span>
-                  </button>
-
-                  <div style={{ flex: 1, minWidth: 0, padding: '13px 16px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)' }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 800, lineHeight: 1.25 }}>{label}</div>
-                    <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 3 }}>
-                      {n.ex_done}/{n.ex_total} · {t.path.lessonShort.toLowerCase()}
-                    </div>
-                    <button onClick={() => go(n)}
-                      style={{ marginTop: 10, width: '100%', padding: '10px 14px', borderRadius: 12, border: 'none',
-                        background: C.accent, color: C.accentInk, fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>
-                      {t.path.start}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                // Обычный узел: небольшой круг, подпись под ним
-                <div style={{ transform: `translateX(${shift}px)`, textAlign: 'center', maxWidth: 150 }}>
-                  <button onClick={() => !locked && go(n)} disabled={locked}
-                    style={{
-                      width: isLesson ? 60 : 54, height: isLesson ? 60 : 54, borderRadius: '50%',
-                      cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.55 : 1,
-                      background: isDone ? C.done : 'var(--surface)',
-                      border: `3px ${isDone ? 'solid' : isLesson ? 'solid' : 'dashed'} ${isDone ? C.doneBorder : isLesson ? 'var(--line)' : color}`,
-                      color: isDone ? C.doneInk : isLesson ? 'var(--ink)' : color,
-                      fontSize: isLesson ? 19 : 12, fontWeight: 800, display: 'grid', placeItems: 'center',
-                      lineHeight: 1.1, padding: 2,
-                    }}>
-                    {isDone ? '✓' : isLesson ? (n.number ?? '•') : short[n.type]}
-                  </button>
-                  <div style={{ fontSize: 11.5, fontWeight: 600, marginTop: 5, color: 'var(--ink-soft)', lineHeight: 1.2 }}>
-                    {label}
-                  </div>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      {/* Дорога: изогнутая нить, узлы смещены по змейке — как было в прежней карте.
+          Кривая Безье идёт от кружка к кружку и обтекает их, а не ломается углами. */}
+      <PathRoad items={items} short={short} lang={lang} t={t} go={go} />
 
       <button onClick={() => { const v = !showAll; setShowAll(v); localStorage.setItem('path_show_all', v ? '1' : '0') }}
         style={{ width: '100%', marginTop: 24, padding: '11px 16px', borderRadius: 14, border: '1px solid var(--line)',
@@ -186,6 +114,108 @@ function Tile({ icon, value, label }) {
       <div style={{ fontSize: 18 }}>{icon}</div>
       <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>{value}</div>
       <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{label}</div>
+    </div>
+  )
+}
+
+// Нить дороги и узлы поверх неё.
+//
+// Геометрия как в прежней карте уроков: узлы расставлены змейкой по сетке 320px,
+// между ними — кубическая кривая Безье, поэтому линия течёт плавно и обтекает
+// кружки, а не ломается прямыми углами.
+function PathRoad({ items, short, lang, t, go }) {
+  const GAP_Y = 118
+  const X_PATTERN = [160, 92, 228, 120, 200, 160]
+
+  const points = items.map((n, i) => ({
+    n,
+    x: X_PATTERN[i % X_PATTERN.length],
+    y: 60 + i * GAP_Y,
+  }))
+  if (!points.length) return null
+
+  const d = points.reduce((acc, p, i) => {
+    if (i === 0) return `M ${p.x} ${p.y}`
+    const prev = points[i - 1]
+    const midY = (prev.y + p.y) / 2
+    return `${acc} C ${prev.x} ${midY}, ${p.x} ${midY}, ${p.x} ${p.y}`
+  }, '')
+
+  const height = points[points.length - 1].y + 90
+  const doneCount = points.filter(p => p.n.state === 'done').length
+
+  return (
+    <div style={{ position: 'relative', height, margin: '0 -4px' }}>
+      <svg viewBox={`0 0 320 ${height}`} preserveAspectRatio="none"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+        <path d={d} fill="none" stroke="var(--line)" strokeWidth="7" strokeLinecap="round" />
+        <path d={d} fill="none" stroke="#3FBF8F" strokeWidth="7" strokeLinecap="round"
+          style={{
+            strokeDasharray: 4000,
+            strokeDashoffset: 4000 - (4000 * (doneCount + 0.4)) / points.length,
+            transition: 'stroke-dashoffset .6s ease-out',
+          }} />
+      </svg>
+
+      {points.map(({ n, x, y }, i) => {
+        const isLesson = n.kind === 'lesson'
+        const isCurrent = isLesson && n.state === 'current'
+        const isDone = n.state === 'done'
+        const locked = n.state === 'locked'
+        const color = isLesson ? '#9A5CD8' : (C[n.type] || C.speech)
+        const size = isCurrent ? 104 : isLesson ? 62 : 58
+
+        // Подпись внутри круга: у станции это её название с переносом по словам,
+        // у урока — номер. Отдельной подписи под кружком больше нет: от неё дорога
+        // разъезжалась, а половина станций оставалась вовсе без имени.
+        const inner = isLesson
+          ? (isDone ? '✓' : (n.number ?? '•'))
+          : (n.type === 'wordset' || n.type === 'phraseset'
+              ? (getLessonTitle(n.title, n.title_translations, lang) || n.title || short[n.type])
+              : short[n.type])
+
+        return (
+          <div key={`${n.kind}-${n.lesson_id ?? n.topic_id ?? i}-${i}`}
+            style={{ position: 'absolute', left: `${(x / 320) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button onClick={() => !locked && go(n)} disabled={locked}
+                style={{
+                  width: size, height: size, borderRadius: '50%', flex: 'none',
+                  cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.55 : 1,
+                  background: isCurrent
+                    ? `conic-gradient(${C.accent} 0 ${Math.round((n.progress || 0) * 100)}%, var(--surface-2) ${Math.round((n.progress || 0) * 100)}%)`
+                    : isDone ? C.done : 'var(--surface)',
+                  border: isCurrent ? 'none'
+                    : `3px ${isDone || isLesson ? 'solid' : 'dashed'} ${isDone ? C.doneBorder : isLesson ? 'var(--line)' : color}`,
+                  color: isDone ? C.doneInk : isLesson ? 'var(--ink)' : color,
+                  boxShadow: isCurrent ? `0 0 0 8px ${C.accent}2E` : 'none',
+                  display: 'grid', placeItems: 'center', padding: 4,
+                  fontSize: isLesson ? 19 : 10.5, fontWeight: 800, lineHeight: 1.15,
+                  wordBreak: 'break-word', hyphens: 'auto', textAlign: 'center',
+                }}>
+                {isCurrent
+                  ? <span style={{ width: 84, height: 84, borderRadius: '50%', background: '#9A5CD8', color: '#fff', display: 'grid', placeItems: 'center', fontSize: 28 }}>{n.number ?? '•'}</span>
+                  : <span style={{ display: 'block', maxWidth: size - 14 }}>{inner}</span>}
+              </button>
+
+              {/* Плашка справа от активного узла — что за урок и что дальше */}
+              {isCurrent && (
+                <div style={{ width: 190, padding: '12px 14px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)' }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, lineHeight: 1.25 }}>
+                    {getLessonTitle(n.title, n.title_translations, lang) || `${t.path.lesson} ${n.number ?? ''}`}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>{n.ex_done}/{n.ex_total}</div>
+                  <button onClick={() => go(n)}
+                    style={{ marginTop: 9, width: '100%', padding: '9px 12px', borderRadius: 12, border: 'none',
+                      background: C.accent, color: C.accentInk, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                    {t.path.start}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
