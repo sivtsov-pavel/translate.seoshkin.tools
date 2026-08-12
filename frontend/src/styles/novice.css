@@ -250,13 +250,25 @@ body.novice-mode .exercise-card [data-word-tile] {
   grid-template-columns: 1fr 1fr 84px 1fr 1fr;
   align-items: end;
   overflow: visible;
-  /* Настоящее углубление: маска вырезает полукруг сверху по центру полосы —
-     кнопка садится в выемку, как на присланном примере. Радиус чуть больше
-     кнопки, чтобы между ней и краем оставался просвет. */
-  -webkit-mask: radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px);
-  mask: radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px);
+  background: transparent;      /* фон рисует слой ниже, ему и достаётся маска */
   border-top: none;
 }
+
+/* Углубление режем на ОТДЕЛЬНОМ фоновом слое, а не на самом баре: маска на баре
+   срезала и кнопку тоже — она оказывалась «под» полосой. Теперь маска трогает
+   только фон, а кнопка и подписи остаются целыми. */
+.novice-tabbar--notch::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  -webkit-mask: radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px);
+  mask: radial-gradient(circle 40px at 50% 0, transparent 39px, #000 40px);
+  z-index: 0;
+}
+
+/* Всё содержимое полосы — поверх фонового слоя */
+.novice-tabbar--notch > * { position: relative; z-index: 1; }
 .novice-notch { position: relative; height: 100%; }
 
 /* Кнопка ВЫСТУПАЕТ над полосой и несёт вокруг себя кольцо цвета фона страницы —
@@ -270,7 +282,7 @@ body.novice-mode .exercise-card [data-word-tile] {
   background: var(--accent); color: var(--accent-ink);
   border: none;
   box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .6);
-  text-decoration: none; z-index: 2;
+  text-decoration: none; z-index: 3;
 }
 .novice-fab.is-active { background: #9A5CD8; color: #fff; }
 
