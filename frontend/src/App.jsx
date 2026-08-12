@@ -8,6 +8,7 @@ import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Landing from './pages/Landing.jsx'
 import Path from './pages/Path.jsx'
+import LessonOverview from './pages/LessonOverview.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import LessonList from './pages/LessonList.jsx'
 import ShareCard from './pages/ShareCard.jsx'
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<HomeRoute />} />
+        <Route path="/lesson/:id" element={<ProtectedRoute><Layout><LessonOverview /></Layout></ProtectedRoute>} />
         <Route path="/lessons" element={<ProtectedRoute><Layout><LessonList /></Layout></ProtectedRoute>} />
         <Route path="/lessons/new" element={<ProtectedRoute><Layout><NewLesson /></Layout></ProtectedRoute>} />
         <Route path="/exercise-session" element={<ProtectedRoute><Layout><ExerciseSession /></Layout></ProtectedRoute>} />

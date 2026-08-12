@@ -80,7 +80,7 @@ export default function Path() {
 
               {n.state === 'current' ? (
                 <div style={{ transform: `translateX(${shift}px)`, textAlign: 'center' }}>
-                  <button onClick={() => navigate(`/exercise-session?lesson_id=${n.lesson_id}`)}
+                  <button onClick={() => navigate(`/lesson/${n.lesson_id}`)}
                     style={{
                       width: 112, height: 112, borderRadius: '50%', cursor: 'pointer', border: 'none',
                       background: `conic-gradient(${C.accent} 0 ${Math.round(n.progress * 100)}%, var(--surface-2) ${Math.round(n.progress * 100)}%)`,
@@ -95,7 +95,7 @@ export default function Path() {
                     </span>
                   </button>
                   <div style={{ fontSize: 12.5, fontWeight: 600, marginTop: 8, maxWidth: 150 }}>{title}</div>
-                  <button onClick={() => navigate(`/exercise-session?lesson_id=${n.lesson_id}`)}
+                  <button onClick={() => navigate(`/lesson/${n.lesson_id}`)}
                     style={{
                       marginTop: 10, padding: '13px 28px', borderRadius: 14, border: 'none', cursor: 'pointer',
                       background: C.accent, color: C.accentInk, fontSize: 16, fontWeight: 700,
@@ -104,7 +104,7 @@ export default function Path() {
               ) : (
                 <div style={{ transform: `translateX(${shift}px)`, textAlign: 'center' }}>
                   <button
-                    onClick={() => n.state === 'done' && navigate(`/exercise-session?lesson_id=${n.lesson_id}`)}
+                    onClick={() => n.state === 'done' && navigate(`/lesson/${n.lesson_id}`)}
                     disabled={n.state === 'locked'}
                     style={{
                       width: 74, height: 74, borderRadius: '50%',

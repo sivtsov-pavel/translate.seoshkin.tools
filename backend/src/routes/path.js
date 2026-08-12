@@ -112,4 +112,53 @@ export async function pathRoutes(fastify) {
       },
     }
   })
+
+  // Обзор урока для режима новичка (макет 2b): урок как список шагов, а не как
+  // россыпь упражнений. Шаг = тип упражнения; отдельным шагом идёт набор фраз.
+  fastify.get('/api/path/lesson/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const lessonId = parseInt(request.params.id)
+    const userId = request.user.id
+
+    const { rows: lessonRows } = await db.query(
+      `SELECT l.id, l.title, COALESCE(l.title_translations, '{}') AS title_translations,
+              l.lesson_number,
+              (SELECT count(*)::int FROM words w WHERE w.lesson_id = l.id) AS words_count
+       FROM lessons l WHERE l.id = $1`, [lessonId])
+    if (!lessonRows[0]) return reply.status(404).send({ error: 'Урок не найден' })
+
+    const { rows: byType } = await db.query(
+      `SELECT e.type,
+              count(*)::int AS total,
+              count(uep.exercise_id)::int AS done
+       FROM exercises e
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $2
+       WHERE e.lesson_id = $1
+       GROUP BY e.type`, [lessonId, userId])
+
+    // Набор фраз — отдельный шаг, в счёт упражнений урока не входит
+    const { rows: topicRows } = await db.query(
+      'SELECT id FROM phrase_topics WHERE lesson_id = $1', [lessonId])
+    let phrases = null
+    if (topicRows[0]) {
+      const { rows: pr } = await db.query(
+        `SELECT count(*)::int AS total,
+                count(*) FILTER (WHERE up.step_listen AND up.step_build)::int AS done
+         FROM phrases p
+         LEFT JOIN user_phrase_progress up ON up.phrase_id = p.id AND up.user_id = $2
+         WHERE p.topic_id = $1`, [topicRows[0].id, userId])
+      phrases = { topic_id: topicRows[0].id, ...pr[0] }
+    }
+
+    const totalEx = byType.reduce((n, r) => n + r.total, 0)
+    const doneEx = byType.reduce((n, r) => n + r.done, 0)
+    return {
+      lesson: lessonRows[0],
+      steps: byType.sort((a, b) => a.type.localeCompare(b.type)),
+      phrases,
+      total: totalEx,
+      done: doneEx,
+      // ~8 секунд на упражнение — грубая, но честная оценка по нашим замерам сессий
+      minutes: Math.max(3, Math.round(((totalEx - doneEx) * 8) / 60)),
+    }
+  })
 }
