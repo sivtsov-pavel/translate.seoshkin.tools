@@ -15,6 +15,7 @@ import { coursesRoutes } from './routes/courses.js'
 import { phraseSetsRoutes } from './routes/phraseSets.js'
 import { readerRoutes } from './routes/reader.js'
 import { phrasebookRoutes } from './routes/phrasebook.js'
+import { phrasesRoutes } from './routes/phrases.js'
 import { settingsRoutes } from './routes/settings.js'
 import { chatRoutes } from './routes/chat.js'
 import { pushRoutes } from './routes/push.js'
@@ -57,6 +58,7 @@ async function registerRoutes(app) {
   await app.register(phraseSetsRoutes)
   await app.register(readerRoutes)
   await app.register(phrasebookRoutes)
+  await app.register(phrasesRoutes)
   await app.register(settingsRoutes)
   await app.register(chatRoutes)
   await app.register(pushRoutes)

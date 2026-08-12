@@ -10,6 +10,7 @@ import { generateWordImage, isFunctionWord } from './imageGen.js'
 import { getOwnerClient, ownerHasOwnKey } from './openaiClient.js'
 import { logOperation, textProvider } from './opLog.js'
 import { normalizeIncomingWord } from './wordNormalize.js'
+import { generateLessonPhrases } from './phrases.js'
 import { bareWord, articlePattern, articleRe } from './articles.js'
 import { auditLesson } from './lessonAudit.js'
 import { classifyEntry } from './entryKind.js'
@@ -438,6 +439,21 @@ export async function enrichLesson(lessonId) {
       }
     }
   } catch (e) { console.error('enrichLesson ex-topup:', e.message) }
+
+  // 3.7) Набор фраз урока — 8–12 бытовых фраз из слов этого урока (gpt-4o, ~$0.01).
+  // Мягкая деградация: нет кредитов или модель молчит — урок остаётся без набора и
+  // добивается скриптом backfill-lesson-phrases.mjs позже. Сам урок из-за этого не ломается.
+  try {
+    const has = await db.query('SELECT 1 FROM phrase_topics WHERE lesson_id = $1', [lessonId])
+    if (!has.rowCount) {
+      await setProgress(lessonId, 'Собираю фразы урока...')
+      const r = await generateLessonPhrases(lessonId, { level: 'A1', client })
+      await logOperation({
+        kind: 'phrases', lessonId, items: r.saved,
+        message: `набор фраз: сохранено ${r.saved}, забраковано ${r.rejected?.length || 0}`,
+      }).catch(() => {})
+    }
+  } catch (e) { console.error('enrichLesson phrases:', e.message) }
 
   // 4) Переводы упражнений (варианты/вопросы) на все языки
   try {
