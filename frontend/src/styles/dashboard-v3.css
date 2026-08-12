@@ -125,11 +125,14 @@
 @media (max-width: 640px) {
   .dl-ex-grid { grid-template-columns: 1fr; }
 }
-.dl-ex-btn { position: relative; background: var(--bg); border: none; border-radius: 12px; padding: 12px 12px 12px 40px; font-size: 12.5px; color: var(--ink); min-height: 20px; display: flex; align-items: center; cursor: pointer; text-align: left; }
+.dl-ex-btn { position: relative; background: var(--bg); border: none; border-radius: 12px; padding: 12px 12px 12px 34px; gap: 2px; font-size: 12.5px; color: var(--ink); min-height: 20px; display: flex; align-items: center; cursor: pointer; text-align: left; }
 .dl-ex-btn--special { background: rgba(62,127,193,0.10); border: 1.5px solid var(--blue); color: var(--blue); font-weight: 700; }
 .dl-ex-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); display: flex; }
-.dl-ex-count { position: absolute; left: 32px; top: 50%; transform: translateY(-50%); background: var(--yellow-soft); color: var(--gold-dark); font-size: 11px; font-weight: 800; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-.dl-ex-label { margin-left: 22px; }
+/* Пилюля-счётчик: раньше круг 20×20 с одной цифрой, но значения выросли («1 из 10»,
+   двузначные числа) и перестали помещаться. Теперь ширина по содержимому, форма — плоская
+   пилюля с минимальной шириной, чтобы одиночная цифра всё ещё выглядела ровно. */
+.dl-ex-count { background: var(--yellow-soft); color: var(--gold-dark); font-size: 11px; font-weight: 800; border-radius: 999px; min-width: 20px; height: 20px; padding: 0 7px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; }
+.dl-ex-label { margin-left: 8px; }
 
 .dl-pass-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 36px); margin: 14px 18px 16px; background: var(--blue); color: #fff; border: none; border-radius: 14px; padding: 14px; font-weight: 700; font-size: 14.5px; cursor: pointer; }
 .dl-pass-btn:hover { background: var(--blue-dark); }

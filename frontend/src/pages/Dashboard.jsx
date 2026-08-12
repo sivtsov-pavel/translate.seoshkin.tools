@@ -29,11 +29,11 @@ const LANGS = {
 }
 
 // Порядок как в сессии (ExerciseSession TYPE_SEQ): склонение — между «проговори» и диктантом
-const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'conjugation', 'dictation']
+const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'conjugation', 'declension', 'dictation']
 // Иконка (lucide) на тип упражнения; letter_fill рисуем как «abc»
 const TYPE_ICON = {
   multiple_choice: CheckCircle2, flashcard: Layers, fill_blank: Pencil,
-  sentence_write: SquarePen, speech: MessageCircle, conjugation: Puzzle, dictation: Mic,
+  sentence_write: SquarePen, speech: MessageCircle, conjugation: Puzzle, declension: Puzzle, dictation: Mic,
 }
 
 const ts = (d) => { const t = new Date(d).getTime(); return isNaN(t) ? 0 : t }
@@ -292,6 +292,11 @@ export default function Dashboard() {
               <span className="dl-ico"><Layers size={19} /></span>
               <div className="dl-game-tile-title">{t.dashboard.allCardsTitle}</div>
               <div className="dl-game-tile-sub">{t.dashboard.allCardsDesc}</div>
+            </button>
+            <button className="dl-game-tile" onClick={() => navigate('/sets')}>
+              <span className="dl-ico">🗣</span>
+              <div className="dl-game-tile-title">{t.dashboard.phraseSetsTitle}</div>
+              <div className="dl-game-tile-sub">{t.dashboard.phraseSetsDesc}</div>
             </button>
             <button className="dl-game-tile" onClick={() => navigate('/exercise-session?type=conjugation')}>
               <span className="dl-ico"><Layers size={19} /></span>
@@ -620,7 +625,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
   const typeLabels = {
     flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice,
     sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill,
-    speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation, dictation: t.exercise.dictation,
+    speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation, declension: t.exercise.declension || 'Падежи', dictation: t.exercise.dictation,
   }
   // Освоение урока: сколько упражнений реально сделано из всех. Отличается от «пройден»:
   // урок засчитывается, когда затронуто каждое слово, а освоен — когда сделаны ВСЕ
@@ -738,7 +743,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
         <>
           <div className="dl-ex-grid">
             {chips.map(type => {
-              const IcoC = TYPE_ICON[type]
+              const IcoC = TYPE_ICON[type] || Layers   // неизвестный тип не должен ронять дашборд
               return (
                 <button key={type} className="dl-ex-btn"
                   onClick={() => navigate(`/exercise-session?lesson_id=${id}&type=${type}`)}>
