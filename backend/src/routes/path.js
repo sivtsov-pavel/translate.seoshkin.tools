@@ -132,6 +132,18 @@ export async function pathRoutes(fastify) {
        -- дороге, иначе станции прыгали бы между заходами.
        ORDER BY l.id`, [userId, target])
 
+    // Наборы фраз — такие же станции, как наборы слов, со своими названиями
+    const { rows: phraseSets } = await db.query(
+      `SELECT t.id, t.title, t.emoji,
+              count(p.id)::int AS total,
+              count(*) FILTER (WHERE up.step_listen AND up.step_build)::int AS done
+       FROM phrase_topics t
+       JOIN phrases p ON p.topic_id = t.id
+       LEFT JOIN user_phrase_progress up ON up.phrase_id = p.id AND up.user_id = $1
+       WHERE t.lang = $2
+       GROUP BY t.id
+       ORDER BY t.id`, [userId, target])
+
     // Собираем дорогу: урок → речевая станция → (каждые 3 урока) грамматика и набор слов
     const road = []
     section.forEach((node, i) => {
@@ -149,18 +161,28 @@ export async function pathRoutes(fastify) {
         })
       }
 
-      // Набор слов — после КАЖДОГО урока и по глобальному номеру урока, а не по
-      // позиции в разделе: наборы создаются ради того, чтобы их проходили, поэтому
-      // каждый закреплён за своим уроком и за курс встречается каждый.
-      if (wordSets.length) {
-        const globalIndex = from + i
-        const ws = wordSets[globalIndex % wordSets.length]
+      // Наборы — после каждого урока, но ЧЕРЕДУЯ слова и фразы: два одинаковых
+      // набора подряд читаются как одна длинная станция. Индекс глобальный, а не
+      // по разделу: так за курс встречается каждый набор, и порядок не прыгает.
+      const globalIndex = from + i
+      if (globalIndex % 2 === 0 && wordSets.length) {
+        const ws = wordSets[Math.floor(globalIndex / 2) % wordSets.length]
         if (ws && ws.total > 0) {
           road.push({
             kind: 'checkpoint', type: 'wordset', lesson_id: ws.id,
             title: ws.title, title_translations: ws.title_translations,
             done: ws.done, total: ws.total,
             state: ws.done >= ws.total ? 'done' : 'open',
+          })
+        }
+      } else if (phraseSets.length) {
+        const ps = phraseSets[Math.floor(globalIndex / 2) % phraseSets.length]
+        if (ps && ps.total > 0) {
+          road.push({
+            kind: 'checkpoint', type: 'phraseset', topic_id: ps.id,
+            title: ps.title, emoji: ps.emoji,
+            done: ps.done, total: ps.total,
+            state: ps.done >= ps.total ? 'done' : 'open',
           })
         }
       }

@@ -67,12 +67,8 @@ export default function FlashcardNovice({
         <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
           onReactionEnd={() => onAnswer(gradeRef.current)} />
 
-        {/* Фото на весь блок — главный элемент карточки в макете */}
-        {imageUrl && (
-          <div style={{ padding: '20px 20px 0' }}>
-            <img src={imageUrl} alt="" style={{ width: '100%', height: 210, objectFit: 'cover', borderRadius: 20, display: 'block' }} />
-          </div>
-        )}
+        {/* Картинку рисует AvatarReaction (WordImage bleed) — на всю ширину блока.
+            Своего <img> здесь быть не должно: получался дубль одной и той же картинки. */}
 
         <div className="exercise-card-content" style={{ padding: '18px 22px 22px' }}>
           <div className="exercise-word-de" style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.02em' }} dir="ltr">
