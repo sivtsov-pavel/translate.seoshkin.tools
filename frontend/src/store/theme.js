@@ -1,6 +1,16 @@
 import { create } from 'zustand'
 
-const saved = localStorage.getItem('theme') || 'light'
+// Тема по умолчанию зависит от роли: ученику — тёмная (в ней сделан новый дизайн
+// и с неё удобнее заниматься вечером), учителю — прежняя светлая. Явный выбор
+// пользователя всегда важнее: он лежит в localStorage и сюда не попадает.
+function defaultTheme() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    return user && user.role !== 'owner' ? 'dark' : 'light'
+  } catch { return 'light' }
+}
+
+const saved = localStorage.getItem('theme') || defaultTheme()
 
 function apply(theme) {
   document.documentElement.setAttribute('data-theme', theme)
