@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background: oklch(0.93 0.006 90); font-family:'Golos Text', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color: oklch(0.5 0.15 262); text-decoration:none; border-bottom:1px solid oklch(0.5 0.15 262 / 0.35); }
+  a:hover { color: oklch(0.4 0.16 262); border-bottom-color: oklch(0.4 0.16 262); }
+  * { box-sizing: border-box; }
+</style>
+</helmet>
+
+<section id="turn2" style="padding:60px 56px 40px; display:flex; flex-direction:column; gap:44px">
+  <div style="display:flex; flex-direction:column; gap:12px; max-width:900px">
+    <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.18em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Ход 2 · компактно и просто · ночная палитра из «Арены»</div>
+    <h1 style="margin:0; font:800 42px/1.05 'Unbounded'; letter-spacing:-0.02em; color:oklch(0.22 0.02 80)">Путь: одна дорога, один следующий шаг</h1>
+    <p style="margin:0; font:400 17px/1.55 'Golos Text'; color:oklch(0.42 0.02 80); text-wrap:pretty">Синий-фиолетовый ночной режим, но структура проще некуда: вертикальная дорога из узлов, где активен ровно один. Ученику нечего выбирать — видно, где он, что дальше, сколько осталось. Вместо цифр и подписей — инфографика: кольцо прогресса, полоски раздела, точки уроков, иконки-статусы. <a href="#2a">2a</a> — путь на мобайле, планшете и ПК, <a href="#2b">2b</a> — карточка урока и упражнения.</p>
+  </div>
+
+  <div id="2a" style="display:flex; flex-direction:column; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:8px; max-width:640px">
+      <div style="display:flex; align-items:center; gap:12px">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:27px; padding:0 11px; border-radius:8px; background:oklch(0.22 0.02 80); color:#fff; font:700 13px/1 'Golos Text'">2a</span>
+        <span style="font:700 21px/1.2 'Unbounded'; color:oklch(0.22 0.02 80)">Путь</span>
+      </div>
+      <p style="margin:0; font:400 15px/1.5 'Golos Text'; color:oklch(0.45 0.02 80)">Пройденное — зелёное с галочкой, текущее — большой узел с кольцом и кнопкой «Начать», будущее — приглушённое. Сверху три плитки: серия, XP за день, уровень.</p>
+    </div>
+
+    <div style="display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap">
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Мобайл 430 · экран с прокруткой</div>
+        <div style="width:430px; min-height:932px; border-radius:46px; background:oklch(0.19 0.03 285); border:9px solid oklch(0.14 0.02 285); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.55); overflow:hidden; display:flex; flex-direction:column">
+          <div style="height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font:600 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)">
+            <span>9:41</span>
+            <span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.95 0.01 285)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.95 0.01 285)"></span></span>
+          </div>
+
+          <div style="flex:none; padding:6px 20px 16px; display:flex; gap:10px">
+            <div style="flex:1; display:flex; align-items:center; gap:9px; padding:12px 14px; border-radius:16px; background:oklch(0.24 0.04 285)"><span style="width:22px; height:22px; flex:none; border-radius:50%; background:oklch(0.72 0.16 55)"></span><span style="font:700 17px/1 'Unbounded'; color:oklch(0.96 0.01 285)">12</span></div>
+            <div style="flex:1; display:flex; align-items:center; gap:9px; padding:12px 14px; border-radius:16px; background:oklch(0.24 0.04 285)"><span style="width:22px; height:22px; flex:none; border-radius:6px; background:oklch(0.78 0.17 90)"></span><span style="font:700 17px/1 'Unbounded'; color:oklch(0.96 0.01 285)">34</span></div>
+            <div style="flex:1; display:flex; align-items:center; gap:9px; padding:12px 14px; border-radius:16px; background:oklch(0.24 0.04 285)"><span style="width:22px; height:22px; flex:none; border-radius:50%; background:oklch(0.6 0.16 300)"></span><span style="font:700 17px/1 'Unbounded'; color:oklch(0.96 0.01 285)">A2</span></div>
+          </div>
+
+          <div style="flex:none; margin:0 20px 22px; padding:18px 20px; border-radius:22px; background:oklch(0.24 0.04 285); display:flex; align-items:center; gap:16px">
+            <div style="flex:1; display:flex; flex-direction:column; gap:9px">
+              <div style="font:700 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Раздел 2 · Числа и еда</div>
+              <div style="display:flex; gap:5px">
+                <div style="flex:1; height:7px; border-radius:4px; background:oklch(0.6 0.16 300)"></div>
+                <div style="flex:1; height:7px; border-radius:4px; background:oklch(0.6 0.16 300)"></div>
+                <div style="flex:1; height:7px; border-radius:4px; background:oklch(0.6 0.16 300)"></div>
+                <div style="flex:1; height:7px; border-radius:4px; background:oklch(0.32 0.05 285)"></div>
+                <div style="flex:1; height:7px; border-radius:4px; background:oklch(0.32 0.05 285)"></div>
+                <div style="flex:1; height:7px; border-radius:4px; background:oklch(0.32 0.05 285)"></div>
+              </div>
+            </div>
+            <div style="font:700 15px/1 'Golos Text'; color:oklch(0.7 0.03 285)">3/6</div>
+          </div>
+
+          <div style="flex:1; padding:0 20px 26px; display:flex; flex-direction:column; align-items:center">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; transform:translateX(-84px)">
+              <div style="width:74px; height:74px; border-radius:50%; background:oklch(0.42 0.12 160); border:4px solid oklch(0.58 0.15 160); display:flex; align-items:center; justify-content:center; font:700 26px/1 'Golos Text'; color:oklch(0.95 0.06 160)">✓</div>
+              <span style="font:600 12px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Приветствие</span>
+            </div>
+            <div style="height:32px; width:5px; border-radius:3px; background:oklch(0.42 0.12 160); transform:translateX(-42px)"></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px">
+              <div style="width:74px; height:74px; border-radius:50%; background:oklch(0.42 0.12 160); border:4px solid oklch(0.58 0.15 160); display:flex; align-items:center; justify-content:center; font:700 26px/1 'Golos Text'; color:oklch(0.95 0.06 160)">✓</div>
+              <span style="font:600 12px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Семья</span>
+            </div>
+            <div style="height:32px; width:5px; border-radius:3px; background:oklch(0.42 0.12 160); transform:translateX(42px)"></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:12px; transform:translateX(70px); margin:4px 0">
+              <div style="width:112px; height:112px; border-radius:50%; background:conic-gradient(oklch(0.78 0.17 90) 0 62%, oklch(0.3 0.05 285) 62%); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 9px oklch(0.28 0.06 90 / 0.5)">
+                <div style="width:88px; height:88px; border-radius:50%; background:oklch(0.6 0.16 300); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px">
+                  <span style="font:700 30px/1 'Unbounded'; color:oklch(0.99 0.01 300)">16</span>
+                  <span style="font:600 10px/1 'Golos Text'; letter-spacing:0.12em; color:oklch(0.9 0.06 300)">УРОК</span>
+                </div>
+              </div>
+              <div style="padding:13px 28px; border-radius:14px; background:oklch(0.78 0.17 90); font:700 16px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Начать</div>
+            </div>
+            <div style="height:32px; width:5px; border-radius:3px; background:oklch(0.3 0.05 285); transform:translateX(42px)"></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px">
+              <div style="width:74px; height:74px; border-radius:50%; background:oklch(0.26 0.04 285); border:4px solid oklch(0.32 0.05 285); display:flex; align-items:center; justify-content:center"><span style="width:24px; height:24px; border-radius:7px; background:oklch(0.42 0.05 285)"></span></div>
+              <span style="font:500 12px/1 'Golos Text'; color:oklch(0.52 0.03 285)">Кафе</span>
+            </div>
+            <div style="height:32px; width:5px; border-radius:3px; background:oklch(0.3 0.05 285); transform:translateX(-42px)"></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; transform:translateX(-84px)">
+              <div style="width:74px; height:74px; border-radius:50%; background:oklch(0.26 0.04 285); border:4px solid oklch(0.32 0.05 285); display:flex; align-items:center; justify-content:center"><span style="width:24px; height:24px; border-radius:7px; background:oklch(0.42 0.05 285)"></span></div>
+              <span style="font:500 12px/1 'Golos Text'; color:oklch(0.52 0.03 285)">У врача</span>
+            </div>
+            <div style="height:32px; width:5px; border-radius:3px; background:oklch(0.3 0.05 285); transform:translateX(-42px)"></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px">
+              <div style="width:74px; height:74px; border-radius:50%; background:oklch(0.28 0.06 90); border:4px dashed oklch(0.5 0.1 90); display:flex; align-items:center; justify-content:center"><span style="width:26px; height:22px; border-radius:5px; background:oklch(0.78 0.17 90)"></span></div>
+              <span style="font:600 12px/1 'Golos Text'; color:oklch(0.75 0.1 90)">Сундук</span>
+            </div>
+          </div>
+
+          <div style="flex:none; height:92px; border-top:1px solid oklch(0.26 0.03 285); background:oklch(0.16 0.025 285); display:grid; grid-template-columns:repeat(5,1fr); padding:12px 6px 0">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.78 0.17 90)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.78 0.17 90)">Путь</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Словарь</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.6 0.03 285); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Тренер</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Читалка</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Ещё</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">ПК 1440×900 · тот же путь, три колонки</div>
+        <div style="width:1440px; height:900px; border-radius:16px; background:oklch(0.19 0.03 285); border:1px solid oklch(0.26 0.03 285); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.5); overflow:hidden; display:flex">
+          <div style="width:230px; flex:none; background:oklch(0.16 0.025 285); border-right:1px solid oklch(0.26 0.03 285); padding:26px 16px; display:flex; flex-direction:column; gap:6px">
+            <div style="display:flex; align-items:center; gap:12px; padding:0 10px 24px"><div style="width:34px; height:34px; border-radius:11px; background:oklch(0.78 0.17 90)"></div><div style="font:700 17px/1 'Unbounded'; color:oklch(0.96 0.01 285)">Deutsch</div></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px; background:oklch(0.28 0.06 90)"><span style="width:19px; height:19px; border-radius:50%; background:oklch(0.78 0.17 90)"></span><span style="font:600 15px/1 'Golos Text'; color:oklch(0.85 0.14 90)">Путь</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:19px; height:19px; border-radius:4px; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.82 0.02 285)">Словарь</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:18px; height:18px; background:oklch(0.6 0.03 285); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.82 0.02 285)">Тренер</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:19px; height:19px; border-radius:50%; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.82 0.02 285)">Читалка</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="display:flex; gap:3px; width:19px"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.82 0.02 285)">Ещё</span></div>
+            <div style="margin-top:auto; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; background:oklch(0.24 0.04 285)"><div style="width:32px; height:32px; border-radius:50%; background:oklch(0.6 0.16 300)"></div><div style="flex:1; display:flex; flex-direction:column; gap:2px"><span style="font:600 13px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Павел</span><span style="font:400 12px/1 'Golos Text'; color:oklch(0.68 0.03 285)">A2 · 12 дней</span></div></div>
+          </div>
+
+          <div style="flex:1; display:flex; overflow:hidden">
+            <div style="flex:1; padding:34px 0 0; display:flex; flex-direction:column; align-items:center; overflow:hidden">
+              <div style="width:100%; padding:0 40px 24px; display:flex; align-items:center; justify-content:space-between; gap:20px">
+                <div style="display:flex; flex-direction:column; gap:6px">
+                  <div style="font:700 28px/1.1 'Unbounded'; color:oklch(0.96 0.01 285)">Раздел 2 · Числа и еда</div>
+                  <div style="font:400 15px/1 'Golos Text'; color:oklch(0.68 0.03 285)">3 из 6 уроков пройдено</div>
+                </div>
+                <div style="display:flex; gap:6px; width:260px">
+                  <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.6 0.16 300)"></div>
+                  <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.6 0.16 300)"></div>
+                  <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.6 0.16 300)"></div>
+                  <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.32 0.05 285)"></div>
+                  <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.32 0.05 285)"></div>
+                  <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.32 0.05 285)"></div>
+                </div>
+              </div>
+              <div style="flex:1; width:100%; display:flex; flex-direction:column; align-items:center; overflow:hidden">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-110px)">
+                  <div style="width:62px; height:62px; border-radius:50%; background:oklch(0.42 0.12 160); border:4px solid oklch(0.58 0.15 160); display:flex; align-items:center; justify-content:center; font:700 22px/1 'Golos Text'; color:oklch(0.95 0.06 160)">✓</div>
+                  <span style="font:600 12px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Семья</span>
+                </div>
+                <div style="height:28px; width:5px; border-radius:3px; background:oklch(0.42 0.12 160); transform:translateX(-110px)"></div>
+                <div style="position:relative; display:flex; flex-direction:column; align-items:center; gap:12px; margin:4px 0; transform:translateX(-110px)">
+                  <div style="position:absolute; left:160px; top:6px; width:300px; padding:22px 24px; border-radius:20px; background:oklch(0.24 0.04 285); display:flex; flex-direction:column; gap:10px">
+                    <div style="font:700 19px/1.25 'Golos Text'; color:oklch(0.96 0.01 285)">Числа, еда и языки</div>
+                    <div style="font:400 14px/1.45 'Golos Text'; color:oklch(0.72 0.03 285)">77 слов · 6 упражнений · ~12 минут</div>
+                    <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:7px 12px; border-radius:999px; background:oklch(0.3 0.06 300); font:600 12px/1 'Golos Text'; color:oklch(0.85 0.1 300)">Слушать</span><span style="padding:7px 12px; border-radius:999px; background:oklch(0.3 0.06 200); font:600 12px/1 'Golos Text'; color:oklch(0.85 0.1 200)">Писать</span><span style="padding:7px 12px; border-radius:999px; background:oklch(0.3 0.06 160); font:600 12px/1 'Golos Text'; color:oklch(0.85 0.1 160)">Говорить</span></div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:12px">
+                    <div style="width:124px; height:124px; border-radius:50%; background:conic-gradient(oklch(0.78 0.17 90) 0 62%, oklch(0.3 0.05 285) 62%); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 10px oklch(0.28 0.06 90 / 0.45)">
+                      <div style="width:98px; height:98px; border-radius:50%; background:oklch(0.6 0.16 300); display:flex; flex-direction:column; align-items:center; justify-content:center"><span style="font:700 34px/1 'Unbounded'; color:oklch(0.99 0.01 300)">16</span><span style="font:600 10px/1 'Golos Text'; letter-spacing:0.12em; color:oklch(0.9 0.06 300)">УРОК</span></div>
+                    </div>
+                    <div style="padding:14px 34px; border-radius:14px; background:oklch(0.78 0.17 90); font:700 17px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Начать</div>
+                  </div>
+                </div>
+                <div style="height:28px; width:5px; border-radius:3px; background:oklch(0.3 0.05 285); transform:translateX(-110px)"></div>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-110px)">
+                  <div style="width:62px; height:62px; border-radius:50%; background:oklch(0.26 0.04 285); border:4px solid oklch(0.32 0.05 285); display:flex; align-items:center; justify-content:center"><span style="width:20px; height:20px; border-radius:6px; background:oklch(0.42 0.05 285)"></span></div>
+                  <span style="font:500 12px/1 'Golos Text'; color:oklch(0.52 0.03 285)">Кафе</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="width:330px; flex:none; border-left:1px solid oklch(0.26 0.03 285); background:oklch(0.17 0.028 285); padding:30px 26px; display:flex; flex-direction:column; gap:20px; overflow:hidden">
+              <div style="display:flex; gap:10px">
+                <div style="flex:1; border-radius:16px; background:oklch(0.24 0.04 285); padding:14px; display:flex; flex-direction:column; gap:6px"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.72 0.16 55)"></span><span style="font:700 20px/1 'Unbounded'; color:oklch(0.96 0.01 285)">12</span><span style="font:500 11px/1.2 'Golos Text'; color:oklch(0.66 0.03 285)">дней</span></div>
+                <div style="flex:1; border-radius:16px; background:oklch(0.24 0.04 285); padding:14px; display:flex; flex-direction:column; gap:6px"><span style="width:22px; height:22px; border-radius:6px; background:oklch(0.78 0.17 90)"></span><span style="font:700 20px/1 'Unbounded'; color:oklch(0.96 0.01 285)">34</span><span style="font:500 11px/1.2 'Golos Text'; color:oklch(0.66 0.03 285)">XP сегодня</span></div>
+                <div style="flex:1; border-radius:16px; background:oklch(0.24 0.04 285); padding:14px; display:flex; flex-direction:column; gap:6px"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.6 0.16 300)"></span><span style="font:700 20px/1 'Unbounded'; color:oklch(0.96 0.01 285)">A2</span><span style="font:500 11px/1.2 'Golos Text'; color:oklch(0.66 0.03 285)">уровень</span></div>
+              </div>
+
+              <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:20px; display:flex; flex-direction:column; gap:14px">
+                <div style="font:700 16px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Неделя</div>
+                <div style="display:flex; gap:8px; align-items:flex-end; height:80px">
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px"><div style="width:100%; height:54px; border-radius:7px; background:oklch(0.6 0.16 300)"></div><span style="font:500 11px/1 'Golos Text'; color:oklch(0.62 0.03 285)">пн</span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px"><div style="width:100%; height:34px; border-radius:7px; background:oklch(0.6 0.16 300)"></div><span style="font:500 11px/1 'Golos Text'; color:oklch(0.62 0.03 285)">вт</span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px"><div style="width:100%; height:62px; border-radius:7px; background:oklch(0.6 0.16 300)"></div><span style="font:500 11px/1 'Golos Text'; color:oklch(0.62 0.03 285)">ср</span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px"><div style="width:100%; height:22px; border-radius:7px; background:oklch(0.6 0.16 300)"></div><span style="font:500 11px/1 'Golos Text'; color:oklch(0.62 0.03 285)">чт</span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px"><div style="width:100%; height:46px; border-radius:7px; background:oklch(0.6 0.16 300)"></div><span style="font:500 11px/1 'Golos Text'; color:oklch(0.62 0.03 285)">пт</span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px"><div style="width:100%; height:9px; border-radius:7px; background:oklch(0.3 0.05 285)"></div><span style="font:500 11px/1 'Golos Text'; color:oklch(0.62 0.03 285)">сб</span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:7px"><div style="width:100%; height:30px; border-radius:7px; background:oklch(0.78 0.17 90)"></div><span style="font:600 11px/1 'Golos Text'; color:oklch(0.9 0.02 285)">вс</span></div>
+                </div>
+              </div>
+
+              <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:20px; display:flex; flex-direction:column; gap:14px">
+                <div style="font:700 16px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Что уже умею</div>
+                <div style="display:flex; flex-direction:column; gap:12px">
+                  <div style="display:flex; flex-direction:column; gap:7px"><div style="display:flex; justify-content:space-between; font:500 13px/1 'Golos Text'; color:oklch(0.78 0.02 285)"><span>Слова</span><span>265</span></div><div style="height:8px; border-radius:4px; background:oklch(0.3 0.05 285); overflow:hidden"><div style="width:62%; height:100%; background:oklch(0.6 0.16 300)"></div></div></div>
+                  <div style="display:flex; flex-direction:column; gap:7px"><div style="display:flex; justify-content:space-between; font:500 13px/1 'Golos Text'; color:oklch(0.78 0.02 285)"><span>Слушание</span><span>48%</span></div><div style="height:8px; border-radius:4px; background:oklch(0.3 0.05 285); overflow:hidden"><div style="width:48%; height:100%; background:oklch(0.66 0.14 200)"></div></div></div>
+                  <div style="display:flex; flex-direction:column; gap:7px"><div style="display:flex; justify-content:space-between; font:500 13px/1 'Golos Text'; color:oklch(0.78 0.02 285)"><span>Речь</span><span>31%</span></div><div style="height:8px; border-radius:4px; background:oklch(0.3 0.05 285); overflow:hidden"><div style="width:31%; height:100%; background:oklch(0.66 0.14 160)"></div></div></div>
+                </div>
+              </div>
+
+              <div style="border-radius:20px; background:oklch(0.28 0.06 90); padding:20px; display:flex; align-items:center; gap:14px">
+                <div style="width:44px; height:44px; flex:none; border-radius:12px; background:oklch(0.78 0.17 90)"></div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 15px/1.25 'Golos Text'; color:oklch(0.95 0.05 90)">Сундук через 2 дня</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.82 0.06 90)">набор «Город и улицы»</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Планшет 834×1112 · путь + рельс</div>
+        <div style="width:834px; height:1112px; border-radius:26px; background:oklch(0.19 0.03 285); border:8px solid oklch(0.14 0.02 285); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.55); overflow:hidden; display:flex">
+          <div style="width:96px; flex:none; border-right:1px solid oklch(0.26 0.03 285); background:oklch(0.16 0.025 285); padding:26px 0; display:flex; flex-direction:column; align-items:center; gap:10px">
+            <div style="width:38px; height:38px; border-radius:12px; background:oklch(0.78 0.17 90); margin-bottom:16px"></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; background:oklch(0.28 0.06 90); display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.78 0.17 90)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.85 0.14 90)">Путь</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Словарь</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.6 0.03 285); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Тренер</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Читалка</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Ещё</span></div>
+          </div>
+
+          <div style="flex:1; padding:30px 32px; display:flex; flex-direction:column; gap:22px; overflow:hidden">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:20px">
+              <div style="display:flex; flex-direction:column; gap:6px">
+                <div style="font:700 26px/1.1 'Unbounded'; color:oklch(0.96 0.01 285)">Раздел 2 · Числа и еда</div>
+                <div style="font:400 15px/1 'Golos Text'; color:oklch(0.68 0.03 285)">3 из 6 уроков пройдено</div>
+              </div>
+              <div style="display:flex; gap:10px">
+                <div style="display:flex; align-items:center; gap:9px; padding:12px 16px; border-radius:16px; background:oklch(0.24 0.04 285)"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.72 0.16 55)"></span><span style="font:700 16px/1 'Unbounded'; color:oklch(0.96 0.01 285)">12</span></div>
+                <div style="display:flex; align-items:center; gap:9px; padding:12px 16px; border-radius:16px; background:oklch(0.24 0.04 285)"><span style="width:20px; height:20px; border-radius:6px; background:oklch(0.78 0.17 90)"></span><span style="font:700 16px/1 'Unbounded'; color:oklch(0.96 0.01 285)">34</span></div>
+                <div style="display:flex; align-items:center; gap:9px; padding:12px 16px; border-radius:16px; background:oklch(0.24 0.04 285)"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.6 0.16 300)"></span><span style="font:700 16px/1 'Unbounded'; color:oklch(0.96 0.01 285)">A2</span></div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:6px">
+              <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.6 0.16 300)"></div>
+              <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.6 0.16 300)"></div>
+              <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.6 0.16 300)"></div>
+              <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.32 0.05 285)"></div>
+              <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.32 0.05 285)"></div>
+              <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.32 0.05 285)"></div>
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; overflow:hidden">
+              <div style="display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-90px)">
+                <div style="width:66px; height:66px; border-radius:50%; background:oklch(0.42 0.12 160); border:4px solid oklch(0.58 0.15 160); display:flex; align-items:center; justify-content:center; font:700 24px/1 'Golos Text'; color:oklch(0.95 0.06 160)">✓</div>
+                <span style="font:600 12px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Приветствие</span>
+              </div>
+              <div style="height:30px; width:5px; border-radius:3px; background:oklch(0.42 0.12 160); transform:translateX(-90px)"></div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-90px)">
+                <div style="width:66px; height:66px; border-radius:50%; background:oklch(0.42 0.12 160); border:4px solid oklch(0.58 0.15 160); display:flex; align-items:center; justify-content:center; font:700 24px/1 'Golos Text'; color:oklch(0.95 0.06 160)">✓</div>
+                <span style="font:600 12px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Семья</span>
+              </div>
+              <div style="height:30px; width:5px; border-radius:3px; background:oklch(0.42 0.12 160); transform:translateX(-90px)"></div>
+              <div style="position:relative; display:flex; flex-direction:column; align-items:center; gap:12px; margin:6px 0; transform:translateX(-90px)">
+                <div style="position:absolute; left:150px; top:8px; width:280px; padding:20px 22px; border-radius:20px; background:oklch(0.24 0.04 285); display:flex; flex-direction:column; gap:9px">
+                  <div style="font:700 18px/1.25 'Golos Text'; color:oklch(0.96 0.01 285)">Числа, еда и языки</div>
+                  <div style="font:400 14px/1.4 'Golos Text'; color:oklch(0.72 0.03 285)">77 слов · 6 упражнений · ~12 минут</div>
+                  <div style="display:flex; gap:8px; margin-top:2px"><span style="padding:7px 12px; border-radius:999px; background:oklch(0.3 0.06 300); font:600 12px/1 'Golos Text'; color:oklch(0.85 0.1 300)">Слушать</span><span style="padding:7px 12px; border-radius:999px; background:oklch(0.3 0.06 200); font:600 12px/1 'Golos Text'; color:oklch(0.85 0.1 200)">Писать</span><span style="padding:7px 12px; border-radius:999px; background:oklch(0.3 0.06 160); font:600 12px/1 'Golos Text'; color:oklch(0.85 0.1 160)">Говорить</span></div>
+                </div>
+                <div style="width:118px; height:118px; border-radius:50%; background:conic-gradient(oklch(0.78 0.17 90) 0 62%, oklch(0.3 0.05 285) 62%); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 9px oklch(0.28 0.06 90 / 0.45)">
+                  <div style="width:94px; height:94px; border-radius:50%; background:oklch(0.6 0.16 300); display:flex; flex-direction:column; align-items:center; justify-content:center"><span style="font:700 32px/1 'Unbounded'; color:oklch(0.99 0.01 300)">16</span><span style="font:600 10px/1 'Golos Text'; letter-spacing:0.12em; color:oklch(0.9 0.06 300)">УРОК</span></div>
+                </div>
+                <div style="padding:13px 30px; border-radius:14px; background:oklch(0.78 0.17 90); font:700 16px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Начать</div>
+              </div>
+              <div style="height:30px; width:5px; border-radius:3px; background:oklch(0.3 0.05 285); transform:translateX(-90px)"></div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-90px)">
+                <div style="width:66px; height:66px; border-radius:50%; background:oklch(0.26 0.04 285); border:4px solid oklch(0.32 0.05 285); display:flex; align-items:center; justify-content:center"><span style="width:22px; height:22px; border-radius:6px; background:oklch(0.42 0.05 285)"></span></div>
+                <span style="font:500 12px/1 'Golos Text'; color:oklch(0.52 0.03 285)">Кафе</span>
+              </div>
+              <div style="height:30px; width:5px; border-radius:3px; background:oklch(0.3 0.05 285); transform:translateX(-90px)"></div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:7px; transform:translateX(-90px)">
+                <div style="width:66px; height:66px; border-radius:50%; background:oklch(0.28 0.06 90); border:4px dashed oklch(0.5 0.1 90); display:flex; align-items:center; justify-content:center"><span style="width:24px; height:20px; border-radius:5px; background:oklch(0.78 0.17 90)"></span></div>
+                <span style="font:600 12px/1 'Golos Text'; color:oklch(0.75 0.1 90)">Сундук</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="2b" style="display:flex; flex-direction:column; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:8px; max-width:640px">
+      <div style="display:flex; align-items:center; gap:12px">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:27px; padding:0 11px; border-radius:8px; background:oklch(0.22 0.02 80); color:#fff; font:700 13px/1 'Golos Text'">2b</span>
+        <span style="font:700 21px/1.2 'Unbounded'; color:oklch(0.22 0.02 80)">Карточки урока и упражнения</span>
+      </div>
+      <p style="margin:0; font:400 15px/1.5 'Golos Text'; color:oklch(0.45 0.02 80)">Внутри урока — один шаг на экран, полоска сверху вместо номеров, всегда одна кнопка внизу. Четыре типа упражнений: карточка слова, выбор перевода, сборка предложения, слушание. Ошибка не наказывает — показывает правильный вариант и кладёт слово в «трудные».</p>
+    </div>
+
+    <div style="display:flex; gap:26px; align-items:flex-start; flex-wrap:wrap">
+
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Обзор урока</div>
+        <div style="width:430px; min-height:932px; border-radius:46px; background:oklch(0.19 0.03 285); border:9px solid oklch(0.14 0.02 285); overflow:hidden; display:flex; flex-direction:column">
+          <div style="height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font:600 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)"><span>9:41</span><span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.95 0.01 285)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.95 0.01 285)"></span></span></div>
+          <div style="flex:1; padding:8px 20px 26px; display:flex; flex-direction:column; gap:20px">
+            <div style="display:flex; align-items:center; gap:14px">
+              <div style="width:40px; height:40px; border-radius:12px; background:oklch(0.24 0.04 285); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.9 0.02 285)">←</div>
+              <div style="flex:1; font:700 17px/1.2 'Golos Text'; color:oklch(0.96 0.01 285)">Урок 16</div>
+            </div>
+            <div style="border-radius:26px; background:oklch(0.38 0.15 300); padding:26px; display:flex; flex-direction:column; gap:18px">
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <div style="font:700 26px/1.2 'Unbounded'; color:oklch(0.98 0.01 300)">Числа, еда<br>и языки</div>
+                <div style="font:400 14px/1.4 'Golos Text'; color:oklch(0.87 0.05 300)">77 слов · 6 шагов · ~12 минут</div>
+              </div>
+              <div style="display:flex; gap:5px">
+                <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.85 0.14 90)"></div>
+                <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.85 0.14 90)"></div>
+                <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.5 0.09 300)"></div>
+                <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.5 0.09 300)"></div>
+                <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.5 0.09 300)"></div>
+                <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.5 0.09 300)"></div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px">
+              <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:18px 20px; display:flex; align-items:center; gap:16px">
+                <div style="width:44px; height:44px; flex:none; border-radius:50%; background:oklch(0.42 0.12 160); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.95 0.06 160)">✓</div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.95 0.01 285)">Новые слова</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.66 0.03 285)">12 карточек · пройдено</div></div>
+              </div>
+              <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:18px 20px; display:flex; align-items:center; gap:16px">
+                <div style="width:44px; height:44px; flex:none; border-radius:50%; background:oklch(0.42 0.12 160); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.95 0.06 160)">✓</div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.95 0.01 285)">Выбери перевод</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.66 0.03 285)">10 вопросов · 9 верных</div></div>
+              </div>
+              <div style="border-radius:20px; background:oklch(0.3 0.06 90); border:2px solid oklch(0.78 0.17 90); padding:18px 20px; display:flex; align-items:center; gap:16px">
+                <div style="width:44px; height:44px; flex:none; border-radius:50%; background:oklch(0.78 0.17 90); display:flex; align-items:center; justify-content:center; font:700 17px/1 'Golos Text'; color:oklch(0.24 0.07 80)">3</div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.97 0.02 90)">Собери предложение</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.85 0.06 90)">8 предложений · сейчас</div></div>
+              </div>
+              <div style="border-radius:20px; background:oklch(0.22 0.035 285); padding:18px 20px; display:flex; align-items:center; gap:16px; opacity:0.7">
+                <div style="width:44px; height:44px; flex:none; border-radius:50%; background:oklch(0.28 0.04 285); display:flex; align-items:center; justify-content:center; font:700 17px/1 'Golos Text'; color:oklch(0.6 0.03 285)">4</div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.88 0.01 285)">Слушай и выбирай</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.62 0.03 285)">10 записей</div></div>
+              </div>
+              <div style="border-radius:20px; background:oklch(0.22 0.035 285); padding:18px 20px; display:flex; align-items:center; gap:16px; opacity:0.7">
+                <div style="width:44px; height:44px; flex:none; border-radius:50%; background:oklch(0.28 0.04 285); display:flex; align-items:center; justify-content:center; font:700 17px/1 'Golos Text'; color:oklch(0.6 0.03 285)">5</div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.88 0.01 285)">Скажи вслух</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.62 0.03 285)">6 фраз с Pablo</div></div>
+              </div>
+              <div style="border-radius:20px; background:oklch(0.22 0.035 285); padding:18px 20px; display:flex; align-items:center; gap:16px; opacity:0.7">
+                <div style="width:44px; height:44px; flex:none; border-radius:50%; background:oklch(0.28 0.06 90); display:flex; align-items:center; justify-content:center"><span style="width:20px; height:17px; border-radius:4px; background:oklch(0.78 0.17 90)"></span></div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.88 0.01 285)">Итог урока</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.62 0.03 285)">+120 XP</div></div>
+              </div>
+            </div>
+
+            <div style="margin-top:auto; height:60px; border-radius:18px; background:oklch(0.78 0.17 90); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Продолжить · шаг 3</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Карточка слова</div>
+        <div style="width:430px; min-height:932px; border-radius:46px; background:oklch(0.19 0.03 285); border:9px solid oklch(0.14 0.02 285); overflow:hidden; display:flex; flex-direction:column">
+          <div style="height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font:600 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)"><span>9:41</span><span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.95 0.01 285)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.95 0.01 285)"></span></span></div>
+          <div style="flex:none; padding:8px 20px 0; display:flex; align-items:center; gap:14px">
+            <div style="width:40px; height:40px; flex:none; border-radius:12px; background:oklch(0.24 0.04 285); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.9 0.02 285)">✕</div>
+            <div style="flex:1; height:12px; border-radius:6px; background:oklch(0.28 0.04 285); overflow:hidden"><div style="width:35%; height:100%; border-radius:6px; background:oklch(0.78 0.17 90)"></div></div>
+            <div style="font:700 15px/1 'Golos Text'; color:oklch(0.8 0.02 285)">4/12</div>
+          </div>
+
+          <div style="flex:1; padding:26px 20px; display:flex; flex-direction:column; gap:22px">
+            <div style="border-radius:28px; background:oklch(0.24 0.04 285); padding:26px 24px; display:flex; flex-direction:column; gap:20px">
+              <div style="height:210px; border-radius:20px; background:repeating-linear-gradient(135deg, oklch(0.28 0.045 285) 0 12px, oklch(0.26 0.04 285) 12px 24px); display:flex; align-items:center; justify-content:center"><span style="padding:8px 14px; border-radius:8px; background:oklch(0.2 0.03 285); font:500 12px/1 ui-monospace, monospace; color:oklch(0.7 0.03 285)">фото: приём у врача</span></div>
+              <div style="display:flex; flex-direction:column; gap:10px; align-items:center; text-align:center">
+                <div style="font:700 34px/1.15 'Unbounded'; color:oklch(0.97 0.01 285)">die Arztvisite</div>
+                <div style="display:flex; align-items:center; gap:10px">
+                  <span style="flex:none; white-space:nowrap; padding:6px 12px; border-radius:999px; background:oklch(0.3 0.08 300); font:700 12px/1 'Golos Text'; color:oklch(0.88 0.1 300)">die · f</span>
+                  <span style="font:400 15px/1 'Golos Text'; color:oklch(0.75 0.03 285)">[ˈaːɐ̯ttsviziːtə]</span>
+                </div>
+                <div style="font:500 21px/1.3 'Golos Text'; color:oklch(0.85 0.02 285)">визит к врачу, обход врача</div>
+              </div>
+              <div style="display:flex; gap:12px">
+                <div style="flex:1; height:52px; border-radius:15px; background:oklch(0.6 0.16 300); display:flex; align-items:center; justify-content:center; gap:10px; font:700 15px/1 'Golos Text'; color:oklch(0.99 0.01 300)"><span style="width:16px; height:16px; border-radius:3px; background:oklch(0.95 0.02 300)"></span>Слушать</div>
+                <div style="flex:none; width:52px; height:52px; border-radius:15px; background:oklch(0.3 0.05 285); display:flex; align-items:center; justify-content:center"><span style="width:18px; height:18px; border-radius:50%; border:2.5px solid oklch(0.8 0.1 55)"></span></div>
+              </div>
+            </div>
+
+            <div style="border-radius:22px; background:oklch(0.22 0.035 285); border:1px solid oklch(0.28 0.04 285); padding:20px; display:flex; flex-direction:column; gap:10px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.66 0.03 285)">В предложении</div>
+              <div style="font:600 20px/1.35 'Golos Text'; color:oklch(0.96 0.01 285)">Die <span style="color:oklch(0.8 0.14 90)">Arztvisite</span> ist wichtig.</div>
+              <div style="font:400 16px/1.35 'Golos Text'; color:oklch(0.72 0.03 285)">Визит к врачу — это важно.</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:auto">
+              <div style="height:60px; border-radius:18px; background:oklch(0.78 0.17 90); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Понятно</div>
+              <div style="height:52px; border-radius:16px; border:2px solid oklch(0.34 0.05 285); display:flex; align-items:center; justify-content:center; font:600 16px/1 'Golos Text'; color:oklch(0.82 0.02 285)">Ещё не выучил</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Упражнение · выбор перевода</div>
+        <div style="width:430px; min-height:932px; border-radius:46px; background:oklch(0.19 0.03 285); border:9px solid oklch(0.14 0.02 285); overflow:hidden; display:flex; flex-direction:column">
+          <div style="height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font:600 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)"><span>9:41</span><span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.95 0.01 285)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.95 0.01 285)"></span></span></div>
+          <div style="flex:none; padding:8px 20px 0; display:flex; align-items:center; gap:14px">
+            <div style="width:40px; height:40px; flex:none; border-radius:12px; background:oklch(0.24 0.04 285); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.9 0.02 285)">✕</div>
+            <div style="flex:1; height:12px; border-radius:6px; background:oklch(0.28 0.04 285); overflow:hidden"><div style="width:60%; height:100%; border-radius:6px; background:oklch(0.78 0.17 90)"></div></div>
+            <div style="display:flex; align-items:center; gap:6px"><span style="width:16px; height:16px; border-radius:50%; background:oklch(0.72 0.16 55)"></span><span style="font:700 15px/1 'Golos Text'; color:oklch(0.85 0.02 285)">3</span></div>
+          </div>
+
+          <div style="flex:1; padding:28px 20px; display:flex; flex-direction:column; gap:24px">
+            <div style="font:700 22px/1.3 'Unbounded'; color:oklch(0.96 0.01 285)">Что значит<br>«die Arztvisite»?</div>
+
+            <div style="display:flex; align-items:center; gap:16px; padding:20px; border-radius:22px; background:oklch(0.24 0.04 285)">
+              <div style="width:56px; height:56px; flex:none; border-radius:16px; background:oklch(0.6 0.16 300); display:flex; align-items:center; justify-content:center"><span style="width:18px; height:18px; border-radius:4px; background:oklch(0.96 0.02 300)"></span></div>
+              <div style="flex:1; display:flex; gap:4px; align-items:center; height:34px">
+                <div style="flex:1; height:10px; border-radius:5px; background:oklch(0.4 0.06 285)"></div>
+                <div style="flex:1; height:22px; border-radius:5px; background:oklch(0.5 0.1 300)"></div>
+                <div style="flex:1; height:34px; border-radius:5px; background:oklch(0.6 0.16 300)"></div>
+                <div style="flex:1; height:18px; border-radius:5px; background:oklch(0.5 0.1 300)"></div>
+                <div style="flex:1; height:28px; border-radius:5px; background:oklch(0.55 0.13 300)"></div>
+                <div style="flex:1; height:12px; border-radius:5px; background:oklch(0.4 0.06 285)"></div>
+                <div style="flex:1; height:20px; border-radius:5px; background:oklch(0.5 0.1 300)"></div>
+                <div style="flex:1; height:9px; border-radius:5px; background:oklch(0.38 0.05 285)"></div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <div style="display:flex; align-items:center; gap:16px; padding:22px 22px; border-radius:20px; background:oklch(0.24 0.04 285); border:2px solid oklch(0.28 0.04 285)">
+                <span style="width:34px; height:34px; flex:none; border-radius:10px; background:oklch(0.3 0.05 285); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.8 0.02 285)">1</span>
+                <span style="font:600 19px/1.3 'Golos Text'; color:oklch(0.95 0.01 285)">аптека</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; padding:22px; border-radius:20px; background:oklch(0.34 0.11 160); border:2px solid oklch(0.62 0.16 160)">
+                <span style="width:34px; height:34px; flex:none; border-radius:10px; background:oklch(0.62 0.16 160); display:flex; align-items:center; justify-content:center; font:700 17px/1 'Golos Text'; color:oklch(0.18 0.05 160)">✓</span>
+                <span style="font:700 19px/1.3 'Golos Text'; color:oklch(0.97 0.03 160)">визит к врачу</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; padding:22px; border-radius:20px; background:oklch(0.24 0.04 285); border:2px solid oklch(0.28 0.04 285)">
+                <span style="width:34px; height:34px; flex:none; border-radius:10px; background:oklch(0.3 0.05 285); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.8 0.02 285)">3</span>
+                <span style="font:600 19px/1.3 'Golos Text'; color:oklch(0.95 0.01 285)">больничный лист</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; padding:22px; border-radius:20px; background:oklch(0.24 0.04 285); border:2px solid oklch(0.28 0.04 285)">
+                <span style="width:34px; height:34px; flex:none; border-radius:10px; background:oklch(0.3 0.05 285); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.8 0.02 285)">4</span>
+                <span style="font:600 19px/1.3 'Golos Text'; color:oklch(0.95 0.01 285)">приёмная</span>
+              </div>
+            </div>
+
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:14px">
+              <div style="padding:18px 20px; border-radius:18px; background:oklch(0.3 0.09 160); display:flex; align-items:center; gap:14px">
+                <span style="width:34px; height:34px; flex:none; border-radius:50%; background:oklch(0.62 0.16 160); display:flex; align-items:center; justify-content:center; font:700 17px/1 'Golos Text'; color:oklch(0.18 0.05 160)">✓</span>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px"><span style="font:700 16px/1.2 'Golos Text'; color:oklch(0.95 0.05 160)">Верно! +10 XP</span><span style="font:400 14px/1.3 'Golos Text'; color:oklch(0.85 0.06 160)">Die Arztvisite ist wichtig.</span></div>
+              </div>
+              <div style="height:60px; border-radius:18px; background:oklch(0.78 0.17 90); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Дальше</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Упражнение · собери предложение</div>
+        <div style="width:430px; min-height:932px; border-radius:46px; background:oklch(0.19 0.03 285); border:9px solid oklch(0.14 0.02 285); overflow:hidden; display:flex; flex-direction:column">
+          <div style="height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font:600 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)"><span>9:41</span><span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.95 0.01 285)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.95 0.01 285)"></span></span></div>
+          <div style="flex:none; padding:8px 20px 0; display:flex; align-items:center; gap:14px">
+            <div style="width:40px; height:40px; flex:none; border-radius:12px; background:oklch(0.24 0.04 285); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.9 0.02 285)">✕</div>
+            <div style="flex:1; height:12px; border-radius:6px; background:oklch(0.28 0.04 285); overflow:hidden"><div style="width:78%; height:100%; border-radius:6px; background:oklch(0.78 0.17 90)"></div></div>
+            <div style="display:flex; align-items:center; gap:6px"><span style="width:16px; height:16px; border-radius:50%; background:oklch(0.72 0.16 55)"></span><span style="font:700 15px/1 'Golos Text'; color:oklch(0.85 0.02 285)">2</span></div>
+          </div>
+
+          <div style="flex:1; padding:28px 20px; display:flex; flex-direction:column; gap:22px">
+            <div style="font:700 22px/1.3 'Unbounded'; color:oklch(0.96 0.01 285)">Составь фразу</div>
+            <div style="padding:20px; border-radius:20px; background:oklch(0.24 0.04 285); display:flex; align-items:center; gap:14px">
+              <div style="width:44px; height:44px; flex:none; border-radius:13px; background:oklch(0.6 0.16 300)"></div>
+              <div style="flex:1; font:500 18px/1.35 'Golos Text'; color:oklch(0.9 0.02 285)">Визит к врачу — это важно.</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <div style="min-height:64px; border-radius:18px; border:2px dashed oklch(0.36 0.05 285); background:oklch(0.21 0.03 285); padding:14px; display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start">
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.6 0.16 300); font:600 18px/1 'Golos Text'; color:oklch(0.99 0.01 300)">Die</span>
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.6 0.16 300); font:600 18px/1 'Golos Text'; color:oklch(0.99 0.01 300)">Arztvisite</span>
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.6 0.16 300); font:600 18px/1 'Golos Text'; color:oklch(0.99 0.01 300)">ist</span>
+              </div>
+              <div style="height:2px; background:oklch(0.26 0.03 285)"></div>
+              <div style="display:flex; flex-wrap:wrap; gap:10px">
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.26 0.04 285); border:1px solid oklch(0.32 0.05 285); font:600 18px/1 'Golos Text'; color:oklch(0.92 0.01 285)">wichtig</span>
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.26 0.04 285); border:1px solid oklch(0.32 0.05 285); font:600 18px/1 'Golos Text'; color:oklch(0.92 0.01 285)">Termin</span>
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.26 0.04 285); border:1px solid oklch(0.32 0.05 285); font:600 18px/1 'Golos Text'; color:oklch(0.92 0.01 285)">sind</span>
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.26 0.04 285); border:1px solid oklch(0.32 0.05 285); font:600 18px/1 'Golos Text'; color:oklch(0.92 0.01 285)">der</span>
+                <span style="padding:12px 18px; border-radius:14px; background:oklch(0.26 0.04 285); border:1px solid oklch(0.32 0.05 285); font:600 18px/1 'Golos Text'; color:oklch(0.92 0.01 285)">heute</span>
+              </div>
+            </div>
+
+            <div style="padding:18px 20px; border-radius:18px; background:oklch(0.24 0.04 285); display:flex; align-items:center; gap:14px">
+              <span style="width:32px; height:32px; flex:none; border-radius:50%; background:oklch(0.3 0.06 200); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.8 0.12 200)">?</span>
+              <span style="flex:1; font:400 14px/1.4 'Golos Text'; color:oklch(0.75 0.03 285)">Подсказка: сказуемое «ist» стоит на втором месте.</span>
+            </div>
+
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:12px">
+              <div style="height:60px; border-radius:18px; background:oklch(0.78 0.17 90); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Проверить</div>
+              <div style="height:52px; border-radius:16px; border:2px solid oklch(0.34 0.05 285); display:flex; align-items:center; justify-content:center; font:600 16px/1 'Golos Text'; color:oklch(0.82 0.02 285)">Не знаю</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding:0 56px 110px; display:flex; flex-direction:column; gap:52px">
+
+  <div style="display:flex; flex-direction:column; gap:12px; max-width:900px">
+    <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.18em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Ход 1 · мобайл 430×932 · планшет 834×1112 · пк 1440×900</div>
+    <h1 style="margin:0; font:800 42px/1.05 'Unbounded'; letter-spacing:-0.02em; color:oklch(0.22 0.02 80)">Deutschlernen — три направления</h1>
+    <p style="margin:0; font:400 17px/1.55 'Golos Text'; color:oklch(0.42 0.02 80); text-wrap:pretty">Направления отличаются степенью геймификации и характером. Общее для всех: одна навигация из 5 пунктов на всех трёх платформах (таб-бар → рельс → сайдбар, один и тот же набор), один главный призыв на «Сегодня» и переработанный «Словарь» — вместо пяти рядов фильтров одна строка чипсов плюс шторка. Ответь номером: <a href="#1a">1a</a>, <a href="#1b">1b</a>, <a href="#1c">1c</a>.</p>
+  </div>
+
+  <div id="2a" style="display:flex; flex-direction:column; gap:24px; padding-bottom:40px; border-bottom:1px solid oklch(0.86 0.01 90)">
+    <div style="display:flex; flex-direction:column; gap:8px; max-width:760px">
+      <div style="display:flex; align-items:center; gap:12px">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:27px; padding:0 11px; border-radius:8px; background:oklch(0.32 0.09 262); color:#fff; font:700 13px/1 'Golos Text'">2a</span>
+        <span style="font:700 21px/1.2 'Unbounded'; color:oklch(0.22 0.02 80)">Главная («Сегодня») и карточки упражнений — направление «Ритм»</span>
+      </div>
+      <p style="margin:0; font:400 15px/1.5 'Golos Text'; color:oklch(0.45 0.02 80)">Взял направление 1b как основу и развернул детально: полная главная страница (хвосты, прогресс курса, стрик, тренер, игры, путь урока с картой, карточка урока со всеми типами упражнений, слова урока, наборы, повтор пройденного) и 4 карточки упражнений — выбор ответа, флеш-карта, заполни пропуск, чат с тренером. Ничего из списка функций не убрано, только переупакова́но визуально. Если нужно направление 1a или 1c вместо этого — скажи.</p>
+    </div>
+
+    <div style="display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap">
+
+      <!-- HOME full scroll -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Мобайл · Сегодня (полная прокрутка)</div>
+        <div style="width:430px; border-radius:34px; background:oklch(0.975 0.008 262); border:9px solid oklch(0.19 0.015 80); box-shadow:0 34px 70px -34px oklch(0.3 0.03 80/0.55); overflow:hidden; display:flex; flex-direction:column">
+
+          <div style="flex:none; background:oklch(0.995 0.004 262); border-bottom:1px solid oklch(0.91 0.012 262); display:flex; align-items:center; justify-content:space-between; padding:14px 20px">
+            <span style="width:22px; height:16px; display:flex; flex-direction:column; justify-content:space-between"><span style="height:2px; background:oklch(0.3 0.02 262); border-radius:1px"></span><span style="height:2px; background:oklch(0.3 0.02 262); border-radius:1px"></span><span style="height:2px; background:oklch(0.3 0.02 262); border-radius:1px"></span></span>
+            <div style="display:flex; align-items:center; gap:8px; font:700 15px/1 'Golos Text'; color:oklch(0.24 0.02 80)"><span style="width:18px; height:13px; border-radius:2px; background:linear-gradient(0deg, #000 33%, #d00 33% 66%, #fc0 66%)"></span>Немецкий</div>
+            <div style="display:flex; align-items:center; gap:10px"><span style="width:26px; height:26px; border-radius:50%; border:1.5px solid oklch(0.75 0.02 262)"></span><span style="width:30px; height:30px; border-radius:50%; background:oklch(0.6 0.03 262)"></span></div>
+          </div>
+
+          <div style="padding:18px 20px 0; display:flex; flex-direction:column; gap:14px">
+            <div style="border-radius:16px; background:oklch(0.94 0.06 90); border:1px solid oklch(0.85 0.09 85); padding:14px 16px; display:flex; align-items:center; gap:12px">
+              <span style="width:30px; height:30px; flex:none; border-radius:9px; background:oklch(0.75 0.16 90); display:flex; align-items:center; justify-content:center; font:700 13px/1 'Golos Text'; color:#fff">44</span>
+              <div style="flex:1; display:flex; flex-direction:column; gap:2px"><span style="font:700 14px/1.2 'Golos Text'; color:oklch(0.4 0.1 70)">Доделать хвосты</span><span style="font:400 12px/1.3 'Golos Text'; color:oklch(0.5 0.07 70)">Пропущенные упражнения — до финиша курса</span></div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+              <div style="font:700 24px/1.15 'Unbounded'; color:oklch(0.2 0.03 262)">Привет,<br>Павел 👋</div>
+              <div style="padding:10px 16px; border-radius:12px; border:1.5px solid oklch(0.85 0.012 262); font:600 13px/1 'Golos Text'; color:oklch(0.32 0.09 262)">Сменить курс</div>
+            </div>
+            <div style="font:500 14px/1 'Golos Text'; color:oklch(0.5 0.02 262)">8 861 упражнение ждёт повторения</div>
+
+            <div style="border-radius:18px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:16px 18px; display:flex; flex-direction:column; gap:8px">
+              <div style="display:flex; justify-content:space-between; font:600 14px/1 'Golos Text'; color:oklch(0.3 0.02 262)"><span>📘 Обучение по урокам</span><span>2 / 16</span></div>
+              <div style="height:8px; border-radius:4px; background:oklch(0.92 0.012 262); overflow:hidden"><div style="width:13%; height:100%; background:oklch(0.32 0.09 262)"></div></div>
+            </div>
+            <div style="border-radius:18px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:16px 18px; display:flex; flex-direction:column; gap:8px">
+              <div style="display:flex; justify-content:space-between; font:600 14px/1 'Golos Text'; color:oklch(0.3 0.02 262)"><span>⚡ Усиление знаний · слова</span><span>10 / 1069</span></div>
+              <div style="height:8px; border-radius:4px; background:oklch(0.92 0.012 262); overflow:hidden"><div style="width:4%; height:100%; background:oklch(0.75 0.16 90)"></div></div>
+            </div>
+
+            <div style="display:flex; gap:10px">
+              <div style="flex:1; border-radius:16px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:14px; display:flex; flex-direction:column; gap:3px"><span style="font:700 22px/1 'Unbounded'; color:oklch(0.22 0.02 262)">12</span><span style="font:400 12px/1.2 'Golos Text'; color:oklch(0.52 0.02 262)">карточек сегодня</span></div>
+              <div style="flex:1; border-radius:16px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:14px; display:flex; flex-direction:column; gap:3px"><span style="font:700 22px/1 'Unbounded'; color:oklch(0.22 0.02 262)">267</span><span style="font:400 12px/1.2 'Golos Text'; color:oklch(0.52 0.02 262)">всего карточек</span></div>
+              <div style="flex:1; border-radius:16px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:14px; display:flex; flex-direction:column; gap:3px"><span style="font:700 22px/1 'Unbounded'; color:oklch(0.68 0.16 45)">🔥4</span><span style="font:400 12px/1.2 'Golos Text'; color:oklch(0.52 0.02 262)">дней подряд</span></div>
+            </div>
+
+            <div style="height:56px; border-radius:16px; background:oklch(0.32 0.09 262); color:#fff; display:flex; align-items:center; justify-content:center; gap:10px; font:700 16px/1 'Golos Text'">▶ Повторить всё · 8861</div>
+
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.55 0.02 262)">Новое для учителя</div>
+              <div style="border-radius:16px; background:oklch(0.93 0.04 160); border:1px solid oklch(0.85 0.06 160); padding:14px 16px; display:flex; align-items:center; gap:12px">
+                <span style="width:34px; height:34px; flex:none; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center">📊</span>
+                <div style="flex:1; display:flex; flex-direction:column; gap:2px"><span style="font:700 14px/1.2 'Golos Text'; color:oklch(0.3 0.07 160)">Аналитика класса</span><span style="font:400 12px/1.3 'Golos Text'; color:oklch(0.42 0.06 160)">Прогресс учеников, точность, трудные слова</span></div>
+                <span style="padding:3px 8px; border-radius:6px; background:oklch(0.55 0.13 145); color:#fff; font:700 10px/1 'Golos Text'">NEW</span>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.55 0.02 262)">Тренер</div>
+              <div style="border-radius:16px; background:oklch(0.94 0.03 262); padding:14px 16px; display:flex; align-items:center; gap:12px">
+                <span style="width:34px; height:34px; flex:none; border-radius:50%; background:oklch(0.6 0.09 262)"></span>
+                <div style="flex:1; display:flex; flex-direction:column; gap:2px"><span style="font:700 14px/1.2 'Golos Text'; color:oklch(0.26 0.05 262)">Hallo! Ich bin Pablo</span><span style="font:400 12px/1.3 'Golos Text'; color:oklch(0.46 0.04 262)">Поговорим — голосом или текстом</span></div>
+              </div>
+              <div style="border-radius:16px; background:oklch(0.95 0.04 20); padding:14px 16px; display:flex; align-items:center; gap:12px">
+                <span style="width:34px; height:34px; flex:none; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center">❤️</span>
+                <div style="flex:1; display:flex; flex-direction:column; gap:2px"><span style="font:700 14px/1.2 'Golos Text'; color:oklch(0.34 0.09 20)">Любовь к детям</span><span style="font:400 12px/1.3 'Golos Text'; color:oklch(0.48 0.07 20)">Тёплые фразы для детей — с любовью</span></div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.55 0.02 262)">Игры</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                <div style="border-radius:14px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:13px 14px; display:flex; flex-direction:column; gap:3px"><span style="font:600 13px/1.2 'Golos Text'; color:oklch(0.26 0.02 262)">✓ Выбери ответ</span><span style="font:400 11px/1.3 'Golos Text'; color:oklch(0.55 0.02 262)">Тест по всем словам</span></div>
+                <div style="border-radius:14px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:13px 14px; display:flex; flex-direction:column; gap:3px"><span style="font:600 13px/1.2 'Golos Text'; color:oklch(0.26 0.02 262)">▤ Все карточки</span><span style="font:400 11px/1.3 'Golos Text'; color:oklch(0.55 0.02 262)">Флеш-карты по урокам</span></div>
+                <div style="border-radius:14px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:13px 14px; display:flex; flex-direction:column; gap:3px; position:relative"><span style="position:absolute; top:8px; right:8px; padding:2px 6px; border-radius:5px; background:oklch(0.55 0.13 145); color:#fff; font:700 9px/1 'Golos Text'">NEW</span><span style="font:600 13px/1.2 'Golos Text'; color:oklch(0.26 0.02 262)">⧉ Словопара</span><span style="font:400 11px/1.3 'Golos Text'; color:oklch(0.55 0.02 262)">Найди пары слов</span></div>
+                <div style="border-radius:14px; background:#fff; border:1px solid oklch(0.9 0.012 262); padding:13px 14px; display:flex; flex-direction:column; gap:3px; position:relative"><span style="position:absolute; top:8px; right:8px; padding:2px 6px; border-radius:5px; background:oklch(0.55 0.13 145); color:#fff; font:700 9px/1 'Golos Text'">NEW</span><span style="font:600 13px/1.2 'Golos Text'; color:oklch(0.26 0.02 262)">⚙ Кроссворд</span><span style="font:400 11px/1.3 'Golos Text'; color:oklch(0.55 0.02 262)">Впиши слова по переводам</span></div>
+                <div style="border-radius:14px; background:oklch(0.98 0.006 262); border:1.5px dashed oklch(0.8 0.012 262); padding:13px 14px; display:flex; flex-direction:column; gap:3px"><span style="font:600 13px/1.2 'Golos Text'; color:oklch(0.45 0.02 262)">✎ Создать набор</span><span style="font:400 11px/1.3 'Golos Text'; color:oklch(0.58 0.02 262)">Из нужных слов словаря</span></div>
+                <div style="border-radius:14px; background:#fff; border:1.5px solid oklch(0.32 0.09 262); padding:13px 14px; display:flex; flex-direction:column; gap:3px"><span style="font:600 13px/1.2 'Golos Text'; color:oklch(0.26 0.02 262)">🎮 Игра класса</span><span style="font:600 11px/1.3 'Golos Text'; color:oklch(0.4 0.13 150)">Готова</span></div>
+              </div>
+            </div>
+
+            <div style="height:46px; border-radius:13px; background:#fff; border:1px solid oklch(0.9 0.012 262); display:flex; align-items:center; padding:0 16px; gap:10px; margin-top:4px">
+              <span style="width:14px; height:14px; border-radius:50%; border:2px solid oklch(0.65 0.02 262)"></span><span style="font:400 14px/1 'Golos Text'; color:oklch(0.6 0.02 262)">Поиск урока по теме…</span>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px">
+              <div style="font:700 15px/1 'Golos Text'; color:oklch(0.24 0.02 262)">Путь урока</div>
+              <div style="display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:#fff; border:1px solid oklch(0.9 0.012 262)"><span style="font:500 13px/1 'Golos Text'; color:oklch(0.45 0.02 262)">Все уроки</span><span style="width:34px; height:20px; border-radius:10px; background:oklch(0.4 0.13 150); position:relative"><span style="position:absolute; right:2px; top:2px; width:16px; height:16px; border-radius:50%; background:#fff"></span></span></div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; align-items:center; gap:22px; padding:20px 0 6px">
+              <div style="display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:52px; height:52px; border-radius:50%; background:oklch(0.62 0.1 90); display:flex; align-items:center; justify-content:center; color:#fff; font:700 18px/1 'Golos Text'">✓</div><span style="font:500 12px/1.3 'Golos Text'; color:oklch(0.4 0.02 262); text-align:center; max-width:150px">Урок 1: Первые шаги и приветствия</span></div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:52px; height:52px; border-radius:50%; background:oklch(0.62 0.1 90); display:flex; align-items:center; justify-content:center; color:#fff; font:700 18px/1 'Golos Text'">✓</div><span style="font:500 12px/1.3 'Golos Text'; color:oklch(0.4 0.02 262); text-align:center; max-width:150px">Урок 2: Общение и язык</span></div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:60px; height:60px; border-radius:50%; background:#fff; border:3px solid oklch(0.32 0.09 262); display:flex; align-items:center; justify-content:center; color:oklch(0.32 0.09 262); font:700 20px/1 'Golos Text'">★</div><span style="font:700 13px/1.3 'Golos Text'; color:oklch(0.24 0.02 262); text-align:center; max-width:160px">Урок 3: Физиотерапия, еда и цвета</span></div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:48px; height:48px; border-radius:50%; border:2px dashed oklch(0.82 0.012 262); display:flex; align-items:center; justify-content:center; color:oklch(0.78 0.012 262); font:16px/1 'Golos Text'">☆</div><span style="font:500 12px/1.3 'Golos Text'; color:oklch(0.62 0.02 262); text-align:center; max-width:150px">Урок 4: Мой город и адрес</span></div>
+            </div>
+
+            <div style="border-radius:20px; background:oklch(0.94 0.06 90); border:1px solid oklch(0.85 0.09 85); padding:18px; display:flex; flex-direction:column; gap:14px">
+              <div style="display:flex; align-items:center; justify-content:space-between"><div style="font:700 16px/1.2 'Golos Text'; color:oklch(0.28 0.06 70)">★ Урок 3: Физиотерапия, еда и цвета</div><span style="padding:4px 10px; border-radius:999px; background:oklch(0.75 0.16 90); color:#fff; font:600 11px/1 'Golos Text'">в процессе</span></div>
+              <div style="font:500 13px/1 'Golos Text'; color:oklch(0.48 0.08 70)">109 упражнений ждут повторения</div>
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:#fff"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.92 0.012 262); display:flex; align-items:center; justify-content:center; font:700 11px/1 'Golos Text'; color:oklch(0.4 0.02 262)">14</span><span style="font:500 14px/1 'Golos Text'; color:oklch(0.28 0.02 262)">Выбери ответ</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:#fff"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.92 0.012 262); display:flex; align-items:center; justify-content:center; font:700 11px/1 'Golos Text'; color:oklch(0.4 0.02 262)">12</span><span style="font:500 14px/1 'Golos Text'; color:oklch(0.28 0.02 262)">Флеш-карта</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:#fff"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.92 0.012 262); display:flex; align-items:center; justify-content:center; font:700 11px/1 'Golos Text'; color:oklch(0.4 0.02 262)">13</span><span style="font:500 14px/1 'Golos Text'; color:oklch(0.28 0.02 262)">Добавь букву</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:#fff"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.92 0.012 262); display:flex; align-items:center; justify-content:center; font:700 11px/1 'Golos Text'; color:oklch(0.4 0.02 262)">12</span><span style="font:500 14px/1 'Golos Text'; color:oklch(0.28 0.02 262)">Заполни пропуск</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:#fff"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.92 0.012 262); display:flex; align-items:center; justify-content:center; font:700 11px/1 'Golos Text'; color:oklch(0.4 0.02 262)">12</span><span style="font:500 14px/1 'Golos Text'; color:oklch(0.28 0.02 262)">Напиши предложение</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:#fff"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.92 0.012 262); display:flex; align-items:center; justify-content:center; font:700 11px/1 'Golos Text'; color:oklch(0.4 0.02 262)">22</span><span style="font:500 14px/1 'Golos Text'; color:oklch(0.28 0.02 262)">Проговори слова</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:#fff"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.92 0.012 262); display:flex; align-items:center; justify-content:center; font:700 11px/1 'Golos Text'; color:oklch(0.4 0.02 262)">22</span><span style="font:500 14px/1 'Golos Text'; color:oklch(0.28 0.02 262)">Диктант</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:13px; background:oklch(0.93 0.04 262)"><span style="width:22px; height:22px; border-radius:50%; background:oklch(0.32 0.09 262)"></span><span style="font:600 14px/1 'Golos Text'; color:oklch(0.3 0.07 262)">Произношение с тренером</span></div>
+              </div>
+              <div style="height:50px; border-radius:14px; background:oklch(0.32 0.09 262); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; font:700 15px/1 'Golos Text'">✓ Зачёт по уроку</div>
+              <div style="display:flex; gap:8px">
+                <div style="flex:1; height:40px; border-radius:11px; background:#fff; border:1px solid oklch(0.87 0.08 85); display:flex; align-items:center; justify-content:center; font:500 12px/1 'Golos Text'; color:oklch(0.4 0.02 262)">🔊 Прослушать</div>
+                <div style="flex:1; height:40px; border-radius:11px; background:#fff; border:1px solid oklch(0.87 0.08 85); display:flex; align-items:center; justify-content:center; font:500 12px/1 'Golos Text'; color:oklch(0.4 0.02 262)">↺ Сбросить</div>
+                <div style="flex:1; height:40px; border-radius:11px; background:oklch(0.75 0.16 90); display:flex; align-items:center; justify-content:center; font:600 12px/1 'Golos Text'; color:oklch(0.24 0.07 80)">✎ 109</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:0; border-top:1px solid oklch(0.87 0.08 85); margin-top:2px">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 2px; border-bottom:1px solid oklch(0.9 0.07 85)"><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">die Physiotherapie</span><span style="font:400 13px/1.2 'Golos Text'; color:oklch(0.5 0.02 262)">физиотерапия</span></div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 2px; border-bottom:1px solid oklch(0.9 0.07 85)"><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">das Mittagessen</span><span style="font:400 13px/1.2 'Golos Text'; color:oklch(0.5 0.02 262)">обед</span></div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 2px; border-bottom:1px solid oklch(0.9 0.07 85)"><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">die Arztvisite</span><span style="font:400 13px/1.2 'Golos Text'; color:oklch(0.5 0.02 262)">врачебный обход</span></div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 2px"><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">die Farbe</span><span style="font:400 13px/1.2 'Golos Text'; color:oklch(0.5 0.02 262)">цвет</span></div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px">
+              <div style="display:flex; align-items:center; justify-content:space-between"><div style="font:700 15px/1 'Golos Text'; color:oklch(0.24 0.02 262)">🗂 Наборы</div><span style="font:400 12px/1 'Golos Text'; color:oklch(0.55 0.02 262)">твои подборки слов</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:13px; background:#fff; border:1px solid oklch(0.9 0.012 262)"><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.28 0.02 262)">Числа 0–100 и деньги</span><span style="font:400 13px/1 'Golos Text'; color:oklch(0.55 0.02 262)">111</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:13px; background:#fff; border:1px solid oklch(0.9 0.012 262)"><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.28 0.02 262)">Спорт, языки и учёба</span><span style="font:400 13px/1 'Golos Text'; color:oklch(0.55 0.02 262)">97</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:13px; background:#fff; border:1px solid oklch(0.9 0.012 262)"><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.28 0.02 262)">Дом и быт</span><span style="font:400 13px/1 'Golos Text'; color:oklch(0.55 0.02 262)">49</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:13px; background:oklch(0.98 0.006 262); border:1.5px dashed oklch(0.8 0.012 262)"><span style="font:500 14px/1.2 'Golos Text'; color:oklch(0.5 0.02 262)">+ ещё 17 тем · создать набор</span></div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px; padding-bottom:22px">
+              <div style="font:700 15px/1 'Golos Text'; color:oklch(0.24 0.02 262)">↺ Повторить пройденное</div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:13px; background:#fff; border:1px solid oklch(0.9 0.012 262)"><div style="display:flex; flex-direction:column; gap:2px"><span style="font:500 12px/1 'Golos Text'; color:oklch(0.4 0.13 150)">✓ пройдено</span><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.26 0.02 262)">Урок 2: Общение и язык</span></div><span style="padding:8px 14px; border-radius:10px; border:1.5px solid oklch(0.32 0.09 262); font:600 12px/1 'Golos Text'; color:oklch(0.32 0.09 262)">Повторить</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:13px; background:#fff; border:1px solid oklch(0.9 0.012 262)"><div style="display:flex; flex-direction:column; gap:2px"><span style="font:500 12px/1 'Golos Text'; color:oklch(0.4 0.13 150)">✓ пройдено</span><span style="font:600 14px/1.2 'Golos Text'; color:oklch(0.26 0.02 262)">Урок 1: Первые шаги</span></div><span style="padding:8px 14px; border-radius:10px; border:1.5px solid oklch(0.32 0.09 262); font:600 12px/1 'Golos Text'; color:oklch(0.32 0.09 262)">Повторить</span></div>
+            </div>
+          </div>
+
+          <div style="flex:none; height:88px; border-top:1px solid oklch(0.91 0.012 262); background:#fff; display:grid; grid-template-columns:repeat(5,1fr); padding:12px 6px 0; position:sticky; bottom:0">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.32 0.09 262)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.32 0.09 262)">Сегодня</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.62 0.02 262)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Словарь</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.62 0.02 262); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Тренер</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.62 0.02 262)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Читалка</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.62 0.02 262)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.62 0.02 262)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.62 0.02 262)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Ещё</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXERCISE CARDS -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Карточки упражнений</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+
+          <!-- Multiple choice -->
+          <div style="width:390px; height:660px; border-radius:32px; background:#fff; border:8px solid oklch(0.19 0.015 80); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 50px -30px oklch(0.3 0.03 80/0.5)">
+            <div style="flex:none; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid oklch(0.92 0.012 262)"><span style="font:600 13px/1 'Golos Text'; color:oklch(0.5 0.02 262)">1 / 14</span><span style="padding:6px 12px; border-radius:999px; background:oklch(0.94 0.06 90); font:600 12px/1 'Golos Text'; color:oklch(0.45 0.1 70)">★ в изучение</span></div>
+            <div style="height:170px; background:oklch(0.96 0.03 90); display:flex; align-items:center; justify-content:center"><div style="width:120px; height:120px; border-radius:18px; background:repeating-linear-gradient(135deg, oklch(0.9 0.05 85) 0 8px, oklch(0.86 0.05 85) 8px 16px)"></div></div>
+            <div style="flex:1; padding:18px; display:flex; flex-direction:column; gap:12px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.1em; text-transform:uppercase; color:oklch(0.55 0.02 262)">Выбери ответ · Урок 3</div>
+              <div style="border-radius:14px; background:oklch(0.96 0.008 262); padding:16px; display:flex; flex-direction:column; gap:6px"><div style="font:700 22px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">die Station</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.52 0.02 262)">Выбери правильный перевод</div></div>
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <div style="padding:12px 14px; border-radius:12px; border:1.5px solid oklch(0.85 0.1 25); background:oklch(0.97 0.03 25); font:500 14px/1 'Golos Text'; color:oklch(0.4 0.1 25)">A · автобус</div>
+                <div style="padding:12px 14px; border-radius:12px; border:1.5px solid oklch(0.55 0.13 150); background:oklch(0.94 0.05 150); font:600 14px/1 'Golos Text'; color:oklch(0.32 0.1 150); display:flex; justify-content:space-between">B · станция<span>✓</span></div>
+                <div style="padding:12px 14px; border-radius:12px; border:1px solid oklch(0.9 0.012 262); font:500 14px/1 'Golos Text'; color:oklch(0.55 0.02 262)">C · поезд</div>
+              </div>
+              <div style="margin-top:auto; height:46px; border-radius:13px; background:oklch(0.32 0.09 262); color:#fff; display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'">Далее →</div>
+            </div>
+          </div>
+
+          <!-- Flashcard -->
+          <div style="width:390px; height:660px; border-radius:32px; background:#fff; border:8px solid oklch(0.19 0.015 80); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 50px -30px oklch(0.3 0.03 80/0.5)">
+            <div style="flex:none; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid oklch(0.92 0.012 262)"><span style="font:600 13px/1 'Golos Text'; color:oklch(0.5 0.02 262)">3 / 12</span><span style="padding:6px 12px; border-radius:999px; background:oklch(0.94 0.06 90); font:600 12px/1 'Golos Text'; color:oklch(0.45 0.1 70)">★ в изучение</span></div>
+            <div style="height:170px; background:oklch(0.96 0.03 90); display:flex; align-items:center; justify-content:center"><div style="width:120px; height:120px; border-radius:18px; background:repeating-linear-gradient(135deg, oklch(0.9 0.05 85) 0 8px, oklch(0.86 0.05 85) 8px 16px)"></div></div>
+            <div style="flex:1; padding:18px; display:flex; flex-direction:column; gap:14px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.1em; text-transform:uppercase; color:oklch(0.55 0.02 262)">Флеш-карта · Урок 3</div>
+              <div style="border-radius:16px; background:oklch(0.96 0.008 262); padding:22px; display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center">
+                <div style="font:700 26px/1.2 'Unbounded'; color:oklch(0.24 0.02 262)">kommen aus</div>
+                <div style="width:60%; height:1px; background:oklch(0.88 0.012 262)"></div>
+                <div style="font:500 18px/1.3 'Golos Text'; color:oklch(0.32 0.09 262)">приехать из</div>
+              </div>
+              <div style="margin-top:auto; display:flex; gap:8px">
+                <div style="flex:1; height:48px; border-radius:13px; background:oklch(0.95 0.05 25); color:oklch(0.42 0.11 25); display:flex; align-items:center; justify-content:center; font:600 13px/1 'Golos Text'">Не помню</div>
+                <div style="flex:1; height:48px; border-radius:13px; background:oklch(0.94 0.06 70); color:oklch(0.4 0.1 60); display:flex; align-items:center; justify-content:center; font:600 13px/1 'Golos Text'">С трудом</div>
+                <div style="flex:1; height:48px; border-radius:13px; background:oklch(0.4 0.13 150); color:#fff; display:flex; align-items:center; justify-content:center; font:600 13px/1 'Golos Text'">Помню!</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fill gap -->
+          <div style="width:390px; height:660px; border-radius:32px; background:#fff; border:8px solid oklch(0.19 0.015 80); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 50px -30px oklch(0.3 0.03 80/0.5)">
+            <div style="flex:none; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid oklch(0.92 0.012 262)"><span style="font:600 13px/1 'Golos Text'; color:oklch(0.5 0.02 262)">1 / 12</span><span style="padding:6px 12px; border-radius:999px; background:oklch(0.94 0.06 90); font:600 12px/1 'Golos Text'; color:oklch(0.45 0.1 70)">★ в изучение</span></div>
+            <div style="height:150px; background:oklch(0.96 0.03 90); display:flex; align-items:center; justify-content:center"><div style="width:100px; height:100px; border-radius:16px; background:repeating-linear-gradient(135deg, oklch(0.9 0.05 85) 0 8px, oklch(0.86 0.05 85) 8px 16px)"></div></div>
+            <div style="flex:1; padding:18px; display:flex; flex-direction:column; gap:12px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.1em; text-transform:uppercase; color:oklch(0.55 0.02 262)">Заполни пропуск · Урок 3</div>
+              <div style="border-radius:14px; background:oklch(0.96 0.008 262); padding:16px; font:600 18px/1.5 'Golos Text'; color:oklch(0.24 0.02 262)">Ich esse <span style="color:oklch(0.6 0.15 25); text-decoration:underline">Abendessen</span> um 12.30 Uhr.</div>
+              <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.55 0.02 262)">С 12:30 до 13:15 я ем обед.</div>
+              <div style="border-radius:13px; background:oklch(0.95 0.05 25); padding:12px 14px; font:600 14px/1.3 'Golos Text'; color:oklch(0.42 0.1 25)">✗ Неверно. Правильно: Mittagessen</div>
+              <div style="border-radius:13px; background:oklch(0.94 0.06 150); padding:12px 14px; display:flex; flex-direction:column; gap:4px"><span style="font:700 15px/1 'Golos Text'; color:oklch(0.32 0.1 150)">Mittagessen</span><span style="font:400 13px/1.3 'Golos Text'; color:oklch(0.42 0.08 150)">Ich esse Mittagessen um 12.30 Uhr.</span></div>
+              <div style="display:flex; gap:8px; margin-top:auto">
+                <div style="flex:1; height:44px; border-radius:12px; border:1px solid oklch(0.88 0.012 262); display:flex; align-items:center; justify-content:center; font:500 13px/1 'Golos Text'; color:oklch(0.4 0.02 262)">В разговорник</div>
+                <div style="flex:1; height:44px; border-radius:12px; background:oklch(0.32 0.09 262); color:#fff; display:flex; align-items:center; justify-content:center; font:600 13px/1 'Golos Text'">Далее →</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat / trainer -->
+          <div style="width:390px; height:660px; border-radius:32px; background:oklch(0.19 0.03 285); border:8px solid oklch(0.14 0.02 285); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 50px -30px oklch(0.3 0.03 80/0.5)">
+            <div style="flex:none; padding:20px; display:flex; flex-direction:column; align-items:center; gap:10px">
+              <div style="width:76px; height:76px; border-radius:50%; background:oklch(0.4 0.1 300); border:3px solid oklch(0.75 0.16 90)"></div>
+              <div style="font:700 16px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Pablo Seoshkin</div>
+              <div style="padding:6px 14px; border-radius:999px; background:oklch(0.3 0.05 285); font:500 12px/1 'Golos Text'; color:oklch(0.85 0.16 90)">● Нажми и говори</div>
+            </div>
+            <div style="flex:1; padding:0 20px; display:flex; flex-direction:column; gap:12px; overflow:hidden">
+              <div style="align-self:flex-start; max-width:80%; border-radius:16px 16px 16px 4px; background:oklch(0.26 0.04 285); padding:12px 14px; display:flex; flex-direction:column; gap:4px"><span style="font:500 14px/1.4 'Golos Text'; color:oklch(0.94 0.01 285)">Hallo Pavel! Was isst du zum Mittagessen?</span></div>
+              <div style="align-self:flex-end; max-width:70%; border-radius:16px 16px 4px 16px; background:oklch(0.32 0.09 262); padding:12px 14px"><span style="font:500 14px/1.4 'Golos Text'; color:#fff">Ich esse Suppe</span></div>
+              <div style="align-self:flex-start; max-width:80%; border-radius:16px 16px 16px 4px; background:oklch(0.26 0.04 285); padding:12px 14px; display:flex; flex-direction:column; gap:4px"><span style="font:500 14px/1.4 'Golos Text'; color:oklch(0.94 0.01 285)">Sehr gut! Isst du gerne Suppe?</span><span style="font:400 12px/1.3 'Golos Text'; color:oklch(0.6 0.02 285)">Отлично! Тебе нравится суп?</span></div>
+            </div>
+            <div style="flex:none; padding:18px 20px; display:flex; justify-content:center"><div style="width:64px; height:64px; border-radius:50%; background:oklch(0.5 0.16 250); display:flex; align-items:center; justify-content:center"><span style="width:20px; height:26px; border-radius:10px; background:#fff"></span></div></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 1a ═══════════════════════════ -->
+  <div id="1a" style="display:flex; flex-direction:column; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:8px; max-width:640px">
+      <div style="display:flex; align-items:center; gap:12px">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:27px; padding:0 11px; border-radius:8px; background:oklch(0.22 0.02 80); color:#fff; font:700 13px/1 'Golos Text'">1a</span>
+        <span style="font:700 21px/1.2 'Unbounded'; color:oklch(0.22 0.02 80)">Тихий прогресс</span>
+      </div>
+      <p style="margin:0; font:400 15px/1.5 'Golos Text'; color:oklch(0.45 0.02 80)">Геймификация по минимуму: серия дней и один следующий шаг. Тёплая бумага, крупный шрифт, спокойный ритм. Для взрослых — интеграция, работа, экзамен.</p>
+    </div>
+
+    <div style="display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap">
+
+      <!-- 1a mobile · Сегодня -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Мобайл · Сегодня</div>
+        <div style="width:430px; height:932px; border-radius:46px; background:oklch(0.965 0.01 85); border:9px solid oklch(0.19 0.015 80); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.55); overflow:hidden; position:relative; display:flex; flex-direction:column">
+          <div style="height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font:600 15px/1 'Golos Text'; color:oklch(0.26 0.02 80)">
+            <span>9:41</span>
+            <span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.26 0.02 80)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.26 0.02 80)"></span></span>
+          </div>
+          <div style="flex:1; overflow:hidden; padding:4px 22px 0; display:flex; flex-direction:column; gap:18px">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <div style="font:500 14px/1 'Golos Text'; color:oklch(0.56 0.02 80)">Понедельник, 22 июля</div>
+                <div style="font:700 26px/1.15 'Unbounded'; color:oklch(0.22 0.02 80)">Привет, Павел</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:7px; padding:9px 14px; border-radius:999px; background:oklch(0.94 0.035 70); font:700 15px/1 'Golos Text'; color:oklch(0.45 0.11 55)">
+                <span style="width:9px; height:9px; border-radius:50%; background:oklch(0.68 0.15 50)"></span>12 дней
+              </div>
+            </div>
+
+            <div style="border-radius:28px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:24px; display:flex; flex-direction:column; gap:20px; box-shadow:0 14px 30px -26px oklch(0.3 0.03 80)">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px">
+                <div style="display:flex; flex-direction:column; gap:8px">
+                  <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.55 0.11 240)">Следующий шаг</div>
+                  <div style="font:700 22px/1.28 'Golos Text'; color:oklch(0.22 0.02 80)">Урок 16<br>Числа, еда и языки</div>
+                  <div style="font:400 14px/1.4 'Golos Text'; color:oklch(0.52 0.02 80)">8 файлов · 77 слов · ~12 минут</div>
+                </div>
+                <div style="width:64px; height:64px; flex:none; border-radius:50%; background:conic-gradient(oklch(0.55 0.11 240) 0 62%, oklch(0.9 0.012 85) 62%); display:flex; align-items:center; justify-content:center">
+                  <div style="width:50px; height:50px; border-radius:50%; background:oklch(0.995 0.004 85); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.28 0.02 80)">62%</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:center; height:56px; border-radius:16px; background:oklch(0.28 0.03 250); color:oklch(0.98 0.005 85); font:700 17px/1 'Golos Text'">Продолжить урок</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.55 0.02 80)">Сегодня к повторению</div>
+              <div style="display:flex; gap:12px">
+                <div style="flex:1; border-radius:20px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:16px 18px; display:flex; flex-direction:column; gap:4px">
+                  <div style="font:700 28px/1 'Unbounded'; color:oklch(0.22 0.02 80)">42</div>
+                  <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.52 0.02 80)">карточки</div>
+                </div>
+                <div style="flex:1; border-radius:20px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:16px 18px; display:flex; flex-direction:column; gap:4px">
+                  <div style="font:700 28px/1 'Unbounded'; color:oklch(0.22 0.02 80)">6</div>
+                  <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.52 0.02 80)">трудных слова</div>
+                </div>
+                <div style="flex:1; border-radius:20px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:16px 18px; display:flex; flex-direction:column; gap:4px">
+                  <div style="font:700 28px/1 'Unbounded'; color:oklch(0.22 0.02 80)">8</div>
+                  <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.52 0.02 80)">минут</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:center; height:52px; border-radius:16px; border:1.5px solid oklch(0.28 0.03 250); color:oklch(0.28 0.03 250); font:600 16px/1 'Golos Text'">Повторить карточки</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px">
+              <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.55 0.02 80)">Разговор с Pablo</div>
+              <div style="border-radius:22px; background:oklch(0.94 0.028 250); padding:18px 20px; display:flex; align-items:center; gap:14px">
+                <div style="width:44px; height:44px; flex:none; border-radius:50%; background:oklch(0.72 0.09 250)"></div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px">
+                  <div style="font:700 16px/1.2 'Golos Text'; color:oklch(0.24 0.04 250)">Hallo! Ich bin Pablo</div>
+                  <div style="font:400 13px/1.35 'Golos Text'; color:oklch(0.44 0.04 250)">Тема на сегодня: заказ в кафе</div>
+                </div>
+                <div style="width:34px; height:34px; flex:none; border-radius:50%; background:oklch(0.28 0.03 250)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:none; height:92px; border-top:1px solid oklch(0.89 0.01 85); background:oklch(0.985 0.006 85); display:grid; grid-template-columns:repeat(5,1fr); padding:12px 6px 0">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.28 0.03 250)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.28 0.03 250)">Сегодня</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.6 0.02 80)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Словарь</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.6 0.02 80); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Тренер</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.6 0.02 80)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Читалка</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Ещё</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1a tablet · Словарь -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Планшет 834×1112 · Словарь</div>
+        <div style="width:834px; height:1112px; border-radius:26px; background:oklch(0.965 0.01 85); border:8px solid oklch(0.19 0.015 80); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.55); overflow:hidden; display:flex">
+          <div style="width:96px; flex:none; border-right:1px solid oklch(0.89 0.01 85); background:oklch(0.985 0.006 85); padding:26px 0; display:flex; flex-direction:column; align-items:center; gap:10px">
+            <div style="width:38px; height:38px; border-radius:12px; background:oklch(0.28 0.03 250); margin-bottom:16px"></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Сегодня</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; background:oklch(0.92 0.025 250); display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.28 0.03 250)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.28 0.03 250)">Словарь</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.6 0.02 80); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Тренер</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.6 0.02 80)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Читалка</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Ещё</span></div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; overflow:hidden">
+            <div style="padding:30px 34px 20px; display:flex; flex-direction:column; gap:20px; border-bottom:1px solid oklch(0.9 0.01 85)">
+              <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:20px">
+                <div style="display:flex; flex-direction:column; gap:5px">
+                  <div style="font:700 32px/1.1 'Unbounded'; color:oklch(0.22 0.02 80)">Словарь</div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.52 0.02 80)">1081 слово · 8 выучено · 31 в работе</div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:center; height:46px; padding:0 22px; border-radius:14px; background:oklch(0.28 0.03 250); color:#fff; font:600 15px/1 'Golos Text'">Учить набор</div>
+              </div>
+              <div style="display:flex; gap:12px; align-items:center">
+                <div style="flex:1; height:48px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.89 0.01 85); display:flex; align-items:center; padding:0 18px; gap:12px">
+                  <span style="width:15px; height:15px; border-radius:50%; border:2px solid oklch(0.62 0.02 80)"></span>
+                  <span style="font:400 15px/1 'Golos Text'; color:oklch(0.6 0.02 80)">Поиск слова или перевода</span>
+                </div>
+                <div style="height:48px; padding:0 20px; border-radius:14px; border:1.5px solid oklch(0.82 0.012 85); display:flex; align-items:center; gap:10px; font:600 15px/1 'Golos Text'; color:oklch(0.3 0.02 80)">Фильтры<span style="display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; border-radius:999px; background:oklch(0.28 0.03 250); color:#fff; font:700 12px/1 'Golos Text'">2</span></div>
+              </div>
+              <div style="display:flex; gap:10px">
+                <div style="padding:10px 18px; border-radius:999px; background:oklch(0.28 0.03 250); color:#fff; font:600 14px/1 'Golos Text'">Все · 1081</div>
+                <div style="padding:10px 18px; border-radius:999px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.88 0.01 85); font:500 14px/1 'Golos Text'; color:oklch(0.34 0.02 80)">Новые · 1042</div>
+                <div style="padding:10px 18px; border-radius:999px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.88 0.01 85); font:500 14px/1 'Golos Text'; color:oklch(0.34 0.02 80)">Учу · 31</div>
+                <div style="padding:10px 18px; border-radius:999px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.88 0.01 85); font:500 14px/1 'Golos Text'; color:oklch(0.34 0.02 80)">Выучено · 8</div>
+                <div style="padding:10px 18px; border-radius:999px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.88 0.01 85); font:500 14px/1 'Golos Text'; color:oklch(0.34 0.02 80)">Трудные · 6</div>
+              </div>
+            </div>
+
+            <div style="flex:1; padding:24px 34px; display:flex; flex-direction:column; gap:14px; overflow:hidden">
+              <div style="display:flex; align-items:center; gap:12px">
+                <div style="font:700 13px/1 'Golos Text'; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.5 0.02 80)">Числа 0–100 и деньги</div>
+                <div style="flex:1; height:1px; background:oklch(0.89 0.01 85)"></div>
+                <div style="font:400 13px/1 'Golos Text'; color:oklch(0.6 0.02 80)">70 слов</div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">neunundneunzig</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">девяносто девять</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Числа</span></div>
+                </div>
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">achtundneunzig</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">девяносто восемь</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Числа</span></div>
+                </div>
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">siebenundneunzig</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">девяносто семь</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.93 0.05 150); font:600 12px/1 'Golos Text'; color:oklch(0.38 0.09 150)">Учу</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Числа</span></div>
+                </div>
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">sechsundneunzig</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">девяносто шесть</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Числа</span></div>
+                </div>
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">fünfundneunzig</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">девяносто пять</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.04 85); font:600 12px/1 'Golos Text'; color:oklch(0.42 0.09 60)">Трудное</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Числа</span></div>
+                </div>
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">vierundneunzig</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">девяносто четыре</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Числа</span></div>
+                </div>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:12px; margin-top:8px">
+                <div style="font:700 13px/1 'Golos Text'; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.5 0.02 80)">Спорт, языки и учёба</div>
+                <div style="flex:1; height:1px; background:oklch(0.89 0.01 85)"></div>
+                <div style="font:400 13px/1 'Golos Text'; color:oklch(0.6 0.02 80)">97 слов</div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">die Mannschaft</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">команда</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Спорт</span></div>
+                </div>
+                <div style="border-radius:18px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px"><div style="font:700 20px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">der Unterricht</div><span style="width:26px; height:26px; border-radius:50%; border:2px solid oklch(0.72 0.02 80)"></span></div>
+                  <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.5 0.02 80)">урок, занятие</div>
+                  <div style="display:flex; gap:8px; margin-top:4px"><span style="padding:5px 11px; border-radius:999px; background:oklch(0.93 0.05 150); font:600 12px/1 'Golos Text'; color:oklch(0.38 0.09 150)">Учу</span><span style="padding:5px 11px; border-radius:999px; background:oklch(0.95 0.008 85); font:500 12px/1 'Golos Text'; color:oklch(0.5 0.02 80)">Учёба</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1a desktop · Словарь -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">ПК 1440×900 · Словарь</div>
+        <div style="width:1440px; height:900px; border-radius:16px; background:oklch(0.965 0.01 85); border:1px solid oklch(0.86 0.01 85); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.5); overflow:hidden; display:flex">
+          <div style="width:250px; flex:none; border-right:1px solid oklch(0.89 0.01 85); background:oklch(0.985 0.006 85); padding:26px 18px; display:flex; flex-direction:column; gap:6px">
+            <div style="display:flex; align-items:center; gap:12px; padding:0 8px 22px">
+              <div style="width:34px; height:34px; border-radius:11px; background:oklch(0.28 0.03 250)"></div>
+              <div style="font:700 17px/1 'Unbounded'; color:oklch(0.22 0.02 80)">Deutsch</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:19px; height:19px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.4 0.02 80)">Сегодня</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px; background:oklch(0.92 0.025 250)"><span style="width:19px; height:19px; border-radius:4px; border:2px solid oklch(0.28 0.03 250)"></span><span style="font:600 15px/1 'Golos Text'; color:oklch(0.28 0.03 250)">Словарь</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:18px; height:18px; background:oklch(0.6 0.02 80); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.4 0.02 80)">Тренер</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:19px; height:19px; border-radius:50%; border:2px solid oklch(0.6 0.02 80)"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.4 0.02 80)">Читалка</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="display:flex; gap:3px; width:19px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.02 80)"></span></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.4 0.02 80)">Ещё</span></div>
+
+            <div style="margin-top:26px; padding:0 16px 10px; font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.6 0.02 80)">В разделе «Ещё»</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.48 0.02 80)">Уроки и наборы</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.48 0.02 80)">Разговорник</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.48 0.02 80)">Грамматика</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.48 0.02 80)">Школы и репетиторы</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.48 0.02 80)">Моя школа</div>
+
+            <div style="margin-top:auto; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; border:1px solid oklch(0.89 0.01 85); background:oklch(0.995 0.004 85)">
+              <div style="width:32px; height:32px; border-radius:50%; background:oklch(0.78 0.06 70)"></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:2px"><span style="font:600 13px/1 'Golos Text'; color:oklch(0.28 0.02 80)">sivtsov.pavel</span><span style="font:400 12px/1 'Golos Text'; color:oklch(0.58 0.02 80)">Учитель</span></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; overflow:hidden">
+            <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; border-right:1px solid oklch(0.89 0.01 85)">
+              <div style="padding:30px 36px 20px; display:flex; flex-direction:column; gap:18px; border-bottom:1px solid oklch(0.9 0.01 85)">
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:20px">
+                  <div style="display:flex; flex-direction:column; gap:5px">
+                    <div style="font:700 30px/1.1 'Unbounded'; color:oklch(0.22 0.02 80)">Словарь</div>
+                    <div style="font:400 15px/1.3 'Golos Text'; color:oklch(0.52 0.02 80)">1081 слово · 8 выучено · 31 в работе</div>
+                  </div>
+                  <div style="display:flex; gap:10px">
+                    <div style="height:44px; padding:0 20px; border-radius:13px; border:1.5px solid oklch(0.82 0.012 85); display:flex; align-items:center; font:600 14px/1 'Golos Text'; color:oklch(0.3 0.02 80)">Слова с фото</div>
+                    <div style="height:44px; padding:0 22px; border-radius:13px; background:oklch(0.28 0.03 250); color:#fff; display:flex; align-items:center; font:600 14px/1 'Golos Text'">Учить набор</div>
+                  </div>
+                </div>
+                <div style="display:flex; gap:12px; align-items:center">
+                  <div style="flex:1; height:46px; border-radius:13px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.89 0.01 85); display:flex; align-items:center; padding:0 18px; gap:12px">
+                    <span style="width:14px; height:14px; border-radius:50%; border:2px solid oklch(0.62 0.02 80)"></span>
+                    <span style="font:400 15px/1 'Golos Text'; color:oklch(0.6 0.02 80)">Поиск слова или перевода</span>
+                  </div>
+                  <div style="display:flex; gap:8px">
+                    <div style="padding:11px 17px; border-radius:999px; background:oklch(0.28 0.03 250); color:#fff; font:600 14px/1 'Golos Text'">Все · 1081</div>
+                    <div style="padding:11px 17px; border-radius:999px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.88 0.01 85); font:500 14px/1 'Golos Text'; color:oklch(0.34 0.02 80)">Новые · 1042</div>
+                    <div style="padding:11px 17px; border-radius:999px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.88 0.01 85); font:500 14px/1 'Golos Text'; color:oklch(0.34 0.02 80)">Учу · 31</div>
+                    <div style="padding:11px 17px; border-radius:999px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.88 0.01 85); font:500 14px/1 'Golos Text'; color:oklch(0.34 0.02 80)">Выучено · 8</div>
+                    <div style="padding:11px 17px; border-radius:999px; border:1.5px solid oklch(0.82 0.012 85); font:600 14px/1 'Golos Text'; color:oklch(0.3 0.02 80)">Фильтры</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="flex:1; padding:22px 36px; display:flex; flex-direction:column; gap:10px; overflow:hidden">
+                <div style="display:flex; align-items:center; gap:12px; padding-bottom:6px">
+                  <div style="font:700 13px/1 'Golos Text'; letter-spacing:0.14em; text-transform:uppercase; color:oklch(0.5 0.02 80)">Числа 0–100 и деньги</div>
+                  <div style="flex:1; height:1px; background:oklch(0.89 0.01 85)"></div>
+                  <div style="font:400 13px/1 'Golos Text'; color:oklch(0.6 0.02 80)">70 слов</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px; padding:16px 20px; border-radius:14px; background:oklch(0.93 0.028 250); border:1px solid oklch(0.86 0.04 250)">
+                  <span style="width:22px; height:22px; border-radius:6px; border:2px solid oklch(0.5 0.08 250)"></span>
+                  <div style="width:250px; font:700 18px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">neunundneunzig</div>
+                  <div style="flex:1; font:400 15px/1.2 'Golos Text'; color:oklch(0.45 0.02 80)">девяносто девять</div>
+                  <span style="padding:6px 12px; border-radius:999px; background:oklch(0.99 0.004 85); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span>
+                  <span style="width:28px; height:28px; border-radius:50%; border:2px solid oklch(0.66 0.03 250)"></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px; padding:16px 20px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85)">
+                  <span style="width:22px; height:22px; border-radius:6px; border:2px solid oklch(0.78 0.012 85)"></span>
+                  <div style="width:250px; font:700 18px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">achtundneunzig</div>
+                  <div style="flex:1; font:400 15px/1.2 'Golos Text'; color:oklch(0.45 0.02 80)">девяносто восемь</div>
+                  <span style="padding:6px 12px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span>
+                  <span style="width:28px; height:28px; border-radius:50%; border:2px solid oklch(0.74 0.02 80)"></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px; padding:16px 20px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85)">
+                  <span style="width:22px; height:22px; border-radius:6px; border:2px solid oklch(0.78 0.012 85)"></span>
+                  <div style="width:250px; font:700 18px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">siebenundneunzig</div>
+                  <div style="flex:1; font:400 15px/1.2 'Golos Text'; color:oklch(0.45 0.02 80)">девяносто семь</div>
+                  <span style="padding:6px 12px; border-radius:999px; background:oklch(0.93 0.05 150); font:600 12px/1 'Golos Text'; color:oklch(0.38 0.09 150)">Учу</span>
+                  <span style="width:28px; height:28px; border-radius:50%; border:2px solid oklch(0.74 0.02 80)"></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px; padding:16px 20px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85)">
+                  <span style="width:22px; height:22px; border-radius:6px; border:2px solid oklch(0.78 0.012 85)"></span>
+                  <div style="width:250px; font:700 18px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">sechsundneunzig</div>
+                  <div style="flex:1; font:400 15px/1.2 'Golos Text'; color:oklch(0.45 0.02 80)">девяносто шесть</div>
+                  <span style="padding:6px 12px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span>
+                  <span style="width:28px; height:28px; border-radius:50%; border:2px solid oklch(0.74 0.02 80)"></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px; padding:16px 20px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85)">
+                  <span style="width:22px; height:22px; border-radius:6px; border:2px solid oklch(0.78 0.012 85)"></span>
+                  <div style="width:250px; font:700 18px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">fünfundneunzig</div>
+                  <div style="flex:1; font:400 15px/1.2 'Golos Text'; color:oklch(0.45 0.02 80)">девяносто пять</div>
+                  <span style="padding:6px 12px; border-radius:999px; background:oklch(0.95 0.04 85); font:600 12px/1 'Golos Text'; color:oklch(0.42 0.09 60)">Трудное</span>
+                  <span style="width:28px; height:28px; border-radius:50%; border:2px solid oklch(0.74 0.02 80)"></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px; padding:16px 20px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85)">
+                  <span style="width:22px; height:22px; border-radius:6px; border:2px solid oklch(0.78 0.012 85)"></span>
+                  <div style="width:250px; font:700 18px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">vierundneunzig</div>
+                  <div style="flex:1; font:400 15px/1.2 'Golos Text'; color:oklch(0.45 0.02 80)">девяносто четыре</div>
+                  <span style="padding:6px 12px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span>
+                  <span style="width:28px; height:28px; border-radius:50%; border:2px solid oklch(0.74 0.02 80)"></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px; padding:16px 20px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85)">
+                  <span style="width:22px; height:22px; border-radius:6px; border:2px solid oklch(0.78 0.012 85)"></span>
+                  <div style="width:250px; font:700 18px/1.2 'Golos Text'; color:oklch(0.22 0.02 80)">dreiundneunzig</div>
+                  <div style="flex:1; font:400 15px/1.2 'Golos Text'; color:oklch(0.45 0.02 80)">девяносто три</div>
+                  <span style="padding:6px 12px; border-radius:999px; background:oklch(0.94 0.03 250); font:600 12px/1 'Golos Text'; color:oklch(0.4 0.08 250)">Новое</span>
+                  <span style="width:28px; height:28px; border-radius:50%; border:2px solid oklch(0.74 0.02 80)"></span>
+                </div>
+              </div>
+            </div>
+
+            <div style="width:360px; flex:none; background:oklch(0.985 0.006 85); padding:30px 28px; display:flex; flex-direction:column; gap:22px; overflow:hidden">
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.58 0.02 80)">Выбранное слово</div>
+                <div style="font:700 30px/1.15 'Unbounded'; color:oklch(0.22 0.02 80)">neunundneunzig</div>
+                <div style="font:400 17px/1.3 'Golos Text'; color:oklch(0.46 0.02 80)">девяносто девять</div>
+              </div>
+              <div style="display:flex; gap:10px">
+                <div style="flex:1; height:44px; border-radius:12px; background:oklch(0.28 0.03 250); color:#fff; display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'">Прослушать</div>
+                <div style="flex:1; height:44px; border-radius:12px; border:1.5px solid oklch(0.82 0.012 85); display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'; color:oklch(0.3 0.02 80)">В трудные</div>
+              </div>
+              <div style="border-radius:16px; overflow:hidden; border:1px solid oklch(0.9 0.01 85); background:repeating-linear-gradient(135deg, oklch(0.93 0.008 85) 0 10px, oklch(0.9 0.008 85) 10px 20px); height:190px; display:flex; align-items:center; justify-content:center">
+                <span style="padding:8px 14px; border-radius:8px; background:oklch(0.99 0.004 85); font:500 12px/1 ui-monospace, monospace; color:oklch(0.45 0.02 80)">фото к слову</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px">
+                <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.58 0.02 80)">Пример</div>
+                <div style="padding:16px 18px; border-radius:14px; background:oklch(0.995 0.004 85); border:1px solid oklch(0.9 0.01 85); display:flex; flex-direction:column; gap:6px">
+                  <div style="font:600 16px/1.35 'Golos Text'; color:oklch(0.24 0.02 80)">Das Buch kostet neunundneunzig Euro.</div>
+                  <div style="font:400 14px/1.35 'Golos Text'; color:oklch(0.52 0.02 80)">Книга стоит девяносто девять евро.</div>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px">
+                <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.58 0.02 80)">Прогресс повторений</div>
+                <div style="display:flex; gap:6px">
+                  <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.55 0.11 240)"></div>
+                  <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.55 0.11 240)"></div>
+                  <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.9 0.012 85)"></div>
+                  <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.9 0.012 85)"></div>
+                  <div style="flex:1; height:8px; border-radius:4px; background:oklch(0.9 0.012 85)"></div>
+                </div>
+                <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.55 0.02 80)">Следующее повторение через 2 дня</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 1b ═══════════════════════════ -->
+  <div id="1b" style="display:flex; flex-direction:column; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:8px; max-width:640px">
+      <div style="display:flex; align-items:center; gap:12px">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:27px; padding:0 11px; border-radius:8px; background:oklch(0.22 0.02 80); color:#fff; font:700 13px/1 'Golos Text'">1b</span>
+        <span style="font:700 21px/1.2 'Unbounded'; color:oklch(0.22 0.02 80)">Ритм</span>
+      </div>
+      <p style="margin:0; font:400 15px/1.5 'Golos Text'; color:oklch(0.45 0.02 80)">Средняя геймификация: дневная цель, серия, неделя в полосках и три задания. Энергичнее по цвету и типографике, но без «игрушечности» — рабочая середина для смешанной аудитории.</p>
+    </div>
+
+    <div style="display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap">
+
+      <!-- 1b mobile -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Мобайл · Сегодня</div>
+        <div style="width:430px; min-height:932px; border-radius:46px; background:oklch(0.975 0.008 250); border:9px solid oklch(0.19 0.015 80); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.55); overflow:hidden; display:flex; flex-direction:column">
+          <div style="flex:none; background:oklch(0.32 0.09 262); padding:0 22px 26px; display:flex; flex-direction:column; gap:20px; border-radius:0 0 30px 30px">
+            <div style="height:52px; display:flex; align-items:center; justify-content:space-between; padding:0 8px; font:600 15px/1 'Golos Text'; color:oklch(0.96 0.01 262)">
+              <span>9:41</span>
+              <span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.96 0.01 262)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.96 0.01 262)"></span></span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <div style="font:500 13px/1 'Golos Text'; letter-spacing:0.1em; text-transform:uppercase; color:oklch(0.78 0.06 262)">День 12 подряд</div>
+                <div style="font:700 26px/1.15 'Unbounded'; color:oklch(0.98 0.01 262)">Привет, Павел</div>
+              </div>
+              <div style="width:52px; height:52px; border-radius:50%; background:oklch(0.42 0.09 262); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.95 0.02 262)">П</div>
+            </div>
+            <div style="border-radius:22px; background:oklch(0.38 0.09 262); padding:20px; display:flex; align-items:center; gap:20px">
+              <div style="width:78px; height:78px; flex:none; border-radius:50%; background:conic-gradient(oklch(0.82 0.16 90) 0 68%, oklch(0.46 0.07 262) 68%); display:flex; align-items:center; justify-content:center">
+                <div style="width:60px; height:60px; border-radius:50%; background:oklch(0.38 0.09 262); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px">
+                  <span style="font:700 19px/1 'Unbounded'; color:oklch(0.97 0.01 262)">34</span>
+                  <span style="font:500 10px/1 'Golos Text'; color:oklch(0.78 0.05 262)">/ 50 XP</span>
+                </div>
+              </div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:8px">
+                <div style="font:700 18px/1.25 'Golos Text'; color:oklch(0.97 0.01 262)">Дневная цель почти взята</div>
+                <div style="font:400 14px/1.35 'Golos Text'; color:oklch(0.8 0.04 262)">Осталось 16 XP — это одно повторение карточек</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:7px; align-items:flex-end; height:44px">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:100%; height:26px; border-radius:6px; background:oklch(0.82 0.16 90)"></div><span style="font:500 10px/1 'Golos Text'; color:oklch(0.75 0.05 262)">пн</span></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:100%; height:18px; border-radius:6px; background:oklch(0.82 0.16 90)"></div><span style="font:500 10px/1 'Golos Text'; color:oklch(0.75 0.05 262)">вт</span></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:100%; height:30px; border-radius:6px; background:oklch(0.82 0.16 90)"></div><span style="font:500 10px/1 'Golos Text'; color:oklch(0.75 0.05 262)">ср</span></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:100%; height:12px; border-radius:6px; background:oklch(0.82 0.16 90)"></div><span style="font:500 10px/1 'Golos Text'; color:oklch(0.75 0.05 262)">чт</span></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:100%; height:24px; border-radius:6px; background:oklch(0.82 0.16 90)"></div><span style="font:500 10px/1 'Golos Text'; color:oklch(0.75 0.05 262)">пт</span></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:100%; height:8px; border-radius:6px; background:oklch(0.5 0.07 262)"></div><span style="font:500 10px/1 'Golos Text'; color:oklch(0.75 0.05 262)">сб</span></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:100%; height:17px; border-radius:6px; background:oklch(0.62 0.14 262)"></div><span style="font:600 10px/1 'Golos Text'; color:oklch(0.92 0.02 262)">вс</span></div>
+            </div>
+          </div>
+
+          <div style="flex:1; padding:22px 22px 24px; display:flex; flex-direction:column; gap:16px">
+            <div style="display:flex; align-items:center; justify-content:space-between">
+              <div style="font:700 17px/1 'Golos Text'; color:oklch(0.22 0.02 262)">Задания на сегодня</div>
+              <div style="font:500 14px/1 'Golos Text'; color:oklch(0.5 0.05 262)">1 из 3</div>
+            </div>
+
+            <div style="border-radius:22px; background:oklch(1 0 0); border:1.5px solid oklch(0.62 0.14 262); padding:20px; display:flex; align-items:center; gap:16px; box-shadow:0 14px 28px -24px oklch(0.32 0.09 262)">
+              <div style="width:46px; height:46px; flex:none; border-radius:14px; background:oklch(0.92 0.05 262); display:flex; align-items:center; justify-content:center"><span style="width:18px; height:18px; border-radius:5px; border:2.5px solid oklch(0.45 0.12 262)"></span></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:3px">
+                <div style="font:700 17px/1.25 'Golos Text'; color:oklch(0.22 0.02 262)">Урок 16 · Числа, еда и языки</div>
+                <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.5 0.02 262)">77 слов · ~12 минут · +20 XP</div>
+              </div>
+              <div style="width:38px; height:38px; flex:none; border-radius:50%; background:oklch(0.32 0.09 262)"></div>
+            </div>
+
+            <div style="border-radius:22px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:20px; display:flex; align-items:center; gap:16px">
+              <div style="width:46px; height:46px; flex:none; border-radius:14px; background:oklch(0.94 0.03 150); display:flex; align-items:center; justify-content:center"><span style="width:17px; height:17px; border-radius:50%; border:2.5px solid oklch(0.48 0.11 150)"></span></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:3px">
+                <div style="font:700 17px/1.25 'Golos Text'; color:oklch(0.22 0.02 262)">Повторить 42 карточки</div>
+                <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.5 0.02 262)">6 трудных · +16 XP</div>
+              </div>
+              <div style="width:38px; height:38px; flex:none; border-radius:50%; border:2px solid oklch(0.85 0.012 262)"></div>
+            </div>
+
+            <div style="border-radius:22px; background:oklch(0.96 0.008 262); border:1px solid oklch(0.91 0.012 262); padding:20px; display:flex; align-items:center; gap:16px; opacity:0.75">
+              <div style="width:46px; height:46px; flex:none; border-radius:14px; background:oklch(0.93 0.012 262); display:flex; align-items:center; justify-content:center"><span style="width:16px; height:16px; background:oklch(0.6 0.02 262); transform:rotate(45deg); border-radius:3px"></span></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:3px">
+                <div style="font:700 17px/1.25 'Golos Text'; color:oklch(0.32 0.02 262); text-decoration:line-through">Разговор с Pablo · кафе</div>
+                <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.5 0.02 262)">Готово · +12 XP</div>
+              </div>
+              <div style="width:38px; height:38px; flex:none; border-radius:50%; background:oklch(0.62 0.13 150)"></div>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-top:2px">
+              <div style="flex:1; border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:16px 18px; display:flex; flex-direction:column; gap:5px">
+                <div style="font:700 24px/1 'Unbounded'; color:oklch(0.22 0.02 262)">265</div>
+                <div style="font:400 13px/1.2 'Golos Text'; color:oklch(0.5 0.02 262)">всего карточек</div>
+              </div>
+              <div style="flex:1; border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:16px 18px; display:flex; flex-direction:column; gap:5px">
+                <div style="font:700 24px/1 'Unbounded'; color:oklch(0.22 0.02 262)">A2</div>
+                <div style="font:400 13px/1.2 'Golos Text'; color:oklch(0.5 0.02 262)">текущий уровень</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:none; height:92px; border-top:1px solid oklch(0.91 0.012 262); background:oklch(1 0 0); display:grid; grid-template-columns:repeat(5,1fr); padding:12px 6px 0">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.32 0.09 262)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.32 0.09 262)">Сегодня</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.62 0.02 262)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Словарь</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.62 0.02 262); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Тренер</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.62 0.02 262)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Читалка</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.62 0.02 262)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.62 0.02 262)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.62 0.02 262)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.5 0.02 262)">Ещё</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1b desktop -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">ПК 1440×900 · Сегодня</div>
+        <div style="width:1440px; height:900px; border-radius:16px; background:oklch(0.975 0.008 262); border:1px solid oklch(0.86 0.01 262); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.5); overflow:hidden; display:flex">
+          <div style="width:250px; flex:none; background:oklch(0.28 0.08 262); padding:26px 18px; display:flex; flex-direction:column; gap:6px">
+            <div style="display:flex; align-items:center; gap:12px; padding:0 8px 22px">
+              <div style="width:34px; height:34px; border-radius:11px; background:oklch(0.82 0.16 90)"></div>
+              <div style="font:700 17px/1 'Unbounded'; color:oklch(0.97 0.01 262)">Deutsch</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px; background:oklch(0.38 0.1 262)"><span style="width:19px; height:19px; border-radius:50%; background:oklch(0.82 0.16 90)"></span><span style="font:600 15px/1 'Golos Text'; color:oklch(0.98 0.01 262)">Сегодня</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:19px; height:19px; border-radius:4px; border:2px solid oklch(0.72 0.05 262)"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.85 0.03 262)">Словарь</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:18px; height:18px; background:oklch(0.72 0.05 262); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.85 0.03 262)">Тренер</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="width:19px; height:19px; border-radius:50%; border:2px solid oklch(0.72 0.05 262)"></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.85 0.03 262)">Читалка</span></div>
+            <div style="display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:14px"><span style="display:flex; gap:3px; width:19px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.72 0.05 262)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.72 0.05 262)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.72 0.05 262)"></span></span><span style="font:500 15px/1 'Golos Text'; color:oklch(0.85 0.03 262)">Ещё</span></div>
+
+            <div style="margin-top:26px; padding:0 16px 10px; font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.68 0.05 262)">В разделе «Ещё»</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.8 0.03 262)">Уроки и наборы</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.8 0.03 262)">Разговорник</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.8 0.03 262)">Грамматика</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.8 0.03 262)">Школы и репетиторы</div>
+            <div style="padding:9px 16px; font:400 14px/1 'Golos Text'; color:oklch(0.8 0.03 262)">Моя школа</div>
+
+            <div style="margin-top:auto; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; background:oklch(0.35 0.09 262)">
+              <div style="width:32px; height:32px; border-radius:50%; background:oklch(0.82 0.16 90)"></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:2px"><span style="font:600 13px/1 'Golos Text'; color:oklch(0.97 0.01 262)">sivtsov.pavel</span><span style="font:400 12px/1 'Golos Text'; color:oklch(0.78 0.04 262)">Уровень A2 · 12 дней</span></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; overflow:hidden">
+            <div style="padding:32px 40px 26px; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; border-bottom:1px solid oklch(0.9 0.012 262)">
+              <div style="display:flex; flex-direction:column; gap:5px">
+                <div style="font:500 14px/1 'Golos Text'; color:oklch(0.52 0.03 262)">Понедельник, 22 июля</div>
+                <div style="font:700 34px/1.1 'Unbounded'; color:oklch(0.2 0.03 262)">Привет, Павел</div>
+              </div>
+              <div style="display:flex; gap:12px">
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:14px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262)"><span style="width:10px; height:10px; border-radius:50%; background:oklch(0.72 0.16 55)"></span><span style="font:600 15px/1 'Golos Text'; color:oklch(0.28 0.02 262)">12 дней подряд</span></div>
+                <div style="display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:14px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262)"><span style="width:10px; height:10px; border-radius:2px; background:oklch(0.72 0.16 90)"></span><span style="font:600 15px/1 'Golos Text'; color:oklch(0.28 0.02 262)">34 / 50 XP</span></div>
+              </div>
+            </div>
+
+            <div style="flex:1; padding:28px 40px; display:grid; grid-template-columns:1fr 380px; gap:24px; overflow:hidden">
+              <div style="display:flex; flex-direction:column; gap:18px; overflow:hidden">
+                <div style="border-radius:26px; background:oklch(0.32 0.09 262); padding:30px 34px; display:flex; align-items:center; gap:30px">
+                  <div style="width:104px; height:104px; flex:none; border-radius:50%; background:conic-gradient(oklch(0.82 0.16 90) 0 68%, oklch(0.44 0.08 262) 68%); display:flex; align-items:center; justify-content:center">
+                    <div style="width:80px; height:80px; border-radius:50%; background:oklch(0.32 0.09 262); display:flex; flex-direction:column; align-items:center; justify-content:center">
+                      <span style="font:700 24px/1 'Unbounded'; color:oklch(0.97 0.01 262)">34</span>
+                      <span style="font:500 11px/1 'Golos Text'; color:oklch(0.78 0.05 262)">/ 50 XP</span>
+                    </div>
+                  </div>
+                  <div style="flex:1; display:flex; flex-direction:column; gap:10px">
+                    <div style="font:700 26px/1.2 'Unbounded'; color:oklch(0.98 0.01 262)">Урок 16 · Числа, еда и языки</div>
+                    <div style="font:400 16px/1.4 'Golos Text'; color:oklch(0.82 0.04 262)">8 файлов · 77 слов · ~12 минут. Закончишь — дневная цель взята.</div>
+                  </div>
+                  <div style="flex:none; height:56px; padding:0 32px; border-radius:16px; background:oklch(0.82 0.16 90); color:oklch(0.24 0.07 80); display:flex; align-items:center; font:700 17px/1 'Golos Text'">Продолжить</div>
+                </div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between">
+                  <div style="font:700 19px/1 'Golos Text'; color:oklch(0.2 0.03 262)">Задания на сегодня</div>
+                  <div style="font:500 15px/1 'Golos Text'; color:oklch(0.5 0.05 262)">1 из 3 выполнено</div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px">
+                  <div style="border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:22px; display:flex; flex-direction:column; gap:12px">
+                    <div style="width:44px; height:44px; border-radius:13px; background:oklch(0.92 0.05 262); display:flex; align-items:center; justify-content:center"><span style="width:17px; height:17px; border-radius:5px; border:2.5px solid oklch(0.45 0.12 262)"></span></div>
+                    <div style="font:700 17px/1.25 'Golos Text'; color:oklch(0.2 0.03 262)">Повторить 42 карточки</div>
+                    <div style="font:400 14px/1.35 'Golos Text'; color:oklch(0.5 0.02 262)">6 трудных слов · +16 XP</div>
+                    <div style="margin-top:auto; height:42px; border-radius:12px; background:oklch(0.32 0.09 262); color:#fff; display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'">Начать</div>
+                  </div>
+                  <div style="border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:22px; display:flex; flex-direction:column; gap:12px">
+                    <div style="width:44px; height:44px; border-radius:13px; background:oklch(0.94 0.03 150); display:flex; align-items:center; justify-content:center"><span style="width:16px; height:16px; border-radius:50%; border:2.5px solid oklch(0.48 0.11 150)"></span></div>
+                    <div style="font:700 17px/1.25 'Golos Text'; color:oklch(0.2 0.03 262)">Разговор с Pablo</div>
+                    <div style="font:400 14px/1.35 'Golos Text'; color:oklch(0.5 0.02 262)">Тема: заказ в кафе · +12 XP</div>
+                    <div style="margin-top:auto; height:42px; border-radius:12px; border:1.5px solid oklch(0.84 0.02 262); color:oklch(0.3 0.03 262); display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'">Готово</div>
+                  </div>
+                  <div style="border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:22px; display:flex; flex-direction:column; gap:12px">
+                    <div style="width:44px; height:44px; border-radius:13px; background:oklch(0.95 0.04 60); display:flex; align-items:center; justify-content:center"><span style="width:16px; height:16px; background:oklch(0.6 0.13 60); transform:rotate(45deg); border-radius:3px"></span></div>
+                    <div style="font:700 17px/1.25 'Golos Text'; color:oklch(0.2 0.03 262)">Прочитать главу</div>
+                    <div style="font:400 14px/1.35 'Golos Text'; color:oklch(0.5 0.02 262)">Волшебник Изумрудного города · +10 XP</div>
+                    <div style="margin-top:auto; height:42px; border-radius:12px; background:oklch(0.32 0.09 262); color:#fff; display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'">Открыть</div>
+                  </div>
+                </div>
+
+                <div style="border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:24px 26px; display:flex; flex-direction:column; gap:16px">
+                  <div style="display:flex; align-items:center; justify-content:space-between"><div style="font:700 17px/1 'Golos Text'; color:oklch(0.2 0.03 262)">Неделя</div><div style="font:400 14px/1 'Golos Text'; color:oklch(0.52 0.03 262)">184 XP · 5 из 7 дней</div></div>
+                  <div style="display:flex; gap:12px; align-items:flex-end; height:96px">
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; height:64px; border-radius:8px; background:oklch(0.62 0.14 262)"></div><span style="font:500 12px/1 'Golos Text'; color:oklch(0.55 0.02 262)">пн</span></div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; height:40px; border-radius:8px; background:oklch(0.62 0.14 262)"></div><span style="font:500 12px/1 'Golos Text'; color:oklch(0.55 0.02 262)">вт</span></div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; height:72px; border-radius:8px; background:oklch(0.62 0.14 262)"></div><span style="font:500 12px/1 'Golos Text'; color:oklch(0.55 0.02 262)">ср</span></div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; height:26px; border-radius:8px; background:oklch(0.62 0.14 262)"></div><span style="font:500 12px/1 'Golos Text'; color:oklch(0.55 0.02 262)">чт</span></div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; height:56px; border-radius:8px; background:oklch(0.62 0.14 262)"></div><span style="font:500 12px/1 'Golos Text'; color:oklch(0.55 0.02 262)">пт</span></div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; height:10px; border-radius:8px; background:oklch(0.92 0.012 262)"></div><span style="font:500 12px/1 'Golos Text'; color:oklch(0.55 0.02 262)">сб</span></div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; height:38px; border-radius:8px; background:oklch(0.82 0.16 90)"></div><span style="font:600 12px/1 'Golos Text'; color:oklch(0.3 0.03 262)">вс</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:16px; overflow:hidden">
+                <div style="border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:22px 24px; display:flex; flex-direction:column; gap:16px">
+                  <div style="font:700 17px/1 'Golos Text'; color:oklch(0.2 0.03 262)">Твой курс</div>
+                  <div style="display:flex; flex-direction:column; gap:10px">
+                    <div style="display:flex; justify-content:space-between; font:500 14px/1 'Golos Text'; color:oklch(0.42 0.02 262)"><span>Обучение по урокам</span><span>2 / 16</span></div>
+                    <div style="height:8px; border-radius:4px; background:oklch(0.93 0.012 262); overflow:hidden"><div style="width:13%; height:100%; background:oklch(0.62 0.14 262)"></div></div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:10px">
+                    <div style="display:flex; justify-content:space-between; font:500 14px/1 'Golos Text'; color:oklch(0.42 0.02 262)"><span>Усиление знаний · слова</span><span>10 / 1069</span></div>
+                    <div style="height:8px; border-radius:4px; background:oklch(0.93 0.012 262); overflow:hidden"><div style="width:4%; height:100%; background:oklch(0.72 0.16 90)"></div></div>
+                  </div>
+                  <div style="height:44px; border-radius:12px; border:1.5px solid oklch(0.84 0.02 262); display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'; color:oklch(0.3 0.03 262)">Сменить курс</div>
+                </div>
+
+                <div style="border-radius:20px; background:oklch(1 0 0); border:1px solid oklch(0.9 0.012 262); padding:22px 24px; display:flex; flex-direction:column; gap:14px">
+                  <div style="font:700 17px/1 'Golos Text'; color:oklch(0.2 0.03 262)">Трудные слова</div>
+                  <div style="display:flex; flex-direction:column; gap:10px">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px"><span style="font:600 15px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">fünfundneunzig</span><span style="font:400 14px/1.2 'Golos Text'; color:oklch(0.55 0.02 262)">девяносто пять</span></div>
+                    <div style="height:1px; background:oklch(0.93 0.012 262)"></div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px"><span style="font:600 15px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">die Mannschaft</span><span style="font:400 14px/1.2 'Golos Text'; color:oklch(0.55 0.02 262)">команда</span></div>
+                    <div style="height:1px; background:oklch(0.93 0.012 262)"></div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px"><span style="font:600 15px/1.2 'Golos Text'; color:oklch(0.24 0.02 262)">der Unterricht</span><span style="font:400 14px/1.2 'Golos Text'; color:oklch(0.55 0.02 262)">урок, занятие</span></div>
+                  </div>
+                  <div style="height:44px; border-radius:12px; background:oklch(0.32 0.09 262); color:#fff; display:flex; align-items:center; justify-content:center; font:600 14px/1 'Golos Text'">Отработать 6 слов</div>
+                </div>
+
+                <div style="border-radius:20px; background:oklch(0.94 0.03 262); padding:22px 24px; display:flex; flex-direction:column; gap:10px">
+                  <div style="font:700 16px/1.3 'Golos Text'; color:oklch(0.26 0.06 262)">Аналитика класса</div>
+                  <div style="font:400 14px/1.4 'Golos Text'; color:oklch(0.44 0.05 262)">Прогресс учеников, точность, трудные слова</div>
+                  <div style="align-self:flex-start; margin-top:4px; padding:9px 16px; border-radius:999px; background:oklch(1 0 0); font:600 13px/1 'Golos Text'; color:oklch(0.32 0.09 262)">Открыть</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 1c ═══════════════════════════ -->
+  <div id="1c" style="display:flex; flex-direction:column; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:8px; max-width:640px">
+      <div style="display:flex; align-items:center; gap:12px">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:27px; padding:0 11px; border-radius:8px; background:oklch(0.22 0.02 80); color:#fff; font:700 13px/1 'Golos Text'">1c</span>
+        <span style="font:700 21px/1.2 'Unbounded'; color:oklch(0.22 0.02 80)">Арена</span>
+      </div>
+      <p style="margin:0; font:400 15px/1.5 'Golos Text'; color:oklch(0.45 0.02 80)">Полная геймификация: уровень, лига, сундук за серию, соревнование в классе. Тёмная тема, крупные цифры, много движения — для детей и подростков и для школьных классов.</p>
+    </div>
+
+    <div style="display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap">
+
+      <!-- 1c mobile -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Мобайл · Сегодня</div>
+        <div style="width:430px; height:932px; border-radius:46px; background:oklch(0.19 0.03 285); border:9px solid oklch(0.14 0.02 285); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.55); overflow:hidden; display:flex; flex-direction:column">
+          <div style="height:52px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font:600 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)">
+            <span>9:41</span>
+            <span style="display:flex; gap:6px; align-items:center"><span style="width:17px; height:9px; border-radius:2px; background:oklch(0.95 0.01 285)"></span><span style="width:24px; height:12px; border-radius:3px; border:1.5px solid oklch(0.95 0.01 285)"></span></span>
+          </div>
+
+          <div style="flex:1; padding:6px 20px 0; display:flex; flex-direction:column; gap:18px; overflow:hidden">
+            <div style="display:flex; align-items:center; gap:14px">
+              <div style="width:62px; height:62px; flex:none; border-radius:20px; background:oklch(0.38 0.13 300); display:flex; align-items:center; justify-content:center; font:700 24px/1 'Unbounded'; color:oklch(0.95 0.02 300)">П</div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+                <div style="display:flex; align-items:baseline; gap:8px">
+                  <span style="font:700 20px/1 'Unbounded'; color:oklch(0.96 0.01 285)">Павел</span>
+                  <span style="padding:4px 10px; border-radius:999px; background:oklch(0.75 0.18 90); font:700 12px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Ур. 7</span>
+                </div>
+                <div style="height:10px; border-radius:5px; background:oklch(0.26 0.04 285); overflow:hidden"><div style="width:64%; height:100%; border-radius:5px; background:oklch(0.75 0.18 90)"></div></div>
+                <div style="font:500 12px/1 'Golos Text'; color:oklch(0.68 0.03 285)">1 280 / 2 000 XP до уровня 8</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px">
+              <div style="flex:1; border-radius:18px; background:oklch(0.24 0.04 285); padding:14px 16px; display:flex; flex-direction:column; gap:4px">
+                <div style="font:700 24px/1 'Unbounded'; color:oklch(0.8 0.16 55)">12</div>
+                <div style="font:500 12px/1.2 'Golos Text'; color:oklch(0.68 0.03 285)">дней подряд</div>
+              </div>
+              <div style="flex:1; border-radius:18px; background:oklch(0.24 0.04 285); padding:14px 16px; display:flex; flex-direction:column; gap:4px">
+                <div style="font:700 24px/1 'Unbounded'; color:oklch(0.78 0.15 160)">3-е</div>
+                <div style="font:500 12px/1.2 'Golos Text'; color:oklch(0.68 0.03 285)">в классе 8Б</div>
+              </div>
+              <div style="flex:1; border-radius:18px; background:oklch(0.24 0.04 285); padding:14px 16px; display:flex; flex-direction:column; gap:4px">
+                <div style="font:700 24px/1 'Unbounded'; color:oklch(0.75 0.15 300)">265</div>
+                <div style="font:500 12px/1.2 'Golos Text'; color:oklch(0.68 0.03 285)">карточек</div>
+              </div>
+            </div>
+
+            <div style="border-radius:26px; background:oklch(0.38 0.15 300); padding:24px; display:flex; flex-direction:column; gap:18px; position:relative; overflow:hidden">
+              <div style="position:absolute; right:-40px; top:-40px; width:170px; height:170px; border-radius:50%; background:oklch(0.46 0.16 300)"></div>
+              <div style="position:relative; display:flex; flex-direction:column; gap:8px">
+                <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.85 0.08 300)">Миссия дня</div>
+                <div style="font:700 25px/1.2 'Unbounded'; color:oklch(0.98 0.01 300)">Урок 16<br>Числа и еда</div>
+                <div style="font:400 14px/1.4 'Golos Text'; color:oklch(0.86 0.05 300)">77 слов · ~12 минут · награда +120 XP</div>
+              </div>
+              <div style="position:relative; height:58px; border-radius:18px; background:oklch(0.75 0.18 90); display:flex; align-items:center; justify-content:center; font:700 18px/1 'Golos Text'; color:oklch(0.24 0.07 80)">В бой</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px">
+              <div style="display:flex; align-items:center; justify-content:space-between">
+                <div style="font:700 17px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Сундук за серию</div>
+                <div style="font:500 13px/1 'Golos Text'; color:oklch(0.68 0.03 285)">2 дня до награды</div>
+              </div>
+              <div style="display:flex; gap:8px">
+                <div style="flex:1; height:52px; border-radius:14px; background:oklch(0.3 0.09 160); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.88 0.1 160)">✓</div>
+                <div style="flex:1; height:52px; border-radius:14px; background:oklch(0.3 0.09 160); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.88 0.1 160)">✓</div>
+                <div style="flex:1; height:52px; border-radius:14px; background:oklch(0.3 0.09 160); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.88 0.1 160)">✓</div>
+                <div style="flex:1; height:52px; border-radius:14px; background:oklch(0.3 0.09 160); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.88 0.1 160)">✓</div>
+                <div style="flex:1; height:52px; border-radius:14px; background:oklch(0.3 0.09 160); display:flex; align-items:center; justify-content:center; font:700 15px/1 'Golos Text'; color:oklch(0.88 0.1 160)">✓</div>
+                <div style="flex:1; height:52px; border-radius:14px; border:2px dashed oklch(0.4 0.05 285)"></div>
+                <div style="flex:1; height:52px; border-radius:14px; background:oklch(0.28 0.06 90); display:flex; align-items:center; justify-content:center"><span style="width:18px; height:18px; border-radius:4px; background:oklch(0.75 0.18 90)"></span></div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px">
+              <div style="font:700 17px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Ещё сегодня</div>
+              <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:18px 20px; display:flex; align-items:center; gap:16px">
+                <div style="width:44px; height:44px; flex:none; border-radius:14px; background:oklch(0.32 0.09 200); display:flex; align-items:center; justify-content:center"><span style="width:16px; height:16px; border-radius:4px; border:2.5px solid oklch(0.78 0.12 200)"></span></div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px">
+                  <div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.95 0.01 285)">42 карточки</div>
+                  <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.66 0.03 285)">+60 XP</div>
+                </div>
+                <div style="padding:9px 16px; border-radius:999px; background:oklch(0.32 0.05 285); font:600 13px/1 'Golos Text'; color:oklch(0.92 0.01 285)">Начать</div>
+              </div>
+              <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:18px 20px; display:flex; align-items:center; gap:16px">
+                <div style="width:44px; height:44px; flex:none; border-radius:14px; background:oklch(0.32 0.09 30); display:flex; align-items:center; justify-content:center"><span style="width:15px; height:15px; background:oklch(0.75 0.14 30); transform:rotate(45deg); border-radius:3px"></span></div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px">
+                  <div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.95 0.01 285)">Дуэль с Pablo</div>
+                  <div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.66 0.03 285)">Разговор о кафе · +80 XP</div>
+                </div>
+                <div style="padding:9px 16px; border-radius:999px; background:oklch(0.32 0.05 285); font:600 13px/1 'Golos Text'; color:oklch(0.92 0.01 285)">Начать</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:none; height:92px; border-top:1px solid oklch(0.26 0.03 285); background:oklch(0.16 0.025 285); display:grid; grid-template-columns:repeat(5,1fr); padding:12px 6px 0">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.75 0.18 90)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.75 0.18 90)">Сегодня</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Словарь</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.6 0.03 285); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Тренер</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Читалка</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Ещё</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1c tablet -->
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <div style="font:600 12px/1 'Golos Text'; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.55 0.02 90)">Планшет 834×1112 · Сегодня</div>
+        <div style="width:834px; height:1112px; border-radius:26px; background:oklch(0.19 0.03 285); border:8px solid oklch(0.14 0.02 285); box-shadow:0 34px 70px -36px oklch(0.3 0.03 80/0.55); overflow:hidden; display:flex">
+          <div style="width:96px; flex:none; border-right:1px solid oklch(0.26 0.03 285); background:oklch(0.16 0.025 285); padding:26px 0; display:flex; flex-direction:column; align-items:center; gap:10px">
+            <div style="width:38px; height:38px; border-radius:12px; background:oklch(0.75 0.18 90); margin-bottom:16px"></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; background:oklch(0.28 0.06 90); display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; background:oklch(0.75 0.18 90)"></span><span style="font:600 11px/1 'Golos Text'; color:oklch(0.75 0.18 90)">Сегодня</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:4px; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Словарь</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:19px; height:19px; background:oklch(0.6 0.03 285); transform:rotate(45deg); border-radius:3px"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Тренер</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="width:20px; height:20px; border-radius:50%; border:2px solid oklch(0.6 0.03 285)"></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Читалка</span></div>
+            <div style="width:76px; padding:12px 0; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:7px"><span style="display:flex; gap:3px; height:20px; align-items:center"><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span><span style="width:4px; height:4px; border-radius:50%; background:oklch(0.6 0.03 285)"></span></span><span style="font:500 11px/1 'Golos Text'; color:oklch(0.68 0.03 285)">Ещё</span></div>
+          </div>
+
+          <div style="flex:1; padding:34px; display:flex; flex-direction:column; gap:22px; overflow:hidden">
+            <div style="display:flex; align-items:center; gap:18px">
+              <div style="width:72px; height:72px; flex:none; border-radius:22px; background:oklch(0.38 0.13 300); display:flex; align-items:center; justify-content:center; font:700 28px/1 'Unbounded'; color:oklch(0.95 0.02 300)">П</div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:8px">
+                <div style="display:flex; align-items:baseline; gap:10px">
+                  <span style="font:700 26px/1 'Unbounded'; color:oklch(0.96 0.01 285)">Павел</span>
+                  <span style="padding:5px 12px; border-radius:999px; background:oklch(0.75 0.18 90); font:700 13px/1 'Golos Text'; color:oklch(0.24 0.07 80)">Уровень 7</span>
+                </div>
+                <div style="height:12px; border-radius:6px; background:oklch(0.26 0.04 285); overflow:hidden"><div style="width:64%; height:100%; border-radius:6px; background:oklch(0.75 0.18 90)"></div></div>
+                <div style="font:500 13px/1 'Golos Text'; color:oklch(0.68 0.03 285)">1 280 / 2 000 XP до уровня 8</div>
+              </div>
+              <div style="display:flex; gap:12px">
+                <div style="width:120px; border-radius:18px; background:oklch(0.24 0.04 285); padding:16px; display:flex; flex-direction:column; gap:4px"><div style="font:700 26px/1 'Unbounded'; color:oklch(0.8 0.16 55)">12</div><div style="font:500 12px/1.2 'Golos Text'; color:oklch(0.68 0.03 285)">дней подряд</div></div>
+                <div style="width:120px; border-radius:18px; background:oklch(0.24 0.04 285); padding:16px; display:flex; flex-direction:column; gap:4px"><div style="font:700 26px/1 'Unbounded'; color:oklch(0.78 0.15 160)">3-е</div><div style="font:500 12px/1.2 'Golos Text'; color:oklch(0.68 0.03 285)">в классе 8Б</div></div>
+              </div>
+            </div>
+
+            <div style="border-radius:28px; background:oklch(0.38 0.15 300); padding:32px 34px; display:flex; align-items:center; gap:28px; position:relative; overflow:hidden">
+              <div style="position:absolute; right:-50px; top:-60px; width:220px; height:220px; border-radius:50%; background:oklch(0.46 0.16 300)"></div>
+              <div style="position:relative; flex:1; display:flex; flex-direction:column; gap:10px">
+                <div style="font:600 11px/1 'Golos Text'; letter-spacing:0.16em; text-transform:uppercase; color:oklch(0.85 0.08 300)">Миссия дня</div>
+                <div style="font:700 30px/1.15 'Unbounded'; color:oklch(0.98 0.01 300)">Урок 16 · Числа и еда</div>
+                <div style="font:400 15px/1.4 'Golos Text'; color:oklch(0.86 0.05 300)">77 слов · ~12 минут · награда +120 XP</div>
+              </div>
+              <div style="position:relative; flex:none; height:60px; padding:0 40px; border-radius:18px; background:oklch(0.75 0.18 90); display:flex; align-items:center; font:700 18px/1 'Golos Text'; color:oklch(0.24 0.07 80)">В бой</div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+              <div style="border-radius:22px; background:oklch(0.24 0.04 285); padding:22px; display:flex; flex-direction:column; gap:14px">
+                <div style="font:700 18px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Сундук за серию</div>
+                <div style="display:flex; gap:7px">
+                  <div style="flex:1; height:46px; border-radius:12px; background:oklch(0.3 0.09 160)"></div>
+                  <div style="flex:1; height:46px; border-radius:12px; background:oklch(0.3 0.09 160)"></div>
+                  <div style="flex:1; height:46px; border-radius:12px; background:oklch(0.3 0.09 160)"></div>
+                  <div style="flex:1; height:46px; border-radius:12px; background:oklch(0.3 0.09 160)"></div>
+                  <div style="flex:1; height:46px; border-radius:12px; background:oklch(0.3 0.09 160)"></div>
+                  <div style="flex:1; height:46px; border-radius:12px; border:2px dashed oklch(0.4 0.05 285)"></div>
+                  <div style="flex:1; height:46px; border-radius:12px; background:oklch(0.28 0.06 90); display:flex; align-items:center; justify-content:center"><span style="width:16px; height:16px; border-radius:4px; background:oklch(0.75 0.18 90)"></span></div>
+                </div>
+                <div style="font:400 14px/1.4 'Golos Text'; color:oklch(0.68 0.03 285)">Ещё 2 дня — и открывается набор «Город и улицы».</div>
+              </div>
+              <div style="border-radius:22px; background:oklch(0.24 0.04 285); padding:22px; display:flex; flex-direction:column; gap:14px">
+                <div style="display:flex; align-items:center; justify-content:space-between"><div style="font:700 18px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Класс 8Б</div><div style="font:500 13px/1 'Golos Text'; color:oklch(0.68 0.03 285)">неделя</div></div>
+                <div style="display:flex; flex-direction:column; gap:10px">
+                  <div style="display:flex; align-items:center; gap:12px"><span style="width:24px; font:700 14px/1 'Golos Text'; color:oklch(0.75 0.18 90)">1</span><span style="width:28px; height:28px; border-radius:50%; background:oklch(0.4 0.09 160)"></span><span style="flex:1; font:500 15px/1 'Golos Text'; color:oklch(0.9 0.01 285)">Анна К.</span><span style="font:700 15px/1 'Golos Text'; color:oklch(0.85 0.02 285)">1 420</span></div>
+                  <div style="display:flex; align-items:center; gap:12px"><span style="width:24px; font:700 14px/1 'Golos Text'; color:oklch(0.7 0.03 285)">2</span><span style="width:28px; height:28px; border-radius:50%; background:oklch(0.4 0.09 300)"></span><span style="flex:1; font:500 15px/1 'Golos Text'; color:oklch(0.9 0.01 285)">Марк В.</span><span style="font:700 15px/1 'Golos Text'; color:oklch(0.85 0.02 285)">1 310</span></div>
+                  <div style="display:flex; align-items:center; gap:12px; padding:8px 10px; margin:0 -10px; border-radius:12px; background:oklch(0.3 0.06 90)"><span style="width:24px; font:700 14px/1 'Golos Text'; color:oklch(0.8 0.16 90)">3</span><span style="width:28px; height:28px; border-radius:50%; background:oklch(0.5 0.14 90)"></span><span style="flex:1; font:700 15px/1 'Golos Text'; color:oklch(0.97 0.01 285)">Ты</span><span style="font:700 15px/1 'Golos Text'; color:oklch(0.95 0.01 285)">1 280</span></div>
+                  <div style="display:flex; align-items:center; gap:12px"><span style="width:24px; font:700 14px/1 'Golos Text'; color:oklch(0.7 0.03 285)">4</span><span style="width:28px; height:28px; border-radius:50%; background:oklch(0.4 0.09 30)"></span><span style="flex:1; font:500 15px/1 'Golos Text'; color:oklch(0.9 0.01 285)">Лена П.</span><span style="font:700 15px/1 'Golos Text'; color:oklch(0.85 0.02 285)">1 105</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <div style="font:700 18px/1 'Golos Text'; color:oklch(0.95 0.01 285)">Ещё сегодня</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
+                <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:20px; display:flex; align-items:center; gap:16px">
+                  <div style="width:46px; height:46px; flex:none; border-radius:14px; background:oklch(0.32 0.09 200); display:flex; align-items:center; justify-content:center"><span style="width:17px; height:17px; border-radius:4px; border:2.5px solid oklch(0.78 0.12 200)"></span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.95 0.01 285)">42 карточки</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.66 0.03 285)">+60 XP</div></div>
+                  <div style="padding:10px 18px; border-radius:999px; background:oklch(0.32 0.05 285); font:600 13px/1 'Golos Text'; color:oklch(0.92 0.01 285)">Начать</div>
+                </div>
+                <div style="border-radius:20px; background:oklch(0.24 0.04 285); padding:20px; display:flex; align-items:center; gap:16px">
+                  <div style="width:46px; height:46px; flex:none; border-radius:14px; background:oklch(0.32 0.09 30); display:flex; align-items:center; justify-content:center"><span style="width:16px; height:16px; background:oklch(0.75 0.14 30); transform:rotate(45deg); border-radius:3px"></span></div>
+                  <div style="flex:1; display:flex; flex-direction:column; gap:3px"><div style="font:700 16px/1.25 'Golos Text'; color:oklch(0.95 0.01 285)">Дуэль с Pablo</div><div style="font:400 13px/1.3 'Golos Text'; color:oklch(0.66 0.03 285)">Кафе · +80 XP</div></div>
+                  <div style="padding:10px 18px; border-radius:999px; background:oklch(0.32 0.05 285); font:600 13px/1 'Golos Text'; color:oklch(0.92 0.01 285)">Начать</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</x-dc>
+</body>
+</html>
