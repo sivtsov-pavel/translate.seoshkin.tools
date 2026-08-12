@@ -1,7 +1,7 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
 import { playableLessonIds, LESSON_PASSED_HAVING } from '../services/drip.js'
-import { passedLessonsToHide } from '../services/newExercises.js'
+import { newExerciseIdsInPassedLessons } from '../services/newExercises.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { generateWordImage } from '../services/imageGen.js'
@@ -161,8 +161,8 @@ export async function exercisesRoutes(fastify) {
            GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, [userId, target])
         const passedIds = pr.map(r => r.lesson_id)
         params.push(passedIds); const pp = params.length
-        params.push(await passedLessonsToHide(userId, passedIds)); const hp = params.length
-        if (!lesson_id) passedClause = `AND NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${hp}::int[]))`
+        params.push(await newExerciseIdsInPassedLessons(userId, passedIds)); const np = params.length
+        if (!lesson_id) passedClause = `AND (NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${pp}::int[])) OR e.id = ANY($${np}::int[]))`
         ownerOrder = `(e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
       }
       query = SELECT + `
@@ -193,10 +193,10 @@ export async function exercisesRoutes(fastify) {
         params.push([...passed]); const pp = params.length
         // Не подаём НЕтронутые упражнения уже пройденных уроков (слова закрыты — только реальные
         // повторения). Исключение — открыт конкретный урок (lesson_id): там показываем всё.
-        // Второе исключение — урок, в котором упражнения появились ПОСЛЕ последней попытки:
-        // добавленное в пройденный урок иначе не всплыло бы в потоке никогда.
-        params.push(await passedLessonsToHide(userId, [...passed])); const hp = params.length
-        if (!lesson_id) passedClause = `AND NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${hp}::int[]))`
+        // Второе исключение — упражнения, ДОБАВЛЕННЫЕ в пройденный урок позже (склонения,
+        // наборы фраз): иначе они не всплыли бы в потоке никогда.
+        params.push(await newExerciseIdsInPassedLessons(userId, [...passed])); const np = params.length
+        if (!lesson_id) passedClause = `AND (NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${pp}::int[])) OR e.id = ANY($${np}::int[]))`
         // Порядок: непройденные уроки (текущий) первыми, потом повторения пройденных; внутри по номеру.
         studentOrder = `(e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
       }

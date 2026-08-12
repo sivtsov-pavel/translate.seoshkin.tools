@@ -1,42 +1,45 @@
 // Новые упражнения в уже пройденных уроках.
 //
 // Поток «сегодня» намеренно не подаёт нетронутые упражнения пройденных уроков — иначе
-// пройденный урок оживал бы целиком. Но у этого правила есть цена: упражнения, добавленные
-// В УЖЕ ПРОЙДЕННЫЙ урок позже (склонения, наборы фраз, догенерация), не попадали в поток
-// НИКОГДА — увидеть их можно было только зайдя в конкретный урок.
+// пройденный урок оживал бы целиком. Цена правила: упражнения, ДОБАВЛЕННЫЕ в уже пройденный
+// урок позже (склонения, наборы фраз, догенерация), не попадали в поток никогда — увидеть
+// их можно было, только зайдя в конкретный урок.
 //
-// Различаем два случая по времени: урок прячем целиком, только если в нём после последней
-// попытки ученика ничего не появилось. Появилось — урок снова подаётся, и новое всплывает
-// в общем потоке само.
+// Сравнивать с «последней попыткой в уроке» нельзя: стоит ученику ответить на любое старое
+// упражнение — и метка уходит вперёд, а новое снова прячется. Поэтому ориентир другой:
+// самое свежее упражнение, которое ученик В ЭТОМ УРОКЕ уже трогал. Всё, что создано позже
+// него и ещё не тронуто, — новое, и его показываем.
 import { db } from '../db/index.js'
 
-// rows: [{ lesson_id, last_attempt_at, newest_exercise_at }]
-export function lessonsToHideUntouched(rows) {
+// rows: [{ id, created_at, last_touched_at }]
+export function pickNewExerciseIds(rows) {
   return (rows || [])
-    .filter(r => {
-      if (!r.last_attempt_at) return false            // урок не тронут — там всё новое
-      if (!r.newest_exercise_at) return true          // упражнений нет — показывать нечего
-      return new Date(r.newest_exercise_at) <= new Date(r.last_attempt_at)
-    })
-    .map(r => r.lesson_id)
+    .filter(r => r.created_at && r.last_touched_at && new Date(r.created_at) > new Date(r.last_touched_at))
+    .map(r => r.id)
 }
 
-// Для списка пройденных уроков: когда ученик отвечал последний раз и когда в уроке
-// появилось самое свежее упражнение.
-export async function fetchLessonFreshness(userId, lessonIds) {
-  if (!lessonIds?.length) return []
+// Нетронутые упражнения пройденных уроков вместе с меткой «самое свежее из тронутых в уроке»
+export async function fetchUntouchedInPassed(userId, passedLessonIds) {
+  if (!passedLessonIds?.length) return []
   const { rows } = await db.query(
-    `SELECT l.id AS lesson_id,
-            (SELECT max(a.attempted_at) FROM exercise_attempts a
-               JOIN exercises e2 ON e2.id = a.exercise_id
-              WHERE e2.lesson_id = l.id AND a.user_id = $1) AS last_attempt_at,
-            (SELECT max(e3.created_at) FROM exercises e3 WHERE e3.lesson_id = l.id) AS newest_exercise_at
-     FROM lessons l WHERE l.id = ANY($2::int[])`,
-    [userId, lessonIds])
+    `WITH touched AS (
+       SELECT e.lesson_id, max(e.created_at) AS last_touched_at
+       FROM exercises e
+       JOIN user_exercise_progress u ON u.exercise_id = e.id AND u.user_id = $1
+       WHERE e.lesson_id = ANY($2::int[])
+       GROUP BY e.lesson_id
+     )
+     SELECT e.id, e.created_at, t.last_touched_at
+     FROM exercises e
+     JOIN touched t ON t.lesson_id = e.lesson_id
+     LEFT JOIN user_exercise_progress u ON u.exercise_id = e.id AND u.user_id = $1
+     WHERE u.exercise_id IS NULL`,
+    [userId, passedLessonIds])
   return rows
 }
 
-// Итог: какие из пройденных уроков прятать в потоке «сегодня».
-export async function passedLessonsToHide(userId, passedLessonIds) {
-  return lessonsToHideUntouched(await fetchLessonFreshness(userId, passedLessonIds))
+// Итог: id упражнений, которые появились в пройденных уроках уже после работы ученика
+// с этими уроками. Их поток «сегодня» показывает, несмотря на общий запрет.
+export async function newExerciseIdsInPassedLessons(userId, passedLessonIds) {
+  return pickNewExerciseIds(await fetchUntouchedInPassed(userId, passedLessonIds))
 }
