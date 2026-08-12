@@ -45,11 +45,14 @@ export async function settingsRoutes(fastify) {
   }, async (request) => {
     const { id: userId } = request.user
     const { rows } = await db.query(
-      `SELECT daily_limit, openai_key, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from, visual
+      `SELECT daily_limit, openai_key, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from, visual, ui_mode
        FROM user_settings WHERE user_id = $1`,
       [userId]
     )
     const s = rows[0] ?? { daily_limit: 50 }
+    // Режим интерфейса: явно выбранный, иначе по роли — учителю привычный полный
+    // интерфейс, ученику простой «Путь».
+    s.ui_mode = s.ui_mode || (request.user.role === 'owner' ? 'expert' : 'novice')
     // Сам ключ OpenAI на клиент НЕ отдаём (секрет). Только факт наличия + маску для UI.
     let openai_key_set = false, openai_key_mask = null
     if (s.openai_key) {
@@ -61,6 +64,26 @@ export async function settingsRoutes(fastify) {
   })
 
   // Визуальные настройки (шрифт/размер/раскладка) — отдельно, чтобы не трогать остальные поля
+  // Режим интерфейса — новичок (Путь) или эксперт (полный интерфейс).
+  // ВАЖНО: переключает ТОЛЬКО отображение. Права на бэкенде не меняются — иначе
+  // «режим ученика» стал бы дырой в доступе к чужим данным.
+  fastify.patch('/api/settings/ui-mode', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object', required: ['ui_mode'],
+        properties: { ui_mode: { type: 'string', enum: ['novice', 'expert'] } },
+      },
+    },
+  }, async (request) => {
+    const { ui_mode } = request.body
+    await db.query(
+      `INSERT INTO user_settings (user_id, ui_mode) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET ui_mode = EXCLUDED.ui_mode, updated_at = NOW()`,
+      [request.user.id, ui_mode])
+    return { ui_mode }
+  })
+
   fastify.patch('/api/settings/visual', {
     preHandler: [fastify.authenticate],
   }, async (request) => {

@@ -884,6 +884,20 @@ export const de = {
     fanToggleDesc: 'Nach jedem Block (Antwort wählen, Karten…) — Auswahl: weiter / anderer Typ / Trainer.',
   },
 
+  path: {
+    title: 'Weg',
+    section: 'Abschnitt',
+    lesson: 'Lektion',
+    lessonShort: 'LEKTION',
+    start: 'Starten',
+    streak: 'Serie',
+    xpToday: 'XP heute',
+    lessons: 'Lektionen',
+    chest: 'Truhe',
+    empty: 'Noch keine Lektionen',
+    modeNovice: 'Anfänger',
+    modeExpert: 'Experte',
+  },
   phrases: {
     title: 'Sätze',
     lessonSet: 'Sätze der Lektion',

@@ -20,6 +20,7 @@ import { useSettingsStore } from '../store/settings.js'
 import { useCourseGateStore } from '../store/courseGate.js'
 import ProcessingBadge from './ProcessingBadge.jsx'
 import { api } from '../api/client.js'
+import { useUiModeStore } from '../store/uiMode.js'
 import LangSwitcher from './LangSwitcher.jsx'
 import TargetSwitcher from './TargetSwitcher.jsx'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
@@ -438,6 +439,7 @@ export default function Layout({ children }) {
         </Link>
         {/* Справа: тур + профиль (кнопку смены курса убрали — она есть на «Сегодня» у приветствия) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <UiModeToggle />
           <button onClick={startTour} style={iconBtn} aria-label={t.nav.tourApp} title={t.nav.tourApp}><Compass size={19} color="var(--blue)" /></button>
           {user && (
             <button onClick={() => setProfileOpen(v => !v)} aria-label={t.nav.tabProfile}
@@ -563,3 +565,30 @@ export default function Layout({ children }) {
 const iconBtn = { width: 40, height: 40, borderRadius: 12, border: '1px solid var(--line)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink)' }
 const pill = { display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 999, padding: '8px 12px', fontSize: 13, color: 'var(--ink)', cursor: 'pointer' }
 const popRow = { display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 4px', fontSize: 13, color: 'var(--ink)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8 }
+
+
+// Тумблер между двумя дизайнами: «Новичок» — экран «Путь» (одна дорога, один следующий
+// шаг), «Эксперт» — привычный полный интерфейс. По умолчанию учителю эксперт, ученику
+// новичок. Переключает ТОЛЬКО отображение: права и данные те же.
+function UiModeToggle() {
+  const { t } = useI18nStore()
+  const { user } = useAuthStore()
+  const { resolve, toggle, load } = useUiModeStore()
+  const mode = resolve(user)
+
+  useEffect(() => { load(user) }, [])
+
+  return (
+    <button
+      onClick={async () => { await toggle(user); window.location.assign('/') }}
+      title={mode === 'novice' ? t.path.modeNovice : t.path.modeExpert}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 999,
+        border: '1px solid var(--line)', background: 'var(--surface)', cursor: 'pointer',
+        fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', whiteSpace: 'nowrap',
+      }}>
+      <span>{mode === 'novice' ? '🌱' : '🎓'}</span>
+      <span>{mode === 'novice' ? t.path.modeNovice : t.path.modeExpert}</span>
+    </button>
+  )
+}

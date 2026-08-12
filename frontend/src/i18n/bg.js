@@ -860,6 +860,20 @@ export const bg = {
     fanToggleDesc: 'След всеки блок (избери отговор, карти…) — избор: напред / друг тип / треньор.',
   },
 
+  path: {
+    title: 'Път',
+    section: 'Раздел',
+    lesson: 'Урок',
+    lessonShort: 'УРОК',
+    start: 'Започни',
+    streak: 'серия',
+    xpToday: 'XP днес',
+    lessons: 'уроци',
+    chest: 'Сандък',
+    empty: 'Още няма уроци',
+    modeNovice: 'Начинаещ',
+    modeExpert: 'Експерт',
+  },
   phrases: {
     title: 'Фрази',
     lessonSet: 'Фрази от урока',

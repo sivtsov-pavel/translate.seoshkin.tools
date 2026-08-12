@@ -634,6 +634,20 @@ export const ru = {
     openBtn: 'Открыть',
   },
   // Наборы по темам + Мой словарь + Premium
+  path: {
+    title: 'Путь',
+    section: 'Раздел',
+    lesson: 'Урок',
+    lessonShort: 'УРОК',
+    start: 'Начать',
+    streak: 'серия',
+    xpToday: 'XP сегодня',
+    lessons: 'уроки',
+    chest: 'Сундук',
+    empty: 'Уроки ещё не готовы',
+    modeNovice: 'Новичок',
+    modeExpert: 'Эксперт',
+  },
   phrases: {
     title: 'Фразы',
     lessonSet: 'Фразы урока',

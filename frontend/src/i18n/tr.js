@@ -865,6 +865,20 @@ export const tr = {
     fanToggleDesc: 'Her bloktan sonra (cevabı seç, kartlar…) — seçenek: devam et / başka bir tür / eğitmen.',
   },
 
+  path: {
+    title: 'Yol',
+    section: 'Bölüm',
+    lesson: 'Ders',
+    lessonShort: 'DERS',
+    start: 'Başla',
+    streak: 'seri',
+    xpToday: 'Bugün XP',
+    lessons: 'dersler',
+    chest: 'Sandık',
+    empty: 'Henüz ders yok',
+    modeNovice: 'Yeni başlayan',
+    modeExpert: 'Uzman',
+  },
   phrases: {
     title: 'Cümleler',
     lessonSet: 'Ders cümleleri',

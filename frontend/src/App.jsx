@@ -1,10 +1,13 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import CookieConsent from './components/CookieConsent.jsx'
 import InstallPWA from './components/InstallPWA.jsx'
+import { useUiModeStore } from './store/uiMode.js'
 import { useAuthStore } from './store/auth.js'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Landing from './pages/Landing.jsx'
+import Path from './pages/Path.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import LessonList from './pages/LessonList.jsx'
 import ShareCard from './pages/ShareCard.jsx'
@@ -53,8 +56,13 @@ function ProtectedRoute({ children }) {
 }
 
 function HomeRoute() {
-  const { token } = useAuthStore()
-  return token ? <Layout><Dashboard /></Layout> : <Landing />
+  const { token, user } = useAuthStore()
+  // Тумблер в шапке переключает между двумя дизайнами: «Путь» для новичка и
+  // привычный дашборд для эксперта. Права при этом не меняются — только вид.
+  const { resolve, load } = useUiModeStore()
+  useEffect(() => { if (token) load(user) }, [token])
+  if (!token) return <Landing />
+  return <Layout>{resolve(user) === 'novice' ? <Path /> : <Dashboard />}</Layout>
 }
 
 // Вход в класс по ссылке-приглашению должен работать и БЕЗ аккаунта:

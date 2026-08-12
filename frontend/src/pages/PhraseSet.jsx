@@ -2,19 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
-import { speak } from '../hooks/useSpeech.jsx'
+import { speak, speakAppend, isSpeakTranslationEnabled, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 import PhraseTrainer from '../components/PhraseTrainer.jsx'
 
 // Экран набора фраз: тема, картинка, нумерованный список с эмодзи, озвучка.
-// Перевод по умолчанию СКРЫТ — если он на виду, глаз читает родной язык, а целевой
-// не запоминается. Кнопка «Слушать всё» проигрывает набор подряд: можно слушать
-// в кармане, не глядя в экран.
+// Перевод виден всегда, но мельче и приглушённо — так он не перетягивает взгляд,
+// а понять смысл можно сразу. Озвучивать ли перевод, решает общий тумблер
+// «перевод вкл/выкл» — тот же, что у слов в уроках.
+// «Слушать всё» проигрывает набор подряд: можно слушать в кармане, не глядя в экран.
 export default function PhraseSet() {
   const { id, lessonId } = useParams()
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const [data, setData] = useState(null)
-  const [showTr, setShowTr] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [training, setTraining] = useState(false)
   const stopRef = useRef(false)
@@ -34,6 +34,7 @@ export default function PhraseSet() {
     for (const p of data.phrases) {
       if (stopRef.current) break
       speak(p.text)
+      if (isSpeakTranslationEnabled() && p.translation) speakAppend(p.translation)
       await new Promise(r => setTimeout(r, Math.max(1800, p.text.length * 90)))
     }
     setPlaying(false)
@@ -68,16 +69,17 @@ export default function PhraseSet() {
         <img src={topic.image_url} alt="" style={{ width: '100%', borderRadius: 14, marginBottom: 14 }} />
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
         <button onClick={playAll} style={btn}>{playing ? `⏹ ${t.phrases.stop}` : `🎧 ${t.phrases.listen}`}</button>
-        <button onClick={() => setShowTr(v => !v)} style={btn}>
-          📖 {showTr ? t.phrases.hideTranslation : t.phrases.showTranslation}
-        </button>
+        <SpeakTranslationToggle />
       </div>
 
       <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {phrases.map((p, i) => (
-          <li key={p.id} onClick={() => speak(p.text)}
+          <li key={p.id} onClick={() => {
+            speak(p.text)
+            if (isSpeakTranslationEnabled() && p.translation) speakAppend(p.translation)
+          }}
             style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '11px 4px',
               borderBottom: '1px solid var(--line)', cursor: 'pointer' }}>
             <span style={{ width: 26, height: 26, flex: 'none', borderRadius: '50%', background: 'var(--surface-2)',
@@ -85,7 +87,7 @@ export default function PhraseSet() {
             <span style={{ fontSize: 20 }}>{p.emoji}</span>
             <span style={{ flex: 1 }}>
               <div style={{ fontSize: 16 }}>{p.text}</div>
-              {showTr && <div style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{p.translation}</div>}
+              {p.translation && <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>{p.translation}</div>}
             </span>
             {p.progress.listen && p.progress.build && <span style={{ color: 'var(--good)' }}>✓</span>}
           </li>

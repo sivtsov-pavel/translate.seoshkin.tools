@@ -868,6 +868,20 @@ export const ar = {
     fanToggleDesc: 'بعد كل مجموعة (اختر الإجابة، البطاقات…) — الخيار: التالي / نوع آخر / مدرب.',
   },
 
+  path: {
+    title: 'المسار',
+    section: 'القسم',
+    lesson: 'الدرس',
+    lessonShort: 'الدرس',
+    start: 'ابدأ',
+    streak: 'سلسلة',
+    xpToday: 'نقاط اليوم',
+    lessons: 'دروس',
+    chest: 'صندوق',
+    empty: 'لا توجد دروس بعد',
+    modeNovice: 'مبتدئ',
+    modeExpert: 'خبير',
+  },
   phrases: {
     title: 'الجمل',
     lessonSet: 'جمل الدرس',

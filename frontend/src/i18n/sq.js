@@ -877,6 +877,20 @@ export const sq = {
     fanToggleDesc: 'Pas çdo bloku (zgjedh një përgjigje, kartat…) — zgjedhja: vazhdo / lloj tjetër / trajner.',
   },
 
+  path: {
+    title: 'Rruga',
+    section: 'Seksioni',
+    lesson: 'Mësimi',
+    lessonShort: 'MËSIMI',
+    start: 'Fillo',
+    streak: 'seri',
+    xpToday: 'XP sot',
+    lessons: 'mësime',
+    chest: 'Arka',
+    empty: 'Ende s’ka mësime',
+    modeNovice: 'Fillestar',
+    modeExpert: 'Ekspert',
+  },
   phrases: {
     title: 'Fraza',
     lessonSet: 'Frazat e mësimit',

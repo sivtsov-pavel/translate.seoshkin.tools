@@ -878,6 +878,20 @@ export const en = {
     fanToggleDesc: 'After each block (choose an answer, flashcards…) — options: next / different type / tutor.',
   },
 
+  path: {
+    title: 'Path',
+    section: 'Section',
+    lesson: 'Lesson',
+    lessonShort: 'LESSON',
+    start: 'Start',
+    streak: 'streak',
+    xpToday: 'XP today',
+    lessons: 'lessons',
+    chest: 'Chest',
+    empty: 'No lessons yet',
+    modeNovice: 'Beginner',
+    modeExpert: 'Expert',
+  },
   phrases: {
     title: 'Phrases',
     lessonSet: 'Lesson phrases',

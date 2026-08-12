@@ -877,6 +877,20 @@ export const uk = {
     fanToggleDesc: 'Після кожного блоку (обери відповідь, картки…) — вибір: далі / інший тип / тренер.',
   },
 
+  path: {
+    title: 'Шлях',
+    section: 'Розділ',
+    lesson: 'Урок',
+    lessonShort: 'УРОК',
+    start: 'Почати',
+    streak: 'серія',
+    xpToday: 'XP сьогодні',
+    lessons: 'уроки',
+    chest: 'Скриня',
+    empty: 'Уроки ще не готові',
+    modeNovice: 'Новачок',
+    modeExpert: 'Експерт',
+  },
   phrases: {
     title: 'Фрази',
     lessonSet: 'Фрази уроку',
