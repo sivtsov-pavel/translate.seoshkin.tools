@@ -206,6 +206,20 @@ export async function pathRoutes(fastify) {
       else break
     }
 
+    // Хвосты одним числом: пропущенные упражнения плюс пропущенные фразы.
+    // Раньше их было видно только внутри урока, и общая картина не собиралась.
+    const { rows: tailRows } = await db.query(
+      `SELECT
+         (SELECT count(*)::int FROM exercise_deferrals d
+           WHERE d.user_id = $1
+             AND NOT EXISTS (SELECT 1 FROM exercise_attempts a
+                              WHERE a.exercise_id = d.exercise_id AND a.user_id = $1)) AS exercises,
+         (SELECT count(*)::int FROM phrase_deferrals pd
+           LEFT JOIN user_phrase_progress up ON up.phrase_id = pd.phrase_id AND up.user_id = $1
+           WHERE pd.user_id = $1
+             AND NOT (COALESCE(up.step_listen, FALSE) AND COALESCE(up.step_build, FALSE))) AS phrases`,
+      [userId])
+
     const { rows: todayRows } = await db.query(
       `SELECT count(*)::int AS n FROM exercise_attempts
        WHERE user_id = $1 AND attempted_at >= CURRENT_DATE`, [userId])
@@ -224,6 +238,11 @@ export async function pathRoutes(fastify) {
         streak,
         xp_today: (todayRows[0]?.n || 0) * 10,   // 10 XP за упражнение — как в макете
         exercises_today: todayRows[0]?.n || 0,
+      },
+      tails: {
+        exercises: tailRows[0]?.exercises || 0,
+        phrases: tailRows[0]?.phrases || 0,
+        total: (tailRows[0]?.exercises || 0) + (tailRows[0]?.phrases || 0),
       },
     }
   })

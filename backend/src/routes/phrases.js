@@ -96,9 +96,44 @@ export async function phrasesRoutes(fastify) {
        RETURNING step_listen, step_build, step_speak`,
       [request.user.id, parseInt(request.params.id)])
     const p = rows[0]
+    // Фраза пройдена — уходит из хвостов, как и упражнение после первой попытки
+    if (p.step_listen && p.step_build) {
+      await db.query('DELETE FROM phrase_deferrals WHERE user_id = $1 AND phrase_id = $2',
+        [request.user.id, parseInt(request.params.id)])
+    }
     return reply.send({
       listen: p.step_listen, build: p.step_build, speak: p.step_speak,
       done: Boolean(p.step_listen && p.step_build),
     })
+  })
+
+  // Пропустить фразу — уходит в хвосты, как и пропущенное упражнение (миграция 056).
+  // Иначе фраза просто оставалась непройденной, и найти её можно было, только
+  // вспомнив, в каком наборе она была.
+  fastify.post('/api/phrases/:id/defer', { preHandler: [fastify.authenticate] }, async (request) => {
+    await db.query(
+      `INSERT INTO phrase_deferrals (user_id, phrase_id) VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`, [request.user.id, parseInt(request.params.id)])
+    return { ok: true }
+  })
+
+  // Хвосты по фразам: что пропущено и ещё не пройдено
+  fastify.get('/api/phrases/deferred', { preHandler: [fastify.authenticate] }, async (request) => {
+    const lang = request.query.lang || 'ru'
+    const { rows } = await db.query(
+      `SELECT p.id, p.text, p.emoji, p.translations, t.id AS topic_id, t.title, t.emoji AS topic_emoji,
+              t.lesson_id
+       FROM phrase_deferrals d
+       JOIN phrases p ON p.id = d.phrase_id
+       JOIN phrase_topics t ON t.id = p.topic_id
+       LEFT JOIN user_phrase_progress up ON up.phrase_id = p.id AND up.user_id = $1
+       WHERE d.user_id = $1
+         AND NOT (COALESCE(up.step_listen, FALSE) AND COALESCE(up.step_build, FALSE))
+       ORDER BY d.created_at`, [request.user.id])
+    return rows.map(r => ({
+      id: r.id, text: r.text, emoji: r.emoji,
+      translation: r.translations?.[lang] || r.translations?.ru || '',
+      topic_id: r.topic_id, topic_title: r.title, topic_emoji: r.topic_emoji, lesson_id: r.lesson_id,
+    }))
   })
 }

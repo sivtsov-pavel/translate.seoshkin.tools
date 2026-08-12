@@ -40,7 +40,7 @@ export default function Path() {
     )
   }
 
-  const { nodes, section, stats, road } = data
+  const { nodes, section, stats, road, tails } = data
   // Дорога — уроки вперемежку со станциями (речь, грамматика, наборы слов, зачёт).
   // Станция стоит НА пути, а не в стороне: иначе диктант и произношение просто не делают.
   const items = road?.length ? road : nodes.map(n => ({ kind: 'lesson', ...n }))
@@ -161,6 +161,20 @@ export default function Path() {
         }}>
         {showAll ? t.path.showSection : t.path.showAll}
       </button>
+
+      {/* Хвосты — общим числом внизу: пропущенное не теряется и видно, сколько его */}
+      {tails?.total > 0 && (
+        <button onClick={() => navigate(current ? `/exercise-session?lesson_id=${current.lesson_id}&tails=1` : '/')}
+          style={{
+            width: '100%', marginTop: 14, padding: '13px 16px', borderRadius: 14,
+            border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)',
+            fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex',
+            alignItems: 'center', justifyContent: 'space-between', gap: 10,
+          }}>
+          <span>↩️ {t.path.tails}</span>
+          <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{tails.total}</span>
+        </button>
+      )}
 
       {/* Фразы текущего урока — второй шаг после упражнений */}
       {current && (

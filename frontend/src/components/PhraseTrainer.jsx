@@ -46,6 +46,9 @@ export default function PhraseTrainer({ phrases, onExit }) {
 
   const phrase = phrases[i]
   const micAvailable = isSpeechRecognitionSupported()
+  // Без переводов шаг «слушаю» собрать не из чего — варианты ответа пустые.
+  // В этом случае начинаем сразу со сборки фразы, а не показываем пустые кнопки.
+  const hasTranslations = phrases.some(p => p.translation)
 
   const mark = (name) => { api.post(`/phrases/${phrase.id}/step`, { step: name }).catch(() => {}) }
 
@@ -69,7 +72,7 @@ export default function PhraseTrainer({ phrases, onExit }) {
   })
 
   useEffect(() => {
-    setStep('listen'); setPicked([]); setWrong(false); setHeard('')
+    setStep(hasTranslations ? 'listen' : 'build'); setPicked([]); setWrong(false); setHeard('')
     setPool(shuffleWords(phrases[i]?.text || ''))
     if (phrases[i]) speak(phrases[i].text)
   }, [i])
@@ -125,7 +128,10 @@ export default function PhraseTrainer({ phrases, onExit }) {
 
       {step === 'build' && (
         <div>
-          <div style={{ fontWeight: 700, marginBottom: 12 }}>🧩 {t.phrases.buildTask}</div>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>🧩 {t.phrases.buildTask}</div>
+          {phrase.translation && (
+            <div style={{ fontSize: 14, color: 'var(--ink-soft)', marginBottom: 12 }}>{phrase.translation}</div>
+          )}
           <div style={{ minHeight: 56, padding: 12, border: '2px dashed var(--line)', borderRadius: 12, marginBottom: 14, fontSize: 17 }}>
             {picked.join(' ')}
           </div>
@@ -153,6 +159,14 @@ export default function PhraseTrainer({ phrases, onExit }) {
       )}
 
       {wrong && <div style={{ marginTop: 14, color: 'var(--red)', fontSize: 14 }}>✗</div>}
+
+      {/* Пропустить фразу целиком: она уходит в хвосты и вернётся позже,
+          а не теряется молча. */}
+      <button onClick={() => { api.post(`/phrases/${phrase.id}/defer`).catch(() => {}); next() }}
+        style={{ width: '100%', marginTop: 18, padding: '10px', border: 'none', background: 'none',
+          color: 'var(--ink-soft)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+        {t.phrases.skip} →
+      </button>
     </div>
   )
 }
