@@ -23,20 +23,20 @@ import UiModeToggle from './UiModeToggle.jsx'
 const SHAPE = { circle: 'circle', square: 'square', diamond: 'diamond' }
 
 const MAIN = (t) => [
-  { to: '/',           C: Home,     shape: SHAPE.circle,  tone: 'a', label: t.path.title },
-  { to: '/sets',       C: Backpack, shape: SHAPE.square,  tone: 'b', label: t.sets.title.replace(/^[^\p{L}]+/u, '') },
-  { to: '/vocabulary', C: BookOpen, shape: SHAPE.diamond, tone: 'c', label: t.nav.vocabulary },
+  { to: '/',           C: Home,      shape: SHAPE.circle,  tone: 'a', label: t.path.title },
+  { to: '/vocabulary', C: BookOpen,  shape: SHAPE.diamond, tone: 'c', label: t.nav.vocabulary },
+  { to: '/reader',     C: Languages, shape: SHAPE.square,  tone: 'd', label: t.nav.reader },
 ]
 
 // Боковая панель шире таб-бара — там сразу видны и переводчик, и книги, и тренер
 const SIDE_EXTRA = (t) => [
-  { to: '/reader',     C: Languages, shape: SHAPE.circle, tone: 'd', label: t.nav.reader },
-  { to: '/books',      C: Library,   shape: SHAPE.square, tone: 'b', label: t.nav.books || 'Книги' },
-  { to: '/ai-trainer', C: Bot,       shape: SHAPE.circle, tone: 'c', label: t.nav.aiTrainer || 'Тренер' },
+  { to: '/sets',       C: Backpack, shape: SHAPE.square, tone: 'b', label: t.sets.title.replace(/^[^\p{L}]+/u, '') },
+  { to: '/books',      C: Library,  shape: SHAPE.square, tone: 'b', label: t.nav.books || 'Книги' },
+  { to: '/ai-trainer', C: Bot,      shape: SHAPE.circle, tone: 'c', label: t.nav.aiTrainer || 'Тренер' },
 ]
 
 const MORE = (t, isOwner) => [
-  { to: '/reader',     C: Languages,      shape: SHAPE.circle,  tone: 'd', label: t.nav.reader },
+  { to: '/sets',       C: Backpack,       shape: SHAPE.square,  tone: 'b', label: t.sets.title.replace(/^[^\p{L}]+/u, '') },
   { to: '/books',      C: Library,        shape: SHAPE.square,  tone: 'b', label: t.nav.books || 'Книги' },
   { to: '/ai-trainer', C: Bot,            shape: SHAPE.circle,  tone: 'c', label: t.nav.aiTrainer || 'Тренер' },
   // «Уроки» показываем только учителю: ученик видит их как второй путь и начинает
@@ -84,8 +84,8 @@ export default function NoviceNav() {
             <span>{item.label}</span>
           </Link>
         ))}
-        <button className={`novice-tab ${moreOpen ? 'is-active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
-          <Shape C={MoreHorizontal} shape={SHAPE.circle} tone="e" active={moreOpen} />
+        <button className={`novice-tab novice-tab--more ${moreOpen ? 'is-active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
+          <Shape C={MoreHorizontal} shape={SHAPE.circle} tone="b" active={moreOpen} />
           <span>{t.nav.more}</span>
         </button>
       </nav>

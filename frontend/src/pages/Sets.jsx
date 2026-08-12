@@ -67,7 +67,7 @@ export default function Sets() {
               {t.phrases.empty}
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14 }}>
             {topics?.map(topic => (
               <div key={topic.id} onClick={() => navigate(`/phrases/${topic.id}`)} style={{
                 cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16,
@@ -93,7 +93,7 @@ export default function Sets() {
           Наборы ещё собираются. Обнови страницу через минуту.
         </div>
       )}
-      <div style={{ display: tab === 'words' ? 'grid' : 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
+      <div style={{ display: tab === 'words' ? 'grid' : 'none', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14 }}>
         {sets?.map(s => {
           // Иконку берём по русскому ключу темы, а подпись — локализованную
           const icon = iconFor(s.set_theme)

@@ -174,3 +174,13 @@ body.novice-mode .layout-topbar button.dl-mode-toggle {
   border: 1px solid var(--line) !important;
   background: var(--surface-2) !important;
 }
+
+/* Шторка «Ещё» открывается почти на весь экран: при 70vh список приходилось
+   скроллить, а этого никто не ожидал — половина пунктов оставалась незамеченной. */
+.novice-more-sheet { max-height: 92vh; }
+
+/* Кнопку «Ещё» не находили: она выглядела как ещё один серый значок.
+   Красить в красный нельзя — красный в интерфейсе читается как ошибка или удаление,
+   поэтому берём акцентный цвет приложения. */
+.novice-tab--more { color: var(--accent); font-weight: 800; }
+.novice-tab--more .nv-shape { box-shadow: 0 0 0 3px rgba(232, 176, 36, 0.28); }
