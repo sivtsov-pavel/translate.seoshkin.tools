@@ -47,6 +47,16 @@ const ribbonBtn = (active) => ({
 })
 
 export default function Dashboard() {
+  // Наборы фраз по урокам: один запрос каталога, в ответе есть lesson_id — по нему
+  // карточка урока и находит свой набор.
+  const [phraseTopics, setPhraseTopics] = useState(null)
+  useEffect(() => {
+    api.get('/phrase-topics').then(list => {
+      const byLesson = {}
+      for (const topic of list || []) if (topic.lesson_id) byLesson[topic.lesson_id] = topic
+      setPhraseTopics(byLesson)
+    }).catch(() => setPhraseTopics({}))
+  }, [])
   const [stats, setStats] = useState(null)
   const [progress, setProgress] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -397,7 +407,7 @@ export default function Dashboard() {
           )
         })()}
 
-        {selLesson && <LessonDetailCard key={selLesson.lesson_id} lesson={selLesson} navigate={navigate} onReset={repeatLesson} />}
+        {selLesson && <LessonDetailCard key={selLesson.lesson_id} lesson={selLesson} navigate={navigate} onReset={repeatLesson} phraseTopics={phraseTopics} />}
 
         {/* Тумблер «Наборы» — под уроком, перед списком наборов */}
         {setsAll.length > 0 && (
@@ -434,7 +444,7 @@ export default function Dashboard() {
                 {/* Раскрытие набора НА МЕСТЕ (аккордеон) — не улетает в низ экрана */}
                 {selectedSetId === s.lesson_id && (
                   <div style={{ marginTop: 8 }}>
-                    <LessonDetailCard key={'set' + s.lesson_id} lesson={{ ...s, status: 'current' }} navigate={navigate} onReset={repeatLesson} />
+                    <LessonDetailCard key={'set' + s.lesson_id} lesson={{ ...s, status: 'current' }} navigate={navigate} onReset={repeatLesson} phraseTopics={phraseTopics} />
                   </div>
                 )}
               </div>
@@ -604,7 +614,7 @@ function LessonPath({ lessons, selectedId, onSelect, lang }) {
 }
 
 /* ================= КАРТОЧКА-ДЕТАЛЬ УРОКА ================= */
-function LessonDetailCard({ lesson, navigate, onReset }) {
+function LessonDetailCard({ lesson, navigate, onReset, phraseTopics }) {
   const { t, lang } = useI18nStore()
   const { user } = useAuthStore()
   const [exOpen, setExOpen] = useState(true)
@@ -622,6 +632,7 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
   // Чип рисуем по общему пулу урока (byTypeTotal), а не только по due-today: иначе
   // пройденный тип «исчезал» с карточки, хотя внутри урока его упражнения на месте
   const chips = TYPE_ORDER.filter(type => lesson.byTypeTotal?.[type] || lesson.byType?.[type])
+  const phraseSet = phraseTopics?.[lesson.lesson_id]
   const typeLabels = {
     flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice,
     sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill,
@@ -758,6 +769,15 @@ function LessonDetailCard({ lesson, navigate, onReset }) {
                 </button>
               )
             })}
+            {/* Набор фраз урока — рядом с типами упражнений, но в счёт урока не входит:
+                он один на урок, а не на каждое слово (см. спеку наборов фраз). */}
+            {phraseSet && (
+              <button className="dl-ex-btn" onClick={() => navigate(`/phrases/lesson/${id}`)}>
+                <span className="dl-ex-icon">🗣</span>
+                <span className="dl-ex-count">{phraseSet.done}/{phraseSet.total}</span>
+                <span className="dl-ex-label">{t.phrases.lessonSet}</span>
+              </button>
+            )}
             {wordsCount > 0 && (
               <button className="dl-ex-btn dl-ex-btn--special"
                 onClick={() => navigate(`/ai-trainer?lesson_id=${id}&lesson_title=${encodeURIComponent(title)}`)}>
