@@ -136,7 +136,12 @@ if (!health.text) console.warn('⚠️ Ollama не отвечает: понят�
 const password = execFileSync('ssh', [SSH_HOST,
   `grep -m1 '^POSTGRES_PASSWORD=' ${PROD_DIR}/.env | cut -d= -f2-`], { encoding: 'utf8' }).trim()
 const { default: pg } = await import('../backend/node_modules/pg/lib/index.js')
-const tunnel = spawn('ssh', ['-N', '-L', '55432:172.19.0.2:5432', SSH_HOST], { stdio: 'ignore' })
+// IP контейнера базы меняется при каждом пересоздании (был .2, стал .4) — зашитый
+// адрес давал ECONNRESET на ровном месте. Спрашиваем адрес у самого docker.
+const dbIp = execFileSync('ssh', [SSH_HOST,
+  `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' translate-db-1`],
+  { encoding: 'utf8' }).trim().split(/\s+/)[0]
+const tunnel = spawn('ssh', ['-N', '-L', `55432:${dbIp}:5432`, SSH_HOST], { stdio: 'ignore' })
 await new Promise(r => setTimeout(r, 2500))
 const db = new pg.Client({ host: '127.0.0.1', port: 55432, user: 'german_app', database: 'german_learning', password })
 await db.connect()
