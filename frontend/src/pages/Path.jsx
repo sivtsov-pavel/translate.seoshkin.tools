@@ -291,7 +291,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   // Нить зелёная ровно до ПЕРВОГО непройденного узла — то есть до места, где путь
   // реально прерывается. По «последнему пройденному» линия закрашивала и пробелы:
   // между 5 и 12 уроком дыра, а нить всё равно шла зелёной до 20-го.
-  let firstGap = points.findIndex(p => p.n.state !== 'done')
+  let firstGap = points.findIndex(p => p.n.kind === 'lesson' && p.n.state !== 'done')
   if (firstGap === -1) firstGap = points.length
   const filled = points.length ? Math.max(0, (firstGap - 0.5) / points.length) : 0
 
