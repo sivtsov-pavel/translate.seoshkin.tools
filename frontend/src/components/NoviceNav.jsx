@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Backpack, BookOpen, Languages, MoreHorizontal, Library, Bot,
@@ -75,6 +75,14 @@ export default function NoviceNav() {
 
   const isActive = (to) => to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
   const main = MAIN(t)
+
+  // Тур показывает разделы, которые живут за кнопкой «Ещё», и должен уметь открыть
+  // шторку сам — иначе рассказывает про то, чего на экране нет.
+  useEffect(() => {
+    const h = (e) => setMoreOpen(!!e.detail?.open)
+    window.addEventListener('dl-novice-more', h)
+    return () => window.removeEventListener('dl-novice-more', h)
+  }, [])
 
   return (
     <>
@@ -166,8 +174,9 @@ export default function NoviceNav() {
               <SpeakTranslationToggle />
             </div>
 
+            {/* data-to — по нему тур находит строку: у кнопки нет href, зацепиться не за что */}
             {MORE(t, isOwner).map(item => (
-              <button key={item.to} className="novice-more-row"
+              <button key={item.to} className="novice-more-row" data-to={item.to}
                 onClick={() => { setMoreOpen(false); navigate(item.to) }}>
                 <Shape C={item.C} shape={item.shape} tone={item.tone} size="lg" />
                 <span>{item.label}</span>
