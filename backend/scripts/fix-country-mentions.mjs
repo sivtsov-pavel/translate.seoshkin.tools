@@ -26,13 +26,16 @@ const RULES = [
   [/\bdas\s+Russland\b/g,        'die Ukraine'],
   [/\bRussland\b/g,              'die Ukraine'],
   [/\bMoskau\b/g,                'Kyjiw'],
-  [/\bRussisch\b/g,              'Ukrainisch'],
+  // ВНИМАНИЕ: «Russisch» НЕ трогаем. Это язык, а не страна: вопрос
+  // «Wie heißt das auf Russisch: der Sport?» означает «как это по-русски»,
+  // и ответы в нём русские. Замена сделала бы упражнение неверным.
   // Русская сторона
   [/\bиз\s+России\b/g,           'из Украины'],
   [/\bв\s+Россию\b/g,            'в Украину'],
   [/\bв\s+России\b/g,            'в Украине'],
   [/\bРоссия\b/g,                'Украина'],
   [/\bРоссии\b/g,                'Украины'],
+  [/\bроссийск(ий|ая|ое|ие)\b/g, 'украинск$1'],
   [/\bМосква\b/g,                'Киев'],
   [/\bМоскву\b/g,                'Киев'],
   [/\bМоскве\b/g,                'Киеве'],
@@ -59,19 +62,19 @@ function convertDeep(value) {
   return value
 }
 
-const HIT = /Russland|Moskau|Russisch|Росси|Москв/i
+const HIT = /Russland|Moskau|Росси|Москв/i
 
 // ── Слова ─────────────────────────────────────────────────────────────────────
 const { rows: words } = await db.query(
   `SELECT id, word_de, translation_ru, example_sentence, example_sentence_ru, translations
    FROM words
-   WHERE word_de ~* 'Russland|Moskau|Russisch' OR translation_ru ~* 'Росси|Москв'
+   WHERE word_de ~* 'Russland|Moskau' OR translation_ru ~* 'Росси|Москв'
       OR example_sentence ~* 'Russland|Moskau' OR example_sentence_ru ~* 'Росси|Москв'`)
 
 // ── Упражнения ────────────────────────────────────────────────────────────────
 const { rows: exercises } = await db.query(
   `SELECT id, type, payload, payload_translations FROM exercises
-   WHERE payload::text ~* 'Russland|Moskau|Russisch|Росси|Москв'
+   WHERE payload::text ~* 'Russland|Moskau|Росси|Москв'
       OR payload_translations::text ~* 'Росси|Москв'`)
 
 console.log(`\nСлов затронуто: ${words.length}, упражнений: ${exercises.length}\n`)
