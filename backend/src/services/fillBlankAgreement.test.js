@@ -56,4 +56,19 @@ describe('fixAgreement — чего трогать нельзя', () => {
     const p = { sentence: 'Ich ___ Hunger.', blank: 'habe', options: ['habe'] }
     expect(fixAgreement(p)).toBe(p)
   })
+
+  // Личные формы тоже кончаются на -n. Проверка по хвосту слова превращала их
+  // в «kane» и «bie» — то есть ломала верные упражнения.
+  it('личная форма на -n остаётся нетронутой', () => {
+    const kann = { sentence: 'Ich ___ gut singen.', blank: 'kann', options: ['kann'] }
+    expect(fixAgreement(kann)).toBe(kann)
+    const bin = { sentence: 'Ich ___ müde.', blank: 'bin', options: ['bin'] }
+    expect(fixAgreement(bin)).toBe(bin)
+    const schon = { sentence: 'Ihr ___ dran.', blank: 'seid', options: ['seid'] }
+    expect(fixAgreement(schon)).toBe(schon)
+  })
+
+  it('глаголы на -eln/-ern спрягаются верно', () => {
+    expect(fixAgreement({ sentence: 'Ich ___ Briefmarken.', blank: 'sammeln', options: ['sammeln'] }).blank).toBe('sammle')
+  })
 })

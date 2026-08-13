@@ -104,15 +104,20 @@ export function fixAgreement(payload) {
   if (!payload || typeof payload !== 'object') return payload
   const sentence = String(payload.sentence || '')
   const blank = String(payload.blank || '').trim()
-  // Интересует только случай «местоимение + пропуск» с инфинитивом в ответе
-  if (!/^[a-zäöüß]+e?n$/i.test(blank)) return payload
+  // Инфинитив немецкого глагола кончается на -en (nehmen) либо на -ln/-rn
+  // (sammeln, wandern). Проверять просто «-n» нельзя: «kann» и «bin» — уже личные
+  // формы, и такое правило превращало их в «kane» и «bie», ломая верные упражнения.
+  // Сверка с формой «wir» идёт следом как вторая опора (у инфинитива они совпадают).
+  if (!/^[a-zäöüß]{3,}(en|ln|rn)$/i.test(blank)) return payload
+  const forms = conjugatePresent(blank)
+  if (!forms || forms.wir !== blank) return payload
+
   const m = sentence.match(/^\s*(ich|du|er|es|ihr|wir)\s+___/i)
   if (!m) return payload
 
   const person = m[1].toLowerCase()
   if (person === 'du' || person === 'er' || person === 'es') return null
-  const forms = conjugatePresent(blank)
-  const form = forms?.[person === 'wir' ? 'wir' : person]
+  const form = forms[person]
   if (!form) return null
   if (form === blank) return payload
 
