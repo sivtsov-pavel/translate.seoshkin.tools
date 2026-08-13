@@ -413,3 +413,21 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 1024px) {
   .path-top-tiles { display: none !important; }
 }
+
+/* ── Полоса с ассистентом на планшете и ПК ────────────────────────────────────
+   Внизу остаётся та же полоса с прогибом и круглой кнопкой ИИ-тренера, но без
+   пунктов навигации: они уже есть в боковой панели, и дублировать их незачем.
+   Кнопка тренера при этом всегда под рукой на любом размере экрана. */
+@media (min-width: 834px) {
+  .novice-tabbar--notch {
+    display: grid !important;
+    grid-template-columns: 1fr 84px 1fr;
+    left: 96px;                       /* полоса начинается за боковой панелью */
+  }
+  .novice-tabbar--notch .novice-tab { display: none; }   /* пункты — только на телефоне */
+  body.novice-mode .main-content { padding-bottom: 96px; }
+}
+
+@media (min-width: 1200px) {
+  .novice-tabbar--notch { left: 230px; }
+}
