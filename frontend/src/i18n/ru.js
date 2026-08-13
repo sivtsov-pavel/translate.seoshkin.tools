@@ -677,6 +677,8 @@ export const ru = {
     skillSpeak: 'Речь',
     weekdays: ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'],
     lessonsPassed: 'уроков пройдено',
+    lockedTitle: 'Урок закрыт',
+    lockedHint: 'Пройди предыдущий урок — этот откроется следующим',
   },
   phrases: {
     title: 'Фразы',

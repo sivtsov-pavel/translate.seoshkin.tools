@@ -903,6 +903,8 @@ export const bg = {
     skillSpeak: 'Говорене',
     weekdays: ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд'],
     lessonsPassed: 'урока завършени',
+    lockedTitle: 'Урокът е заключен',
+    lockedHint: 'Завърши предишния урок — този ще се отвори след него',
   },
   phrases: {
     title: 'Фрази',

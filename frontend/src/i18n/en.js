@@ -921,6 +921,8 @@ export const en = {
     skillSpeak: 'Speaking',
     weekdays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
     lessonsPassed: 'lessons done',
+    lockedTitle: 'Lesson locked',
+    lockedHint: 'Finish the previous lesson — this one opens next',
   },
   phrases: {
     title: 'Phrases',

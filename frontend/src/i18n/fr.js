@@ -908,6 +908,8 @@ export const fr = {
     skillSpeak: 'Parole',
     weekdays: ['lu', 'ma', 'me', 'je', 've', 'sa', 'di'],
     lessonsPassed: 'leçons terminées',
+    lockedTitle: 'Leçon verrouillée',
+    lockedHint: 'Termine la leçon précédente — celle-ci suivra',
   },
   phrases: {
     title: 'Phrases',

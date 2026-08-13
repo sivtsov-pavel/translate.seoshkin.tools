@@ -920,6 +920,8 @@ export const uk = {
     skillSpeak: 'Мовлення',
     weekdays: ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд'],
     lessonsPassed: 'уроків пройдено',
+    lockedTitle: 'Урок закритий',
+    lockedHint: 'Пройди попередній урок — цей відкриється далі',
   },
   phrases: {
     title: 'Фрази',

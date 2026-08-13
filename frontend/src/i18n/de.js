@@ -927,6 +927,8 @@ export const de = {
     skillSpeak: 'Sprechen',
     weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
     lessonsPassed: 'Lektionen geschafft',
+    lockedTitle: 'Lektion gesperrt',
+    lockedHint: 'Schließe die vorige Lektion ab — diese folgt',
   },
   phrases: {
     title: 'Sätze',

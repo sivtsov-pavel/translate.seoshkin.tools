@@ -288,11 +288,12 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   }, '')
 
   const height = points[points.length - 1].y + 100
-  // Доля закрашенной нити — по позиции последнего пройденного узла. Если считать
-  // количеством, непройденные станции между уроками рвут линию, хотя путь пройден.
-  let lastDone = -1
-  points.forEach((p, i) => { if (p.n.state === 'done') lastDone = i })
-  const filled = points.length > 1 ? (lastDone + 0.5) / points.length : 0
+  // Нить зелёная ровно до ПЕРВОГО непройденного узла — то есть до места, где путь
+  // реально прерывается. По «последнему пройденному» линия закрашивала и пробелы:
+  // между 5 и 12 уроком дыра, а нить всё равно шла зелёной до 20-го.
+  let firstGap = points.findIndex(p => p.n.state !== 'done')
+  if (firstGap === -1) firstGap = points.length
+  const filled = points.length ? Math.max(0, (firstGap - 0.5) / points.length) : 0
 
   return (
     <div className="path-road" style={{ position: 'relative', height }}>
@@ -337,7 +338,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
           <div key={k} {...(isLesson && n.state === 'current' ? { 'data-current-node': '1' } : {})}
             style={{ position: 'absolute', left: `${(x / VIEW_W) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-              <button onClick={() => !locked && openNode(n, i)} disabled={locked}
+              <button onClick={() => openNode(n, i)}
                 style={{
                   width: size, height: size, borderRadius: radius, flex: 'none',
                   transform: shape === 'diamond' ? 'rotate(45deg)' : 'none',
@@ -411,10 +412,21 @@ function NodeCard({ n, title, details, t, go, pct }) {
     const dc = byType('declension'); if (dc) rows.push({ label: t.exercise.declension || 'Падежи', done: dc.done, total: dc.total, go: `/exercise-session?lesson_id=${details.lesson.id}&type=declension` })
   }
 
+  // Закрытый урок тоже раскрывается: молчащий на тап кружок читается как поломка,
+  // а человеку нужно понять, почему он закрыт и что делать.
+  const locked = n.state === 'locked'
+
   return (
     <div style={{ width: 208, padding: '12px 14px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)', boxShadow: '0 12px 30px -24px rgba(0,0,0,.6)' }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{kindLabel}</div>
       <div style={{ fontSize: 13.5, fontWeight: 800, lineHeight: 1.25, marginTop: 2 }}>{title}</div>
+
+      {locked && (
+        <div style={{ marginTop: 8, padding: '10px 12px', borderRadius: 12, background: 'var(--surface-2)' }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700 }}>🔒 {t.path.lockedTitle}</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3, lineHeight: 1.35 }}>{t.path.lockedHint}</div>
+        </div>
+      )}
       <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 3 }}>
         {isLesson ? `${n.ex_done}/${n.ex_total}` : `${n.done}/${n.total}`} · {pct}%
       </div>
@@ -437,11 +449,13 @@ function NodeCard({ n, title, details, t, go, pct }) {
         <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 8 }}>…</div>
       )}
 
-      <button onClick={() => go(n)}
-        style={{ marginTop: 10, width: '100%', padding: '9px 12px', borderRadius: 12, border: 'none',
-          background: C.accent, color: C.accentInk, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-        {t.path.start}
-      </button>
+      {!locked && (
+        <button onClick={() => go(n)}
+          style={{ marginTop: 10, width: '100%', padding: '9px 12px', borderRadius: 12, border: 'none',
+            background: C.accent, color: C.accentInk, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          {t.path.start}
+        </button>
+      )}
 
       {/* Пропустить станцию: непройденное уходит в хвосты и вернётся позже.
           Речь ночью не сделаешь — но и терять её нельзя. */}
@@ -460,7 +474,7 @@ function NodeCard({ n, title, details, t, go, pct }) {
 
       {/* Полный список упражнений урока — карточка урока со всеми шагами,
           словами, зачётом и печатью */}
-      {isLesson && (
+      {isLesson && !locked && (
         <button onClick={() => go({ __url: `/lesson/${n.lesson_id}` })}
           style={{ marginTop: 7, width: '100%', padding: '9px 12px', borderRadius: 12,
             border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)',

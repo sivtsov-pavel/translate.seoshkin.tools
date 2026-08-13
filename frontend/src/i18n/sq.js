@@ -920,6 +920,8 @@ export const sq = {
     skillSpeak: 'Të folurit',
     weekdays: ['hë', 'ma', 'më', 'en', 'pr', 'sh', 'di'],
     lessonsPassed: 'mësime të përfunduara',
+    lockedTitle: 'Mësimi i kyçur',
+    lockedHint: 'Përfundo mësimin e mëparshëm — ky hapet pas tij',
   },
   phrases: {
     title: 'Fraza',

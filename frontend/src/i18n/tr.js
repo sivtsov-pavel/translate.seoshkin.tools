@@ -908,6 +908,8 @@ export const tr = {
     skillSpeak: 'Konuşma',
     weekdays: ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'],
     lessonsPassed: 'ders tamamlandı',
+    lockedTitle: 'Ders kilitli',
+    lockedHint: 'Önceki dersi bitir — bu sonra açılır',
   },
   phrases: {
     title: 'Cümleler',

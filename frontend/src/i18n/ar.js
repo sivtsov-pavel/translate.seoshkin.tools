@@ -911,6 +911,8 @@ export const ar = {
     skillSpeak: 'التحدث',
     weekdays: ['إث', 'ثل', 'أر', 'خم', 'جم', 'سب', 'أح'],
     lessonsPassed: 'دروس مكتملة',
+    lockedTitle: 'الدرس مقفل',
+    lockedHint: 'أكمل الدرس السابق — سيُفتح هذا بعده',
   },
   phrases: {
     title: 'الجمل',
