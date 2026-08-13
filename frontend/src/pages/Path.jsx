@@ -411,6 +411,7 @@ function NodeCard({ n, title, details, t, go, pct }) {
   if (n.kind === 'checkpoint' && n.type === 'grammar' && details) {
     const c = byType('conjugation'); if (c) rows.push({ label: t.exercise.conjugation, done: c.done, total: c.total, go: `/exercise-session?lesson_id=${details.lesson.id}&type=conjugation` })
     const dc = byType('declension'); if (dc) rows.push({ label: t.exercise.declension || 'Падежи', done: dc.done, total: dc.total, go: `/exercise-session?lesson_id=${details.lesson.id}&type=declension` })
+    const ar = byType('article');    if (ar) rows.push({ label: t.exercise.article || 'Артикль', done: ar.done, total: ar.total, go: `/exercise-session?lesson_id=${details.lesson.id}&type=article` })
   }
 
   // Закрытый урок тоже раскрывается: молчащий на тап кружок читается как поломка,

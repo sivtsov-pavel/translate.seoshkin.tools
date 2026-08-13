@@ -29,11 +29,11 @@ const LANGS = {
 }
 
 // Порядок как в сессии (ExerciseSession TYPE_SEQ): склонение — между «проговори» и диктантом
-const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'conjugation', 'declension', 'dictation']
+const TYPE_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank', 'sentence_write', 'speech', 'conjugation', 'declension', 'article', 'dictation']
 // Иконка (lucide) на тип упражнения; letter_fill рисуем как «abc»
 const TYPE_ICON = {
   multiple_choice: CheckCircle2, flashcard: Layers, fill_blank: Pencil,
-  sentence_write: SquarePen, speech: MessageCircle, conjugation: Puzzle, declension: Puzzle, dictation: Mic,
+  sentence_write: SquarePen, speech: MessageCircle, conjugation: Puzzle, declension: Puzzle, article: Puzzle, dictation: Mic,
 }
 
 const ts = (d) => { const t = new Date(d).getTime(); return isNaN(t) ? 0 : t }
@@ -636,7 +636,7 @@ function LessonDetailCard({ lesson, navigate, onReset, phraseTopics }) {
   const typeLabels = {
     flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice,
     sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill,
-    speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation, declension: t.exercise.declension || 'Падежи', dictation: t.exercise.dictation,
+    speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation, declension: t.exercise.declension || 'Падежи', article: t.exercise.article || 'Артикль', dictation: t.exercise.dictation,
   }
   // Освоение урока: сколько упражнений реально сделано из всех. Отличается от «пройден»:
   // урок засчитывается, когда затронуто каждое слово, а освоен — когда сделаны ВСЕ

@@ -95,9 +95,10 @@ export async function pathRoutes(fastify) {
          FROM exercises e
          LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
          WHERE e.lesson_id = ANY($2::int[])
-           AND e.type IN ('dictation','speech','conjugation','declension')
+           AND e.type IN ('dictation','speech','conjugation','declension','article')
          GROUP BY e.lesson_id, e.type`, [userId, lessonIds])
       for (const r of st) {
+        // Артикль — такая же грамматика, как спряжение и падежи
         const kind = (r.type === 'dictation' || r.type === 'speech') ? 'speech' : 'grammar'
         const cur = stationProgress.get(r.lesson_id) || { speech: { done: 0, total: 0 }, grammar: { done: 0, total: 0 } }
         cur[kind].done += r.done
@@ -379,7 +380,7 @@ export async function pathRoutes(fastify) {
   }, async (request) => {
     const userId = request.user.id
     const { type, lesson_id } = request.body
-    const kinds = type === 'speech' ? ['dictation', 'speech'] : ['conjugation', 'declension']
+    const kinds = type === 'speech' ? ['dictation', 'speech'] : ['conjugation', 'declension', 'article']
 
     // Упражнения станции, которых ученик ещё не касался
     const { rowCount: exCount } = await db.query(

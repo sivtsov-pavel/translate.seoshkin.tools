@@ -44,6 +44,7 @@ export default function Checkpoint() {
     : [
         byType('conjugation') ? { key: 'conjugation', C: Puzzle, label: t.exercise.conjugation, ...byType('conjugation'), go: () => navigate(`/exercise-session?lesson_id=${lessonIds[0]}&type=conjugation`) } : null,
         byType('declension') ? { key: 'declension', C: Puzzle, label: t.exercise.declension || 'Падежи', ...byType('declension'), go: () => navigate(`/exercise-session?lesson_id=${lessonIds[0]}&type=declension`) } : null,
+        byType('article') ? { key: 'article', C: Puzzle, label: t.exercise.article || 'Артикль', ...byType('article'), go: () => navigate(`/exercise-session?lesson_id=${lessonIds[0]}&type=article`) } : null,
       ].filter(Boolean)
 
   const title = isSpeech ? t.path.cpSpeech : t.path.cpGrammar

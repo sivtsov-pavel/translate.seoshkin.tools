@@ -20,12 +20,12 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 // Порядок шагов: сначала «выбери ответ» — узнавание запускается легче, чем
 // вспоминание, и первый шаг не должен пугать. Флеш-карты следом.
 const STEP_ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank',
-                    'sentence_write', 'conjugation', 'declension', 'dictation', 'speech']
+                    'sentence_write', 'conjugation', 'declension', 'article', 'dictation', 'speech']
 
 // Иконки проекта (lucide), как во всём интерфейсе — эмодзи здесь выбивались
 const STEP_ICON = {
   flashcard: Layers, multiple_choice: CheckCircle2, letter_fill: Type, fill_blank: Pencil,
-  sentence_write: SquarePen, conjugation: Puzzle, declension: Puzzle, dictation: Mic,
+  sentence_write: SquarePen, conjugation: Puzzle, declension: Puzzle, article: Type, dictation: Mic,
   speech: Mic,
 }
 
@@ -55,7 +55,8 @@ export default function LessonOverview() {
     flashcard: t.exercise.flashcard, multiple_choice: t.exercise.multipleChoice,
     letter_fill: t.exercise.letterFill, fill_blank: t.exercise.fillBlank,
     sentence_write: t.exercise.sentenceWrite, conjugation: t.exercise.conjugation,
-    declension: t.exercise.declension || 'Падежи', dictation: t.exercise.dictation,
+    declension: t.exercise.declension || 'Падежи', article: t.exercise.article || 'Артикль',
+    dictation: t.exercise.dictation,
     speech: t.exercise.speech || 'Произношение',
   }
 
