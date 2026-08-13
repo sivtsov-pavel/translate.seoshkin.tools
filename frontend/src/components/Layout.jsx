@@ -529,6 +529,23 @@ export default function Layout({ children }) {
         ) : (
           <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{tgt.flag} {tgtName}</span>
         )}
+
+        {/* Справа — то же, что в мобильной шапке: тумблер режима, тур и профиль.
+            Без тумблера на ПК из режима эксперта нельзя было вернуться в новичка:
+            мобильная шапка на этой ширине скрыта. */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <UiModeToggle />
+          <button onClick={startTour} style={{ ...iconBtn, border: 'none', background: 'transparent' }}
+            aria-label={t.nav.tourApp} title={t.nav.tourApp}>
+            <Compass size={19} color="var(--blue)" />
+          </button>
+          {user && (
+            <button onClick={() => setProfileOpen(v => !v)} aria-label={t.nav.tabProfile}
+              style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid var(--surface)', background: 'var(--gold)', color: '#fff', fontWeight: 700, fontSize: /\p{Emoji}/u.test(avatarChar) ? 18 : 14, cursor: 'pointer', flexShrink: 0 }}>
+              {avatarChar}
+            </button>
+          )}
+        </div>
       </header>
 
       <main className="main-content">{children}</main>
