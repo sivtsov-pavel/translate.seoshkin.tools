@@ -78,12 +78,12 @@ export default function Path() {
   // есть хоть одно сделанное упражнение). Резать по «текущему» нельзя: Павел учит
   // урок 17, но «текущим» путь считает первый недоделанный (3-й) — и дорога
   // схлопывалась до трёх уроков. Совсем ничего не тронуто — показываем всё.
+  // Только по УРОКАМ: станция-набор с прогрессом в хвосте дороги не должна
+  // разворачивать весь путь (из-за этого тумблер «пропадал» — прятать было нечего).
   let cut = -1
   items.forEach((it, i) => {
-    const touched = it.kind === 'lesson'
-      ? (it.state === 'done' || it.state === 'current' || (it.ex_done || 0) > 0)
-      : (it.done || 0) > 0
-    if (touched) cut = i
+    if (it.kind !== 'lesson') return
+    if (it.state === 'done' || it.state === 'current' || (it.ex_done || 0) > 0) cut = i
   })
   const visibleItems = showAll || cut === -1 ? items : items.slice(0, cut + 1)
   const hiddenCount = items.length - visibleItems.length
@@ -172,21 +172,21 @@ export default function Path() {
         )}
       </div>
 
-      {/* Дорога: изогнутая нить, узлы смещены по змейке — как было в прежней карте.
-          Кривая Безье идёт от кружка к кружку и обтекает их, а не ломается углами. */}
-      <PathRoad items={visibleItems} short={short} lang={lang} t={t} go={go}
-        selected={selected} setSelected={setSelected} details={details} setDetails={setDetails} />
-
-      {/* Тумблер дороги: по умолчанию виден пройденный путь, дальнейшие уроки —
-          по желанию. Кнопка стоит там, где дорога обрывается. */}
+      {/* Тумблер дороги — НАД дорогой, всегда на виду: внизу длинной дороги его
+          не находили («тумблер пропал»). По умолчанию — пройденный путь. */}
       {(hiddenCount > 0 || showAll) && (
         <button onClick={toggleRoad}
-          style={{ width: '100%', marginTop: 6, padding: '12px 16px', borderRadius: 14,
+          style={{ width: '100%', marginBottom: 10, padding: '12px 16px', borderRadius: 14,
             border: '1px dashed var(--line)', background: 'var(--surface)', color: 'var(--ink)',
             fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
           {showAll ? `↥ ${t.path.roadMine}` : `🗺 ${t.path.roadAll} (+${hiddenCount})`}
         </button>
       )}
+
+      {/* Дорога: изогнутая нить, узлы смещены по змейке — как было в прежней карте.
+          Кривая Безье идёт от кружка к кружку и обтекает их, а не ломается углами. */}
+      <PathRoad items={visibleItems} short={short} lang={lang} t={t} go={go}
+        selected={selected} setSelected={setSelected} details={details} setDetails={setDetails} />
 
       {/* Хвосты — общим числом: пропущенное не теряется и видно, сколько его */}
       {tails?.total > 0 && (
