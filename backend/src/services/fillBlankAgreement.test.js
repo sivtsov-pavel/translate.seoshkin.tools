@@ -83,3 +83,48 @@ describe('fixAgreement — чего трогать нельзя', () => {
     expect(fixAgreement({ sentence: 'Ich ___ Briefmarken.', blank: 'sammeln', options: ['sammeln'] }).blank).toBe('sammle')
   })
 })
+
+// Отделяемые глаголы — дыра, найденная аудитом 13.08: «aufräumen» спрягался целиком
+// в «aufräume» («Ich aufräume mein Zimmer auf» — не немецкий, урок 298).
+describe('fixAgreement — отделяемые приставки', () => {
+  it('приставка в конце предложения: в пропуск идёт спрягаемая основа', () => {
+    const out = fixAgreement({ sentence: 'Ich ___ die Arbeit an.', blank: 'anfangen', options: ['anfangen', 'gehen'] })
+    expect(out.blank).toBe('fange')
+    expect(out.options).toContain('fange')
+    expect(fixAgreement({ sentence: 'Ich ___ mein Zimmer auf.', blank: 'aufräumen', options: ['aufräumen'] }).blank).toBe('räume')
+    expect(fixAgreement({ sentence: 'Ihr ___ die Geschenke ein.', blank: 'einpacken', options: ['einpacken'] }).blank).toBe('packt')
+  })
+
+  it('wir: инфинитив целиком в пропуске неверен, верна основа', () => {
+    // Раньше «Wir anfangen … an» считалось правильным (форма wir совпадает с инфинитивом)
+    expect(fixAgreement({ sentence: 'Wir ___ um 8 Uhr auf.', blank: 'aufstehen', options: ['aufstehen'] }).blank).toBe('stehen')
+  })
+
+  it('возвратный отделяемый: основа без приставки и местоимения', () => {
+    expect(fixAgreement({ sentence: 'Ich ___ mich schnell an.', blank: 'sich anziehen', options: ['sich anziehen'] }).blank).toBe('ziehe')
+  })
+
+  it('du: основа сильного глагола наугад не спрягается — отбрасываем', () => {
+    expect(fixAgreement({ sentence: 'Du ___ die Arbeit an.', blank: 'anfangen', options: ['anfangen'] })).toBe(null)
+  })
+
+  it('приставка НЕ отделена в предложении — не чиним сами, отбрасываем', () => {
+    expect(fixAgreement({ sentence: 'Ich ___ mein Zimmer.', blank: 'aufräumen', options: ['aufräumen'] })).toBe(null)
+  })
+
+  it('ложные отделяемые спрягаются целиком', () => {
+    // antworten — не «ant + worten»; teilen — не «teil + en»; angeln — не «an + geln»
+    expect(fixAgreement({ sentence: 'Ich ___ auf die Frage.', blank: 'antworten', options: ['antworten'] }).blank).toBe('antworte')
+    expect(fixAgreement({ sentence: 'Ich ___ den Kuchen.', blank: 'teilen', options: ['teilen'] }).blank).toBe('teile')
+    expect(fixAgreement({ sentence: 'Ich ___ am See.', blank: 'angeln', options: ['angeln'] }).blank).toBe('angle')
+  })
+
+  it('притяжательное Ihr + существительное не трогается (защита регистром)', () => {
+    // «Ihr ___ ist kaputt» + «Wagen»: сверка формы wir регистрозависима — существительное
+    // с заглавной не совпадает с «wagen» и остаётся нетронутым. Закреплено тестом.
+    const p = { sentence: 'Ihr ___ ist kaputt.', blank: 'Wagen', options: ['Wagen', 'Auto'] }
+    expect(fixAgreement(p)).toBe(p)
+    const st = { sentence: 'Ihr ___ ist online.', blank: 'Status', options: ['Status'] }
+    expect(fixAgreement(st)).toBe(st)
+  })
+})

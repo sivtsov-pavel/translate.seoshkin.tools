@@ -79,6 +79,22 @@ export function ensureBlank(payload) {
   return { ...payload, sentence: sentence.replace(form, '___'), blank: form, options }
 }
 
+// Отделяемые приставки (порядок важен: длинные раньше коротких, иначе «zurückgeben»
+// разберётся как «zu + rückgeben»). Список тот же, что в systemCheck.js.
+const SEPARABLE_PREFIX = /^(zusammen|zurück|statt|fest|frei|teil|nach|weg|her|hin|los|bei|ein|mit|auf|aus|an|ab|vor|zu)/
+
+// Глаголы, которые лишь НАЧИНАЮТСЯ как отделяемые, но ими не являются:
+// «antworten» — не «ant + worten», спрягается целиком (ich antworte).
+// Сюда попадают только те, у кого «остаток» сам похож на глагол и обманул бы проверку.
+const PSEUDO_SEPARABLE = new Set(['antworten', 'abonnieren'])
+
+// Похож ли остаток без приставки на спрягаемый инфинитив («fangen», «räumen»).
+// У ложных отделяемых остаток на глагол не похож: teilen → «en», angeln → «geln»,
+// beißen → «ßen» — все они проваливают эту проверку и спрягаются целиком, как и должны.
+function conjugableRest(rest) {
+  return /^[a-zäöüß]{3,}(en|ln|rn)$/.test(rest) && conjugatePresent(rest)?.wir === rest
+}
+
 // Инфинитив вместо личной формы: «Ich ___ das Buch» с ответом «nehmen» (нужно «nehme»).
 // Ошибка грубая и заметная — именно на такие указывает учитель, — а модель делает её
 // регулярно, потому что в словаре слово стоит в инфинитиве и она переносит его как есть.
@@ -117,13 +133,35 @@ export function fixAgreement(payload) {
   const verb = reflexive ? blank.replace(/^sich\s+/i, '') : blank
 
   if (!/^[a-zäöüß]{3,}(en|ln|rn)$/i.test(verb)) return payload
-  const forms = conjugatePresent(verb)
-  if (!forms || forms.wir !== verb) return payload
 
   const m = sentence.match(/^\s*(ich|du|er|es|ihr|wir)\s+___/i)
   if (!m) return payload
-
   const person = m[1].toLowerCase()
+
+  // Отделяемый глагол. Спрягать его целиком нельзя: «Ich ___ mein Zimmer auf» +
+  // «aufräumen» превращалось в «aufräume» — не немецкий (нашёл аудит 13.08, урок 298).
+  //  • Приставка отделена и стоит в конце предложения («Ich ___ die Arbeit an.») —
+  //    в пропуск идёт только основа: спрягаем остаток (anfangen → fange).
+  //  • Приставка в предложении НЕ отделена — сами такое не чиним: вернуть null,
+  //    упражнение отбрасывается и генерируется заново.
+  let conjVerb = verb
+  if (!PSEUDO_SEPARABLE.has(verb.toLowerCase())) {
+    const tail = sentence.match(/([a-zäöüß]+)\s*[.!?…]*\s*$/i)?.[1]?.toLowerCase()
+    if (tail && tail.length >= 2 && tail.length < verb.length && verb.toLowerCase().startsWith(tail)) {
+      const rest = verb.slice(tail.length)
+      if (conjugableRest(rest)) conjVerb = rest
+    }
+    if (conjVerb === verb) {
+      const pref = SEPARABLE_PREFIX.exec(verb.toLowerCase())?.[1]
+      if (pref && conjugableRest(verb.slice(pref.length))) return null
+    }
+  }
+
+  const forms = conjugatePresent(conjVerb)
+  // Сверка с формой «wir» регистрозависима нарочно: она же отсекает существительные
+  // после притяжательного «Ihr» («Ihr ___ ist kaputt» + «Wagen» ≠ форма «wagen»).
+  if (!forms || forms.wir !== conjVerb) return payload
+
   if (person === 'du' || person === 'er' || person === 'es') return null
   const form = forms[person]
   if (!form) return null
