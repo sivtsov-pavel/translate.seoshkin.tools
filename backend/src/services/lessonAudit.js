@@ -7,6 +7,7 @@
 // Это лежало месяцами и всплывало, только когда на него натыкался живой ученик.
 // Теперь урок проверяется сразу после создания, а отчёт уходит в журнал операций.
 import { isValidMask } from './letterFill.js'
+import { fixAgreement } from './fillBlankFix.js'
 
 // Уровни: 'blocker' — пройти невозможно; 'warn' — пройти можно, но учит неверно.
 const CORE = ['flashcard', 'fill_blank', 'multiple_choice', 'sentence_write', 'letter_fill']
@@ -37,6 +38,13 @@ const GENDER_RULES = [
 ]
 const MIN_NOUN_LEN = 6
 const ART_RE = /^(der|die|das)\s+(.+)$/i
+
+// Существительные и наречия на «-st», которые не являются спрягаемой формой глагола.
+const VERB_FORM_OK = new Set(['ist', 'bist', 'erst', 'fast', 'selbst', 'sonst', 'meist', 'jetzt', 'obst', 'durst'])
+
+// Служебные слова: артикли, местоимения, связки, союзы, отрицание.
+const FUNCTION_WORDS = new Set(['die', 'der', 'das', 'ein', 'eine', 'und', 'ist', 'sind',
+  'nicht', 'auch', 'sie', 'wir', 'ihr', 'mein', 'dein', 'den', 'dem', 'des'])
 
 // Текст, который обязан быть на изучаемом языке (перевод на русский сюда не входит).
 function targetTexts(ex) {
@@ -145,6 +153,18 @@ export function checkExercise(ex) {
     bad('warn', `пример по-русски вместо ${ex.target_lang}: «${String(p.example).slice(0, 50)}»`)
   }
 
+  // Инфинитив вместо личной формы: «Ich ___ das Buch» с ответом «nehmen». Спрашиваем
+  // тот же fixAgreement, что стоит на генерации, — правило живёт в одном месте, и
+  // проверка не может разойтись с починкой.
+  if (ex.type === 'fill_blank' && ex.target_lang === 'de') {
+    const fixed = fixAgreement(p)
+    if (fixed === null) {
+      bad('blocker', `глагол не согласован с подлежащим: «${p.sentence}» → «${p.blank}»`)
+    } else if (fixed !== p && fixed.blank !== p.blank) {
+      bad('blocker', `нужна личная форма «${fixed.blank}», а стоит «${p.blank}»: «${p.sentence}»`)
+    }
+  }
+
   return out
 }
 
@@ -162,6 +182,24 @@ export function checkWord(w) {
   }
 
   if (w.target_lang !== 'de') return out
+
+  // Глагол в спрягаемой форме вместо инфинитива: в словаре стояло «hoffst», и модель
+  // честно строила вокруг него «Ich hoffst auf gutes Wetter». 13.08.2026 таких нашлось 37.
+  // Правило только для немецкого: в английском курсе «artist», «breakfast», «past» —
+  // нормальные слова, и общий фильтр по «-st» их бы обвинил.
+  const bare = String(w.word_de || '').trim()
+  if (/^[a-zäöü]+st$/.test(bare) && !VERB_FORM_OK.has(bare)) {
+    out.push({ level: 'warn', kind: 'форма слова', id: w.id,
+      text: `«${bare}» — похоже на спрягаемую форму (2 л. ед. ч.), в словаре нужен инфинитив` })
+  }
+
+  // Служебное слово карточкой. «die = эта» с картинкой ничему не учит: артикль и
+  // местоимение живут только внутри фразы. Их место — грамматические упражнения.
+  if (!w.is_function_word && FUNCTION_WORDS.has(bare.toLowerCase())) {
+    out.push({ level: 'warn', kind: 'служебное', id: w.id,
+      text: `«${bare}» — служебное слово, его нельзя учить карточкой (пометить is_function_word)` })
+  }
+
   const m = String(w.word_de || '').match(ART_RE)
   if (!m) return out
   const [, art, noun] = m

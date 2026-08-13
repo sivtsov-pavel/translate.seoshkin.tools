@@ -6,6 +6,8 @@ import { checkSentence, translateSentences, enrichWords, translateWordsToAllLang
 import { fetchImageUrl, fetchRandomImageUrl, downloadAndSave } from '../services/unsplash.js'
 import { generateWordImage } from '../services/imageGen.js'
 import { saveOptimizedImage } from '../services/imageOptimize.js'
+import { runSystemCheck } from '../services/systemCheck.js'
+import { logOperation } from '../services/opLog.js'
 
 async function getUserDailyLimit(userId) {
   const { rows } = await db.query(
@@ -43,6 +45,22 @@ export async function exercisesRoutes(fastify) {
   }, async (request, reply) => {
     if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
     return { ...adminOp }
+  })
+
+  // Проверка системы: прогон всех правил качества по всей базе. ИИ не вызывается,
+  // стоимость $0 — можно жать сколько угодно и после каждой загрузки урока.
+  fastify.post('/api/admin/system-check', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user.role !== 'owner') return reply.status(403).send({ error: 'Только для учителя' })
+    const report = await runSystemCheck()
+    await logOperation({
+      kind: 'audit', status: report.ok ? 'ok' : 'warn', costUsd: 0,
+      message: report.ok
+        ? `Проверка системы: чисто (${report.checkedExercises} упражнений, ${report.checkedWords} слов)`
+        : `Проверка системы: ${report.total} замечаний в ${report.groups.length} видах`,
+    }).catch(() => {})
+    return report
   })
 
   fastify.get('/api/admin/report', {
