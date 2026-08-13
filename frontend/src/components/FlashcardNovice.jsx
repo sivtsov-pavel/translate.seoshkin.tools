@@ -119,7 +119,9 @@ export default function FlashcardNovice({
               ? <>{before}<span style={{ color: '#E8B024' }}>{match}</span>{after}</>
               : exampleSentence}
           </div>
-          {exampleSentenceRu && (
+          {/* Перевод примера — только после раскрытия: до него он подсказывал ответ,
+              ведь изучаемое слово в переводе стоит открытым текстом. */}
+          {revealed && exampleSentenceRu && (
             <div style={{ fontSize: 15, color: 'var(--ink-soft)', marginTop: 6 }}>{exampleSentenceRu}</div>
           )}
         </div>

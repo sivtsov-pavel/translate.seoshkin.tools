@@ -179,10 +179,13 @@ export default function ExerciseSession() {
     const next = current + 1
     if (next >= exercises.length) { endSession(); return } // последнее — полный финиш-веер урока
     if (exam || inTails) { setCurrent(next); return }       // зачёт/хвосты — без веера, сразу дальше
-    // Мини-веер показываем на ГРАНИЦЕ типа: прошёл все карточки типа (напр. все «выбери ответ») —
-    // получаешь выбор. Внутри одного типа идём подряд без веера.
+    // Мини-веер показываем, когда БЛОК ТИПА ЗАКРЫТ: впереди не осталось ни одного
+    // упражнения текущего типа. Сравнивать с одним лишь следующим нельзя — поток урока
+    // идёт с shuffle=1, типы вперемешку, и такая проверка срабатывала бы через раз
+    // на неисчерпанном блоке (а на станции с одним типом — не срабатывала никогда).
     // Галочка «Больше не показывать» (fan_skip) — едем дальше без остановки.
-    if (exercises[next].type !== exercises[current].type && localStorage.getItem('fan_skip') !== '1') {
+    const blockClosed = !exercises.slice(next).some(e => e.type === exercises[current].type)
+    if (blockClosed && localStorage.getItem('fan_skip') !== '1') {
       setFanTypesOpen(false)
       setBetweenFan(true)
     } else {
