@@ -395,8 +395,8 @@ body.novice-mode .layout-drawer button {
    данные отвлекают от дороги, а места под них нет. */
 .path-aside { display: none; }
 
-@media (min-width: 1200px) {
-  .path-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 20px; align-items: start; }
+@media (min-width: 1024px) {
+  .path-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 330px); gap: 20px; align-items: start; }
   .path-aside {
     display: flex; flex-direction: column; gap: 14px;
     padding: 16px 18px 40px; border-left: 1px solid var(--line);
@@ -407,3 +407,9 @@ body.novice-mode .layout-drawer button {
 .path-aside-card { padding: 16px 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
 .path-aside-card--chest { background: rgba(232, 176, 36, 0.12); border-color: rgba(232, 176, 36, 0.35); }
 .path-aside-title { font-size: 14px; font-weight: 800; }
+
+/* Верхние плитки метрик прячем там, где есть правая колонка со статистикой —
+   иначе серия, XP и уроки показываются дважды на одном экране. */
+@media (min-width: 1024px) {
+  .path-top-tiles { display: none !important; }
+}

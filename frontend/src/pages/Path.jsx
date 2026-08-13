@@ -80,8 +80,9 @@ export default function Path() {
   return (
     <div className="path-layout">
       <div className="path-main" style={{ maxWidth: 560, margin: '0 auto', padding: '10px 16px 40px' }}>
-      {/* Три плитки-метрики */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      {/* Три плитки-метрики — только на телефоне: на ПК и планшете те же цифры
+          стоят в правой колонке, и наверху они дублировались. */}
+      <div className="path-top-tiles" style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <Tile shape="circle"  tone="#E8863C" value={stats.streak} label={t.path.streak} />
         <Tile shape="square"  tone="#E8B024" value={stats.xp_today} label={t.path.xpToday} />
         <Tile shape="diamond" tone="#9A5CD8" value={`${data.done_lessons}/${data.total_lessons}`} label={t.path.lessons} />
