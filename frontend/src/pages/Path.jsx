@@ -89,7 +89,9 @@ export default function Path() {
 
       {/* Карточка текущего урока: раньше здесь стояла неизменная надпись «Раздел N»,
           по которой нельзя было понять ни что учим сейчас, ни сколько осталось. */}
-      <div style={{ padding: '16px 18px', borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 20 }}>
+      <div onClick={() => document.querySelector('[data-current-node]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+        title={t.path.start}
+        style={{ padding: '16px 18px', borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 20, cursor: 'pointer' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
           {t.path.section} {section.index + 1} · {section.done}/{section.total}
         </div>
