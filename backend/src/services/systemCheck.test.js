@@ -49,3 +49,14 @@ describe('exampleHasWord — настоящие находки', () => {
     expect(has('das Eis', 'Der Hund schläft.')).toBe(true)
   })
 })
+
+describe('exampleHasWord — записи с вариантами через слэш', () => {
+  it('слово есть, если есть любой вариант (ложное срабатывание 13.08)', () => {
+    expect(has('sie/Sie', 'Sie sind meine Freunde.')).toBe(true)
+    expect(has('er/sie/es', 'Er ist mein Bruder.')).toBe(true)
+  })
+
+  it('нет ни одного варианта — настоящая находка', () => {
+    expect(has('lesen/schreiben', 'Der Hund schläft im Garten.')).toBe(false)
+  })
+})

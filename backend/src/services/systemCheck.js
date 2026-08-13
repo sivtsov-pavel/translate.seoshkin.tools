@@ -15,6 +15,13 @@ import { db } from '../db/index.js'
 import { checkExercise, checkWord } from './lessonAudit.js'
 import { conjugatePresent } from './germanConjugator.js'
 
+// Слова на «-st», которые НЕ спрягаемая форма глагола: существительные, наречия,
+// прилагательные. Пополнено 13.08 (fest, ernst, zuerst…) — иначе правило verb_form
+// ругалось бы на нормальные слова, как только они появятся в словаре.
+const ST_OK = ['ist', 'bist', 'erst', 'fast', 'selbst', 'sonst', 'meist', 'obst', 'durst',
+  'fest', 'ernst', 'zuerst', 'längst', 'höchst', 'äußerst', 'zunächst', 'jetzt']
+const ST_OK_SQL = ST_OK.map(w => `'${w}'`).join(',')
+
 // Одна проверка = { id, title, hint, sql }. sql возвращает строки с полями
 // lesson_id, ref (что именно не так) — их и показываем.
 const CHECKS = [
@@ -40,7 +47,7 @@ const CHECKS = [
     hint: 'Из «hoffst» модель строит «Ich hoffst…». Ошибка уходит в каждое упражнение слова.',
     sql: `SELECT w.lesson_id, w.word_de AS ref FROM words w JOIN lessons l ON l.id = w.lesson_id
           WHERE l.target_lang = 'de' AND w.word_de ~ '^[a-zäöü]+st$'
-            AND w.word_de NOT IN ('ist','bist','erst','fast','selbst','sonst','meist','obst','durst')`,
+            AND w.word_de NOT IN (${ST_OK_SQL})`,
   },
   {
     id: 'function_word',
@@ -125,6 +132,13 @@ const fold = (s) => String(s || '').toLowerCase()
 export function exampleHasWord(wordDe, sentence, conjugate) {
   const text = fold(sentence)
   if (!text) return true
+
+  // Запись с вариантами через слэш («sie/Sie», «er/sie/es») — слово есть, если есть
+  // ЛЮБОЙ вариант. Без этого правило обвиняло верный пример «Sie sind meine Freunde»
+  // у записи «sie/Sie» (ложное срабатывание, поймано перепроверкой 13.08).
+  if (String(wordDe || '').includes('/')) {
+    return String(wordDe).split('/').some(part => exampleHasWord(part.trim(), sentence, conjugate))
+  }
 
   // Словарная запись → чистая основа: без артикля, без скобок с множественным числом,
   // без «sich» и без управления предлогом («sich ärgern über» → «ärgern»).
@@ -244,4 +258,86 @@ export async function runSystemCheck() {
     groups: problems,
     clean: groups.filter(g => g.count === 0).map(g => g.title),
   }
+}
+
+/**
+ * Словарная проверка ОДНОГО урока — запускается автоматически после каждой загрузки
+ * (решение Павла, 13.08.2026). Те же правила, что в полной проверке, но в границах
+ * урока: мусор из кривой загрузки виден сразу, пока урок свежий, а не когда на него
+ * наткнётся ученик.
+ *
+ * Чего здесь НЕТ нарочно:
+ *  • «пример без перевода» — переводы приезжают асинхронно после генерации,
+ *    правило ругалось бы на каждый свежий урок (ложное правило хуже отсутствующего);
+ *  • проверок самих упражнений — их делает auditLesson, дублировать нельзя.
+ *
+ * ИИ не участвует, стоимость $0.
+ */
+export async function runLessonCheck(lessonId) {
+  const { rows: lrows } = await db.query('SELECT target_lang FROM lessons WHERE id = $1', [lessonId])
+  if (!lrows.length) return null
+  const de = (lrows[0].target_lang || 'de') === 'de'
+  const groups = []
+  const add = async (title, sql) => {
+    const { rows } = await db.query(sql, [lessonId])
+    if (rows.length) groups.push({ title, count: rows.length, samples: rows.slice(0, 6).map(r => r.ref) })
+  }
+
+  // Правила про немецкий (артикли, спряжение, служебные) — только для немецкого курса:
+  // в английском «artist» и «breakfast» — нормальные слова, а не формы на «-st».
+  if (de) {
+    // Артикль расходится с другим уроком: конфликт виден только по всей базе,
+    // но ругаемся лишь если задето слово ЭТОГО урока.
+    await add('артикль расходится с другим уроком', `
+      WITH n AS (
+        SELECT regexp_replace(w.word_de, '^(der|die|das) ', '') AS base,
+               lower(substring(w.word_de from '^(der|die|das) ')) AS art
+        FROM words w JOIN lessons l ON l.id = w.lesson_id
+        WHERE l.target_lang = 'de' AND w.word_de ~ '^(der|die|das) '
+        GROUP BY 1, 2)
+      SELECT n.base || ': ' || string_agg(trim(n.art), ' / ' ORDER BY n.art) AS ref
+      FROM n
+      WHERE n.base IN (SELECT regexp_replace(word_de, '^(der|die|das) ', '')
+                       FROM words WHERE lesson_id = $1 AND word_de ~ '^(der|die|das) ')
+      GROUP BY n.base HAVING count(*) > 1`)
+    await add('глагол в спрягаемой форме', `
+      SELECT word_de AS ref FROM words WHERE lesson_id = $1
+        AND word_de ~ '^[a-zäöü]+st$' AND word_de NOT IN (${ST_OK_SQL})`)
+    await add('служебное слово карточкой', `
+      SELECT word_de AS ref FROM words WHERE lesson_id = $1 AND NOT is_function_word
+        AND lower(word_de) IN ('die','der','das','den','dem','ein','eine','und','ist','sind',
+                               'nicht','auch','sie','wir','ihr','mein','dein')`)
+  }
+  await add('слово без перевода', `
+    SELECT word_de AS ref FROM words WHERE lesson_id = $1 AND NOT is_function_word
+      AND (translation_ru IS NULL OR trim(translation_ru) = '')`)
+  await add('мусор в примере', `
+    SELECT word_de || ' → «' || left(example_sentence, 30) || '»' AS ref FROM words
+    WHERE lesson_id = $1 AND example_sentence <> ''
+      AND (lower(trim(example_sentence)) IN ('null','undefined','-','—')
+           OR example_sentence ~* '^(plural|singular|pl\\.|sg\\.)\\s*:'
+           OR example_sentence !~ '[a-zäöüßA-ZÄÖÜ]{2}')`)
+  await add('слово дважды в уроке', `
+    SELECT lower(word_de) || ' ×' || count(*) AS ref FROM words
+    WHERE lesson_id = $1 GROUP BY lower(word_de) HAVING count(*) > 1`)
+  await add('упражнение без привязки к слову', `
+    SELECT type || ' #' || id AS ref FROM exercises
+    WHERE lesson_id = $1 AND word_id IS NULL
+      AND type IN ('flashcard','multiple_choice','fill_blank','sentence_write')`)
+
+  if (de) {
+    const { rows: exw } = await db.query(
+      `SELECT word_de, example_sentence FROM words
+       WHERE lesson_id = $1 AND example_sentence <> '' AND NOT is_function_word`, [lessonId])
+    const bad = exw.filter(w => !exampleHasWord(w.word_de, w.example_sentence, conjugatePresent))
+    if (bad.length) groups.push({ title: 'пример без изучаемого слова', count: bad.length,
+      samples: bad.slice(0, 6).map(w => w.word_de) })
+  }
+
+  const total = groups.reduce((s, g) => s + g.count, 0)
+  // Короткий итог для строки статуса урока: первое замечание каждой группы + счётчик.
+  const summary = total
+    ? `словарь: ${total} — ` + groups.map(g => `${g.title} (${g.samples[0]}${g.count > 1 ? ` +${g.count - 1}` : ''})`).join('; ')
+    : 'словарь чист'
+  return { total, groups, summary }
 }

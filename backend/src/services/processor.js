@@ -13,6 +13,7 @@ import { normalizeIncomingWord } from './wordNormalize.js'
 import { generateLessonPhrases } from './phrases.js'
 import { bareWord, articlePattern, articleRe } from './articles.js'
 import { auditLesson } from './lessonAudit.js'
+import { runLessonCheck } from './systemCheck.js'
 import { classifyEntry } from './entryKind.js'
 
 // Сопоставление сгенерированного word_de со словом урока: GPT иногда возвращает слово
@@ -101,18 +102,32 @@ export async function auditLessonAndLog(lessonId, userId = null) {
       repaired++
     }
     if (repaired) r = auditLesson({ exercises, words }) // отчёт после ремонта, не до
+    // Словарная проверка урока (артикли, спрягаемые формы, мусорные примеры, дубли) —
+    // автоматически после каждой загрузки (решение Павла, 13.08.2026). ИИ не участвует.
+    let dict = null
+    try { dict = await runLessonCheck(lessonId) } catch (e) { console.error('runLessonCheck:', e.message) }
+    const summary = `${r.summary}${dict?.total ? `; ${dict.summary}` : ''}`
     await logOperation({
       kind: 'audit', lessonId, userId, provider: 'none',
       status: r.blockers.length ? 'error' : 'ok',
-      message: r.summary,
-      items: r.blockers.length + r.warns.length + r.uncovered.length,
+      message: summary,
+      items: r.blockers.length + r.warns.length + r.uncovered.length + (dict?.total || 0),
       meta: {
         blockers: r.blockers.slice(0, 20),
         warns: r.warns.slice(0, 20),
         uncovered: r.uncovered.slice(0, 20).map(w => w.word_de),
+        dictionary: dict?.groups || [],
       },
     })
-    return r
+    // Итог — прямо в строку статуса урока: учитель видит его сразу после загрузки,
+    // не заглядывая в журнал. Приписка идемпотентна: старая срезается перед новой.
+    const clean = r.ok && !dict?.total
+    const note = clean ? ' · Проверка: ✓' : ` · ⚠️ Проверка: ${summary}`
+    await db.query(
+      `UPDATE lessons SET progress = left(regexp_replace(COALESCE(progress, ''), ' · (⚠️ )?Проверка:.*$', '') || $1, 400)
+       WHERE id = $2 AND status = 'done'`,
+      [note.replace(/\s+/g, ' '), lessonId])
+    return { ...r, dictionary: dict, summary }
   } catch (e) {
     console.error('auditLessonAndLog:', e.message)
     return null
@@ -958,12 +973,11 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
     await enrichLesson(lessonId)
     // Превью подтверждено и больше не нужно — чистим, чтобы не подсовывать старый разбор
     // при следующей дозагрузке фото в этот же урок.
-    // Проверку качества запускаем и здесь: подтверждение превью — ОСНОВНОЙ путь создания
-    // урока, а аудит был подключён только к обработке фото, и новые уроки его не проходили.
-    const audit = await auditLessonAndLog(lessonId, ownerId)
+    // Проверку качества запускаем ПОСЛЕ выставления status='done': auditLessonAndLog
+    // сам приписывает итог к строке статуса (и раньше вызывался здесь дважды — лишний раз).
     await db.query("UPDATE lessons SET status='done', progress=$1, preview=NULL WHERE id=$2",
-      [`Готово! Слов: ${words.length}${audit ? `. Проверка: ${audit.summary}` : ''}`, lessonId])
-    await auditLessonAndLog(lessonId, ownerId)   // отчёт о качестве — в журнал
+      [`Готово! Слов: ${words.length}`, lessonId])
+    await auditLessonAndLog(lessonId, ownerId)
   } catch (err) {
     console.error('commitLessonWords:', err.message)
     await db.query("UPDATE lessons SET status='error', progress=$1 WHERE id=$2", [String(err.message).slice(0, 150), lessonId])

@@ -102,7 +102,16 @@ function NewLessonInner() {
           setStatus('done')
           photos.forEach(p => URL.revokeObjectURL(p.preview))
           extraPhotos.forEach(p => URL.revokeObjectURL(p.preview))
-          setTimeout(() => navigate(selectedCourse ? `/courses/${selectedCourse}` : '/'), 2500)
+          // Автопроверка урока дописывает итог в progress через мгновение ПОСЛЕ
+          // статуса «done» — добираем его отдельным запросом, иначе строка
+          // «Проверка: …» не успевает попасть на экран.
+          setTimeout(async () => {
+            try {
+              const fin = await api.get(`/lessons/${lessonId}/status`)
+              if (fin.progress) setProgress(fin.progress)
+            } catch {}
+          }, 1500)
+          setTimeout(() => navigate(selectedCourse ? `/courses/${selectedCourse}` : '/'), 4500)
         } else if (res.status === 'error') {
           clearInterval(pollRef.current)
           setError(res.progress || t.lessons.processError)
@@ -387,7 +396,9 @@ function NewLessonInner() {
             <div style={{ fontWeight: 600, color: status === 'done' ? 'var(--good)' : 'var(--accent)', marginBottom: progress ? 6 : 0 }}>
               {statusLabel}
             </div>
-            {progress && status === 'processing' && (
+            {/* Строку прогресса показываем и после «Готово»: в ней теперь итог
+                автопроверки урока («Проверка: ✓» или список замечаний словаря). */}
+            {progress && (status === 'processing' || status === 'done') && (
               <div style={{ fontSize: 14, color: 'var(--ink-soft)' }}>{progress}</div>
             )}
             {status === 'processing' && (
