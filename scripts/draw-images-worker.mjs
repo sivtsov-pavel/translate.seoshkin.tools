@@ -45,7 +45,7 @@ const dry = args.includes('--dry')
 // независимо от того, есть она уже или нет. Для случая «эта картинка не нравится».
 const ids = (argOf('--ids', '') || '').split(',').map(n => parseInt(n)).filter(Boolean)
 
-const SSH_HOST = process.env.PROD_SSH_HOST || 'gcloud-seosite'
+const SSH_HOST = process.env.PROD_SSH_HOST || 'seoshkin-tools-core'
 const PROD_DIR = process.env.PROD_DIR || '/home/seosite/translate'
 const DC = `docker compose -f docker-compose.prod.yml`
 

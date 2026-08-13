@@ -36,7 +36,7 @@ if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true })
 const OUT = `${OUT_DIR}/lesson${lessonId}.json`
 
 // ── Прод-база через ssh (порт наружу не открываем) ────────────────────────────
-const SSH_HOST = process.env.PROD_SSH_HOST || 'gcloud-seosite'
+const SSH_HOST = process.env.PROD_SSH_HOST || 'seoshkin-tools-core'
 const PROD_DIR = process.env.PROD_DIR || '/home/seosite/translate'
 function prodSql(sql) {
   // Схлопываем в одну строку: JSON.stringify превратил бы переводы строк в литерал «\n»,

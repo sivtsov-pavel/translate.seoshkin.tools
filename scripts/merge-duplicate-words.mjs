@@ -25,7 +25,7 @@ const apply = process.argv.includes('--apply')
 // и «der Müll» — вопрос грамматики, а не техники, его делает человек.
 const picks = new Set((process.argv[process.argv.indexOf('--pick') + 1] || '')
   .split(',').map(n => parseInt(n)).filter(Boolean))
-const SSH_HOST = process.env.PROD_SSH_HOST || 'gcloud-seosite'
+const SSH_HOST = process.env.PROD_SSH_HOST || 'seoshkin-tools-core'
 const PROD_DIR = process.env.PROD_DIR || '/home/seosite/translate'
 const DC = 'docker compose -f docker-compose.prod.yml'
 

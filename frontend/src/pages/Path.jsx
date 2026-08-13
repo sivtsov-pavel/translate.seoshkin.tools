@@ -301,9 +301,10 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
         <path d={d} fill="none" stroke="var(--line)" strokeWidth="7" strokeLinecap="round" />
         <path d={d} fill="none" stroke="#3FBF8F" strokeWidth="7" strokeLinecap="round"
+          pathLength="1"
           style={{
-            strokeDasharray: 4000,
-            strokeDashoffset: 4000 - 4000 * Math.max(0, filled),
+            strokeDasharray: 1,
+            strokeDashoffset: Math.max(0, Math.min(1, 1 - filled)),
             transition: 'stroke-dashoffset .6s ease-out',
           }} />
       </svg>

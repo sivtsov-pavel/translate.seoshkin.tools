@@ -33,7 +33,7 @@ const lang = args.includes('--lang') ? args[args.indexOf('--lang') + 1] : null
 const sets = args.includes('--sets')
 const MIN_WORDS = sets ? 3 : 12
 
-const SSH = process.env.PROD_SSH_HOST || 'gcloud-seosite'
+const SSH = process.env.PROD_SSH_HOST || 'seoshkin-tools-core'
 const DIR = process.env.PROD_DIR || '/home/seosite/translate'
 const prodSql = (sql) => execFileSync('ssh', [SSH,
   `cd ${DIR} && docker compose -f docker-compose.prod.yml exec -T db psql -U german_app -d german_learning -t -A -c ` +

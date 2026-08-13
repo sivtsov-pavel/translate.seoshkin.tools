@@ -21,7 +21,7 @@ import { execFileSync, spawn } from 'child_process'
 import { checkExercise } from '../backend/src/services/lessonAudit.js'
 
 const apply = process.argv.includes('--apply')
-const SSH_HOST = process.env.PROD_SSH_HOST || 'gcloud-seosite'
+const SSH_HOST = process.env.PROD_SSH_HOST || 'seoshkin-tools-core'
 const PROD_DIR = process.env.PROD_DIR || '/home/seosite/translate'
 const DC = 'docker compose -f docker-compose.prod.yml'
 

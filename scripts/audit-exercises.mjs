@@ -22,7 +22,7 @@ import { checkExercise, checkWord } from '../backend/src/services/lessonAudit.js
 
 const argOf = (n, d = null) => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : d }
 const lang = argOf('--lang', null)
-const SSH_HOST = process.env.PROD_SSH_HOST || 'gcloud-seosite'
+const SSH_HOST = process.env.PROD_SSH_HOST || 'seoshkin-tools-core'
 const PROD_DIR = process.env.PROD_DIR || '/home/seosite/translate'
 
 const prodSql = (sql) => execFileSync('ssh', [SSH_HOST,

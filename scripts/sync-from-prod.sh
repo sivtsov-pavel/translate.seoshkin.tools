@@ -15,7 +15,7 @@
 #   bash scripts/sync-from-prod.sh --files  # только файлы (~600 МБ)
 set -euo pipefail
 
-SSH_HOST="${PROD_SSH_HOST:-gcloud-seosite}"
+SSH_HOST="${PROD_SSH_HOST:-seoshkin-tools-core}"
 PROD_DIR="${PROD_DIR:-/home/seosite/translate}"
 DCP="docker compose -f docker-compose.prod.yml"
 LOCAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
