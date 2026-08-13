@@ -336,7 +336,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
         return (
           <div key={k} {...(isLesson && n.state === 'current' ? { 'data-current-node': '1' } : {})}
             style={{ position: 'absolute', left: `${(x / VIEW_W) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
               <button onClick={() => !locked && openNode(n, i)} disabled={locked}
                 style={{
                   width: size, height: size, borderRadius: radius, flex: 'none',
@@ -366,9 +366,17 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
                 </span>
               </button>
 
-              {/* Плашка раскрытого узла: что внутри и кнопки — из неё и выбираешь */}
+              {/* Плашка раскрытого узла. Кладём её АБСОЛЮТНО сбоку от круга: если
+                  оставить в потоке, узел вместе с плашкой центрируется и уезжает
+                  за край экрана — под боковое меню. Сторона выбирается по позиции:
+                  узлам левой половины плашка уходит вправо, правой — влево. */}
               {isOpen && (
-                <NodeCard n={n} title={title} details={details} t={t} go={go} pct={pct} />
+                <div style={{
+                  position: 'absolute', top: '50%', transform: 'translateY(-50%)', zIndex: 6,
+                  ...(x < VIEW_W / 2 ? { left: `calc(100% + 12px)` } : { right: `calc(100% + 12px)` }),
+                }}>
+                  <NodeCard n={n} title={title} details={details} t={t} go={go} pct={pct} />
+                </div>
               )}
             </div>
           </div>

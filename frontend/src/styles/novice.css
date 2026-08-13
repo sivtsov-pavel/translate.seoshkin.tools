@@ -495,3 +495,10 @@ body.novice-mode .layout-drawer button {
     padding-right: 24px !important;
   }
 }
+
+/* Раскрытый узел не должен подлезать под боковую панель или улетать за экран:
+   дороге даём поля, а плашке — предел ширины. */
+.path-road { padding: 0 8px; }
+@media (min-width: 834px) {
+  .path-road { padding: 0 24px; }
+}
