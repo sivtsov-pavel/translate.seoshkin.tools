@@ -272,12 +272,16 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
     const prev = points[i - 1]
     const dx = Math.abs(p.x - prev.x), dy = Math.abs(p.y - prev.y)
     if (dx > dy) {
-      // Движение вдоль ряда — изгиб по горизонтали
-      const midX = (prev.x + p.x) / 2
-      return `${acc} C ${midX} ${prev.y}, ${midX} ${p.y}, ${p.x} ${p.y}`
+      // Движение вдоль ряда: ведём дугой, а не прямой палкой — прямые под прямым
+      // углом выглядели как схема метро, а не как дорога.
+      const bend = (i % 2 === 0 ? -1 : 1) * 26
+      const c1x = prev.x + (p.x - prev.x) * 0.35
+      const c2x = prev.x + (p.x - prev.x) * 0.65
+      return `${acc} C ${c1x} ${prev.y + bend}, ${c2x} ${p.y + bend}, ${p.x} ${p.y}`
     }
     const midY = (prev.y + p.y) / 2
-    return `${acc} C ${prev.x} ${midY}, ${p.x} ${midY}, ${p.x} ${p.y}`
+    const swing = prev.x > VIEW_W / 2 ? 34 : -34   // заворот наружу, как на повороте дороги
+    return `${acc} C ${prev.x + swing} ${midY}, ${p.x + swing} ${midY}, ${p.x} ${p.y}`
   }, '')
 
   const height = points[points.length - 1].y + 100

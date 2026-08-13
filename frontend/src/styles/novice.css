@@ -444,24 +444,30 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 1024px) {
   /* Горизонтальная змейка занимает всю ширину центра — иначе узлы жмутся
      в узкую колонку посреди пустого экрана. */
-  .path-main { max-width: none; margin: 0; padding: 10px 24px 40px 8px; }
+  .path-main { max-width: none; margin: 0; padding: 16px 24px 40px; }
 }
 
 /* ── Заголовок раздела (макет 2a) ─────────────────────────────────────────────
    В макете это не карточка, а крупная строка с подписью и полосками прогресса
    справа. Рамка и фон делали из неё «плашку», которая спорила с картой. */
 .path-head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
   margin-bottom: 18px; cursor: pointer;
 }
+.path-head > div:first-child { flex: 1 1 auto; min-width: 0; }
 .path-head-title {
   margin: 0; font-size: 21px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em;
 }
 .path-head-sub { margin-top: 4px; font-size: 13.5px; color: var(--ink-soft); }
-.path-head-bars { display: flex; gap: 6px; flex: none; padding-top: 8px; }
-.path-head-bars > span { display: block; width: 26px; height: 7px; border-radius: 4px; }
+/* Полоски прогресса не должны отжимать заголовок: их много (по числу уроков),
+   поэтому ограничиваем блок по ширине и делаем сегменты тонкими. */
+.path-head-bars {
+  display: flex; gap: 4px; flex: 0 1 auto; padding-top: 10px;
+  max-width: 45%; overflow: hidden; justify-content: flex-end;
+}
+.path-head-bars > span { display: block; width: 14px; height: 6px; border-radius: 3px; flex: none; }
 
 @media (min-width: 1024px) {
-  .path-head-title { font-size: 28px; }
-  .path-head-bars > span { width: 40px; height: 8px; }
+  .path-head-title { font-size: 26px; }
+  .path-head-bars > span { width: 18px; height: 7px; }
 }
