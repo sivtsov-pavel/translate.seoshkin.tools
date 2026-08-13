@@ -68,6 +68,17 @@ describe('fixAgreement — чего трогать нельзя', () => {
     expect(fixAgreement(schon)).toBe(schon)
   })
 
+  it('возвратный глагол: местоимение уже в предложении', () => {
+    const out = fixAgreement({ sentence: 'Ich ___ mich über die Schule.', blank: 'sich ärgern', options: ['sich ärgern'] })
+    expect(out.blank).toBe('ärgere')
+    expect(out.options).toContain('ärgere')
+  })
+
+  it('возвратный глагол без местоимения в предложении — не трогаем', () => {
+    const p = { sentence: 'Ich ___ über die Schule.', blank: 'sich ärgern', options: ['sich ärgern'] }
+    expect(fixAgreement(p)).toBe(p)
+  })
+
   it('глаголы на -eln/-ern спрягаются верно', () => {
     expect(fixAgreement({ sentence: 'Ich ___ Briefmarken.', blank: 'sammeln', options: ['sammeln'] }).blank).toBe('sammle')
   })

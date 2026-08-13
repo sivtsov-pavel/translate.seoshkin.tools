@@ -108,9 +108,17 @@ export function fixAgreement(payload) {
   // (sammeln, wandern). Проверять просто «-n» нельзя: «kann» и «bin» — уже личные
   // формы, и такое правило превращало их в «kane» и «bie», ломая верные упражнения.
   // Сверка с формой «wir» идёт следом как вторая опора (у инфинитива они совпадают).
-  if (!/^[a-zäöüß]{3,}(en|ln|rn)$/i.test(blank)) return payload
-  const forms = conjugatePresent(blank)
-  if (!forms || forms.wir !== blank) return payload
+  // Возвратные глаголы приходят словарной записью «sich ärgern», а в предложении
+  // местоимение уже стоит («Ich ___ mich über…»), поэтому в пропуск идёт только глагол.
+  // Но только если местоимение в предложении действительно есть: иначе ответ без «mich»
+  // окажется неполным, а дописывать его за модель мы не беремся.
+  const reflexive = /^sich\s+/i.test(blank)
+  if (reflexive && !/\b(mich|dich|sich|uns|euch)\b/i.test(sentence)) return payload
+  const verb = reflexive ? blank.replace(/^sich\s+/i, '') : blank
+
+  if (!/^[a-zäöüß]{3,}(en|ln|rn)$/i.test(verb)) return payload
+  const forms = conjugatePresent(verb)
+  if (!forms || forms.wir !== verb) return payload
 
   const m = sentence.match(/^\s*(ich|du|er|es|ihr|wir)\s+___/i)
   if (!m) return payload
