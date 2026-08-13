@@ -18,6 +18,10 @@ import { generateLessonMeta, translateLessonMeta, usageCostUSD } from '../src/se
 import { logOperation } from '../src/services/opLog.js'
 
 const APPLY = process.argv.includes('--apply')
+// --ids 629,630,631 — ограничить конкретными уроками (например, только номерными
+// уроками учебника, не трогая 69 тематических наборов без отдельного решения Павла)
+const idsArg = process.argv.find(a => a.startsWith('--ids='))
+const onlyIds = idsArg ? idsArg.slice(6).split(',').map(Number).filter(Boolean) : null
 
 const { rows: lessons } = await db.query(`
   SELECT l.id, l.title, l.target_lang
@@ -25,7 +29,8 @@ const { rows: lessons } = await db.query(`
   WHERE (l.description IS NULL OR trim(l.description) = '')
     AND l.status = 'done'
     AND EXISTS (SELECT 1 FROM words w WHERE w.lesson_id = l.id)
-  ORDER BY l.id`)
+    AND ($1::int[] IS NULL OR l.id = ANY($1::int[]))
+  ORDER BY l.id`, [onlyIds])
 
 console.log(`\nУроков без описания: ${lessons.length}`)
 lessons.forEach(l => console.log(`   #${l.id} ${l.title}`))
