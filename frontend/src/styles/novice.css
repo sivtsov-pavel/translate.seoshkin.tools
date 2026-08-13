@@ -431,3 +431,10 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 1200px) {
   .novice-tabbar--notch { left: 230px; }
 }
+
+
+/* Горизонтальная змейка шире вертикальной ленты: на широком экране центр
+   разворачиваем на всю доступную ширину, иначе узлы сжимаются в колонку. */
+@media (min-width: 1024px) {
+  .path-main { max-width: none !important; padding-left: 24px !important; padding-right: 8px !important; }
+}

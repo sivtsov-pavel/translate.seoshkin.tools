@@ -224,6 +224,16 @@ function Tile({ shape, tone, value, label }) {
 // между ними — кубическая кривая Безье, поэтому линия течёт плавно и обтекает
 // кружки, а не ломается прямыми углами.
 function PathRoad({ items, short, lang, t, go, selected, setSelected, details, setDetails }) {
+  // На широком экране дорога идёт змейкой ПО ГОРИЗОНТАЛИ: ряд слева направо,
+  // следующий справа налево. Вертикальная лента на компьютере тратит ширину впустую
+  // и заставляет крутить страницу там, где всё помещается на экран.
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024)
+  useEffect(() => {
+    const onResize = () => setWide(window.innerWidth >= 1024)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   // Ключ узла: у уроков он по lesson_id, у станций — по типу и цели
   const keyOf = (n, i) => `${n.kind}-${n.type || 'lesson'}-${n.lesson_id ?? n.topic_id ?? i}`
 
@@ -243,21 +253,35 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   const GAP_Y = 118
   const X_PATTERN = [160, 92, 228, 120, 200, 160]
 
-  const points = items.map((n, i) => ({
-    n,
-    x: X_PATTERN[i % X_PATTERN.length],
-    y: 60 + i * GAP_Y,
-  }))
+  // Узкий экран — вертикальная змейка (как раньше). Широкий — горизонтальная:
+  // COLS узлов в ряд, каждый следующий ряд идёт в обратную сторону.
+  const COLS = 4
+  const VIEW_W = wide ? 1000 : 320
+  const ROW_H = 150
+
+  const points = items.map((n, i) => {
+    if (!wide) return { n, x: X_PATTERN[i % X_PATTERN.length], y: 60 + i * GAP_Y }
+    const row = Math.floor(i / COLS)
+    const colRaw = i % COLS
+    const col = row % 2 === 0 ? colRaw : COLS - 1 - colRaw   // змейка: ряд туда, ряд обратно
+    return { n, x: (col + 0.5) * (VIEW_W / COLS), y: 80 + row * ROW_H }
+  })
   if (!points.length) return null
 
   const d = points.reduce((acc, p, i) => {
     if (i === 0) return `M ${p.x} ${p.y}`
     const prev = points[i - 1]
+    const dx = Math.abs(p.x - prev.x), dy = Math.abs(p.y - prev.y)
+    if (dx > dy) {
+      // Движение вдоль ряда — изгиб по горизонтали
+      const midX = (prev.x + p.x) / 2
+      return `${acc} C ${midX} ${prev.y}, ${midX} ${p.y}, ${p.x} ${p.y}`
+    }
     const midY = (prev.y + p.y) / 2
     return `${acc} C ${prev.x} ${midY}, ${p.x} ${midY}, ${p.x} ${p.y}`
   }, '')
 
-  const height = points[points.length - 1].y + 90
+  const height = points[points.length - 1].y + 100
   // Доля закрашенной нити — по позиции последнего пройденного узла. Если считать
   // количеством, непройденные станции между уроками рвут линию, хотя путь пройден.
   let lastDone = -1
@@ -266,7 +290,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
 
   return (
     <div style={{ position: 'relative', height, margin: '0 -4px' }}>
-      <svg viewBox={`0 0 320 ${height}`} preserveAspectRatio="none"
+      <svg viewBox={`0 0 ${VIEW_W} ${height}`} preserveAspectRatio="none"
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
         <path d={d} fill="none" stroke="var(--line)" strokeWidth="7" strokeLinecap="round" />
         <path d={d} fill="none" stroke="#3FBF8F" strokeWidth="7" strokeLinecap="round"
@@ -305,7 +329,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
 
         return (
           <div key={k} {...(isLesson && n.state === 'current' ? { 'data-current-node': '1' } : {})}
-            style={{ position: 'absolute', left: `${(x / 320) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
+            style={{ position: 'absolute', left: `${(x / VIEW_W) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <button onClick={() => !locked && openNode(n, i)} disabled={locked}
                 style={{
