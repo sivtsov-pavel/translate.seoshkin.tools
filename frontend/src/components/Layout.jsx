@@ -61,14 +61,11 @@ export default function Layout({ children }) {
     return () => window.removeEventListener('dl-start-tour', h)
   }, [])
 
-  // Ширина панели новичка влияет на отступ контента — держим метку на body
+  // Бургер в панели новичка выдвигает прежнюю шторку-меню — она уже в новом стиле
   useEffect(() => {
-    const sync = () => document.body.classList.toggle('novice-rail-open',
-      localStorage.getItem('novice_rail_open') === '1')
-    sync()
-    window.addEventListener('storage', sync)
-    const id = setInterval(sync, 800)
-    return () => { window.removeEventListener('storage', sync); clearInterval(id) }
+    const h = () => setOpen(true)
+    window.addEventListener('dl-open-menu', h)
+    return () => window.removeEventListener('dl-open-menu', h)
   }, [])
 
   useEffect(() => {

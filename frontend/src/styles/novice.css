@@ -353,9 +353,20 @@ body.novice-mode .exercise-card [class*="bleed"] {
   body.novice-mode .layout-desktop-topbar { left: 96px !important; }
   body.novice-mode .novice-rail { display: block !important; }
 }
-body.novice-mode.novice-rail-open .layout-desktop-topbar { left: 248px !important; }
+
 
 /* Контент уезжает вправо ровно на ширину панели — и при её разворачивании тоже */
-@media (min-width: 834px) {
-  body.novice-mode.novice-rail-open .main-content { padding-left: 248px; }
+
+
+
+/* Шторка-меню (её выдвигает бургер у учителя и показывает тур) — в новом стиле:
+   без жёстких рамок, крупные строки, мягкие скругления. */
+body.novice-mode .layout-drawer {
+  border-radius: 0 22px 22px 0;
+  border-right: 1px solid var(--line);
+}
+body.novice-mode .layout-drawer a,
+body.novice-mode .layout-drawer button {
+  border-radius: 14px !important;
+  min-height: 46px;
 }
