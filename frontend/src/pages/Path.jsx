@@ -79,7 +79,7 @@ export default function Path() {
 
   return (
     <div className="path-layout">
-      <div className="path-main" style={{ maxWidth: 560, margin: '0 auto', padding: '10px 16px 40px' }}>
+      <div className="path-main">
       {/* Три плитки-метрики — только на телефоне: на ПК и планшете те же цифры
           стоят в правой колонке, и наверху они дублировались. */}
       <div className="path-top-tiles" style={{ display: 'flex', gap: 10, marginBottom: 16 }}>

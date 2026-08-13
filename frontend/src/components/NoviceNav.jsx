@@ -108,6 +108,13 @@ export default function NoviceNav() {
         </button>
       </nav>
 
+      {/* Ассистент на широких экранах — отдельной кнопкой в правом нижнем углу:
+          нижняя полоса там скрыта, а тренер должен оставаться под рукой. */}
+      <Link to="/ai-trainer" className="novice-fab-desktop"
+        aria-label={t.nav.aiTrainer || 'Тренер'} title={t.nav.aiTrainer || 'Тренер'}>
+        <Bot size={26} strokeWidth={2} />
+      </Link>
+
       {/* Планшет и ПК: те же фигуры слева */}
       <nav className="novice-rail">
         <div className="novice-rail-inner">

@@ -419,24 +419,32 @@ body.novice-mode .layout-drawer button {
    пунктов навигации: они уже есть в боковой панели, и дублировать их незачем.
    Кнопка тренера при этом всегда под рукой на любом размере экрана. */
 @media (min-width: 834px) {
-  .novice-tabbar--notch {
-    display: grid !important;
-    grid-template-columns: 1fr 84px 1fr;
-    left: 96px;                       /* полоса начинается за боковой панелью */
-  }
-  .novice-tabbar--notch .novice-tab { display: none; }   /* пункты — только на телефоне */
-  body.novice-mode .main-content { padding-bottom: 96px; }
-}
+  /* Полоса — только на телефоне. На широких экранах она уезжала за панель и
+     ломала раскладку, а её пункты и так есть слева. Ассистент остаётся кнопкой. */
+  .novice-tabbar--notch { display: none !important; }
 
-@media (min-width: 1200px) {
-  .novice-tabbar--notch { left: 230px; }
+  .novice-fab-desktop {
+    position: fixed; right: 26px; bottom: 26px; z-index: 96;
+    width: 60px; height: 60px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: var(--accent-ink);
+    border: none; cursor: pointer; text-decoration: none;
+    box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .65);
+  }
+  body.novice-mode .main-content { padding-bottom: 40px; }
 }
+.novice-fab-desktop { display: none; }
+@media (min-width: 834px) { .novice-fab-desktop { display: flex; } }
 
 
 /* Горизонтальная змейка шире вертикальной ленты: на широком экране центр
    разворачиваем на всю доступную ширину, иначе узлы сжимаются в колонку. */
+.path-main { max-width: 560px; margin: 0 auto; padding: 10px 16px 40px; }
+
 @media (min-width: 1024px) {
-  .path-main { max-width: none !important; padding-left: 24px !important; padding-right: 8px !important; }
+  /* Горизонтальная змейка занимает всю ширину центра — иначе узлы жмутся
+     в узкую колонку посреди пустого экрана. */
+  .path-main { max-width: none; margin: 0; padding: 10px 24px 40px 8px; }
 }
 
 /* ── Заголовок раздела (макет 2a) ─────────────────────────────────────────────
