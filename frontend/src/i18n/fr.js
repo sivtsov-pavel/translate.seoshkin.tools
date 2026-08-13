@@ -907,6 +907,7 @@ export const fr = {
     skillListen: 'Écoute',
     skillSpeak: 'Parole',
     weekdays: ['lu', 'ma', 'me', 'je', 've', 'sa', 'di'],
+    lessonsPassed: 'leçons terminées',
   },
   phrases: {
     title: 'Phrases',

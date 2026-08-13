@@ -902,6 +902,7 @@ export const bg = {
     skillListen: 'Слушане',
     skillSpeak: 'Говорене',
     weekdays: ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд'],
+    lessonsPassed: 'урока завършени',
   },
   phrases: {
     title: 'Фрази',

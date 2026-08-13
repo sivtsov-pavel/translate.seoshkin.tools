@@ -676,6 +676,7 @@ export const ru = {
     skillListen: 'Слушание',
     skillSpeak: 'Речь',
     weekdays: ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'],
+    lessonsPassed: 'уроков пройдено',
   },
   phrases: {
     title: 'Фразы',

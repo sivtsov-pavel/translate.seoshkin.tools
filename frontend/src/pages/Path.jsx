@@ -90,26 +90,25 @@ export default function Path() {
 
       {/* Карточка текущего урока: раньше здесь стояла неизменная надпись «Раздел N»,
           по которой нельзя было понять ни что учим сейчас, ни сколько осталось. */}
-      <div onClick={() => document.querySelector('[data-current-node]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-        title={t.path.start}
-        style={{ padding: '16px 18px', borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 20, cursor: 'pointer' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
-          {t.path.section} {section.index + 1} · {section.done}/{section.total}
+      {/* Заголовок раздела по макету: крупная строка, подпись и полоски справа —
+          без карточки и рамки. Тап возвращает к текущему уроку. */}
+      <div className="path-head"
+        onClick={() => document.querySelector('[data-current-node]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+        <div style={{ minWidth: 0 }}>
+          <h1 className="path-head-title">
+            {t.path.section} {section.index + 1}
+            {current ? ` · ${getLessonTitle(current.title, current.title_translations, lang) || `${t.path.lesson} ${current.number ?? ''}`}` : ''}
+          </h1>
+          <div className="path-head-sub">
+            {section.done} {t.phrases.of} {section.total} {t.path.lessonsPassed}
+          </div>
         </div>
-        {current && (
-          <>
-            <div style={{ fontSize: 16, fontWeight: 800, marginTop: 4, lineHeight: 1.25 }}>
-              {getLessonTitle(current.title, current.title_translations, lang) || `${t.path.lesson} ${current.number ?? ''}`}
-            </div>
-            <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 3 }}>
-              {t.path.lesson} {current.number} · {current.ex_done}/{current.ex_total}
-            </div>
-          </>
-        )}
-        <div style={{ display: 'flex', gap: 5, marginTop: 12 }}>
+
+        <div className="path-head-bars">
           {nodes.map((n, i) => (
-            <div key={i} style={{ flex: 1, height: 7, borderRadius: 4,
-              background: n.state === 'done' ? C.doneBorder : n.state === 'current' ? C.accent : 'var(--surface-2)' }} />
+            <span key={i} style={{
+              background: n.state === 'done' ? C.current : n.state === 'current' ? C.accent : 'var(--surface-2)',
+            }} />
           ))}
         </div>
       </div>

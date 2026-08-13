@@ -920,6 +920,7 @@ export const en = {
     skillListen: 'Listening',
     skillSpeak: 'Speaking',
     weekdays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+    lessonsPassed: 'lessons done',
   },
   phrases: {
     title: 'Phrases',

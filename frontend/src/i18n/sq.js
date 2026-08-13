@@ -919,6 +919,7 @@ export const sq = {
     skillListen: 'Dëgjimi',
     skillSpeak: 'Të folurit',
     weekdays: ['hë', 'ma', 'më', 'en', 'pr', 'sh', 'di'],
+    lessonsPassed: 'mësime të përfunduara',
   },
   phrases: {
     title: 'Fraza',

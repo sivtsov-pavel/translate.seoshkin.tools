@@ -910,6 +910,7 @@ export const ar = {
     skillListen: 'الاستماع',
     skillSpeak: 'التحدث',
     weekdays: ['إث', 'ثل', 'أر', 'خم', 'جم', 'سب', 'أح'],
+    lessonsPassed: 'دروس مكتملة',
   },
   phrases: {
     title: 'الجمل',

@@ -907,6 +907,7 @@ export const tr = {
     skillListen: 'Dinleme',
     skillSpeak: 'Konuşma',
     weekdays: ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'],
+    lessonsPassed: 'ders tamamlandı',
   },
   phrases: {
     title: 'Cümleler',

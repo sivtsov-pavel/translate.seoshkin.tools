@@ -919,6 +919,7 @@ export const uk = {
     skillListen: 'Слухання',
     skillSpeak: 'Мовлення',
     weekdays: ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд'],
+    lessonsPassed: 'уроків пройдено',
   },
   phrases: {
     title: 'Фрази',

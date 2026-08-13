@@ -438,3 +438,22 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 1024px) {
   .path-main { max-width: none !important; padding-left: 24px !important; padding-right: 8px !important; }
 }
+
+/* ── Заголовок раздела (макет 2a) ─────────────────────────────────────────────
+   В макете это не карточка, а крупная строка с подписью и полосками прогресса
+   справа. Рамка и фон делали из неё «плашку», которая спорила с картой. */
+.path-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  margin-bottom: 18px; cursor: pointer;
+}
+.path-head-title {
+  margin: 0; font-size: 21px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em;
+}
+.path-head-sub { margin-top: 4px; font-size: 13.5px; color: var(--ink-soft); }
+.path-head-bars { display: flex; gap: 6px; flex: none; padding-top: 8px; }
+.path-head-bars > span { display: block; width: 26px; height: 7px; border-radius: 4px; }
+
+@media (min-width: 1024px) {
+  .path-head-title { font-size: 28px; }
+  .path-head-bars > span { width: 40px; height: 8px; }
+}
