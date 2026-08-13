@@ -33,17 +33,25 @@ export default function Path() {
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const [data, setData] = useState(null)
-  // «Показать все уроки» — по умолчанию видно окно вокруг текущего (принцип макета:
-  // один следующий шаг), но список целиком тоже нужен.
-  const [showAll, setShowAll] = useState(() => localStorage.getItem('path_show_all') === '1')
   // Тап по узлу раскрывает его, а не проваливает в упражнение: карта должна быть
   // интерактивной — сначала видно, что внутри станции, и уже оттуда выбираешь.
   const [selected, setSelected] = useState(null)   // ключ выбранного узла
   const [details, setDetails] = useState(null)     // содержимое станции (грузим по тапу)
 
   useEffect(() => {
-    api.get(`/path${showAll ? '?all=1' : ''}`).then(setData).catch(() => setData({ error: true }))
-  }, [showAll])
+    api.get('/path').then(setData).catch(() => setData({ error: true }))
+  }, [])
+
+  // Дорога показывается целиком, поэтому подкручиваем к текущему узлу — иначе
+  // ученик открывает экран на первом уроке и не понимает, где он сейчас.
+  useEffect(() => {
+    if (!data?.nodes?.length) return
+    const id = setTimeout(() => {
+      document.querySelector('[data-current-node]')
+        ?.scrollIntoView({ behavior: 'auto', block: 'center' })
+    }, 60)
+    return () => clearTimeout(id)
+  }, [data])
 
   if (!data) return <div style={{ padding: 24, color: 'var(--ink-soft)' }}>{t.common.loading}</div>
   if (data.error || !data.nodes?.length) {
@@ -107,12 +115,6 @@ export default function Path() {
           Кривая Безье идёт от кружка к кружку и обтекает их, а не ломается углами. */}
       <PathRoad items={items} short={short} lang={lang} t={t} go={go}
         selected={selected} setSelected={setSelected} details={details} setDetails={setDetails} />
-
-      <button onClick={() => { const v = !showAll; setShowAll(v); localStorage.setItem('path_show_all', v ? '1' : '0') }}
-        style={{ width: '100%', marginTop: 24, padding: '11px 16px', borderRadius: 14, border: '1px solid var(--line)',
-          background: 'var(--surface)', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-        {showAll ? t.path.showSection : t.path.showAll}
-      </button>
 
       {/* Хвосты — общим числом: пропущенное не теряется и видно, сколько его */}
       {tails?.total > 0 && (
@@ -299,7 +301,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
           : (n.total ? Math.round((n.done / n.total) * 100) : 0)
 
         return (
-          <div key={k}
+          <div key={k} {...(isLesson && n.state === 'current' ? { 'data-current-node': '1' } : {})}
             style={{ position: 'absolute', left: `${(x / 320) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <button onClick={() => !locked && openNode(n, i)} disabled={locked}

@@ -76,8 +76,10 @@ export async function pathRoutes(fastify) {
     const currentIndex = Math.max(0, nodes.findIndex(n => n.state === 'current'))
     const sectionIndex = Math.floor(currentIndex / SECTION_SIZE)
     const from = sectionIndex * SECTION_SIZE
-    // ?all=1 — показать все уроки одной дорогой, а не окно вокруг текущего
-    const section = request.query.all === '1' ? nodes : nodes.slice(from, from + SECTION_SIZE)
+    // Показываем ВСЮ дорогу. Прежнее окно из шести уроков вокруг текущего резало
+    // путь: у ученика на 16-м уроке карта начиналась с 13-го, и пройденное просто
+    // исчезало. Номер раздела остаётся подписью прогресса.
+    const section = nodes
 
     // ── Чекпойнты между уроками ───────────────────────────────────────────────
     // Идея Павла: урок разгружаем до ядра (слова и их узнавание), а речь, грамматику
