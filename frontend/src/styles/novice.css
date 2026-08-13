@@ -444,7 +444,7 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 1024px) {
   /* Горизонтальная змейка занимает всю ширину центра — иначе узлы жмутся
      в узкую колонку посреди пустого экрана. */
-  .path-main { max-width: none; margin: 0; padding: 16px 24px 40px; }
+  .path-main { max-width: none; width: 100%; margin: 0; padding: 16px 24px 40px; }
 }
 
 /* ── Заголовок раздела (макет 2a) ─────────────────────────────────────────────
@@ -470,4 +470,28 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 1024px) {
   .path-head-title { font-size: 26px; }
   .path-head-bars > span { width: 18px; height: 7px; }
+}
+
+
+/* Дорога тянется на всю ширину центра — фиксированной ширины у неё нет */
+.path-road { width: 100%; }
+
+/* ── Общий отступ контента в режиме новичка ───────────────────────────────────
+   Причина «двойного отступа» на ВСЕХ страницах: прежняя вёрстка на ≥1024px
+   двигает контент под старый сайдбар (margin-left: 220px), а панель новичка
+   добавляла свой padding-left поверх. Итог — 450px пустоты слева.
+   Здесь сбрасываем чужой отступ и оставляем только ширину нашей панели. */
+@media (min-width: 834px) {
+  body.novice-mode .main-content {
+    margin-left: 0 !important;
+    padding-left: 96px !important;
+    padding-right: 16px !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  body.novice-mode .main-content {
+    padding-left: 230px !important;
+    padding-right: 24px !important;
+  }
 }

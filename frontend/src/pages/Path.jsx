@@ -96,8 +96,9 @@ export default function Path() {
         onClick={() => document.querySelector('[data-current-node]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
         <div style={{ minWidth: 0 }}>
           <h1 className="path-head-title">
-            {t.path.section} {section.index + 1}
-            {current ? ` · ${getLessonTitle(current.title, current.title_translations, lang) || `${t.path.lesson} ${current.number ?? ''}`}` : ''}
+            {current
+              ? (getLessonTitle(current.title, current.title_translations, lang) || `${t.path.lesson} ${current.number ?? ''}`)
+              : t.path.title}
           </h1>
           <div className="path-head-sub">
             {section.done} {t.phrases.of} {section.total} {t.path.lessonsPassed}
@@ -226,12 +227,13 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   // На широком экране дорога идёт змейкой ПО ГОРИЗОНТАЛИ: ряд слева направо,
   // следующий справа налево. Вертикальная лента на компьютере тратит ширину впустую
   // и заставляет крутить страницу там, где всё помещается на экран.
-  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024)
+  const [vw, setVw] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 375))
   useEffect(() => {
-    const onResize = () => setWide(window.innerWidth >= 1024)
+    const onResize = () => setVw(window.innerWidth)
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
+  const wide = vw >= 1024
 
   // Ключ узла: у уроков он по lesson_id, у станций — по типу и цели
   const keyOf = (n, i) => `${n.kind}-${n.type || 'lesson'}-${n.lesson_id ?? n.topic_id ?? i}`
@@ -254,7 +256,8 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
 
   // Узкий экран — вертикальная змейка (как раньше). Широкий — горизонтальная:
   // COLS узлов в ряд, каждый следующий ряд идёт в обратную сторону.
-  const COLS = 4
+  // Колонок — по ширине экрана: дорога должна заполнять место, а не жаться влево.
+  const COLS = vw >= 1700 ? 6 : vw >= 1400 ? 5 : 4
   const VIEW_W = wide ? 1000 : 320
   const ROW_H = 150
 
@@ -292,7 +295,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   const filled = points.length > 1 ? (lastDone + 0.5) / points.length : 0
 
   return (
-    <div style={{ position: 'relative', height, margin: '0 -4px' }}>
+    <div className="path-road" style={{ position: 'relative', height }}>
       <svg viewBox={`0 0 ${VIEW_W} ${height}`} preserveAspectRatio="none"
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
         <path d={d} fill="none" stroke="var(--line)" strokeWidth="7" strokeLinecap="round" />
