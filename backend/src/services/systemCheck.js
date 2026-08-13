@@ -61,11 +61,20 @@ const CHECKS = [
     id: 'example_without_word',
     title: 'Пример не содержит изучаемого слова',
     hint: 'Пример нужен, чтобы показать слово в живой фразе. Если слова в нём нет, он бесполезен.',
-    sql: `SELECT w.lesson_id, w.word_de || ' → «' || left(w.example_sentence, 40) || '»' AS ref
-          FROM words w JOIN lessons l ON l.id = w.lesson_id
-          WHERE l.target_lang = 'de' AND w.example_sentence <> '' AND NOT w.is_function_word
-            AND position(lower(regexp_replace(w.word_de, '^(der|die|das) ', '')) in lower(w.example_sentence)) = 0
-            AND length(regexp_replace(w.word_de, '^(der|die|das) ', '')) > 3`,
+    // Сравниваем по ОСНОВЕ, а не по всей словарной записи: в предложении слово стоит
+    // в живой форме («denken an» → «Ich denke an…»), а запись может нести артикль,
+    // множественное число в скобках («das Wort (Wörter)») или управление предлогом.
+    // Прямое вхождение целиком давало сотни ложных обвинений верным примерам.
+    sql: `
+      WITH b AS (
+        SELECT w.id, w.lesson_id, w.word_de, w.example_sentence,
+               split_part(regexp_replace(regexp_replace(w.word_de, '^(der|die|das)\\s+', ''), '\\s*\\(.*\\)', ''), ' ', 1) AS base
+        FROM words w JOIN lessons l ON l.id = w.lesson_id
+        WHERE l.target_lang = 'de' AND w.example_sentence <> '' AND NOT w.is_function_word)
+      SELECT lesson_id, word_de || ' → «' || left(example_sentence, 40) || '»' AS ref
+      FROM b
+      WHERE length(base) > 3
+        AND position(lower(left(base, greatest(4, length(base) - 3))) in lower(example_sentence)) = 0`,
   },
   {
     id: 'example_no_ru',
