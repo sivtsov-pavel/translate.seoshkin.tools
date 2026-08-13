@@ -54,6 +54,9 @@ describe('exampleHasWord — записи с вариантами через с�
   it('слово есть, если есть любой вариант (ложное срабатывание 13.08)', () => {
     expect(has('sie/Sie', 'Sie sind meine Freunde.')).toBe(true)
     expect(has('er/sie/es', 'Er ist mein Bruder.')).toBe(true)
+    // Варианты пишут и через запятую — поймано первой боевой автопроверкой (урок 638)
+    expect(has('sie, Sie', 'Sie sind freundlich.')).toBe(true)
+    expect(has('er, sie, es', 'Er ist mein Freund.')).toBe(true)
   })
 
   it('нет ни одного варианта — настоящая находка', () => {

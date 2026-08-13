@@ -133,11 +133,11 @@ export function exampleHasWord(wordDe, sentence, conjugate) {
   const text = fold(sentence)
   if (!text) return true
 
-  // Запись с вариантами через слэш («sie/Sie», «er/sie/es») — слово есть, если есть
-  // ЛЮБОЙ вариант. Без этого правило обвиняло верный пример «Sie sind meine Freunde»
-  // у записи «sie/Sie» (ложное срабатывание, поймано перепроверкой 13.08).
-  if (String(wordDe || '').includes('/')) {
-    return String(wordDe).split('/').some(part => exampleHasWord(part.trim(), sentence, conjugate))
+  // Запись с вариантами через слэш или запятую («sie/Sie», «er, sie, es») — слово есть,
+  // если есть ЛЮБОЙ вариант. Без этого правило обвиняло верный пример «Sie sind meine
+  // Freunde» у записи «sie/Sie» (ложные срабатывания, пойманы перепроверкой 13.08).
+  if (/[/,]/.test(String(wordDe || ''))) {
+    return String(wordDe).split(/[/,]/).some(part => exampleHasWord(part.trim(), sentence, conjugate))
   }
 
   // Словарная запись → чистая основа: без артикля, без скобок с множественным числом,
