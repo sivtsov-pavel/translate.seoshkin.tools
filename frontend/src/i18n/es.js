@@ -234,6 +234,7 @@ export const es = {
     trainWords: 'Entrenador de palabras de la lección',
     conjugation: 'Conjugación',
     declension: 'Casos',
+    article: 'Artículo',
     conjChoose: 'Elegir',
     conjType: 'Escribir',
     multiVariantHint: 'Varias formas aquí — basta con escribir una',

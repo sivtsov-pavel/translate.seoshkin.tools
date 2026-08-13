@@ -18,6 +18,7 @@ import Dictation from '../components/Dictation.jsx'
 import SpeechExercise from '../components/SpeechExercise.jsx'
 import Conjugation from '../components/Conjugation.jsx'
 import Declension from '../components/Declension.jsx'
+import ArticleExercise from '../components/ArticleExercise.jsx'
 import ExerciseErrorBoundary from '../components/ExerciseErrorBoundary.jsx'
 import Confetti from '../components/Confetti.jsx'
 import { playFanfare } from '../utils/sound.js'
@@ -26,7 +27,7 @@ import { playFanfare } from '../utils/sound.js'
 // вопрос-ответ → флеш-карты → вставь букву → вставь слово → напиши предложение → проговори → диктант
 // Педагогический порядок прохождения (по логике Павла): карточка(разогрев) → выбери ответ →
 // добавь букву → заполни пропуск → напиши предложение → проговори → склонение → диктант.
-const TYPE_SEQ = { flashcard: 0, multiple_choice: 1, letter_fill: 2, fill_blank: 3, sentence_write: 4, speech: 5, conjugation: 6, declension: 7, dictation: 8 }
+const TYPE_SEQ = { flashcard: 0, multiple_choice: 1, letter_fill: 2, fill_blank: 3, sentence_write: 4, speech: 5, conjugation: 6, declension: 7, article: 8, dictation: 9 }
 // Голосовые/на слух типы — их можно пропустить в «хвосты» (напр. ночью неудобно говорить)
 const VOICE_TYPES = new Set(['speech', 'dictation'])
 
@@ -399,7 +400,7 @@ export default function ExerciseSession() {
 
   const ex = exercises[current]
   // Подписи типов — для бейджа и мини-веера
-  const TYPE_LABELS = { flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation, speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation || 'Склонение', declension: t.exercise.declension || 'Падежи', phrases: t.phrases?.lessonSet || 'Фразы урока' }
+  const TYPE_LABELS = { flashcard: t.exercise.flashcard, fill_blank: t.exercise.fillBlank, multiple_choice: t.exercise.multipleChoice, sentence_write: t.exercise.sentenceWrite, letter_fill: t.exercise.letterFill, dictation: t.exercise.dictation, speech: t.exercise.speech || 'Произношение', conjugation: t.exercise.conjugation || 'Склонение', declension: t.exercise.declension || 'Падежи', article: t.exercise.article || 'Артикль', phrases: t.phrases?.lessonSet || 'Фразы урока' }
 
   // Мини-веер ПОСЛЕ каждого упражнения (в уроке): не гоним линейно, а даём выбор —
   // дальше по логике / прыгнуть на другой тип урока / тренер по словам / на главную.
@@ -571,6 +572,7 @@ export default function ExerciseSession() {
         {ex.type === 'letter_fill'     && <LetterFill     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} />}
         {ex.type === 'dictation'       && <Dictation       key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} imageUrl={ex.image_url} />}
         {ex.type === 'conjugation'     && <Conjugation     key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} />}
+        {ex.type === 'article'         && <ArticleExercise key={ex.id} payload={ex.payload} onAnswer={handleAnswer} imageUrl={ex.image_url} />}
         {ex.type === 'declension'      && <Declension      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} />}
         {ex.type === 'speech'          && <SpeechExercise  key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
       </ExerciseErrorBoundary>

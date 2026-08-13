@@ -234,6 +234,7 @@ export const fr = {
     trainWords: 'Entraîneur de mots de la leçon',
     conjugation: 'Conjugaison',
     declension: 'Cas',
+    article: 'Article',
     conjChoose: 'Choisir',
     conjType: 'Écrire',
     multiVariantHint: 'Plusieurs formes ici — une seule suffit',

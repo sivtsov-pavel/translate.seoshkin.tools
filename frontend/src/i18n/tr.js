@@ -234,6 +234,7 @@ export const tr = {
     trainWords: 'Ders kelimeleri antrenörü',
     conjugation: 'Çekim',
     declension: 'Hâller',
+    article: 'Artikel',
     conjChoose: 'Seç',
     conjType: 'Yaz',
     multiVariantHint: 'Birden fazla biçim var — birini yazman yeterli',

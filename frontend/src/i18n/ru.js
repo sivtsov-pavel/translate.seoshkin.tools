@@ -238,6 +238,7 @@ export const ru = {
     trainWords: 'Тренер по словам урока',
     conjugation: 'Склонение',
     declension: 'Падежи',
+    article: 'Артикль',
     conjChoose: 'Выбрать',
     conjType: 'Вписать руками',
     multiVariantHint: 'Здесь несколько форм — достаточно написать любую одну',

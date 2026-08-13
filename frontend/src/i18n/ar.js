@@ -236,6 +236,7 @@ export const ar = {
     trainWords: 'مدرّب كلمات الدرس',
     conjugation: 'التصريف',
     declension: 'الحالات',
+    article: 'أداة التعريف',
     conjChoose: 'اختر',
     conjType: 'اكتب',
     multiVariantHint: 'هناك عدة أشكال — يكفي كتابة واحدة منها',

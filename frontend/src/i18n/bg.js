@@ -234,6 +234,7 @@ export const bg = {
     trainWords: 'Треньор по думи за урока',
     conjugation: 'Спрежение',
     declension: 'Падежи',
+    article: 'Член',
     conjChoose: 'Избери',
     conjType: 'Напиши',
     multiVariantHint: 'Тук има няколко форми — достатъчно е да напишеш само една',

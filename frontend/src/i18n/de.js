@@ -238,6 +238,7 @@ export const de = {
     trainWords: "Wörtertrainer zur Lektion",
     conjugation: 'Konjugation',
     declension: 'Fälle',
+    article: 'Artikel',
     conjChoose: 'Wählen',
     conjType: 'Selbst tippen',
     multiVariantHint: 'Mehrere Formen — eine davon genügt',

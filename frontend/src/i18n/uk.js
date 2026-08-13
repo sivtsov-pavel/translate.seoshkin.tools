@@ -234,6 +234,7 @@ export const uk = {
     trainWords: 'Тренер слів уроку',
     conjugation: 'Відмінювання',
     declension: 'Відмінки',
+    article: 'Артикль',
     conjChoose: 'Обрати',
     conjType: 'Вписати вручну',
     multiVariantHint: 'Тут кілька форм — достатньо написати будь-яку одну',

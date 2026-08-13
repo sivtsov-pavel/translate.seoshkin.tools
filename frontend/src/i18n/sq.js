@@ -234,6 +234,7 @@ export const sq = {
     trainWords: 'Stërvitësi i fjalëve të mësimit',
     conjugation: 'Zgjedhimi',
     declension: 'Rasat',
+    article: 'Nyja',
     conjChoose: 'Zgjidh',
     conjType: 'Shkruaj',
     multiVariantHint: 'Disa forma këtu — mjafton të shkruash njërën',

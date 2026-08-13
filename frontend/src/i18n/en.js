@@ -234,6 +234,7 @@ export const en = {
     trainWords: 'Word trainer for this lesson',
     conjugation: 'Conjugation',
     declension: 'Cases',
+    article: 'Article',
     conjChoose: 'Choose',
     conjType: 'Type it',
     multiVariantHint: 'Multiple forms here — writing any one of them is enough',
