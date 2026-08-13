@@ -66,12 +66,13 @@ export default function FlashcardNovice({
       <div className="exercise-card" onClick={!revealed ? () => setRevealed(true) : undefined}
         style={{ borderRadius: 28, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)',
           marginBottom: 14, cursor: revealed ? 'default' : 'pointer', userSelect: 'none' }}>
-        {/* Реакция аватара — поверх карточки, картинку рисуем сами: в макете она
-            лежит ВНУТРИ карточки со своими полями, а не в край. */}
+        {/* Картинка — во всю ширину блока, как в «вопрос-ответ» (просьба Павла 13.08):
+            режим fill убирает старую медиа-область 4:3 с потолком высоты, из-за
+            которой фото здесь выглядело мельче, чем в соседнем упражнении. */}
         <div style={{ padding: 20, paddingBottom: 0 }}>
           <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
             display: 'grid', placeItems: 'center', aspectRatio: '1 / 1' }}>
-            <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
+            <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction} fill
               onReactionEnd={() => onAnswer(gradeRef.current)} />
           </div>
         </div>

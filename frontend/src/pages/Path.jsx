@@ -74,11 +74,17 @@ export default function Path() {
   const current = nodes.find(n => n.state === 'current')
   const short = CP_SHORT(t)
 
-  // «Мой путь» — узлы до текущего урока включительно (со станциями между ними).
-  // Нет текущего — режем по последнему пройденному; совсем ничего не пройдено —
-  // прятать нечего, показываем дорогу целиком.
-  let cut = items.findIndex(it => it.kind === 'lesson' && it.state === 'current')
-  if (cut === -1) cut = items.reduce((a, it, i) => (it.state === 'done' ? i : a), -1)
+  // «Мой путь» — до ПОСЛЕДНЕГО узла, которого ученик касался (пройден, текущий или
+  // есть хоть одно сделанное упражнение). Резать по «текущему» нельзя: Павел учит
+  // урок 17, но «текущим» путь считает первый недоделанный (3-й) — и дорога
+  // схлопывалась до трёх уроков. Совсем ничего не тронуто — показываем всё.
+  let cut = -1
+  items.forEach((it, i) => {
+    const touched = it.kind === 'lesson'
+      ? (it.state === 'done' || it.state === 'current' || (it.ex_done || 0) > 0)
+      : (it.done || 0) > 0
+    if (touched) cut = i
+  })
   const visibleItems = showAll || cut === -1 ? items : items.slice(0, cut + 1)
   const hiddenCount = items.length - visibleItems.length
 

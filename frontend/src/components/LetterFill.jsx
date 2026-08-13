@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
-import { speakAuto, SpeakButton } from '../hooks/useSpeech.jsx'
+import { speakAuto, speak } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import { shouldAutoFocus } from '../utils/device.js'
@@ -49,15 +49,12 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
   })
   if (cur.length) groups.push(cur)
 
-  // Размер клетки под самое длинное слово: узкий экран (~312px рабочей ширины) делим
-  // на длину слова. Без этого «Kugelschreiber» (14 букв × 34px = 476px) не помещался.
-  const AVAIL = 312, GAP = 4, MIN_SLOT = 16
-  const longest = groups.reduce((m, g) => Math.max(m, g.length), 1)
-  const slot = Math.max(MIN_SLOT, Math.min(34, Math.floor(AVAIL / longest) - GAP))
-  const font = Math.round(slot * 0.88)
-  // Слово-гигант («Sozialversicherungsnummer») не помещается даже минимальными клетками —
-  // тогда разрешаем перенос внутри слова: лучше две строки, чем уехавший за экран хвост.
-  const allowBreakInWord = longest * (slot + GAP) > AVAIL
+  // Клетка ФИКСИРОВАННАЯ (просьба Павла 13.08): раньше размер подгонялся под самое
+  // длинное слово, и от упражнения к упражнению буквы прыгали — то крупные, то мелкие.
+  // Теперь шаблон один, а слово-гигант («Sozialversicherungsnummer») не ужимается,
+  // а прокручивается внутри своего блока влево-вправо.
+  const GAP = 5, SLOT = 34, TILE_H = 44
+  const font = 20
 
   useEffect(() => {
     // фокус на первый пропуск + озвучка слова
@@ -112,33 +109,34 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
   }
 
   return (
-    <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
-      {/* Реакция Pablo — БЕЗ авто-перехода: дальше только по кнопке «Далее» */}
-      <AvatarReaction imageUrl={imageUrl} wordDe={payload.word_de} reaction={reaction} />
-
-      <div className="exercise-card-content" style={{ padding: 24 }}>
+    <div className="exercise-card" style={{ border: '1px solid var(--line)', borderRadius: 26, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
+      <div className="exercise-card-content" style={{ padding: 20 }}>
       <ExerciseCardHeader typeLabel={typeLabel} lessonTitle={lessonTitle} />
+
+      {/* Картинка — во всю ширину карточки, как в «вопрос-ответ» (просьба Павла 13.08).
+          Реакция Pablo играет в этом же блоке; авто-перехода нет — дальше по кнопке. */}
+      <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
+        display: 'grid', placeItems: 'center', marginBottom: 16, aspectRatio: '1 / 1' }}>
+        <AvatarReaction imageUrl={imageUrl} wordDe={payload.word_de} reaction={reaction} fill />
+      </div>
 
       <p style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 15, marginBottom: 16 }}>
         {t.exercise.rememberWord} <strong style={{ color: 'var(--ink)' }}>{hint}</strong>
       </p>
 
-      {/* Слово: видимые буквы + клетки-пропуски (каждая клетка = одна буква).
-          Длинные слова («der Kugelschreiber») в одну строку не влезали и уезжали за
-          экран. Теперь слово переносится ЦЕЛИКОМ — артикль отдельной строкой, само
-          слово отдельной — и клетки ужимаются под длину самого длинного слова. */}
-      <div style={{ textAlign: 'center', marginBottom: 20 }}>
+      {/* Слово — клетки-плитки одного размера, по шаблону (макет Павла):
+          видимая буква — заполненная плитка, пропуск — плитка-поле. Перенос идёт
+          между словами; слово длиннее экрана не ужимается, а прокручивается
+          внутри блока влево-вправо. */}
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 18, padding: '2px 0' }}>
         <div style={{
           display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-          alignItems: 'flex-end', columnGap: 14, rowGap: 6, fontWeight: 700,
+          columnGap: 14, rowGap: 8, fontWeight: 700, width: 'max-content',
+          minWidth: '100%',
         }} dir="ltr">
           {groups.map((g, gi) => (
-            // Одно слово = неразрывная группа: перенос идёт по пробелам, а не по буквам
-            <div key={gi} style={{
-              display: 'inline-flex', alignItems: 'flex-end', gap: GAP, rowGap: 6,
-              flexWrap: allowBreakInWord ? 'wrap' : 'nowrap',
-              justifyContent: 'center',
-            }}>
+            // Одно слово = неразрывная группа: перенос только по пробелам
+            <div key={gi} style={{ display: 'inline-flex', gap: GAP, flexWrap: 'nowrap' }}>
               {g.map(({ ch, i }) => (
                 ch === '_'
                   // Показываем то, что ВВЁЛ ученик (даже после проверки) — чтобы он видел свою букву
@@ -156,20 +154,30 @@ export default function LetterFill({ payload, onAnswer, lessonTitle, typeLabel, 
                       inputMode="text"
                       aria-label={t.exercise.missingLetterAria}
                       style={{
-                        width: slot, height: slot * 1.35, padding: 0, textAlign: 'center',
-                        fontSize: font, fontWeight: 700, fontFamily: 'inherit',
-                        color: slotColor(i), background: 'transparent',
-                        border: 'none', borderBottom: `3px solid ${submitted ? slotColor(i) : 'var(--accent)'}`,
-                        borderRadius: 0, outline: 'none',
+                        width: SLOT, height: TILE_H, padding: 0, textAlign: 'center', flex: 'none',
+                        fontSize: font, fontWeight: 800, fontFamily: 'inherit',
+                        color: slotColor(i), background: 'var(--surface)',
+                        border: `2px solid ${submitted ? slotColor(i) : 'var(--accent)'}`,
+                        borderRadius: 10, outline: 'none',
                       }}
                     />
-                  : <span key={i} style={{ color: 'var(--ink)', fontSize: font, lineHeight: `${slot * 1.35}px` }}>{ch}</span>
+                  : <span key={i} style={{
+                      width: SLOT, height: TILE_H, flex: 'none', display: 'grid', placeItems: 'center',
+                      color: 'var(--ink)', fontSize: font, fontWeight: 800,
+                      background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10,
+                    }}>{ch}</span>
               ))}
             </div>
           ))}
-          <SpeakButton text={payload.word_de} size={22} style={{ alignSelf: 'flex-end' }} />
         </div>
       </div>
+
+      {/* Прослушать — крупной кнопкой, как в «вопрос-ответ» */}
+      <button onClick={() => speak(payload.word_de)}
+        style={{ margin: '0 auto 18px', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px',
+          borderRadius: 15, border: 'none', background: '#9A5CD8', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+        🔊 {t.exercise.listen || 'Прослушать'}
+      </button>
 
       {/* Кнопки: Проверить → потом Далее (без авто-перехода) */}
       {!submitted ? (
