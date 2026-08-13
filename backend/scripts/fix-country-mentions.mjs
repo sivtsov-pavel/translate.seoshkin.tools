@@ -12,6 +12,7 @@
 //   node scripts/fix-country-mentions.mjs --apply   # заменить
 import { writeFileSync } from 'fs'
 import { db } from '../src/db/index.js'
+import { generateExercises, translateExercisePayloads, resetUsage, usageCostUSD } from '../src/services/claude.js'
 import { logOperation } from '../src/services/opLog.js'
 
 const APPLY = process.argv.includes('--apply')
@@ -111,8 +112,23 @@ if (!APPLY) {
 writeFileSync(ROLLBACK, JSON.stringify({ words, exercises }, null, 1))
 console.log(`Откат записан: ${ROLLBACK}`)
 
+// Упражнения САМОГО слова-страны не правим построчно: ответ и варианты завязаны
+// друг на друга, и точечная замена рассинхронизирует их («ответ Die Ukraine, а
+// в вариантах его нет»). Такие упражнения пересобираем заново.
+const countryWordIds = words.filter(w => /Russland/i.test(w.word_de || '')).map(w => w.id)
+resetUsage()
+
 let wn = 0, en = 0
 for (const w of words) {
+  const isCountry = /Russland/i.test(w.word_de || '')
+  if (isCountry) {
+    await db.query(
+      `UPDATE words SET word_de = 'die Ukraine', translation_ru = 'Украина',
+              example_sentence = NULL, example_sentence_ru = NULL, translations = '{}'::jsonb
+       WHERE id = $1`, [w.id])
+    wn++
+    continue
+  }
   await db.query(
     `UPDATE words SET word_de = $1, translation_ru = $2, example_sentence = $3,
             example_sentence_ru = $4, translations = $5 WHERE id = $6`,
@@ -120,7 +136,13 @@ for (const w of words) {
      convert(w.example_sentence_ru), JSON.stringify(convertDeep(w.translations || {})), w.id])
   wn++
 }
+const { rows: ownRows } = countryWordIds.length
+  ? await db.query('SELECT id, lesson_id FROM exercises WHERE word_id = ANY($1::int[])', [countryWordIds])
+  : { rows: [] }
+const ownIds = new Set(ownRows.map(r => r.id))
+
 for (const e of exercises) {
+  if (ownIds.has(e.id)) continue          // это упражнения слова-страны — пересоберём
   await db.query(
     `UPDATE exercises SET payload = $1, payload_translations = $2 WHERE id = $3`,
     [JSON.stringify(convertDeep(e.payload)),
@@ -128,7 +150,38 @@ for (const e of exercises) {
   en++
 }
 
-await logOperation({ kind: 'cleanup', status: 'ok', costUsd: 0,
-  message: `Россия → Украина: слов ${wn}, упражнений ${en}`, meta: { rollback: ROLLBACK } }).catch(() => {})
-console.log(`\nГотово: слов ${wn}, упражнений ${en}. OpenAI не вызывался (0$).`)
+// Пересборка упражнений слова-страны: модель сама построит фразы с верными падежами
+let regenerated = 0
+if (countryWordIds.length) {
+  const lessonId = ownRows[0]?.lesson_id
+  await db.query('DELETE FROM exercises WHERE word_id = ANY($1::int[])', [countryWordIds])
+  const { rows: fresh } = await db.query(
+    'SELECT id, word_de, translation_ru FROM words WHERE id = ANY($1::int[])', [countryWordIds])
+  for (const w of fresh) {
+    for (const type of ['dictation', 'speech']) {
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        [lessonId, w.id, type, JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })])
+    }
+  }
+  const generated = await generateExercises(
+    fresh.map(w => ({ word_de: w.word_de, translation_ru: w.translation_ru })), [], 'de', [])
+  const byKey = new Map(fresh.map(w => [w.word_de.toLowerCase().replace(/^(der|die|das)\s+/, ''), w.id]))
+  const seen = new Set()
+  for (const ex of generated) {
+    const key = String(ex.word_de || '').toLowerCase().replace(/^(der|die|das)\s+/, '')
+    const wid = byKey.get(key)
+    if (!wid || seen.has(`${wid}|${ex.type}`)) continue
+    await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+      [lessonId, wid, ex.type, JSON.stringify(ex.payload)])
+    seen.add(`${wid}|${ex.type}`)
+    regenerated++
+  }
+  console.log(`Пересобрано упражнений слова-страны: ${regenerated}`)
+}
+
+const cost = usageCostUSD()
+await logOperation({ kind: 'cleanup', status: 'ok', costUsd: cost,
+  message: `Россия → Украина: слов ${wn}, упражнений ${en}, пересобрано ${regenerated}`,
+  meta: { rollback: ROLLBACK } }).catch(() => {})
+console.log(`\nГотово: слов ${wn}, правок в упражнениях ${en}. Потрачено: $${cost.toFixed(4)}`)
 process.exit(0)
