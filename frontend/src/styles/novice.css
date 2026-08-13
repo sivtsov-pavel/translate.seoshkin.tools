@@ -345,3 +345,15 @@ body.novice-mode .exercise-card [class*="bleed"] {
   border: 1px solid var(--line) !important;
   box-shadow: 0 10px 30px -26px rgba(60, 50, 20, .5);
 }
+
+/* ── Десктоп: старый сайдбар уступает место панели новичка ────────────────────
+   На ширине ≥1024px показывался постоянный сайдбар прежнего дизайна — он и
+   перекрывал новую панель, из-за чего слева «ничего не было». */
+@media (min-width: 1024px) {
+  body.novice-mode .layout-sidebar { display: none !important; }
+  body.novice-mode .layout-desktop-topbar { left: 96px !important; }
+  body.novice-mode .novice-rail { display: block !important; }
+}
+@media (min-width: 1200px) {
+  body.novice-mode .layout-desktop-topbar { left: 230px !important; }
+}

@@ -73,20 +73,31 @@ export default function Path() {
     <div style={{ maxWidth: 560, margin: '0 auto', padding: '10px 16px 40px' }}>
       {/* Три плитки-метрики */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        <Tile icon="🔥" value={stats.streak} label={t.path.streak} />
-        <Tile icon="⚡" value={stats.xp_today} label={t.path.xpToday} />
-        <Tile icon="📘" value={`${data.done_lessons}/${data.total_lessons}`} label={t.path.lessons} />
+        <Tile shape="circle"  tone="#E8863C" value={stats.streak} label={t.path.streak} />
+        <Tile shape="square"  tone="#E8B024" value={stats.xp_today} label={t.path.xpToday} />
+        <Tile shape="diamond" tone="#9A5CD8" value={`${data.done_lessons}/${data.total_lessons}`} label={t.path.lessons} />
       </div>
 
-      {/* Карточка раздела: полоски вместо цифр */}
+      {/* Карточка текущего урока: раньше здесь стояла неизменная надпись «Раздел N»,
+          по которой нельзя было понять ни что учим сейчас, ни сколько осталось. */}
       <div style={{ padding: '16px 18px', borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>{t.path.section} {section.index + 1}</div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink-soft)' }}>{section.done}/{section.total}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+          {t.path.section} {section.index + 1} · {section.done}/{section.total}
         </div>
-        <div style={{ display: 'flex', gap: 5 }}>
+        {current && (
+          <>
+            <div style={{ fontSize: 16, fontWeight: 800, marginTop: 4, lineHeight: 1.25 }}>
+              {getLessonTitle(current.title, current.title_translations, lang) || `${t.path.lesson} ${current.number ?? ''}`}
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 3 }}>
+              {t.path.lesson} {current.number} · {current.ex_done}/{current.ex_total}
+            </div>
+          </>
+        )}
+        <div style={{ display: 'flex', gap: 5, marginTop: 12 }}>
           {nodes.map((n, i) => (
-            <div key={i} style={{ flex: 1, height: 7, borderRadius: 4, background: n.state === 'done' ? C.current : 'var(--surface-2)' }} />
+            <div key={i} style={{ flex: 1, height: 7, borderRadius: 4,
+              background: n.state === 'done' ? C.doneBorder : n.state === 'current' ? C.accent : 'var(--surface-2)' }} />
           ))}
         </div>
       </div>
@@ -116,12 +127,20 @@ export default function Path() {
   )
 }
 
-function Tile({ icon, value, label }) {
+// Плитка метрики по макету: цветная фигура вместо эмодзи, крупное число, подпись.
+// Фигуры те же, что в навигации: круг, квадрат, ромб — глаз связывает их между экранами.
+function Tile({ shape, tone, value, label }) {
+  const radius = shape === 'circle' ? '50%' : shape === 'square' ? 6 : 3
   return (
-    <div style={{ flex: 1, padding: '12px 14px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)', textAlign: 'center' }}>
-      <div style={{ fontSize: 18 }}>{icon}</div>
-      <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>{value}</div>
-      <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{label}</div>
+    <div style={{ flex: 1, padding: '12px 10px', borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--line)', textAlign: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <span style={{
+          width: 20, height: 20, borderRadius: radius, background: tone,
+          transform: shape === 'diamond' ? 'rotate(45deg)' : 'none', display: 'block',
+        }} />
+      </div>
+      <div style={{ fontSize: 17, fontWeight: 800, marginTop: 6 }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 1 }}>{label}</div>
     </div>
   )
 }
