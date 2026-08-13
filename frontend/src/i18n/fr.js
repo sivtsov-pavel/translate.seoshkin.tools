@@ -903,6 +903,8 @@ export const fr = {
     cpPhraseset: 'Série de phrases',
     kindLesson: 'Leçon',
     week: 'Semaine',
+    roadAll: 'Toute la route',
+    roadMine: 'Mon chemin',
     skills: 'Ce que je sais',
     skillWords: 'Mots',
     skillListen: 'Écoute',

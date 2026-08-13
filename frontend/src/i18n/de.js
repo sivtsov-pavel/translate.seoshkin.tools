@@ -922,6 +922,8 @@ export const de = {
     cpPhraseset: 'Satzreihe',
     kindLesson: 'Lektion',
     week: 'Woche',
+    roadAll: 'Ganzer Weg',
+    roadMine: 'Mein Weg',
     skills: 'Was ich kann',
     skillWords: 'Wörter',
     skillListen: 'Hören',

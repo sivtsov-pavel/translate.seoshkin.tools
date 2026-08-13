@@ -916,6 +916,8 @@ export const en = {
     cpPhraseset: 'Phrase set',
     kindLesson: 'Lesson',
     week: 'Week',
+    roadAll: 'Whole road',
+    roadMine: 'My path',
     skills: 'What I can do',
     skillWords: 'Words',
     skillListen: 'Listening',

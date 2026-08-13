@@ -904,6 +904,8 @@ export const es = {
     cpPhraseset: 'Conjunto de frases',
     kindLesson: 'Lección',
     week: 'Semana',
+    roadAll: 'Todo el camino',
+    roadMine: 'Mi camino',
     skills: 'Lo que ya sé',
     skillWords: 'Palabras',
     skillListen: 'Escucha',

@@ -898,6 +898,8 @@ export const bg = {
     cpPhraseset: 'Набор фрази',
     kindLesson: 'Урок',
     week: 'Седмица',
+    roadAll: 'Целият път',
+    roadMine: 'Моят път',
     skills: 'Какво вече мога',
     skillWords: 'Думи',
     skillListen: 'Слушане',

@@ -903,6 +903,8 @@ export const tr = {
     cpPhraseset: 'Cümle seti',
     kindLesson: 'Ders',
     week: 'Hafta',
+    roadAll: 'Tüm yol',
+    roadMine: 'Benim yolum',
     skills: 'Neler biliyorum',
     skillWords: 'Kelimeler',
     skillListen: 'Dinleme',

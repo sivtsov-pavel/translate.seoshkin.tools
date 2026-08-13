@@ -37,6 +37,15 @@ export default function Path() {
   // интерактивной — сначала видно, что внутри станции, и уже оттуда выбираешь.
   const [selected, setSelected] = useState(null)   // ключ выбранного узла
   const [details, setDetails] = useState(null)     // содержимое станции (грузим по тапу)
+  // По умолчанию — только пройденный путь (просьба Павла, 13.08): вся дорога на
+  // 36+ уроков превращает экран в бесконечную ленту. Выбор запоминаем на устройстве.
+  const [showAll, setShowAll] = useState(() => {
+    try { return localStorage.getItem('path_show_all') === '1' } catch { return false }
+  })
+  const toggleRoad = () => setShowAll(v => {
+    try { localStorage.setItem('path_show_all', v ? '' : '1') } catch {}
+    return !v
+  })
 
   useEffect(() => {
     api.get('/path').then(setData).catch(() => setData({ error: true }))
@@ -64,6 +73,14 @@ export default function Path() {
   const items = road?.length ? road : nodes.map(n => ({ kind: 'lesson', ...n }))
   const current = nodes.find(n => n.state === 'current')
   const short = CP_SHORT(t)
+
+  // «Мой путь» — узлы до текущего урока включительно (со станциями между ними).
+  // Нет текущего — режем по последнему пройденному; совсем ничего не пройдено —
+  // прятать нечего, показываем дорогу целиком.
+  let cut = items.findIndex(it => it.kind === 'lesson' && it.state === 'current')
+  if (cut === -1) cut = items.reduce((a, it, i) => (it.state === 'done' ? i : a), -1)
+  const visibleItems = showAll || cut === -1 ? items : items.slice(0, cut + 1)
+  const hiddenCount = items.length - visibleItems.length
 
   const go = (n) => {
     if (n?.__url) return navigate(n.__url)   // строка внутри плашки станции
@@ -114,16 +131,12 @@ export default function Path() {
         </div>
       </div>
 
-      {/* Дорога: изогнутая нить, узлы смещены по змейке — как было в прежней карте.
-          Кривая Безье идёт от кружка к кружку и обтекает их, а не ломается углами. */}
-      <PathRoad items={items} short={short} lang={lang} t={t} go={go}
-        selected={selected} setSelected={setSelected} details={details} setDetails={setDetails} />
-
-      {/* Мотивационный блок на телефоне: справа его нет — там нет колонки, а серия
-          и прогресс нужны всем. Дизайнер вынес его только в ПК-раскладку. */}
-      <div className="path-motivation">
+      {/* Мотивационный блок на телефоне — НАД дорогой (просьба Павла, 13.08):
+          неделя и умения под длинной дорогой не находились. На ПК их нет —
+          там та же информация в правой колонке. */}
+      <div className="path-motivation" style={{ marginBottom: 16 }}>
         {weekly?.length > 0 && (
-          <div className="path-aside-card" style={{ marginTop: 20 }}>
+          <div className="path-aside-card" style={{ marginTop: 4 }}>
             <div className="path-aside-title">{t.path.week}</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 74, marginTop: 12 }}>
               {weekly.map((d, i) => {
@@ -152,6 +165,22 @@ export default function Path() {
           </div>
         )}
       </div>
+
+      {/* Дорога: изогнутая нить, узлы смещены по змейке — как было в прежней карте.
+          Кривая Безье идёт от кружка к кружку и обтекает их, а не ломается углами. */}
+      <PathRoad items={visibleItems} short={short} lang={lang} t={t} go={go}
+        selected={selected} setSelected={setSelected} details={details} setDetails={setDetails} />
+
+      {/* Тумблер дороги: по умолчанию виден пройденный путь, дальнейшие уроки —
+          по желанию. Кнопка стоит там, где дорога обрывается. */}
+      {(hiddenCount > 0 || showAll) && (
+        <button onClick={toggleRoad}
+          style={{ width: '100%', marginTop: 6, padding: '12px 16px', borderRadius: 14,
+            border: '1px dashed var(--line)', background: 'var(--surface)', color: 'var(--ink)',
+            fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          {showAll ? `↥ ${t.path.roadMine}` : `🗺 ${t.path.roadAll} (+${hiddenCount})`}
+        </button>
+      )}
 
       {/* Хвосты — общим числом: пропущенное не теряется и видно, сколько его */}
       {tails?.total > 0 && (

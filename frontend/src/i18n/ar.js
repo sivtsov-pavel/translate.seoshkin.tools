@@ -906,6 +906,8 @@ export const ar = {
     cpPhraseset: 'مجموعة جمل',
     kindLesson: 'الدرس',
     week: 'الأسبوع',
+    roadAll: 'كل الطريق',
+    roadMine: 'مساري',
     skills: 'ما أتقنه',
     skillWords: 'كلمات',
     skillListen: 'الاستماع',

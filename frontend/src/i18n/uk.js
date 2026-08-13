@@ -915,6 +915,8 @@ export const uk = {
     cpPhraseset: 'Набір фраз',
     kindLesson: 'Урок',
     week: 'Тиждень',
+    roadAll: 'Уся дорога',
+    roadMine: 'Мій шлях',
     skills: 'Що вже вмію',
     skillWords: 'Слова',
     skillListen: 'Слухання',

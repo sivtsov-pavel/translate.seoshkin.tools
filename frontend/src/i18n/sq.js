@@ -915,6 +915,8 @@ export const sq = {
     cpPhraseset: 'Set frazash',
     kindLesson: 'Mësimi',
     week: 'Java',
+    roadAll: 'E gjithë rruga',
+    roadMine: 'Rruga ime',
     skills: 'Çfarë di',
     skillWords: 'Fjalë',
     skillListen: 'Dëgjimi',

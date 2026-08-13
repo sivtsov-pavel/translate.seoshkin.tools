@@ -672,6 +672,8 @@ export const ru = {
     cpPhraseset: 'Набор фраз',
     kindLesson: 'Урок',
     week: 'Неделя',
+    roadAll: 'Вся дорога',
+    roadMine: 'Мой путь',
     skills: 'Что уже умею',
     skillWords: 'Слова',
     skillListen: 'Слушание',
