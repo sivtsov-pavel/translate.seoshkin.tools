@@ -13,6 +13,7 @@
 // гонять хоть после каждой загрузки урока.
 import { db } from '../db/index.js'
 import { checkExercise, checkWord } from './lessonAudit.js'
+import { conjugatePresent } from './germanConjugator.js'
 
 // Одна проверка = { id, title, hint, sql }. sql возвращает строки с полями
 // lesson_id, ref (что именно не так) — их и показываем.
@@ -58,23 +59,15 @@ const CHECKS = [
           WHERE (w.translation_ru IS NULL OR trim(w.translation_ru) = '') AND NOT w.is_function_word`,
   },
   {
-    id: 'example_without_word',
-    title: 'Пример не содержит изучаемого слова',
-    hint: 'Пример нужен, чтобы показать слово в живой фразе. Если слова в нём нет, он бесполезен.',
-    // Сравниваем по ОСНОВЕ, а не по всей словарной записи: в предложении слово стоит
-    // в живой форме («denken an» → «Ich denke an…»), а запись может нести артикль,
-    // множественное число в скобках («das Wort (Wörter)») или управление предлогом.
-    // Прямое вхождение целиком давало сотни ложных обвинений верным примерам.
-    sql: `
-      WITH b AS (
-        SELECT w.id, w.lesson_id, w.word_de, w.example_sentence,
-               split_part(regexp_replace(regexp_replace(w.word_de, '^(der|die|das)\\s+', ''), '\\s*\\(.*\\)', ''), ' ', 1) AS base
-        FROM words w JOIN lessons l ON l.id = w.lesson_id
-        WHERE l.target_lang = 'de' AND w.example_sentence <> '' AND NOT w.is_function_word)
-      SELECT lesson_id, word_de || ' → «' || left(example_sentence, 40) || '»' AS ref
-      FROM b
-      WHERE length(base) > 3
-        AND position(lower(left(base, greatest(4, length(base) - 3))) in lower(example_sentence)) = 0`,
+    id: 'example_broken',
+    title: 'В примере мусор вместо фразы',
+    hint: 'Строка «null», «Plural: die Gäste» и подобное — это не пример употребления, ученику показывать нечего.',
+    sql: `SELECT w.lesson_id, w.word_de || ' → «' || left(w.example_sentence, 40) || '»' AS ref
+          FROM words w JOIN lessons l ON l.id = w.lesson_id
+          WHERE w.example_sentence <> ''
+            AND (lower(trim(w.example_sentence)) IN ('null','undefined','-','—')
+                 OR w.example_sentence ~* '^(plural|singular|pl\\.|sg\\.)\\s*:'
+                 OR w.example_sentence !~ '[a-zäöüßA-ZÄÖÜ]{2}')`,
   },
   {
     id: 'example_no_ru',
@@ -108,6 +101,67 @@ const CHECKS = [
 ]
 
 const MAX_SAMPLES = 12
+
+// Отделяемые приставки: в предложении глагол разрывается («einkaufen» → «Ich kaufe
+// gerne ein»), поэтому искать надо остаток без приставки.
+const SEPARABLE = /^(ab|an|auf|aus|bei|ein|los|mit|nach|vor|zu|zurück|weg|her|hin|fest|frei|statt|teil)/
+
+// Умлаут во множественном числе и в личных формах — обычное дело в немецком
+// («der Gast» → «die Gäste», «fahren» → «du fährst»). Без свёртки правило считает
+// такие пары разными словами и обвиняет верные примеры.
+const fold = (s) => String(s || '').toLowerCase()
+  .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
+
+/**
+ * Есть ли изучаемое слово в примере. Немецкий здесь важнее регулярки: слово в живой
+ * фразе почти никогда не выглядит как словарная запись.
+ *
+ * Первая версия правила искала запись целиком и обвинила сотни ВЕРНЫХ примеров:
+ * «denken an → Ich denke an meine Familie», «sich ärgern → Ich ärgere mich»,
+ * «einkaufen → Ich kaufe gerne ein», «wollen → Ich will Deutsch lernen».
+ * Ложное правило хуже отсутствующего — его перестают читать, и вместе с шумом
+ * теряются настоящие находки.
+ */
+export function exampleHasWord(wordDe, sentence, conjugate) {
+  const text = fold(sentence)
+  if (!text) return true
+
+  // Словарная запись → чистая основа: без артикля, без скобок с множественным числом,
+  // без «sich» и без управления предлогом («sich ärgern über» → «ärgern»).
+  let base = fold(String(wordDe || '')
+    .replace(/^(der|die|das)\s+/i, '')
+    .replace(/\s*\(.*?\)/g, '')
+    .replace(/^sich\s+/i, '')
+    .trim()
+    .split(/\s+/)[0])
+  if (base.length < 4) return true    // короткие слова не проверяем: слишком много совпадений
+
+  const candidates = new Set([base])
+
+  // Глагол: добавляем все личные формы — «wollen» в тексте выглядит как «will».
+  if (/(en|ln|rn)$/.test(base)) {
+    const forms = conjugate?.(base)
+    if (forms) for (const f of Object.values(forms)) if (f) candidates.add(fold(f))
+    // Отделяемая приставка: ищем и остаток («einkaufen» → «kauf…»)
+    const m = base.match(SEPARABLE)
+    if (m) {
+      const rest = base.slice(m[0].length)
+      if (rest.length >= 3) {
+        candidates.add(rest)
+        const restForms = conjugate?.(rest)
+        if (restForms) for (const f of Object.values(restForms)) if (f) candidates.add(fold(f))
+      }
+    }
+  }
+
+  for (const c of candidates) {
+    // По корню, а не по всей форме: существительные склоняются («Gast» → «Gäste»),
+    // прилагательные получают окончания («klein» → «kleine»).
+    const stem = c.slice(0, Math.max(4, c.length - 3))
+    if (text.includes(stem)) return true
+  }
+  return false
+}
 
 /**
  * Полная проверка. Возвращает отчёт для экрана «Проверка системы».
@@ -150,6 +204,18 @@ export async function runSystemCheck() {
     ...exercises.flatMap(e => withLesson(checkExercise(e), e)),
     ...words.flatMap(w => withLesson(checkWord(w), w)),
   ]
+
+  // Пример без изучаемого слова — проверка живёт в JS, а не в SQL: ей нужен
+  // спрягатель, иначе «wollen → Ich will…» и «einkaufen → Ich kaufe … ein»
+  // объявляются браком.
+  const { rows: exWords } = await db.query(
+    `SELECT w.id, w.lesson_id, w.word_de, w.example_sentence FROM words w JOIN lessons l ON l.id = w.lesson_id
+     WHERE l.target_lang = 'de' AND w.example_sentence <> '' AND NOT w.is_function_word`)
+  for (const w of exWords) {
+    if (exampleHasWord(w.word_de, w.example_sentence, conjugatePresent)) continue
+    perItem.push({ level: 'warn', kind: 'пример без слова', id: w.id, lesson_id: w.lesson_id,
+      text: `${w.word_de} → «${String(w.example_sentence).slice(0, 45)}»` })
+  }
   const byKind = new Map()
   for (const i of perItem) {
     if (!byKind.has(i.kind)) byKind.set(i.kind, [])
