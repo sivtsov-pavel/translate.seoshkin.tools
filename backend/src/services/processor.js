@@ -106,7 +106,11 @@ export async function auditLessonAndLog(lessonId, userId = null) {
     // автоматически после каждой загрузки (решение Павла, 13.08.2026). ИИ не участвует.
     let dict = null
     try { dict = await runLessonCheck(lessonId) } catch (e) { console.error('runLessonCheck:', e.message) }
-    const summary = `${r.summary}${dict?.total ? `; ${dict.summary}` : ''}`
+    // «проблем не найдено; словарь: 1 — …» читается противоречиво, поэтому когда
+    // упражнения чисты, а словарь ругается, говорим это прямо.
+    const summary = r.ok && dict?.total
+      ? `упражнения в порядке; ${dict.summary}`
+      : `${r.summary}${dict?.total ? `; ${dict.summary}` : ''}`
     await logOperation({
       kind: 'audit', lessonId, userId, provider: 'none',
       status: r.blockers.length ? 'error' : 'ok',
