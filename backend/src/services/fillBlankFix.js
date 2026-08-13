@@ -1,3 +1,5 @@
+import { conjugatePresent } from './germanConjugator.js'
+
 // Починка «Заполни пропуск», когда правильного ответа нет среди вариантов.
 //
 // Такое упражнение пройти нельзя в принципе — ученик перебирает варианты, и ни один не
@@ -75,6 +77,51 @@ export function ensureBlank(payload) {
     ? payload.options.map(o => String(o).trim().toLowerCase() === form.toLowerCase() ? form : o)
     : payload.options
   return { ...payload, sentence: sentence.replace(form, '___'), blank: form, options }
+}
+
+// Инфинитив вместо личной формы: «Ich ___ das Buch» с ответом «nehmen» (нужно «nehme»).
+// Ошибка грубая и заметная — именно на такие указывает учитель, — а модель делает её
+// регулярно, потому что в словаре слово стоит в инфинитиве и она переносит его как есть.
+//
+// Границы намеренно узкие. В germanConjugator.js стоит верное предупреждение: спрягать
+// пропуск «по догадке» нельзя — эвристика не отличает глагол от неглагола и ломает
+// «Ich kann ___» (там инфинитив «singen» как раз правилен). Поэтому смотрим ТОЛЬКО на
+// позицию сразу за подлежащим («Ich ___», «Ihr ___»): в немецком там стоит спрягаемый
+// глагол и ничто другое, так что инфинитив в ней — всегда ошибка.
+//
+// Спрягаем ich/wir/ihr: у сильных глаголов корень меняется лишь в du и er/sie/es
+// (du nimmst, er sieht), а эти три лица выводятся из инфинитива надёжно. Для du/er/es
+// возвращаем null — упражнение отбрасывается и генерируется заново, потому что
+// незнакомый таблицам сильный глагол дал бы неверную форму, а своими руками создавать
+// ошибку хуже, чем потерять одно упражнение.
+// «Sie/sie» не трогаем вовсе — из предложения не понять, «Вы» это или «она».
+
+/**
+ * Проверяет согласование подлежащего и глагола в «заполни пропуск».
+ * @returns исправленный payload, либо null — упражнение негодное и должно быть отброшено.
+ */
+export function fixAgreement(payload) {
+  if (!payload || typeof payload !== 'object') return payload
+  const sentence = String(payload.sentence || '')
+  const blank = String(payload.blank || '').trim()
+  // Интересует только случай «местоимение + пропуск» с инфинитивом в ответе
+  if (!/^[a-zäöüß]+e?n$/i.test(blank)) return payload
+  const m = sentence.match(/^\s*(ich|du|er|es|ihr|wir)\s+___/i)
+  if (!m) return payload
+
+  const person = m[1].toLowerCase()
+  if (person === 'du' || person === 'er' || person === 'es') return null
+  const forms = conjugatePresent(blank)
+  const form = forms?.[person === 'wir' ? 'wir' : person]
+  if (!form) return null
+  if (form === blank) return payload
+
+  // Ответ меняется, значит и в вариантах он должен смениться: иначе верного среди них
+  // не окажется и упражнение станет непроходимым.
+  const options = Array.isArray(payload.options)
+    ? payload.options.map(o => (String(o).trim().toLowerCase() === blank.toLowerCase() ? form : o))
+    : payload.options
+  return { ...payload, blank: form, options }
 }
 
 // Один и тот же вариант дважды: выбор превращается в угадайку, а «правильных» кнопок две.

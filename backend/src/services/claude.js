@@ -2,7 +2,7 @@ import { readFileSync } from 'fs'
 import { platformClient } from './openaiClient.js'
 import { pickSentencesFor } from './sentencePick.js'
 import { salvageJsonObjects } from './jsonSalvage.js'
-import { fixFillBlank, ensureBlank, dedupeOptions } from './fillBlankFix.js'
+import { fixFillBlank, ensureBlank, dedupeOptions, fixAgreement } from './fillBlankFix.js'
 import { groundFillBlank, groundSentenceWrite } from './grounding.js'
 import { joinWrappedLines } from './entryKind.js'
 import { normalizeLetterFill } from './letterFill.js'
@@ -515,7 +515,12 @@ export function sanitizeExercise(ex) {
     //  • пропуск не поставлен вовсе («Heute ist ein schöner Tag.» при ответе «heute»);
     //  • ответ не совпадает ни с одним вариантом;
     //  • один и тот же вариант дважды.
-    ex = { ...ex, payload: dedupeOptions(fixFillBlank(ensureBlank(payload))) }
+    // Согласование проверяем последним: к этому моменту пропуск уже поставлен,
+    // а ответ сверен с вариантами. null означает «спрягать наугад нельзя» —
+    // такое упражнение в базу не пускаем, слову сгенерируется другое.
+    const agreed = fixAgreement(dedupeOptions(fixFillBlank(ensureBlank(payload))))
+    if (!agreed) return null
+    ex = { ...ex, payload: agreed }
   }
 
   if (ex.type === 'multiple_choice') {
