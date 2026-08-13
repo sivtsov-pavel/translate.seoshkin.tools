@@ -124,14 +124,23 @@ export async function runSystemCheck() {
 
   // 2. Проверки по каждому упражнению и слову — тем же кодом, что стоит на генерации,
   // поэтому отчёт не может разойтись с тем, что приложение считает браком.
+  // word_id обязателен: checkExercise по нему судит, привязано ли упражнение к слову.
+  // Без этого поля все упражнения разом объявлялись «без привязки» — 4162 ложных
+  // замечания вместо 125 настоящих.
   const { rows: exercises } = await db.query(
-    `SELECT e.id, e.type, e.payload, e.lesson_id, w.translation_ru, l.target_lang
+    `SELECT e.id, e.word_id, e.type, e.payload, e.lesson_id, w.translation_ru, l.target_lang
      FROM exercises e LEFT JOIN words w ON w.id = e.word_id JOIN lessons l ON l.id = e.lesson_id`)
   const { rows: words } = await db.query(
     `SELECT w.id, w.word_de, w.lesson_id, w.is_function_word, l.target_lang
      FROM words w JOIN lessons l ON l.id = w.lesson_id`)
 
-  const perItem = [...exercises.flatMap(checkExercise), ...words.flatMap(checkWord)]
+  // Номер урока в самих проверках не возвращается — они чистые и про урок не знают,
+  // поэтому проставляем его здесь: без него замечание невозможно найти глазами.
+  const withLesson = (list, row) => list.map(i => ({ ...i, lesson_id: row.lesson_id }))
+  const perItem = [
+    ...exercises.flatMap(e => withLesson(checkExercise(e), e)),
+    ...words.flatMap(w => withLesson(checkWord(w), w)),
+  ]
   const byKind = new Map()
   for (const i of perItem) {
     if (!byKind.has(i.kind)) byKind.set(i.kind, [])
