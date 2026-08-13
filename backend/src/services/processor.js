@@ -608,7 +608,10 @@ export async function regenerateExercisesFromDb(lessonId) {
 // лишнее НЕ удаляем. Возвращает { updated, inserted }.
 export async function regenerateExercisesSafe(lessonId) {
   const { rows: wordRows } = await db.query(
-    `SELECT id, word_de, translation_ru, example_sentence FROM words WHERE lesson_id = $1 ORDER BY id`,
+    // Служебные слова пропускаем: из «die» или «und» осмысленной карточки не выйдет,
+    // а перегенерация без этого фильтра возвращала бы снятый мусор обратно.
+    `SELECT id, word_de, translation_ru, example_sentence FROM words
+     WHERE lesson_id = $1 AND NOT is_function_word ORDER BY id`,
     [lessonId]
   )
   if (!wordRows.length) throw new Error('Нет слов для этого урока')
