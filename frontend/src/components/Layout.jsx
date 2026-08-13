@@ -61,6 +61,16 @@ export default function Layout({ children }) {
     return () => window.removeEventListener('dl-start-tour', h)
   }, [])
 
+  // Ширина панели новичка влияет на отступ контента — держим метку на body
+  useEffect(() => {
+    const sync = () => document.body.classList.toggle('novice-rail-open',
+      localStorage.getItem('novice_rail_open') === '1')
+    sync()
+    window.addEventListener('storage', sync)
+    const id = setInterval(sync, 800)
+    return () => { window.removeEventListener('storage', sync); clearInterval(id) }
+  }, [])
+
   useEffect(() => {
     document.body.classList.toggle('novice-mode', novice)
     return () => document.body.classList.remove('novice-mode')

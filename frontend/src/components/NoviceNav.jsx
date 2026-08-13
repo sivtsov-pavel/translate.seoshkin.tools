@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Backpack, BookOpen, Languages, MoreHorizontal, Library, Bot,
-  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X, Compass,
+  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X, Compass, Menu,
 } from 'lucide-react'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
@@ -70,6 +70,14 @@ export default function NoviceNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const [moreOpen, setMoreOpen] = useState(false)
+  // На ПК панель по умолчанию узкая, как на планшете, а бургер разворачивает её
+  // в полное меню с подписями — выбор запоминается.
+  const [railOpen, setRailOpen] = useState(() => localStorage.getItem('novice_rail_open') === '1')
+  const toggleRail = () => {
+    const v = !railOpen
+    setRailOpen(v)
+    localStorage.setItem('novice_rail_open', v ? '1' : '0')
+  }
 
   const isActive = (to) => to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
   const main = MAIN(t)
@@ -107,18 +115,34 @@ export default function NoviceNav() {
       </nav>
 
       {/* Планшет и ПК: те же фигуры слева */}
-      <nav className="novice-rail">
+      <nav className={`novice-rail ${railOpen ? 'is-open' : ''}`}>
         <div className="novice-rail-inner">
+          {/* Бургер разворачивает панель: в узком виде — только фигуры, в широком —
+              фигуры с подписями и полный список разделов. */}
+          <button className="novice-rail-burger" onClick={toggleRail}
+            aria-label={t.nav.menu} title={t.nav.menu}>
+            <Menu size={20} strokeWidth={2} />
+          </button>
+
           {[...main, ...SIDE_EXTRA(t)].map(item => (
             <Link key={item.to} to={item.to} className={`novice-rail-item ${isActive(item.to) ? 'is-active' : ''}`}>
               <Shape C={item.C} shape={item.shape} tone={item.tone} active={isActive(item.to)} />
               <span className="novice-rail-label">{item.label}</span>
             </Link>
           ))}
-          <button className="novice-rail-item" onClick={() => setMoreOpen(true)}>
-            <Shape C={MoreHorizontal} shape={SHAPE.circle} tone="e" />
-            <span className="novice-rail-label">{t.nav.more}</span>
-          </button>
+          {railOpen
+            ? MORE(t, isOwner).filter(m => !['/sets', '/books', '/ai-trainer'].includes(m.to)).map(item => (
+                <Link key={item.to} to={item.to} className={`novice-rail-item ${isActive(item.to) ? 'is-active' : ''}`}>
+                  <Shape C={item.C} shape={item.shape} tone={item.tone} active={isActive(item.to)} />
+                  <span className="novice-rail-label">{item.label}</span>
+                </Link>
+              ))
+            : (
+              <button className="novice-rail-item" onClick={() => setMoreOpen(true)}>
+                <Shape C={MoreHorizontal} shape={SHAPE.circle} tone="e" />
+                <span className="novice-rail-label">{t.nav.more}</span>
+              </button>
+            )}
 
           {/* Низ панели: настройки, тур и тумблер режима. На компьютере старая шапка
               не показывается, и без этого блока переключиться обратно в «эксперта»

@@ -67,9 +67,8 @@ body.novice-mode .main-content { padding-bottom: 104px; }
 @media (min-width: 834px) {
   body.novice-mode .main-content { padding-bottom: 24px; padding-left: 96px; }
 }
-@media (min-width: 1200px) {
-  body.novice-mode .main-content { padding-left: 230px; }
-}
+/* Панель на ПК остаётся узкой, поэтому отступ контента прежний;
+   развёрнутая панель добавляет свой отступ отдельным правилом ниже. */
 
 /* ── Упражнения в режиме новичка (макет 2b) ───────────────────────────────────
    Логику компонентов не трогаем — только вид. Стили компонентов заданы инлайном,
@@ -354,6 +353,9 @@ body.novice-mode .exercise-card [class*="bleed"] {
   body.novice-mode .layout-desktop-topbar { left: 96px !important; }
   body.novice-mode .novice-rail { display: block !important; }
 }
-@media (min-width: 1200px) {
-  body.novice-mode .layout-desktop-topbar { left: 230px !important; }
+body.novice-mode.novice-rail-open .layout-desktop-topbar { left: 248px !important; }
+
+/* Контент уезжает вправо ровно на ширину панели — и при её разворачивании тоже */
+@media (min-width: 834px) {
+  body.novice-mode.novice-rail-open .main-content { padding-left: 248px; }
 }
