@@ -17,12 +17,20 @@ import { logOperation } from '../src/services/opLog.js'
 const APPLY = process.argv.includes('--apply')
 const ROLLBACK = '/tmp/country-rollback.json'
 
-// Порядок важен: сначала длинные конструкции с предлогами, потом одиночное слово
+// Порядок важен: сначала длинные конструкции с предлогами, потом одиночное слово.
+//
+// ВАЖНО про варианты ответа: «Russland» стоит без артикля, а «Ukraine» — всегда
+// с артиклем, и в списке вариантов подмена ломает грамматику предложения
+// («Ich komme aus ___» + «die Ukraine» = «aus die Ukraine»). Поэтому в ЧУЖИХ
+// упражнениях, где Russland лишь один из вариантов, ставим нейтральную страну
+// без артикля — Italien. А само слово «Russland» в словаре становится Украиной,
+// и его упражнения перегенерируются отдельно, с правильными падежами.
 const RULES = [
+  [/\bHauptstadt\s+von\s+Russland\b/g, 'Hauptstadt der Ukraine'],
   [/\baus\s+Russland\b/g,        'aus der Ukraine'],
   [/\bnach\s+Russland\b/g,       'in die Ukraine'],
   [/\bin\s+Russland\b/g,         'in der Ukraine'],
-  [/\bvon\s+Russland\b/g,        'von der Ukraine'],
+  [/\bvon\s+Russland\b/g,        'aus der Ukraine'],
   [/\bdas\s+Russland\b/g,        'die Ukraine'],
   [/\bRussland\b/g,              'die Ukraine'],
   [/\bMoskau\b/g,                'Kyjiw'],
@@ -51,12 +59,19 @@ function convert(text) {
   return fixSentenceStart(out)
 }
 
-function convertDeep(value) {
+// В списке вариантов ответа страну меняем на нейтральную без артикля: подмена
+// на «die Ukraine» ломает согласование с предлогом в предложении.
+const convertOption = (v) => (typeof v === 'string'
+  ? v.replace(/\bRussland\b/g, 'Italien').replace(/\bРоссия\b/g, 'Италия')
+  : convertDeep(v))
+
+function convertDeep(value, key = null) {
+  if (key === 'options') return Array.isArray(value) ? value.map(convertOption) : value
   if (typeof value === 'string') return convert(value)
-  if (Array.isArray(value)) return value.map(convertDeep)
+  if (Array.isArray(value)) return value.map(v => convertDeep(v))
   if (value && typeof value === 'object') {
     const out = {}
-    for (const [k, v] of Object.entries(value)) out[k] = convertDeep(v)
+    for (const [k, v] of Object.entries(value)) out[k] = convertDeep(v, k)
     return out
   }
   return value
