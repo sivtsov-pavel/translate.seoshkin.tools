@@ -15,6 +15,7 @@
 //   docker compose -f docker-compose.prod.yml exec -T backend node scripts/ai-audit-sentences.mjs --lang de --run   # аудит
 //   … добавить --limit 50 — пробный прогон на 50 упражнениях
 //
+import { writeFileSync } from 'fs'
 import { db } from '../src/db/index.js'
 import { platformClient } from '../src/services/openaiClient.js'
 import { trackUsage, resetUsage, usageCostUSD, targetLangName } from '../src/services/claude.js'
@@ -103,6 +104,15 @@ const cost = usageCostUSD()
 console.log(`\nПроверено: ${checked}/${items.length} (битых батчей: ${failedBatches})`)
 console.log(`Находок: ${findings.length}`)
 console.log(`Потрачено: $${cost.toFixed(3)}, время ${(Date.now() - t0) / 60000 | 0} мин`)
+// Отчёт пишем В ФАЙЛ, а не только в консоль: вывод легко потерять (обрезать
+// пайпом, закрыть терминал), а прогон стоит денег и минут.
+const stamp = new Date().toISOString().slice(0, 10)
+const out = `/tmp/ai-audit-${stamp}.json`
+try {
+  writeFileSync(out, JSON.stringify({ checked, total: items.length, findings, cost }, null, 1))
+  console.log(`\nОтчёт сохранён: ${out} (забрать: docker compose ... cp)`)
+} catch (e) { console.error('не удалось сохранить отчёт:', e.message) }
+
 console.log('\n=== JSON-ОТЧЁТ ===')
 console.log(JSON.stringify(findings, null, 1))
 
