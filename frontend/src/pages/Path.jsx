@@ -119,6 +119,40 @@ export default function Path() {
       <PathRoad items={items} short={short} lang={lang} t={t} go={go}
         selected={selected} setSelected={setSelected} details={details} setDetails={setDetails} />
 
+      {/* Мотивационный блок на телефоне: справа его нет — там нет колонки, а серия
+          и прогресс нужны всем. Дизайнер вынес его только в ПК-раскладку. */}
+      <div className="path-motivation">
+        {weekly?.length > 0 && (
+          <div className="path-aside-card" style={{ marginTop: 20 }}>
+            <div className="path-aside-title">{t.path.week}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 74, marginTop: 12 }}>
+              {weekly.map((d, i) => {
+                const max = Math.max(...weekly.map(x => x.count), 1)
+                const h = Math.max(6, Math.round((d.count / max) * 56))
+                const today = i === weekly.length - 1
+                return (
+                  <div key={d.date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: '100%', height: h, borderRadius: 7, background: today ? '#E8B024' : '#9A5CD8' }} />
+                    <span style={{ fontSize: 10.5, fontWeight: today ? 800 : 600, color: today ? 'var(--ink)' : 'var(--ink-soft)' }}>
+                      {(t.path.weekdays || [])[d.weekday - 1] || ''}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {skills && (
+          <div className="path-aside-card" style={{ marginTop: 12 }}>
+            <div className="path-aside-title">{t.path.skills}</div>
+            <Skill label={t.path.skillWords}  value={skills.words_known} pct={Math.min(100, skills.words_known / 5)} color="#9A5CD8" />
+            <Skill label={t.path.skillListen} value={`${skills.listen_pct}%`} pct={skills.listen_pct} color="#3FA9C4" />
+            <Skill label={t.path.skillSpeak}  value={`${skills.speak_pct}%`} pct={skills.speak_pct} color="#3FBF8F" />
+          </div>
+        )}
+      </div>
+
       {/* Хвосты — общим числом: пропущенное не теряется и видно, сколько его */}
       {tails?.total > 0 && (
         <button onClick={() => navigate(current ? `/exercise-session?lesson_id=${current.lesson_id}&tails=1` : '/')}

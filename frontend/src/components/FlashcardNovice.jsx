@@ -70,7 +70,7 @@ export default function FlashcardNovice({
             лежит ВНУТРИ карточки со своими полями, а не в край. */}
         <div style={{ padding: 20, paddingBottom: 0 }}>
           <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
-            display: 'grid', placeItems: 'center', aspectRatio: '4 / 3' }}>
+            display: 'grid', placeItems: 'center', aspectRatio: '1 / 1' }}>
             <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction}
               onReactionEnd={() => onAnswer(gradeRef.current)} />
           </div>
@@ -125,19 +125,21 @@ export default function FlashcardNovice({
         </div>
       )}
 
+      {/* Три равные кнопки оценки. Раньше «С трудом» стояла голой строкой без рамки
+          и читалась как случайный текст, а не как выбор. */}
       {revealed && (
-        <div style={{ opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>
-          <button onClick={() => grade(5)}
-            style={{ width: '100%', minHeight: 60, borderRadius: 18, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 18, fontWeight: 700, cursor: 'pointer' }}>
-            {t.exercise.remembered}
-          </button>
+        <div style={{ display: 'flex', gap: 8, opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>
           <button onClick={() => grade(1)}
-            style={{ width: '100%', minHeight: 52, marginTop: 10, borderRadius: 16, border: '2px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             {t.exercise.forgot}
           </button>
           <button onClick={() => grade(3)}
-            style={{ width: '100%', marginTop: 8, border: 'none', background: 'none', color: 'var(--ink-soft)', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '8px 0' }}>
+            style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             {t.exercise.hard}
+          </button>
+          <button onClick={() => grade(5)}
+            style={{ flex: 1.2, minHeight: 58, borderRadius: 16, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+            {t.exercise.remembered}
           </button>
         </div>
       )}

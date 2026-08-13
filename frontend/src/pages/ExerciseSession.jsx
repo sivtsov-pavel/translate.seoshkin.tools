@@ -243,13 +243,26 @@ export default function ExerciseSession() {
     let more = []
     try { more = await loadExercises() } catch { more = [] }
 
-    // Сессия могла быть ограничена типами («Начать» на карте даёт два главных).
-    // Они кончились — не упираемся в пустоту, а берём остальные упражнения урока.
-    if ((!more || !more.length) && searchParams.get('types') && lessonId) {
+    // Сессия могла быть ограничена типом или парой типов. Когда они кончились,
+    // «Продолжить» упиралось в пустоту, и приходилось идти на главную, искать урок
+    // и выбирать следующий шаг руками. Теперь сами переходим на следующий незакрытый
+    // шаг этого же урока.
+    if ((!more || !more.length) && lessonId && (type || searchParams.get('types'))) {
       try {
-        const rest = await api.get(`/exercises/today?lesson_id=${lessonId}`)
-        if (Array.isArray(rest) && rest.length) {
-          setExercises(rest); setCurrent(0); setFinished(false); setContinuing(false)
+        const overview = await api.get(`/path/lesson/${lessonId}`)
+        const ORDER = ['multiple_choice', 'flashcard', 'letter_fill', 'fill_blank',
+                       'sentence_write', 'conjugation', 'declension', 'article', 'dictation', 'speech']
+        const nextStep = ORDER
+          .map(t2 => (overview.steps || []).find(x => x.type === t2))
+          .find(x => x && x.done < x.total && x.type !== type)
+        if (nextStep) {
+          setContinuing(false)
+          navigate(`/exercise-session?lesson_id=${lessonId}&type=${nextStep.type}`)
+          return
+        }
+        if (overview.phrases?.total && overview.phrases.done < overview.phrases.total) {
+          setContinuing(false)
+          navigate(`/phrases/lesson/${lessonId}`)
           return
         }
       } catch {}

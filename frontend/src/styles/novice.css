@@ -502,3 +502,9 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 834px) {
   .path-road { padding: 0 24px; }
 }
+
+/* Мотивационный блок (неделя и «что уже умею») показываем только там, где нет
+   правой колонки — иначе он дублируется. */
+@media (min-width: 1024px) {
+  .path-motivation { display: none; }
+}

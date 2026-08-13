@@ -42,7 +42,9 @@ export default function MultipleChoiceNovice({
     if (selected !== null) return
     setSelected(idx)
     if (idx === correctIdx) playCorrect(); else playWrong()
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 120)
+    // Крутим к самому низу: раньше останавливались на фидбеке, и кнопку «Дальше»
+    // всё равно приходилось доскроливать руками.
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 150)
   }
 
   const next = () => {
@@ -62,7 +64,7 @@ export default function MultipleChoiceNovice({
             свободное место, если картинка не квадратная. */}
         {imageUrl && (
           <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
-            display: 'grid', placeItems: 'center', marginBottom: 18, aspectRatio: '4 / 3' }}>
+            display: 'grid', placeItems: 'center', marginBottom: 18, aspectRatio: '1 / 1' }}>
             <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
           </div>
         )}
@@ -81,6 +83,22 @@ export default function MultipleChoiceNovice({
           </button>
         </div>
       </div>
+
+      {/* Фидбек стоит МЕЖДУ картинкой и вариантами: внизу его не видно без прокрутки,
+          а ответ нужен сразу. Ширина — как у вариантов, чтобы блоки были одной колонкой. */}
+      {selected !== null && (
+        <div style={{
+          marginBottom: 14, padding: '14px 16px', borderRadius: 18,
+          background: ok ? 'rgba(63,191,143,0.16)' : 'rgba(192,57,43,0.12)',
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <span style={{ width: 34, height: 34, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center',
+            background: ok ? '#3FBF8F' : '#C0392B', color: '#fff', fontWeight: 800 }}>{ok ? '✓' : '✕'}</span>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>
+            {ok ? `${t.exercise.correct} +10 XP` : `${t.exercise.wrong} — ${correctAnswer}`}
+          </span>
+        </div>
+      )}
 
       {/* Варианты ответа — плитки с номерами */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -107,20 +125,6 @@ export default function MultipleChoiceNovice({
         })}
       </div>
 
-      {/* Фидбек-полоска: ошибка не наказывает, а показывает верный ответ */}
-      {selected !== null && (
-        <div style={{
-          marginTop: 16, padding: '14px 16px', borderRadius: 18,
-          background: ok ? 'rgba(63,191,143,0.16)' : 'rgba(192,57,43,0.12)',
-          display: 'flex', alignItems: 'center', gap: 12,
-        }}>
-          <span style={{ width: 34, height: 34, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center',
-            background: ok ? '#3FBF8F' : '#C0392B', color: '#fff', fontWeight: 800 }}>{ok ? '✓' : '✕'}</span>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>
-            {ok ? `${t.exercise.correct} +10 XP` : `${t.exercise.wrong} — ${correctAnswer}`}
-          </span>
-        </div>
-      )}
 
       <div ref={resultRef} />
 
