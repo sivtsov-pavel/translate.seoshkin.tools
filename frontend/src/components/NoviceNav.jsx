@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Backpack, BookOpen, Languages, MoreHorizontal, Library, Bot,
-  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X, Compass, Menu,
+  BookText, MessageCircle, GraduationCap, MessagesSquare, Settings, X, Compass,
 } from 'lucide-react'
 import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
@@ -70,9 +70,8 @@ export default function NoviceNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const [moreOpen, setMoreOpen] = useState(false)
-  // Панель всегда узкая. Полное меню — прежняя шторка (в новом стиле), и только
-  // у учителя: ученику меню сознательно упрощено до пяти пунктов и кнопки «Ещё».
-  const openDrawer = () => window.dispatchEvent(new CustomEvent('dl-open-menu'))
+  // Панель на ПК — как в макете: подписи рядом с фигурами, ничего разворачивать
+  // не нужно. Бургер убран: раскрытое меню и так читается.
 
   const isActive = (to) => to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
   const main = MAIN(t)
@@ -112,14 +111,6 @@ export default function NoviceNav() {
       {/* Планшет и ПК: те же фигуры слева */}
       <nav className="novice-rail">
         <div className="novice-rail-inner">
-          {/* Бургер выдвигает полное меню-шторку — только учителю: ученику разделы
-              сознательно упрощены до пяти пунктов и кнопки «Ещё». */}
-          {isOwner && (
-            <button className="novice-rail-burger" onClick={openDrawer}
-              aria-label={t.nav.menu} title={t.nav.menu}>
-              <Menu size={20} strokeWidth={2} />
-            </button>
-          )}
 
           {[...main, ...SIDE_EXTRA(t)].map(item => (
             <Link key={item.to} to={item.to} className={`novice-rail-item ${isActive(item.to) ? 'is-active' : ''}`}>

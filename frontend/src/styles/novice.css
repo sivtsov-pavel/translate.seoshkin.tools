@@ -370,3 +370,40 @@ body.novice-mode .layout-drawer button {
   border-radius: 14px !important;
   min-height: 46px;
 }
+
+/* ── Правая колонка «Пути» на ПК (макет 2a) ───────────────────────────────────
+   Неделя, «что уже умею» и сундук. На телефоне и планшете скрыта: там эти
+   данные отвлекают от дороги, а места под них нет. */
+.path-aside { display: none; }
+
+@media (min-width: 1200px) {
+  .path-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; align-items: start; }
+  .path-aside {
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 14px 16px 40px; border-left: 1px solid var(--line); min-height: 100%;
+  }
+  .path-main { margin: 0 auto; }
+}
+.path-aside-tiles { display: flex; gap: 10px; }
+.path-aside-card { padding: 16px 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
+.path-aside-card--chest { background: rgba(232, 176, 36, 0.12); border-color: rgba(232, 176, 36, 0.35); }
+.path-aside-title { font-size: 14px; font-weight: 800; }
+
+
+/* ── Правая колонка «Пути» на ПК (макет 2a) ───────────────────────────────────
+   Неделя, «что уже умею» и сундук. На телефоне и планшете скрыта: там эти
+   данные отвлекают от дороги, а места под них нет. */
+.path-aside { display: none; }
+
+@media (min-width: 1200px) {
+  .path-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 20px; align-items: start; }
+  .path-aside {
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 16px 18px 40px; border-left: 1px solid var(--line);
+  }
+  body.novice-mode .main-content { padding-left: 230px; }
+}
+.path-aside-tiles { display: flex; gap: 10px; }
+.path-aside-card { padding: 16px 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
+.path-aside-card--chest { background: rgba(232, 176, 36, 0.12); border-color: rgba(232, 176, 36, 0.35); }
+.path-aside-title { font-size: 14px; font-weight: 800; }

@@ -246,6 +246,42 @@ export async function pathRoutes(fastify) {
       `SELECT count(*)::int AS n FROM exercise_attempts
        WHERE user_id = $1 AND attempted_at >= CURRENT_DATE`, [userId])
 
+    // Правая колонка ПК-версии (макет 2a): активность за неделю и «что уже умею».
+    // Считаем здесь же, чтобы экран собирался одним запросом, а не тремя.
+    const { rows: weekRows } = await db.query(
+      `SELECT (a.attempted_at AT TIME ZONE 'UTC')::date AS d, count(*)::int AS n
+       FROM exercise_attempts a
+       WHERE a.user_id = $1 AND a.attempted_at >= CURRENT_DATE - interval '6 days'
+       GROUP BY 1 ORDER BY 1`, [userId])
+    const weekMap = new Map(weekRows.map(r => [new Date(r.d).toISOString().slice(0, 10), r.n]))
+    const weekly = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date()
+      d.setUTCDate(d.getUTCDate() - (6 - i))
+      const key = d.toISOString().slice(0, 10)
+      return { date: key, weekday: d.getUTCDay() || 7, count: weekMap.get(key) || 0 }
+    })
+
+    const { rows: skillRows } = await db.query(
+      `SELECT
+         (SELECT count(*)::int FROM user_word_status ws
+           JOIN words w ON w.id = ws.word_id JOIN lessons l2 ON l2.id = w.lesson_id
+          WHERE ws.user_id = $1 AND ws.status = 'known' AND l2.target_lang = $2) AS words_known,
+         (SELECT count(*)::int FROM exercises e JOIN lessons l3 ON l3.id = e.lesson_id
+          WHERE e.type IN ('dictation') AND l3.target_lang = $2) AS listen_total,
+         (SELECT count(*)::int FROM exercises e
+           JOIN lessons l4 ON l4.id = e.lesson_id
+           JOIN user_exercise_progress u ON u.exercise_id = e.id AND u.user_id = $1
+          WHERE e.type IN ('dictation') AND l4.target_lang = $2) AS listen_done,
+         (SELECT count(*)::int FROM exercises e JOIN lessons l5 ON l5.id = e.lesson_id
+          WHERE e.type = 'speech' AND l5.target_lang = $2) AS speak_total,
+         (SELECT count(*)::int FROM exercises e
+           JOIN lessons l6 ON l6.id = e.lesson_id
+           JOIN user_exercise_progress u ON u.exercise_id = e.id AND u.user_id = $1
+          WHERE e.type = 'speech' AND l6.target_lang = $2) AS speak_done`,
+      [userId, target])
+    const sk = skillRows[0] || {}
+    const pctOf = (done, total) => (total ? Math.round((done / total) * 100) : 0)
+
     return {
       section: {
         index: sectionIndex,
@@ -260,6 +296,12 @@ export async function pathRoutes(fastify) {
         streak,
         xp_today: (todayRows[0]?.n || 0) * 10,   // 10 XP за упражнение — как в макете
         exercises_today: todayRows[0]?.n || 0,
+      },
+      weekly,
+      skills: {
+        words_known: sk.words_known || 0,
+        listen_pct: pctOf(sk.listen_done, sk.listen_total),
+        speak_pct: pctOf(sk.speak_done, sk.speak_total),
       },
       tails: {
         exercises: tailRows[0]?.exercises || 0,

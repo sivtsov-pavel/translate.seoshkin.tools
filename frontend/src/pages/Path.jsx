@@ -50,7 +50,7 @@ export default function Path() {
     return <div style={{ padding: 28, textAlign: 'center', color: 'var(--ink-soft)' }}>{t.path.empty}</div>
   }
 
-  const { nodes, section, stats, road, tails } = data
+  const { nodes, section, stats, road, tails, weekly, skills } = data
   // Дорога — уроки вперемежку со станциями (речь, грамматика, наборы слов, зачёт).
   // Станция стоит НА пути, а не в стороне: иначе диктант и произношение не делают.
   const items = road?.length ? road : nodes.map(n => ({ kind: 'lesson', ...n }))
@@ -70,7 +70,8 @@ export default function Path() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto', padding: '10px 16px 40px' }}>
+    <div className="path-layout">
+      <div className="path-main" style={{ maxWidth: 560, margin: '0 auto', padding: '10px 16px 40px' }}>
       {/* Три плитки-метрики */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <Tile shape="circle"  tone="#E8863C" value={stats.streak} label={t.path.streak} />
@@ -123,6 +124,73 @@ export default function Path() {
           <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{tails.total}</span>
         </button>
       )}
+      </div>
+
+      {/* Правая колонка (макет 2a, только ПК): неделя, «что уже умею», сундук.
+          На телефоне и планшете скрыта — там эти данные отвлекают от дороги. */}
+      <aside className="path-aside">
+        <div className="path-aside-tiles">
+          <Tile shape="circle"  tone="#E8863C" value={stats.streak} label={t.path.streak} />
+          <Tile shape="square"  tone="#E8B024" value={stats.xp_today} label={t.path.xpToday} />
+          <Tile shape="diamond" tone="#9A5CD8" value={`${data.done_lessons}/${data.total_lessons}`} label={t.path.lessons} />
+        </div>
+
+        {weekly?.length > 0 && (
+          <div className="path-aside-card">
+            <div className="path-aside-title">{t.path.week}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 80, marginTop: 12 }}>
+              {weekly.map((d, i) => {
+                const max = Math.max(...weekly.map(x => x.count), 1)
+                const h = Math.max(6, Math.round((d.count / max) * 60))
+                const today = i === weekly.length - 1
+                return (
+                  <div key={d.date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: '100%', height: h, borderRadius: 7, background: today ? '#E8B024' : '#9A5CD8' }} />
+                    <span style={{ fontSize: 10.5, fontWeight: today ? 800 : 600, color: today ? 'var(--ink)' : 'var(--ink-soft)' }}>
+                      {(t.path.weekdays || [])[d.weekday - 1] || ''}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {skills && (
+          <div className="path-aside-card">
+            <div className="path-aside-title">{t.path.skills}</div>
+            <Skill label={t.path.skillWords}  value={skills.words_known} pct={Math.min(100, skills.words_known / 5)} color="#9A5CD8" />
+            <Skill label={t.path.skillListen} value={`${skills.listen_pct}%`} pct={skills.listen_pct} color="#3FA9C4" />
+            <Skill label={t.path.skillSpeak}  value={`${skills.speak_pct}%`} pct={skills.speak_pct} color="#3FBF8F" />
+          </div>
+        )}
+
+        <div className="path-aside-card path-aside-card--chest">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ width: 44, height: 44, borderRadius: 12, background: '#E8B024', display: 'grid', placeItems: 'center', fontSize: 22 }}>🎁</span>
+            <span>
+              <div style={{ fontWeight: 800, fontSize: 14 }}>{t.path.chest}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
+                {Math.max(0, section.total - section.done)} · {t.path.lessons}
+              </div>
+            </span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
+// Строка навыка: подпись, значение и полоска — как в правой колонке макета
+function Skill({ label, value, pct, color }) {
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 700 }}>
+        <span>{label}</span><span style={{ color: 'var(--ink-soft)' }}>{value}</span>
+      </div>
+      <div style={{ height: 8, borderRadius: 4, background: 'var(--surface-2)', marginTop: 5 }}>
+        <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, pct))}%`, borderRadius: 4, background: color }} />
+      </div>
     </div>
   )
 }
