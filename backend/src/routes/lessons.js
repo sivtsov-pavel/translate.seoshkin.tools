@@ -100,7 +100,11 @@ export async function lessonsRoutes(fastify) {
        LEFT JOIN words w ON w.id = e.word_id
        ${filter}
        GROUP BY l.id
-       ORDER BY l.date DESC`,
+       -- Внутри одного дня сортируем по номеру урока: уроки, разбитые из большого
+       -- скопом или залитые пачкой, получают одну дату, и без второго ключа порядок
+       -- случайный («20, 35, 27» — жалоба Павла 13.08). NULLS LAST — у урока без даты
+       -- место в конце, а не наверху списка.
+       ORDER BY l.date DESC NULLS LAST, l.lesson_number DESC NULLS LAST, l.created_at DESC`,
       [target]
     )
     // `l.*` тянет и preview — это весь разбор фото, сотни слов JSON на урок. В списке он

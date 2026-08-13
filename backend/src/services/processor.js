@@ -124,7 +124,7 @@ export async function auditLessonAndLog(lessonId, userId = null) {
     const clean = r.ok && !dict?.total
     const note = clean ? ' · Проверка: ✓' : ` · ⚠️ Проверка: ${summary}`
     await db.query(
-      `UPDATE lessons SET progress = left(regexp_replace(COALESCE(progress, ''), ' · (⚠️ )?Проверка:.*$', '') || $1, 400)
+      `UPDATE lessons SET progress = left(regexp_replace(COALESCE(progress, ''), '( · (⚠️ )?|\\. )Проверка:.*$', '') || $1, 400)
        WHERE id = $2 AND status = 'done'`,
       [note.replace(/\s+/g, ' '), lessonId])
     return { ...r, dictionary: dict, summary }
@@ -497,7 +497,9 @@ export async function enrichLesson(lessonId) {
       const { rows: ws } = await db.query('SELECT word_de, translation_ru FROM words WHERE lesson_id=$1 ORDER BY id', [lessonId])
       if (ws.length >= 3) {
         await setProgress(lessonId, 'Придумываю название урока...')
-        const meta = await generateLessonMeta(ws, [], targetLang) // { title, description }
+        // Предложения урока нужны генератору, чтобы заметить тренировку букв
+        // («Schreiben Sie J j Y y») и вписать их в описание.
+        const meta = await generateLessonMeta(ws, [], targetLang, await getLessonSentences(lessonId)) // { title, description }
         if (meta?.title) {
           // Сохраняем номер, если был: «Урок 1» → «Урок 1: <тема>»
           const num = (curTitle.match(/\d+/) || [])[0]
@@ -1283,7 +1285,7 @@ export async function processLesson(lessonId, ownerId) {
         const needTitle = !curTitle || /^Урок\s+\d+$/i.test(curTitle)
         const needDesc  = !metaRows[0]?.description
         if (needTitle || needDesc) {
-          const meta = await generateLessonMeta(consolidated.words, consolidated.grammar_points, targetLang, client)
+          const meta = await generateLessonMeta(consolidated.words, consolidated.grammar_points, targetLang, consolidated.sentences, client)
           // Номер урока: если задан вручную — сохраняем; иначе берём СЛЕДУЮЩИЙ свободный
           // (max «Урок N» у учителя + 1), чтобы не было дублей «Урок 3» и урок был новым.
           const numMatch = curTitle.match(/Урок\s+(\d+)/i)

@@ -416,16 +416,22 @@ export async function mergeLesson(extractions, transcription = null, existingWor
 }
 
 // AI-название и описание урока по его содержимому (когда учитель не задал тему).
-// Возвращает { title, description } по-русски.
-export async function generateLessonMeta(words = [], grammarPoints = [], targetLang = 'de', client = platformClient) {
+// Возвращает { title, description } по-русски. sentences — реальные предложения урока:
+// по ним видно, тренирует ли урок конкретные буквы («Schreiben Sie J j Y y»).
+export async function generateLessonMeta(words = [], grammarPoints = [], targetLang = 'de', sentences = [], client = platformClient) {
   const wl = words.slice(0, 60).map(w => `${w.word_de} — ${w.translation_ru}`).join(', ')
   const gl = (grammarPoints || []).slice(0, 8).map(g => g.description).filter(Boolean).join('; ')
+  const sl = (sentences || []).slice(0, 12).map(s => (typeof s === 'string' ? s : s?.text)).filter(Boolean).join(' · ')
   const prompt = `Ты помогаешь учителю ${TL(targetLang).name} языка. По содержимому урока придумай:
 1) НАЗВАНИЕ — короткое, 3-6 слов, по-русски, БЕЗ слова «Урок» и без номера (например: «Умлаут Ä, семья и заказ еды»).
 2) ОПИСАНИЕ — 1-2 предложения по-русски: какие темы и что тренируется.
+   Если урок из учебника тренирует конкретные БУКВЫ или буквосочетания (задания вида
+   «Schreiben Sie J j Y y», серия слов на Pf-/Ö-), обязательно перечисли их в описании
+   отдельной пометкой, например: «Буквы: Pf, J, Y». Если таких нет — пометку не пиши.
 
 Слова урока: ${wl || '(нет)'}
 Грамматика: ${gl || '—'}
+Предложения урока: ${sl || '—'}
 
 Верни СТРОГО JSON без markdown: {"title":"...","description":"..."}`
   const res = await client.chat.completions.create({
