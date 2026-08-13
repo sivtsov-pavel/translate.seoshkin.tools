@@ -923,7 +923,7 @@ export const fr = {
   sets: {
     tabWords: 'Mots',
     tabPhrases: 'Phrases',
-    title: '📚 Ensembles par thèmes',
+    title: '📚 Ensembles',
   },
   myWords: {
     title: '📔 Mon dictionnaire',

@@ -935,7 +935,7 @@ export const uk = {
   sets: {
     tabWords: 'Слова',
     tabPhrases: 'Фрази',
-    title: '📚 Набори за темами',
+    title: '📚 Набори',
   },
   myWords: {
     title: '📔 Мій словник',

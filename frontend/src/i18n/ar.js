@@ -926,7 +926,7 @@ export const ar = {
   sets: {
     tabWords: 'كلمات',
     tabPhrases: 'جمل',
-    title: '📚 مجموعات حسب المواضيع',
+    title: '📚 المجموعات',
   },
   myWords: {
     title: '📔 قاموسي',

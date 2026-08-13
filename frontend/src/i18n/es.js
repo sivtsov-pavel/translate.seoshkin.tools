@@ -924,7 +924,7 @@ export const es = {
   sets: {
     tabWords: 'Palabras',
     tabPhrases: 'Frases',
-    title: '📚 Conjuntos por temas',
+    title: '📚 Conjuntos',
   },
   myWords: {
     title: '📔 Mi diccionario',

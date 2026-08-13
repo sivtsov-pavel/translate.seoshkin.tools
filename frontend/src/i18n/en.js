@@ -936,7 +936,7 @@ export const en = {
   sets: {
     tabWords: 'Words',
     tabPhrases: 'Phrases',
-    title: '📚 Topic Sets',
+    title: '📚 Sets',
   },
   myWords: {
     title: '📔 My Vocabulary',

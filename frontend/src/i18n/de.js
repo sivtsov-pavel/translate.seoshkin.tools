@@ -942,7 +942,7 @@ export const de = {
   sets: {
     tabWords: 'Wörter',
     tabPhrases: 'Sätze',
-    title: '📚 Themen-Sets',
+    title: '📚 Sets',
   },
   myWords: {
     title: '📔 Mein Wörterbuch',

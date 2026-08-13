@@ -918,7 +918,7 @@ export const bg = {
   sets: {
     tabWords: 'Думи',
     tabPhrases: 'Фрази',
-    title: '📚 Тематични набори',
+    title: '📚 Набори',
   },
   myWords: {
     title: '📔 Моят речник',

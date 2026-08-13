@@ -692,7 +692,7 @@ export const ru = {
   sets: {
     tabWords: 'Слова',
     tabPhrases: 'Фразы',
-    title: '📚 Наборы по темам',
+    title: '📚 Наборы',
   },
   myWords: {
     title: '📔 Мой словарь',

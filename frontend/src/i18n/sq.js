@@ -935,7 +935,7 @@ export const sq = {
   sets: {
     tabWords: 'Fjalë',
     tabPhrases: 'Fraza',
-    title: '📚 Grumbuj sipas temave',
+    title: '📚 Setet',
   },
   myWords: {
     title: '📔 Fjalori im',

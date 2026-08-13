@@ -923,7 +923,7 @@ export const tr = {
   sets: {
     tabWords: 'Kelimeler',
     tabPhrases: 'Cümleler',
-    title: '📚 Konu Setleri',
+    title: '📚 Setler',
   },
   myWords: {
     title: '📔 Kelime Dağarcığım',
