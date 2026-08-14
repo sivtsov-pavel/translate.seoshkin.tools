@@ -79,6 +79,11 @@ export default defineConfig({
     }),
   ],
   server: {
+    // Порт из реестра экосистемы (seoshkin.tools/infra/ports.json).
+    // strictPort: без него vite при занятом порте молча уезжает на соседний,
+    // а роутер продолжает стучаться на прежний и отдаёт чужой сайт.
+    port: 5184,
+    strictPort: true,
     proxy: {
       '/api': 'http://localhost:8090',
     },
