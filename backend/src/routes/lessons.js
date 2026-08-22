@@ -156,7 +156,7 @@ export async function lessonsRoutes(fastify) {
       if (ex.type !== 'letter_fill') continue
       const wordId = wordMap[ex.word_de] ?? null
       await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
         [lessonId, wordId, ex.type, JSON.stringify(ex.payload)]
       )
       added++
@@ -206,7 +206,7 @@ export async function lessonsRoutes(fastify) {
     let added = 0
     for (const w of wordRows) {
       await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
         [lessonId, w.word_id, 'dictation', JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })]
       )
       added++
@@ -245,7 +245,7 @@ export async function lessonsRoutes(fastify) {
     let added = 0
     for (const w of wordRows) {
       await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
         [lessonId, w.word_id, 'speech', JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })]
       )
       added++

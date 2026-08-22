@@ -7,7 +7,7 @@ uploads/
 frontend/dist/
 backend/node_modules/
 frontend/node_modules/
-test/
+/test/
 
 # Claude Code локальные файлы/воркри (Fable и др.)
 .claude/

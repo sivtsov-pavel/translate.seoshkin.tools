@@ -1333,7 +1333,7 @@ export async function exercisesRoutes(fastify) {
           )
           for (const w of wordRows) {
             await db.query(
-              'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+              'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
               [lesson.id, w.word_id, 'speech', JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })]
             )
           }

@@ -57,7 +57,7 @@ export async function adoptTextbook(textbookId, newOwnerId, newSchoolId) {
     const { rows: exs } = await db.query('SELECT word_id, type, payload, payload_translations, image_url FROM exercises WHERE lesson_id=$1', [L.id])
     for (const e of exs) {
       await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload, payload_translations, image_url) VALUES ($1,$2,$3,$4,$5,$6)',
+        'INSERT INTO exercises (lesson_id, word_id, type, payload, payload_translations, image_url) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING',
         [newId, wordIdMap[e.word_id] || null, e.type, e.payload, e.payload_translations || {}, e.image_url])
     }
     copied++

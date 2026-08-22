@@ -14,10 +14,15 @@ import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 // типы (диктант, «напиши предложение») в минимум НЕ входят — они тяжелее и догоняются
 // повторениями, иначе урок станет непроходимым за один присест.
 //
+// Считаем ТОЛЬКО слова, у которых карточка или «выбери ответ» вообще есть. Прежняя версия
+// дополнительно требовала, чтобы каждое слово урока было отработано хоть чем-нибудь, и через
+// это втягивала в минимум как раз исключённые из него типы: в уроке 19 запись
+// «ich bin dreißig.» имела только диктант и речь, поэтому урок не закрывался даже после всех
+// 52 карточек и 63 «выбери ответ» — урок 20 не открывался (баг Павла от 22.08.2026).
+// Такие записи (диктант/речь без карточки) теперь урок не держат: 37 слов в 5 уроках.
+//
 // Требует в запросе алиасы: exercises AS e и LEFT JOIN user_exercise_progress uep (по нужному user_id).
-export const LESSON_PASSED_HAVING = `count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL) > 0
-  AND count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND uep.exercise_id IS NOT NULL)
-    = count(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)
+export const LESSON_PASSED_HAVING = `count(DISTINCT e.word_id) FILTER (WHERE e.type IN ('flashcard', 'multiple_choice')) > 0
   AND count(DISTINCT e.word_id) FILTER (WHERE e.type = 'flashcard' AND uep.exercise_id IS NOT NULL)
     = count(DISTINCT e.word_id) FILTER (WHERE e.type = 'flashcard')
   AND count(DISTINCT e.word_id) FILTER (WHERE e.type = 'multiple_choice' AND uep.exercise_id IS NOT NULL)

@@ -269,13 +269,13 @@ export async function redistributeLesson(lessonId) {
       const exercises = await generateExercises(nw, [], L.target_lang, await getLessonSentences(newId), client)
       const wordMap = buildWordMap(nw)
       for (const ex of exercises) {
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
           [newId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
       }
       for (const w of nw) {
         const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [newId, w.id, 'dictation', p])
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [newId, w.id, 'speech', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [newId, w.id, 'dictation', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [newId, w.id, 'speech', p])
       }
       await enrichLesson(newId) // переводы упражнений/заголовка (слова и картинки уже есть → пропустит)
       await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${nw.length}`, newId])
@@ -428,7 +428,7 @@ export async function enrichLesson(lessonId) {
       for (const type of ['dictation', 'speech']) {
         if (set.has(type)) continue
         const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, type, p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, type, p])
         set.add(type)
       }
       have.set(w.id, set)
@@ -451,7 +451,7 @@ export async function enrichLesson(lessonId) {
         if (!wid) continue
         const set = have.get(wid) || new Set()
         if (set.has(ex.type)) continue
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
           [lessonId, wid, ex.type, JSON.stringify(ex.payload)])
         set.add(ex.type)
         have.set(wid, set)
@@ -594,7 +594,7 @@ export async function regenerateExercisesFromDb(lessonId) {
     for (const ex of exercises) {
       const wordId = wordIdFor(wordMap, ex.word_de)
       await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
         [lessonId, wordId, ex.type, JSON.stringify(ex.payload)]
       )
     }
@@ -603,8 +603,8 @@ export async function regenerateExercisesFromDb(lessonId) {
     for (const word of words) {
       const wordId = wordIdFor(wordMap, word.word_de)
       const payload = JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'dictation', payload])
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'speech', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [lessonId, wordId, 'dictation', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [lessonId, wordId, 'speech', payload])
     }
 
     const total = exercises.length + words.length
@@ -672,7 +672,7 @@ export async function regenerateExercisesSafe(lessonId) {
       await db.query("UPDATE exercises SET payload = $1, payload_translations = '{}' WHERE id = $2", [JSON.stringify(ex.payload), reuseId])
       updated++
     } else {
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
         [lessonId, wordId, ex.type, JSON.stringify(ex.payload)])
       inserted++
     }
@@ -684,7 +684,7 @@ export async function regenerateExercisesSafe(lessonId) {
     const payload = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
     for (const t of ['dictation', 'speech']) {
       if (takeId(w.id, t)) continue // уже есть — не трогаем
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
         [lessonId, w.id, t, payload])
       inserted++
     }
@@ -966,13 +966,13 @@ export async function commitLessonWords(lessonId, words = [], sentences = [], gr
       const exercises = await generateExercises(wordRows, grammarPoints, targetLang, await getLessonSentences(lessonId), client)
       const wordMap = buildWordMap(wordRows)
       for (const ex of exercises) {
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
           [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
       }
       for (const w of wordRows) {
         const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', p])
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'dictation', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'speech', p])
       }
     }
 
@@ -1041,13 +1041,13 @@ export async function processNewMedia(lessonId) {
     const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId), client)
     const wordMap = buildWordMap(wordRows)
     for (const ex of exercises) {
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
         [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
     }
     for (const w of wordRows) {
       const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', p])
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', p])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'dictation', p])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'speech', p])
     }
   }
   return media.length
@@ -1091,13 +1091,13 @@ export async function saveCameraWords(lessonId, words) {
       const exercises = await generateExercises(wordRows, [], targetLang, await getLessonSentences(lessonId), client)
       const wordMap = buildWordMap(wordRows)
       for (const ex of exercises) {
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
           [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
       }
       for (const w of wordRows) {
         const p = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', p])
-        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'dictation', p])
+        await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'speech', p])
       }
     }
     await enrichLesson(lessonId)
@@ -1124,13 +1124,13 @@ export async function generateCustomSet(lessonId, wordIds) {
     const exercises = await generateExercises(words, [], tl, await getLessonSentences(lessonId), client)
     const wordMap = buildWordMap(words)
     for (const ex of exercises) {
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)',
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING',
         [lessonId, wordIdFor(wordMap, ex.word_de), ex.type, JSON.stringify(ex.payload)])
     }
     for (const w of words) {
       const payload = JSON.stringify({ word_de: w.word_de, translation_ru: w.translation_ru })
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'dictation', payload])
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4)', [lessonId, w.id, 'speech', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'dictation', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [lessonId, w.id, 'speech', payload])
     }
     await enrichLesson(lessonId)  // переводы упражнений на все языки (у слов картинки/переводы уже есть)
     await db.query("UPDATE lessons SET status='done', progress=$1 WHERE id=$2", [`Готово! Слов: ${words.length}`, lessonId])
@@ -1268,7 +1268,7 @@ export async function processLesson(lessonId, ownerId) {
     for (const ex of exercises) {
       const wordId = wordIdFor(wordMap, ex.word_de)
       await db.query(
-        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)',
+        'INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
         [lessonId, wordId, ex.type, JSON.stringify(ex.payload)]
       )
     }
@@ -1277,8 +1277,8 @@ export async function processLesson(lessonId, ownerId) {
     for (const word of consolidated.words) {
       const wordId = wordIdFor(wordMap, word.word_de)
       const payload = JSON.stringify({ word_de: word.word_de, translation_ru: word.translation_ru })
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'dictation', payload])
-      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4)', [lessonId, wordId, 'speech', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [lessonId, wordId, 'dictation', payload])
+      await db.query('INSERT INTO exercises (lesson_id, word_id, type, payload) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING', [lessonId, wordId, 'speech', payload])
     }
 
     // AI-название и описание, если тема не задана вручную (пусто или авто «Урок N»)
