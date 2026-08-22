@@ -97,6 +97,63 @@ const CHECKS = [
     sql: `SELECT e.lesson_id, e.type || ' #' || e.id AS ref FROM exercises e
           WHERE e.word_id IS NULL AND e.type IN ('flashcard','multiple_choice','fill_blank','sentence_write')`,
   },
+  // ── Находки 22.08.2026 (уроки 19 и 28, жалоба Павла «дубли и странные переводы») ──
+  // Тетрадь и учебник загружались в один урок разными фото, и в словарь попало то,
+  // что словарными словами не является. Каждая строка ниже — реальная запись с бою.
+  {
+    id: 'verb_with_pronoun',
+    title: 'В словаре форма глагола с местоимением',
+    hint: 'В уроке 19 отдельными словами лежали «ich backe», «du backst», «wir backen», «ihr backt» — пять записей одного глагола вместо одной. Место спряжения — упражнение «спряжение», а не карточка.',
+    sql: `SELECT w.lesson_id, w.word_de AS ref FROM words w JOIN lessons l ON l.id = w.lesson_id
+          WHERE l.target_lang = 'de'
+            AND w.word_de ~* '^(ich|du|er|sie|es|wir|ihr) [a-zäöüß]+$'`,
+  },
+  {
+    id: 'sentence_as_word',
+    title: 'В словаре предложение вместо слова',
+    hint: 'Запись «ich bin dreißig.» получила только диктант и речь — карточки у неё нет. Из-за таких записей урок 19 не закрывался: слово числилось неотработанным.',
+    sql: `SELECT w.lesson_id, w.word_de AS ref FROM words w JOIN lessons l ON l.id = w.lesson_id
+          WHERE w.word_de ~ '[.!?]'
+             OR array_length(string_to_array(trim(w.word_de), ' '), 1) >= 4`,
+  },
+  {
+    id: 'textbook_instruction',
+    title: 'В словаре задание из учебника, а не слово',
+    hint: '«Verbinden Sie» («Соедините»), «Kreuzen» («отметьте крестиком»), «trennbares», «z.B.» — это подписи к упражнениям на странице, ученику их учить незачем.',
+    sql: `SELECT w.lesson_id, w.word_de AS ref FROM words w JOIN lessons l ON l.id = w.lesson_id
+          WHERE l.target_lang = 'de'
+            AND (w.word_de ~* '^(verbinden|ergänzen|kreuzen|ankreuzen|markieren|ordnen|unterstreichen|hören|schreiben|sprechen|lesen)\\s+Sie\\b'
+                 OR lower(w.word_de) IN ('kreuzen','trennbar','trennbares','getrennt','plural','singular','z.b.','usw.','bzw.'))`,
+  },
+  {
+    id: 'duplicate_base',
+    title: 'Одно слово дважды: с артиклем и без',
+    hint: 'В уроке 19 рядом лежали «Bäume» (из учебника) и «die Bäume» (из тетради). Прогресс делится между двумя записями, а ученик учит одно и то же дважды.',
+    sql: `SELECT lesson_id,
+                 lower(regexp_replace(word_de, '^(der|die|das) ', '')) || ' ×' || count(*) AS ref
+          FROM words
+          GROUP BY lesson_id, lower(regexp_replace(word_de, '^(der|die|das) ', ''))
+          HAVING count(*) > 1`,
+  },
+  {
+    id: 'noun_without_article',
+    title: 'Существительное без артикля',
+    hint: 'В одном уроке «der Schatz», но «Blume», «Applaus», «Feier». Род — половина немецкого существительного; без артикля ученик его не выучит.',
+    sql: `SELECT w.lesson_id, w.word_de AS ref FROM words w JOIN lessons l ON l.id = w.lesson_id
+          WHERE l.target_lang = 'de' AND NOT w.is_function_word
+            AND w.word_de ~ '^[A-ZÄÖÜ][a-zäöüß]+$'
+            AND w.word_de !~ '^(der|die|das) '`,
+  },
+  {
+    id: 'word_without_core_exercise',
+    title: 'У слова нет ни карточки, ни «выбери ответ»',
+    hint: 'Такое слово ученик не увидит в основных типах — только в диктанте или речи, если повезёт. Раньше эти записи ещё и держали урок закрытым.',
+    sql: `SELECT w.lesson_id, w.word_de AS ref FROM words w JOIN lessons l ON l.id = w.lesson_id
+          WHERE NOT w.is_function_word
+            AND EXISTS (SELECT 1 FROM exercises e WHERE e.lesson_id = w.lesson_id)
+            AND NOT EXISTS (SELECT 1 FROM exercises e
+                            WHERE e.word_id = w.id AND e.type IN ('flashcard','multiple_choice'))`,
+  },
   {
     id: 'lesson_without_exercises',
     title: 'В уроке есть слова, но нет упражнений',
@@ -307,7 +364,30 @@ export async function runLessonCheck(lessonId) {
       SELECT word_de AS ref FROM words WHERE lesson_id = $1 AND NOT is_function_word
         AND lower(word_de) IN ('die','der','das','den','dem','ein','eine','und','ist','sind',
                                'nicht','auch','sie','wir','ihr','mein','dein')`)
+    // Загрузка учебника и тетради в один урок (находки 22.08.2026, уроки 19 и 28)
+    await add('форма глагола с местоимением', `
+      SELECT word_de AS ref FROM words WHERE lesson_id = $1
+        AND word_de ~* '^(ich|du|er|sie|es|wir|ihr) [a-zäöüß]+$'`)
+    await add('задание из учебника вместо слова', `
+      SELECT word_de AS ref FROM words WHERE lesson_id = $1
+        AND (word_de ~* '^(verbinden|ergänzen|kreuzen|ankreuzen|markieren|ordnen|unterstreichen|hören|schreiben|sprechen|lesen)\\s+Sie\\b'
+             OR lower(word_de) IN ('kreuzen','trennbar','trennbares','getrennt','plural','singular','z.b.','usw.','bzw.'))`)
+    await add('существительное без артикля', `
+      SELECT word_de AS ref FROM words WHERE lesson_id = $1 AND NOT is_function_word
+        AND word_de ~ '^[A-ZÄÖÜ][a-zäöüß]+$' AND word_de !~ '^(der|die|das) '`)
   }
+  await add('предложение вместо слова', `
+    SELECT word_de AS ref FROM words WHERE lesson_id = $1
+      AND (word_de ~ '[.!?]' OR array_length(string_to_array(trim(word_de), ' '), 1) >= 4)`)
+  await add('одно слово дважды: с артиклем и без', `
+    SELECT lower(regexp_replace(word_de, '^(der|die|das) ', '')) || ' ×' || count(*) AS ref
+    FROM words WHERE lesson_id = $1
+    GROUP BY lower(regexp_replace(word_de, '^(der|die|das) ', '')) HAVING count(*) > 1`)
+  await add('слово без карточки и «выбери ответ»', `
+    SELECT w.word_de AS ref FROM words w WHERE w.lesson_id = $1 AND NOT w.is_function_word
+      AND EXISTS (SELECT 1 FROM exercises e WHERE e.lesson_id = $1)
+      AND NOT EXISTS (SELECT 1 FROM exercises e
+                      WHERE e.word_id = w.id AND e.type IN ('flashcard','multiple_choice'))`)
   await add('слово без перевода', `
     SELECT word_de AS ref FROM words WHERE lesson_id = $1 AND NOT is_function_word
       AND (translation_ru IS NULL OR trim(translation_ru) = '')`)
