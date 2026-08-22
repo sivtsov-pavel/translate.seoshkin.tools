@@ -19,6 +19,11 @@ const ARTICLE_RE = /^(der|die|das|ein|eine|el|la|los|las|le|les|the)\s+/i
 export function isValidMask(masked, answer) {
   if (typeof masked !== 'string' || typeof answer !== 'string') return false
   if (!masked || !answer || masked.length !== answer.length) return false
+  // Дырка внутри артикля — маска негодная, даже если по длине всё сходится.
+  // На бою 23.08.2026 нашлось 544 таких: «d_r Sport», «d__ N__l». Ученик угадывает
+  // буквы в «der/die/das» вместо слова, а род не запоминает — артикль он не видит целиком.
+  const art = answer.match(ARTICLE_RE)
+  if (art && masked.slice(0, art[0].length).includes('_')) return false
   let holes = 0, letters = 0
   for (let i = 0; i < answer.length; i++) {
     if (/\p{L}/u.test(answer[i])) letters++
