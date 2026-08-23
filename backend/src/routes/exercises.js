@@ -9,6 +9,18 @@ import { saveOptimizedImage } from '../services/imageOptimize.js'
 import { runSystemCheck } from '../services/systemCheck.js'
 import { logOperation } from '../services/opLog.js'
 
+// Срезает хвост неиспользуемых параметров запроса.
+//
+// PostgreSQL отвергает Bind, если значений передано больше, чем плейсхолдеров в тексте:
+// «bind message supplies 7 parameters, but prepared statement "" requires 5». Выборка
+// упражнений собирается из кусков, и часть параметров при некоторых сочетаниях никуда
+// не попадает — экспортируем функцию отдельно, чтобы это поведение было под тестом.
+export function trimUnusedParams(query, params) {
+  const used = [...String(query).matchAll(/\$(\d+)/g)].map(m => Number(m[1]))
+  const max = used.length ? Math.max(...used) : 0
+  return params.length > max ? params.slice(0, max) : params
+}
+
 async function getUserDailyLimit(userId) {
   const { rows } = await db.query(
     `SELECT us.daily_limit, u.plan,
@@ -245,7 +257,13 @@ export async function exercisesRoutes(fastify) {
         ORDER BY ${shuffle ? 'RANDOM()' : studentOrder} LIMIT ${limit}`
     }
 
-    const { rows } = await db.query(query, params)
+    // Запрос собирается из кусков, и не каждый кусок доходит до текста: при «Начать» с карты
+    // (урок задан + shuffle) условие про пройденные уроки не нужно, а ORDER BY — просто
+    // RANDOM(). Два последних параметра тогда не встречаются в запросе нигде, и PostgreSQL
+    // отвергает Bind целиком: «bind message supplies 7 parameters, but prepared statement ""
+    // requires 5» — сессия падала с 500, а экран молча возвращал на главную (баг 23.08.2026).
+    // Лишние параметры всегда в хвосте (их дописывают последними), поэтому хвост и срезаем.
+    const { rows } = await db.query(query, trimUnusedParams(query, params))
     return rows
   })
 
