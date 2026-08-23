@@ -1,5 +1,9 @@
-# Генерируется bubblewrap update / build — в git только twa-manifest.json и README
+# Генерируется bubblewrap update / build — в git только манифест и документация.
+# RELEASE_CHECKLIST.md держим в git намеренно: на него ссылается CLAUDE.md как на
+# обязательный к прочтению перед выкладкой, а жил он только на ноутбуке Павла —
+# пропал бы вместе с ним ровно тогда, когда нужнее всего.
 *
 !.gitignore
 !twa-manifest.json
 !README.md
+!RELEASE_CHECKLIST.md

@@ -1,6 +1,6 @@
 {
   "packageId": "tools.seoshkin.translate",
-  "host": "translate.seoshkin.tools",
+  "host": "deutschlernen.ai",
   "name": "Deutsch Lernen",
   "launcherName": "Deutsch",
   "display": "standalone",
@@ -13,18 +13,18 @@
   "backgroundColor": "#111111",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://translate.seoshkin.tools/icons/icon-512.png",
-  "maskableIconUrl": "https://translate.seoshkin.tools/icons/icon-512-maskable.png",
+  "iconUrl": "https://deutschlernen.ai/icons/icon-512.png",
+  "maskableIconUrl": "https://deutschlernen.ai/icons/icon-512-maskable.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "/Users/pabloseoshkin/Klients/Projects/translate.seoshkin.tools-android-keys/android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
+  "appVersionName": "1.0.1",
+  "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://translate.seoshkin.tools/manifest.webmanifest",
+  "webManifestUrl": "https://deutschlernen.ai/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {
@@ -33,10 +33,10 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://translate.seoshkin.tools/",
+  "fullScopeUrl": "https://deutschlernen.ai/",
   "minSdkVersion": 21,
   "orientation": "portrait",
   "fingerprints": [],
-  "additionalTrustedOrigins": [],
+  "additionalTrustedOrigins": ["https://translate.seoshkin.tools"],
   "retainedBundles": []
 }
