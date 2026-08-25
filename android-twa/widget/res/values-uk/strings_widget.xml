@@ -27,4 +27,5 @@
     <string name="widget_error">Не вдалося оновити: %1$s</string>
     <string name="widget_channel_name">Картка для навчання</string>
     <string name="widget_channel_desc">Картка на екрані блокування: відповідайте не розблоковуючи</string>
+    <string name="widget_expand_hint">Потягніть вниз, щоб відповісти</string>
 </resources>

@@ -27,4 +27,5 @@
     <string name="widget_error">Échec de mise à jour : %1$s</string>
     <string name="widget_channel_name">Carte d’apprentissage</string>
     <string name="widget_channel_desc">Carte sur l’écran de verrouillage : répondez sans déverrouiller</string>
+    <string name="widget_expand_hint">Faites glisser pour répondre</string>
 </resources>

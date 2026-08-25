@@ -27,4 +27,5 @@
     <string name="widget_error">تعذّر التحديث: %1$s</string>
     <string name="widget_channel_name">بطاقة تعلّم</string>
     <string name="widget_channel_desc">بطاقة على شاشة القفل: أجب دون فتح القفل</string>
+    <string name="widget_expand_hint">اسحب للأسفل للإجابة</string>
 </resources>

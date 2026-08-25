@@ -27,4 +27,5 @@
     <string name="widget_error">Update fehlgeschlagen: %1$s</string>
     <string name="widget_channel_name">Lernkarte</string>
     <string name="widget_channel_desc">Karte auf dem Sperrbildschirm: antworten ohne zu entsperren</string>
+    <string name="widget_expand_hint">Nach unten ziehen zum Antworten</string>
 </resources>

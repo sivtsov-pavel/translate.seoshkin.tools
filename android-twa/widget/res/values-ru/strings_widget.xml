@@ -27,4 +27,5 @@
     <string name="widget_error">Не удалось обновить: %1$s</string>
     <string name="widget_channel_name">Карточка для учёбы</string>
     <string name="widget_channel_desc">Карточка на экране блокировки: отвечайте не разблокируя</string>
+    <string name="widget_expand_hint">Потяните вниз, чтобы ответить</string>
 </resources>

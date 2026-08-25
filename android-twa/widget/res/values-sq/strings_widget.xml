@@ -27,4 +27,5 @@
     <string name="widget_error">S’u përditësua: %1$s</string>
     <string name="widget_channel_name">Kartë mësimi</string>
     <string name="widget_channel_desc">Kartë në ekranin e kyçjes: përgjigju pa e shkyçur</string>
+    <string name="widget_expand_hint">Tërhiq poshtë për të përgjigjur</string>
 </resources>

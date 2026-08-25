@@ -33,6 +33,7 @@ const T = {
   lockDesc:  { ru: 'Отвечать можно не разблокируя телефон. Уведомление беззвучное.', en: 'Answer without unlocking the phone. The notification is silent.', de: 'Antworten, ohne das Handy zu entsperren. Die Benachrichtigung ist lautlos.', uk: 'Відповідати можна не розблоковуючи телефон. Сповіщення беззвучне.', es: 'Responde sin desbloquear el teléfono. La notificación es silenciosa.', fr: 'Répondez sans déverrouiller le téléphone. Notification silencieuse.', bg: 'Отговаряйте без да отключвате телефона. Известието е беззвучно.', tr: 'Telefonu açmadan cevaplayın. Bildirim sessizdir.', ar: 'أجب دون فتح قفل الهاتف. الإشعار صامت.', sq: 'Përgjigju pa e shkyçur telefonin. Njoftimi është pa zë.' },
   on2:       { ru: 'Включить', en: 'Turn on', de: 'Einschalten', uk: 'Увімкнути', es: 'Activar', fr: 'Activer', bg: 'Включи', tr: 'Aç', ar: 'تشغيل', sq: 'Aktivizo' },
   off2:      { ru: 'Выключить', en: 'Turn off', de: 'Ausschalten', uk: 'Вимкнути', es: 'Desactivar', fr: 'Désactiver', bg: 'Изключи', tr: 'Kapat', ar: 'إيقاف', sq: 'Çaktivizo' },
+  lockSwipe: { ru: 'На экране блокировки потяните уведомление вниз — появятся варианты ответа.', en: 'On the lock screen, pull the notification down — the answer buttons appear.', de: 'Auf dem Sperrbildschirm die Benachrichtigung nach unten ziehen — dann erscheinen die Antworten.', uk: 'На екрані блокування потягніть сповіщення вниз — з’являться варіанти відповіді.', es: 'En la pantalla de bloqueo, desliza la notificación hacia abajo para ver las respuestas.', fr: 'Sur l’écran de verrouillage, faites glisser la notification vers le bas pour voir les réponses.', bg: 'На заключен екран плъзнете известието надолу — ще се появят отговорите.', tr: 'Kilit ekranında bildirimi aşağı çekin — cevap seçenekleri görünür.', ar: 'على شاشة القفل اسحب الإشعار للأسفل لتظهر خيارات الإجابة.', sq: 'Në ekranin e kyçjes tërhiq njoftimin poshtë — shfaqen përgjigjet.' },
   error:     { ru: 'Не получилось. Попробуйте ещё раз.', en: 'Didn’t work. Please try again.', de: 'Hat nicht geklappt. Bitte erneut versuchen.', uk: 'Не вийшло. Спробуйте ще раз.', es: 'No funcionó. Inténtalo de nuevo.', fr: 'Échec. Réessayez.', bg: 'Не се получи. Опитайте пак.', tr: 'Olmadı. Tekrar deneyin.', ar: 'لم ينجح. حاول مرة أخرى.', sq: 'Nuk funksionoi. Provo sërish.' },
 }
 const tr = (key, lang) => T[key][lang] || T[key].en
@@ -67,6 +68,10 @@ export default function WidgetBlock() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
+  // Состояние карточки на экране блокировки веб узнать у нативной части не может:
+  // связь односторонняя (intent://). Поэтому помним, что человек выбрал сам —
+  // и честно предупреждаем, что переключатель может разойтись с телефоном.
+  const [lockOn, setLockOn] = useState(() => localStorage.getItem('widget_lockscreen') === '1')
 
   // Виджет бывает только в Android-приложении — в браузере блока нет вовсе.
   const available = isAndroidApp()
@@ -109,9 +114,12 @@ export default function WidgetBlock() {
 
   // Уведомление включается на самом телефоне, серверу об этом знать незачем: токен
   // у приложения уже есть, передаём только флаг.
-  const setLockScreen = (on) => {
+  const toggleLockScreen = () => {
+    const next = !lockOn
+    setLockOn(next)
+    localStorage.setItem('widget_lockscreen', next ? '1' : '0')
     window.location.href =
-      `intent://widget-link?notify=${on ? 1 : 0}#Intent;scheme=dlwidget;package=${PACKAGE_ID};end`
+      `intent://widget-link?notify=${next ? 1 : 0}#Intent;scheme=dlwidget;package=${PACKAGE_ID};end`
   }
 
   const disable = async () => {
@@ -162,19 +170,20 @@ export default function WidgetBlock() {
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14 }}>🔒 {tr('lockTitle', lang)}</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => setLockScreen(true)}
-                  style={{ padding: '6px 12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  {tr('on2', lang)}
-                </button>
-                <button onClick={() => setLockScreen(false)}
-                  style={{ padding: '6px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  {tr('off2', lang)}
-                </button>
-              </div>
+              <button onClick={toggleLockScreen}
+                style={{
+                  padding: '6px 14px', borderRadius: 10, fontWeight: 700, fontSize: 12,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  border: lockOn ? '1px solid var(--line)' : 'none',
+                  background: lockOn ? 'transparent' : 'var(--accent)',
+                  color: lockOn ? 'var(--ink)' : 'var(--accent-ink)',
+                }}>
+                {lockOn ? tr('off2', lang) : tr('on2', lang)}
+              </button>
             </div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>
               {tr('lockDesc', lang)}
+              {lockOn && <div style={{ marginTop: 4 }}>{tr('lockSwipe', lang)}</div>}
             </div>
           </div>
 

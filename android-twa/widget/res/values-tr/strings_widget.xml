@@ -27,4 +27,5 @@
     <string name="widget_error">Güncellenemedi: %1$s</string>
     <string name="widget_channel_name">Öğrenme kartı</string>
     <string name="widget_channel_desc">Kilit ekranında kart: kilidi açmadan cevaplayın</string>
+    <string name="widget_expand_hint">Cevaplamak için aşağı çekin</string>
 </resources>

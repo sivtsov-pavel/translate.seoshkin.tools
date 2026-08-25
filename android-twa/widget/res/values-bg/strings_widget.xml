@@ -27,4 +27,5 @@
     <string name="widget_error">Неуспешно обновяване: %1$s</string>
     <string name="widget_channel_name">Карта за учене</string>
     <string name="widget_channel_desc">Карта на заключен екран: отговаряйте без отключване</string>
+    <string name="widget_expand_hint">Плъзнете надолу, за да отговорите</string>
 </resources>
