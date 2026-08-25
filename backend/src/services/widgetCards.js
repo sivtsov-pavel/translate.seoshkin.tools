@@ -57,8 +57,14 @@ async function exerciseCards(userId, lessonId, lang, limit) {
      LEFT JOIN words w ON w.id = e.word_id
      LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
      WHERE e.lesson_id = $2 AND e.type = ANY($3)
-     -- Сначала несделанное: именно оно двигает урок к открытию следующего.
+     -- Порядок важен и задан Павлом 25.08.2026: сперва «выбери ответ», и только когда
+     -- он кончится — карточки с самооценкой. Выбор из вариантов реально проверяет, что
+     -- человек отличает слово от похожих; «знал / не знал» он ставит себе сам, и три
+     -- такие подряд в начале превращают виджет в пролистывание.
+     -- Внутри каждой группы — сначала несделанное: именно оно двигает урок к открытию
+     -- следующего.
      ORDER BY (uep.exercise_id IS NOT NULL) ASC,
+              (e.type <> 'multiple_choice') ASC,
               COALESCE(uep.next_review_date, CURRENT_DATE) ASC,
               e.id ASC
      LIMIT $4`,
