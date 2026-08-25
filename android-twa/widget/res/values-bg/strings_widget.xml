@@ -24,4 +24,5 @@
     <string name="widget_done_today">Минимумът е готов 🎉</string>
     <string name="widget_open_app">Отвори приложението</string>
     <string name="widget_speak_hint">Чуй</string>
+    <string name="widget_error">Неуспешно обновяване: %1$s</string>
 </resources>

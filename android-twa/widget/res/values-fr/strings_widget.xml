@@ -24,4 +24,5 @@
     <string name="widget_done_today">Minimum atteint 🎉</string>
     <string name="widget_open_app">Ouvrir l’app</string>
     <string name="widget_speak_hint">Écouter</string>
+    <string name="widget_error">Échec de mise à jour : %1$s</string>
 </resources>

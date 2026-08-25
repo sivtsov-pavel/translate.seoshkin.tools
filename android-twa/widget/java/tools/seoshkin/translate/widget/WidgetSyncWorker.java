@@ -67,15 +67,18 @@ public class WidgetSyncWorker extends Worker {
                 WidgetSync.cancelPeriodic(ctx);
             } else {
                 Log.w(TAG, "Сервер ответил " + code);
+                store.setError("HTTP " + code);
                 DailyGoalWidgetProvider.redrawAll(ctx);
                 return Result.retry();
             }
+            store.clearError();
 
             DailyGoalWidgetProvider.redrawAll(ctx);
             return Result.success();
 
         } catch (Exception e) {
             Log.w(TAG, "Нет связи: " + e.getMessage());
+            store.setError(e.getClass().getSimpleName());
             DailyGoalWidgetProvider.redrawAll(ctx);   // кэш с пометкой времени
             return Result.retry();
         } finally {

@@ -51,7 +51,7 @@ else
 fi
 
 # ── 3. Манифест: приёмник виджета, приём токена, ранний старт ────────────────
-if grep -q "DailyGoalWidgetProvider" "$MANIFEST"; then
+if grep -q "DailyGoalWidgetProvider" "$MANIFEST" && grep -q "permission.INTERNET" "$MANIFEST"; then
   echo "• Манифест уже пропатчен"
 else
   python3 - "$MANIFEST" <<'PY'
@@ -59,6 +59,16 @@ import sys
 
 path = sys.argv[1]
 src = open(path, encoding='utf-8').read()
+
+# Разрешение на сеть. Bubblewrap его НЕ добавляет: самому TWA сеть не нужна, в интернет
+# ходит браузер в своём процессе. А виджет ходит сам — и без этой строки любой его запрос
+# падает с отказом в доступе, из-за чего виджет вечно показывает «Загрузка…».
+PERM = '    <uses-permission android:name="android.permission.INTERNET"/>\n'
+if 'android.permission.INTERNET' not in src:
+    src = src.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android"',
+                      '<manifest xmlns:android="http://schemas.android.com/apk/res/android"', 1)
+    idx = src.index('>', src.index('<manifest ')) + 1
+    src = src[:idx] + '\n' + PERM + src[idx:]
 
 BLOCK = '''
         <!-- ▼▼▼ Виджет домашнего экрана (android-twa/apply-widget.sh) ▼▼▼ -->

@@ -24,4 +24,5 @@
     <string name="widget_done_today">Minimumi u krye 🎉</string>
     <string name="widget_open_app">Hap aplikacionin</string>
     <string name="widget_speak_hint">Dëgjo</string>
+    <string name="widget_error">S’u përditësua: %1$s</string>
 </resources>

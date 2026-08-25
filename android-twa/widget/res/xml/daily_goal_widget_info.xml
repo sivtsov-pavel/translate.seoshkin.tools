@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- updatePeriodMillis="0" — обновлениями управляет WorkManager. Системный таймер всё равно
-     не даёт чаще получаса и будит устройство впустую. -->
+<!-- Размер под КАРТОЧКУ, а не под полоску прогресса: вопрос, четыре варианта ответа
+     и строка состояния. С прежними 70dp высоты виджет физически не мог показать ничего,
+     кроме первой строки.
+     updatePeriodMillis="0" — обновлениями управляет WorkManager, системный таймер всё
+     равно не даёт чаще получаса и будит устройство впустую. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="180dp"
-    android:minHeight="70dp"
+    android:minWidth="250dp"
+    android:minHeight="180dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="3"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_daily_goal"
-    android:resizeMode="horizontal"
+    android:previewLayout="@layout/widget_daily_goal"
+    android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/widget_description" />

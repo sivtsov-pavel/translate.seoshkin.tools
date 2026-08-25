@@ -24,4 +24,5 @@
     <string name="widget_done_today">Asgari tamam 🎉</string>
     <string name="widget_open_app">Uygulamayı aç</string>
     <string name="widget_speak_hint">Dinle</string>
+    <string name="widget_error">Güncellenemedi: %1$s</string>
 </resources>

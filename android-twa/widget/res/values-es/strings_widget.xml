@@ -24,4 +24,5 @@
     <string name="widget_done_today">Mínimo hecho 🎉</string>
     <string name="widget_open_app">Abrir la app</string>
     <string name="widget_speak_hint">Escuchar</string>
+    <string name="widget_error">No se pudo actualizar: %1$s</string>
 </resources>

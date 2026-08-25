@@ -24,4 +24,5 @@
     <string name="widget_done_today">اكتمل الحد الأدنى 🎉</string>
     <string name="widget_open_app">افتح التطبيق</string>
     <string name="widget_speak_hint">استمع</string>
+    <string name="widget_error">تعذّر التحديث: %1$s</string>
 </resources>

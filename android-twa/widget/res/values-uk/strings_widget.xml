@@ -24,4 +24,5 @@
     <string name="widget_done_today">Мінімум зроблено 🎉</string>
     <string name="widget_open_app">Відкрити застосунок</string>
     <string name="widget_speak_hint">Послухати</string>
+    <string name="widget_error">Не вдалося оновити: %1$s</string>
 </resources>

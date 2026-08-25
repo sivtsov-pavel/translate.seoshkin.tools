@@ -172,7 +172,10 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         if (s == null) {
             v.setTextViewText(R.id.widget_line1, ctx.getString(R.string.widget_loading));
             v.setProgressBar(R.id.widget_bar, 1, 0, false);
-            v.setTextViewText(R.id.widget_line2, "");
+            // Показываем причину, если сервер так и не ответил: иначе «Загрузка…» висит
+            // вечно и одинаково выглядит при любой поломке.
+            String err = store.lastError();
+            v.setTextViewText(R.id.widget_line2, err == null ? "" : ctx.getString(R.string.widget_error, err));
             v.setOnClickPendingIntent(R.id.widget_root, openApp(ctx, "/"));
             mgr.updateAppWidget(widgetId, v);
             return;

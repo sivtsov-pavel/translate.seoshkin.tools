@@ -28,6 +28,7 @@ public class WidgetStore {
     private static final String KEY_INDEX  = "card_index";   // какая карточка показана сейчас
     private static final String KEY_QUEUE  = "answer_queue"; // ответы, ещё не дошедшие до сервера
     private static final String KEY_FLIPPED = "card_flipped"; // перевод у карточки уже открыт
+    private static final String KEY_ERROR  = "last_error";    // почему не удалось обновиться
 
     private final SharedPreferences prefs;
 
@@ -60,6 +61,16 @@ public class WidgetStore {
     public void touch() { prefs.edit().putLong(KEY_SYNCED, System.currentTimeMillis()).apply(); }
 
     public long syncedAt() { return prefs.getLong(KEY_SYNCED, 0L); }
+
+    // Последняя ошибка обновления. Молчащий виджет невозможно чинить на расстоянии:
+    // «Загрузка…» одинаково выглядит и при отсутствии сети, и при запрете доступа к ней.
+    public String lastError() { return prefs.getString(KEY_ERROR, null); }
+
+    public void setError(String message) {
+        prefs.edit().putString(KEY_ERROR, message).apply();
+    }
+
+    public void clearError() { prefs.edit().remove(KEY_ERROR).apply(); }
 
     // ── Лента карточек ───────────────────────────────────────────────────────
     // Индекс живёт отдельно от ленты: пришли свежие карточки — начинаем сначала,
