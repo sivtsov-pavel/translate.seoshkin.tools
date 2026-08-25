@@ -63,8 +63,8 @@
              сюда полноразмерную нельзя — не пролезет в лимит межпроцессной передачи. -->
         <ImageView
             android:id="@+id/widget_image"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
             android:layout_marginEnd="10dp"
             android:scaleType="centerCrop"
             android:visibility="gone"

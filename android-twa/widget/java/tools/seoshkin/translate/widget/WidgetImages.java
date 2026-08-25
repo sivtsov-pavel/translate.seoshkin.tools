@@ -27,9 +27,10 @@ public class WidgetImages {
     private static final String TAG = "WidgetImages";
     private static final String DIR = "widget-images";
 
-    // 240×180 хватает для картинки размером с ноготь на виджете и укладывается в лимит
-    // передачи с большим запасом (примерно 170 КБ в памяти).
-    private static final int MAX_SIDE = 240;
+    // 320px: картинку на виджете увеличили до 76dp, и прежних 240px стало мало — на
+    // плотных экранах она мылила. В лимит передачи по-прежнему укладывается с запасом
+    // (примерно 400 КБ в памяти против примерно мегабайта потолка).
+    private static final int MAX_SIDE = 320;
 
     private static final int TIMEOUT_MS = 10000;
 
@@ -110,6 +111,10 @@ public class WidgetImages {
         if (url == null || url.isEmpty()) return null;
         // Имя файла — из ссылки: в ней есть ?v=N, поэтому обновлённая картинка
         // получает другое имя и старая не подменяет новую.
-        return new File(dir(ctx), Integer.toHexString(url.hashCode()) + ".png");
+        //
+        // Размер в имени обязателен: без него после увеличения картинки на виджете
+        // из кэша продолжали бы браться прежние мелкие файлы, и картинка мылила бы
+        // до тех пор, пока человек не переустановит приложение.
+        return new File(dir(ctx), Integer.toHexString(url.hashCode()) + "_" + MAX_SIDE + ".png");
     }
 }
