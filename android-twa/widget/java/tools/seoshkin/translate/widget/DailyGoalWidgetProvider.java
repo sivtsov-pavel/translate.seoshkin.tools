@@ -169,7 +169,10 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
      */
     public static RemoteViews buildViews(Context ctx, WidgetStore store, Reveal reveal,
                                          boolean forNotification) {
-        RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.widget_daily_goal);
+        // В уведомлении разметка своя: развёрнутое уведомление ограничено примерно 256dp
+        // по высоте, и полная карточка виджета обрезалась — кнопки ответа уезжали за край.
+        RemoteViews v = new RemoteViews(ctx.getPackageName(),
+                forNotification ? R.layout.widget_notification_big : R.layout.widget_daily_goal);
 
         // Прячем всё необязательное; ниже покажем только то, что нужно этой карточке.
         v.setViewVisibility(R.id.widget_image, View.GONE);
@@ -207,7 +210,7 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         String state = s.optString("state", "");
 
         if (card != null && "in_progress".equals(state)) {
-            renderCard(ctx, v, store, card, reveal);
+            renderCard(ctx, v, store, card, reveal, forNotification);
         } else if ("in_progress".equals(state)) {
             // Карточки в пачке кончились, а урок ещё не пройден. Раньше здесь появлялось
             // «Минимум сделан 🎉» — виджет объявлял победу вместо того, чтобы принести
@@ -218,7 +221,12 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             v.setTextViewText(R.id.widget_line2, statusLine(ctx, s, store));
         }
 
-        v.setOnClickPendingIntent(R.id.widget_root, openApp(ctx, s.optString("nextUrl", "/")));
+        // Открытие приложения — только по названию урока и картинке. Раньше кликабельным
+        // был весь фон виджета: промах мимо кнопки ответа выкидывал человека в приложение
+        // посреди занятия (Павел, 25.08.2026).
+        PendingIntent open = openApp(ctx, s.optString("nextUrl", "/"));
+        v.setOnClickPendingIntent(R.id.widget_line1, open);
+        v.setOnClickPendingIntent(R.id.widget_image, open);
         return v;
     }
 
@@ -239,7 +247,7 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
     }
 
     private static void renderCard(Context ctx, RemoteViews v, WidgetStore store,
-                                   JSONObject card, Reveal reveal) {
+                                   JSONObject card, Reveal reveal, boolean forNotification) {
         String kind = card.optString("kind", "mc");
 
         v.setViewVisibility(R.id.widget_question_row, View.VISIBLE);
@@ -259,14 +267,20 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         JSONObject state = store.state();
 
         if ("mc".equals(kind)) {
-            renderChoice(ctx, v, card, reveal);
-            // Пока не ответил — показываем полезное (серия, дневная норма, сколько
-            // осталось до нового урока). Ответил — результат.
-            v.setTextViewText(R.id.widget_line2,
-                    reveal == null ? infoLine(ctx, state) : resultLine(ctx, card, reveal));
+            renderChoice(ctx, v, card, reveal, forNotification);
+            v.setTextViewText(R.id.widget_line2, infoLine(ctx, state));
+            // Результат ответа — крупной строкой и цветом. Мелкая подпись внизу читалась
+            // плохо: «даже не понятно, верно сделал или как» (Павел, 25.08.2026).
+            if (reveal != null) showResult(ctx, v, card, reveal);
         } else if ("flip".equals(kind)) {
             renderFlip(ctx, v, store, card, reveal);
             v.setTextViewText(R.id.widget_line2, infoLine(ctx, state));
+            if (reveal != null) {
+                v.setViewVisibility(R.id.widget_answer, View.VISIBLE);
+                v.setTextViewText(R.id.widget_answer,
+                        (reveal.correct ? "✓ " : "✗ ") + card.optString("answer"));
+                v.setTextColor(R.id.widget_answer, reveal.correct ? 0xFF4E9A6E : 0xFFB3382C);
+            }
         } else {   // phrase
             v.setViewVisibility(R.id.widget_answer, View.VISIBLE);
             v.setTextViewText(R.id.widget_answer, card.optString("answer"));
@@ -297,7 +311,8 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
     }
 
     /** «Выбери ответ»: четыре кнопки, после тапа — подсветка верного и неверного. */
-    private static void renderChoice(Context ctx, RemoteViews v, JSONObject card, Reveal reveal) {
+    private static void renderChoice(Context ctx, RemoteViews v, JSONObject card, Reveal reveal,
+                                     boolean forNotification) {
         JSONArray options = card.optJSONArray("options");
         if (options == null) return;
         v.setViewVisibility(R.id.widget_options, View.VISIBLE);
@@ -311,10 +326,15 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             }
             v.setTextViewText(id, options.optString(i));
 
-            int bg = R.drawable.widget_option;
+            // Фон уведомления системный (в светлой теме белый), поэтому там своя палитра:
+            // тёмные кнопки виджета на нём выглядели бы пустыми пятнами.
+            int bg = forNotification ? R.drawable.widget_option_light : R.drawable.widget_option;
             if (reveal != null) {
-                if (i == reveal.correctIndex) bg = R.drawable.widget_option_correct;
-                else if (i == reveal.chosenIndex) bg = R.drawable.widget_option_wrong;
+                if (i == reveal.correctIndex) {
+                    bg = forNotification ? R.drawable.widget_option_light_correct : R.drawable.widget_option_correct;
+                } else if (i == reveal.chosenIndex) {
+                    bg = forNotification ? R.drawable.widget_option_light_wrong : R.drawable.widget_option_wrong;
+                }
             }
             v.setInt(id, "setBackgroundResource", bg);
 
@@ -391,12 +411,20 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         return sb.toString();
     }
 
+    /** Крупная строка результата: видно с одного взгляда, верно или нет. */
+    private static void showResult(Context ctx, RemoteViews v, JSONObject card, Reveal reveal) {
+        v.setViewVisibility(R.id.widget_answer, View.VISIBLE);
+        v.setTextViewText(R.id.widget_answer, resultLine(ctx, card, reveal));
+        // Зелёный и красный — те же, что в приложении, чтобы не учиться заново.
+        v.setTextColor(R.id.widget_answer, reveal.correct ? 0xFF4E9A6E : 0xFFB3382C);
+    }
+
     private static String resultLine(Context ctx, JSONObject card, Reveal reveal) {
-        if (reveal.correct) return ctx.getString(R.string.widget_correct);
+        if (reveal.correct) return "✓ " + ctx.getString(R.string.widget_correct);
         JSONArray options = card.optJSONArray("options");
         String right = options != null && reveal.correctIndex >= 0 && reveal.correctIndex < options.length()
                 ? options.optString(reveal.correctIndex) : "";
-        return ctx.getString(R.string.widget_wrong, right);
+        return "✗ " + ctx.getString(R.string.widget_wrong, right);
     }
 
     private static String statusLine(Context ctx, JSONObject s, WidgetStore store) {

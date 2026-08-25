@@ -17,4 +17,25 @@
         <item name="android:textColor">#FFFFFF</item>
         <item name="android:textSize">16sp</item>
     </style>
+
+    <!-- Кнопка ответа в уведомлении. Отличий от виджета два, и оба вынужденные:
+         развёрнутое уведомление ограничено ~256dp по высоте, поэтому всё компактнее;
+         фон у уведомления системный (в светлой теме — белый), поэтому текст тёмный,
+         иначе кнопки выглядят пустыми. -->
+    <style name="WidgetOptionCompact">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/widget_option_light</item>
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">#111111</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

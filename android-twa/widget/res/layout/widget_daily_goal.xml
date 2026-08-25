@@ -100,7 +100,8 @@
         android:maxLines="2"
         android:ellipsize="end"
         android:textColor="#C9A54A"
-        android:textSize="18sp"
+        android:textSize="19sp"
+        android:textStyle="bold"
         android:visibility="gone" />
 
     <!-- Четыре варианта ответа, сеткой 2×2 -->
