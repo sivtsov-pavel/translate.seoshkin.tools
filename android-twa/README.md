@@ -29,7 +29,10 @@
    и виджет домашнего экрана в нём исчезает. Пропустив шаг, вы соберёте рабочий APK
    БЕЗ виджета — сборка не упадёт и ничего не скажет, а у людей виджет просто перестанет
    обновляться. Исходники виджета лежат в `widget/` (в git), скрипт идемпотентный.
-3. `cp app-release-signed.apk ../frontend/public/downloads/deutsch-lernen.apk` → коммит → деплой.
+3. `cp app-release-signed.apk ../frontend/public/downloads/deutsch-lernen.apk`
+   **и обновить `frontend/public/downloads/version.json`** (версия + код) — по нему
+   настройки показывают, какая версия лежит на сайте. Разошёлся — человек не поймёт,
+   нужно ли ему обновляться. Затем коммит → деплой.
 4. Для Google Play — загрузить `app-release-bundle.aab` в Play Console.
 
 ## Digital Asset Links
