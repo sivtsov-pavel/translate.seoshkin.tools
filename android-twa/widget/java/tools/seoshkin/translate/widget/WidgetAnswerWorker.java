@@ -92,7 +92,11 @@ public class WidgetAnswerWorker extends Worker {
                 int keepIndex = store.index();
                 store.save(state.toString(), null);   // ETag сбрасываем: состояние изменилось
                 // save() ставит индекс в 0; если карточки те же самые, вернём позицию.
-                if (sameCards(state, store) && keepIndex > 0) store.setIndex(keepIndex);
+                // Позицию возвращаем, только если она попадает внутрь новой ленты.
+                // Иначе после ответа на последнюю карточку виджет оставался «за концом».
+                if (sameCards(state, store) && keepIndex > 0 && keepIndex < store.cards().length()) {
+                    store.setIndex(keepIndex);
+                }
                 WidgetSyncWorker.prefetchImages(ctx, store);
             }
             DailyGoalWidgetProvider.redrawAll(ctx);

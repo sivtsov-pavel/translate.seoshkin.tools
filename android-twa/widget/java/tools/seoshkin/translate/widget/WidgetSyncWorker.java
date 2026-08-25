@@ -59,7 +59,10 @@ public class WidgetSyncWorker extends Worker {
                 store.save(readBody(conn), conn.getHeaderField("ETag"));
                 // save() ставит позицию в начало — это верно для свежей пачки. Но если
                 // сервер вернул ту же ленту, человек не должен терять место, на котором стоит.
-                if (keepIndex > 0 && sameFirstCard(oldCards, store.cards())) store.setIndex(keepIndex);
+                if (keepIndex > 0 && keepIndex < store.cards().length()
+                        && sameFirstCard(oldCards, store.cards())) {
+                    store.setIndex(keepIndex);
+                }
             } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 // Виджет выключили в настройках или токен истёк: забываем токен и кэш,
                 // виджет покажет «подключите в приложении».

@@ -80,7 +80,12 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
 
         switch (action) {
             case ACTION_REFRESH:
+                // Человек нажал сам — значит хочет свежее. Забываем ETag, иначе сервер
+                // ответит «не изменилось» и на экране не поменяется ровным счётом ничего.
+                store.clearEtag();
+                store.setIndex(0);
                 WidgetSync.requestNow(ctx);
+                redrawAll(ctx);
                 break;
 
             case ACTION_SPEAK: {
