@@ -63,6 +63,31 @@ public class WidgetStore {
                 .apply();
     }
 
+    /**
+     * Обновить прогресс, НЕ трогая ленту карточек и позицию в ней.
+     *
+     * Сервер после каждого ответа присылает свежую пачку — уже без той карточки, на которую
+     * ответили. Если применить её целиком, лента начнётся сначала и человек увидит прыжок
+     * на одну-две карточки вперёд. Именно это выглядело как «перескакивает через пару
+     * упражнений» (Павел, 25.08.2026).
+     *
+     * Поэтому свежие числа (прогресс, серия, дневная норма) берём сразу, а карточки —
+     * только когда лента кончилась или человек сам нажал «обновить».
+     */
+    public void saveProgressOnly(String json) {
+        try {
+            JSONObject fresh = new JSONObject(json);
+            JSONObject old = state();
+            if (old != null && old.optJSONArray("cards") != null) {
+                fresh.put("cards", old.optJSONArray("cards"));
+            }
+            prefs.edit()
+                    .putString(KEY_STATE, fresh.toString())
+                    .putLong(KEY_SYNCED, System.currentTimeMillis())
+                    .apply();       // KEY_INDEX и признак ответа намеренно не трогаем
+        } catch (Exception ignored) { }
+    }
+
     /** Ответ 304: данные те же, но подтверждены сейчас — обновляем только метку времени. */
     public void touch() { prefs.edit().putLong(KEY_SYNCED, System.currentTimeMillis()).apply(); }
 

@@ -54,14 +54,15 @@ public class WidgetSyncWorker extends Worker {
             if (code == HttpURLConnection.HTTP_NOT_MODIFIED) {
                 store.touch();                       // данные те же, но они свежие
             } else if (code == HttpURLConnection.HTTP_OK) {
-                int keepIndex = store.index();
-                org.json.JSONArray oldCards = store.cards();
-                store.save(readBody(conn), conn.getHeaderField("ETag"));
-                // save() ставит позицию в начало — это верно для свежей пачки. Но если
-                // сервер вернул ту же ленту, человек не должен терять место, на котором стоит.
-                if (keepIndex > 0 && keepIndex < store.cards().length()
-                        && sameFirstCard(oldCards, store.cards())) {
-                    store.setIndex(keepIndex);
+                String body = readBody(conn);
+                // Ленту подменяем, только когда человек её домотал или ещё не начинал.
+                // Иначе плановое обновление раз в полчаса выдёргивало бы карточку
+                // прямо из-под руки.
+                boolean midway = store.currentCard() != null && (store.index() > 0 || store.answered());
+                if (midway) {
+                    store.saveProgressOnly(body);
+                } else {
+                    store.save(body, conn.getHeaderField("ETag"));
                 }
             } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 // Виджет выключили в настройках или токен истёк: забываем токен и кэш,
@@ -123,13 +124,6 @@ public class WidgetSyncWorker extends Worker {
             }
         }
         WidgetImages.cleanup(ctx, urls);
-    }
-
-    /** Та же ли лента пришла: сравниваем первую карточку. */
-    private static boolean sameFirstCard(org.json.JSONArray a, org.json.JSONArray b) {
-        if (a == null || b == null || a.length() == 0 || b.length() == 0) return false;
-        org.json.JSONObject x = a.optJSONObject(0), y = b.optJSONObject(0);
-        return x != null && y != null && x.optInt("id") == y.optInt("id");
     }
 
     private static String readBody(HttpURLConnection conn) throws Exception {

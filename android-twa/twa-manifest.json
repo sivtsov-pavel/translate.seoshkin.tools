@@ -21,7 +21,7 @@
     "alias": "android"
   },
   "appVersionName": "1.2.0",
-  "appVersionCode": 15,
+  "appVersionCode": 16,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://deutschlernen.ai/manifest.webmanifest",

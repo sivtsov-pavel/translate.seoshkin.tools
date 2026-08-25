@@ -93,14 +93,9 @@ public class WidgetAnswerWorker extends Worker {
             JSONObject resp = new JSONObject(readBody(conn));
             JSONObject state = resp.optJSONObject("state");
             if (state != null) {
-                int keepIndex = store.index();
-                store.save(state.toString(), null);   // ETag сбрасываем: состояние изменилось
-                // save() ставит индекс в 0; если карточки те же самые, вернём позицию.
-                // Позицию возвращаем, только если она попадает внутрь новой ленты.
-                // Иначе после ответа на последнюю карточку виджет оставался «за концом».
-                if (sameCards(state, store) && keepIndex > 0 && keepIndex < store.cards().length()) {
-                    store.setIndex(keepIndex);
-                }
+                // Числа берём свежие, ленту оставляем свою: подмена ленты прямо после
+                // ответа и была тем самым «перескоком через пару упражнений».
+                store.saveProgressOnly(state.toString());
                 WidgetSyncWorker.prefetchImages(ctx, store);
                 WidgetSyncWorker.applyNotifyFlag(ctx, store);
             }
@@ -113,15 +108,6 @@ public class WidgetAnswerWorker extends Worker {
         } finally {
             if (conn != null) conn.disconnect();
         }
-    }
-
-    /** Пришла ли та же лента (сервер мог отдать те же карточки, если ничего не изменилось). */
-    private static boolean sameCards(JSONObject state, WidgetStore store) {
-        JSONArray fresh = state.optJSONArray("cards");
-        JSONArray old = store.cards();
-        if (fresh == null || old.length() == 0 || fresh.length() != old.length()) return false;
-        return fresh.optJSONObject(0) != null && old.optJSONObject(0) != null
-                && fresh.optJSONObject(0).optInt("id") == old.optJSONObject(0).optInt("id");
     }
 
     private static String readBody(HttpURLConnection conn) throws Exception {
