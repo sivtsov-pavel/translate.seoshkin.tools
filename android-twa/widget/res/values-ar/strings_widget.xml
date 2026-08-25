@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Строки виджета. Правятся вместе с остальными локалями: интерфейс у нас
+     целиком на языке ученика, и виджет не исключение. -->
+<resources>
+    <string name="widget_description">كم تبقّى للدرس التالي</string>
+    <string name="widget_loading">جارٍ التحميل…</string>
+    <string name="widget_not_connected">وصّل الأداة من الإعدادات</string>
+    <string name="widget_progress">%1$d / %2$d</string>
+    <string name="widget_waiting">الدرس التالي: %1$s</string>
+    <string name="widget_no_schedule">اختر جدول الدورة</string>
+    <string name="widget_all_done">أُنجزت كل الدروس 🎉</string>
+    <string name="widget_no_lessons">لا دروس بعد</string>
+    <string name="widget_streak">%1$d أيام متتالية</string>
+    <string name="widget_tails">متأخرات: %1$d</string>
+    <string name="widget_stale">بيانات %1$s</string>
+    <string name="widget_refresh_hint">تحديث</string>
+</resources>

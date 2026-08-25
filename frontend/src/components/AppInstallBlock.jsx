@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useI18nStore } from '../store/i18n.js'
+// Определение режима запуска — общее с блоком виджета (utils/device.js)
+import { isStandalone, isAndroidApp } from '../utils/device.js'
 
 // Блок «Установить приложение» в настройках: PWA и APK рядом, с честным объяснением
 // разницы. Стандарт для всех наших приложений (см. ~/.claude/CLAUDE.md).
@@ -28,14 +30,6 @@ const T = {
 }
 const tr = (key, lang) => T[key][lang] || T[key].en
 
-const isStandalone = () =>
-  typeof window !== 'undefined' &&
-  (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true)
-
-// TWA (наш APK) открывает сайт в standalone и помечает себя реферером android-app://
-const isAndroidApp = () =>
-  typeof document !== 'undefined' &&
-  (document.referrer.startsWith('android-app://') || /wv|Android.*Version\/[\d.]+ Chrome/.test(navigator.userAgent || '') && isStandalone())
 
 export default function AppInstallBlock() {
   const { lang } = useI18nStore()

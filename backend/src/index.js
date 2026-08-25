@@ -32,6 +32,7 @@ import { catalogRoutes } from './routes/catalog.js'
 import { personalWordsRoutes } from './routes/personalWords.js'
 import { offlineRoutes } from './routes/offline.js'
 import { booksRoutes } from './routes/books.js'
+import { widgetRoutes } from './routes/widget.js'
 import { startReminderCron } from './services/reminders.js'
 import { startDripCron } from './services/drip.js'
 import { startMotivationCron } from './services/motivation.js'
@@ -76,6 +77,7 @@ async function registerRoutes(app) {
   await app.register(personalWordsRoutes)
   await app.register(offlineRoutes)
   await app.register(booksRoutes)
+  await app.register(widgetRoutes)
   await app.register(mediaRoutes)
 }
 

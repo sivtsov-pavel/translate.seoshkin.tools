@@ -19,10 +19,16 @@
 2. ```bash
    cd android-twa
    npx @bubblewrap/cli update --skipVersionUpgrade   # регенерирует проект из twa-manifest.json
+   ./apply-widget.sh                                 # ⚠️ ОБЯЗАТЕЛЬНО: вживляет виджет
    export BUBBLEWRAP_KEYSTORE_PASSWORD="$(cat ../../translate.seoshkin.tools-android-keys/keystore-password.txt)"
    export BUBBLEWRAP_KEY_PASSWORD="$BUBBLEWRAP_KEYSTORE_PASSWORD"
    npx @bubblewrap/cli build
    ```
+
+   ⚠️ **Шаг `./apply-widget.sh` пропускать нельзя.** `update` создаёт Android-проект заново,
+   и виджет домашнего экрана в нём исчезает. Пропустив шаг, вы соберёте рабочий APK
+   БЕЗ виджета — сборка не упадёт и ничего не скажет, а у людей виджет просто перестанет
+   обновляться. Исходники виджета лежат в `widget/` (в git), скрипт идемпотентный.
 3. `cp app-release-signed.apk ../frontend/public/downloads/deutsch-lernen.apk` → коммит → деплой.
 4. Для Google Play — загрузить `app-release-bundle.aab` в Play Console.
 
@@ -30,6 +36,15 @@
 `frontend/public/.well-known/assetlinks.json` содержит SHA-256 отпечаток ключа —
 это убирает адресную строку браузера в приложении. При смене ключа обновить отпечаток:
 `keytool -list -v -keystore android.keystore -alias android | grep SHA256`.
+
+## Виджет домашнего экрана
+
+`widget/` — исходники (Java + ресурсы на 10 локалей), `apply-widget.sh` — скрипт, который
+копирует их в сгенерированный проект, добавляет зависимость WorkManager и дописывает
+манифест. Данные виджет берёт с сервера: `GET /api/widget/state` по узкому токену
+устройства, который выдаётся в настройках приложения (`frontend/src/components/WidgetBlock.jsx`).
+Логика того, что показывать, живёт на бэкенде (`backend/src/services/widgetState.js`) —
+поэтому подписи и правила можно менять обычным деплоем, без нового APK.
 
 ## Обновления контента
 TWA показывает живой сайт: деплой фронта = обновление приложения у всех.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Строки виджета. Правятся вместе с остальными локалями: интерфейс у нас
+     целиком на языке ученика, и виджет не исключение. -->
+<resources>
+    <string name="widget_description">Sa mbetet deri te mësimi i ri</string>
+    <string name="widget_loading">Po ngarkohet…</string>
+    <string name="widget_not_connected">Lidh widget-in te cilësimet</string>
+    <string name="widget_progress">%1$d / %2$d</string>
+    <string name="widget_waiting">Mësimi i ri: %1$s</string>
+    <string name="widget_no_schedule">Zgjidh orarin e kursit</string>
+    <string name="widget_all_done">Të gjitha mësimet u kryen 🎉</string>
+    <string name="widget_no_lessons">Ende s’ka mësime</string>
+    <string name="widget_streak">%1$d ditë rresht</string>
+    <string name="widget_tails">mbetje: %1$d</string>
+    <string name="widget_stale">të dhëna nga %1$s</string>
+    <string name="widget_refresh_hint">Rifresko</string>
+</resources>

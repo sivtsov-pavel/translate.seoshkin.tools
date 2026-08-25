@@ -22,11 +22,26 @@ import { localParts, hmToMinutes, sanitizeNotifyPrefs } from './timeutil.js'
 // Такие записи (диктант/речь без карточки) теперь урок не держат: 37 слов в 5 уроках.
 //
 // Требует в запросе алиасы: exercises AS e и LEFT JOIN user_exercise_progress uep (по нужному user_id).
-export const LESSON_PASSED_HAVING = `count(DISTINCT e.word_id) FILTER (WHERE e.type IN ('flashcard', 'multiple_choice')) > 0
-  AND count(DISTINCT e.word_id) FILTER (WHERE e.type = 'flashcard' AND uep.exercise_id IS NOT NULL)
-    = count(DISTINCT e.word_id) FILTER (WHERE e.type = 'flashcard')
-  AND count(DISTINCT e.word_id) FILTER (WHERE e.type = 'multiple_choice' AND uep.exercise_id IS NOT NULL)
-    = count(DISTINCT e.word_id) FILTER (WHERE e.type = 'multiple_choice')`
+//
+// Список типов — ОДИН на весь проект. Гейт урока (HAVING ниже) и счётчик «сколько осталось»
+// для виджета (REQUIRED_PROGRESS_SELECT) собираются из него же: разъехавшиеся определения
+// уже стоили нам порванной цепочки уроков (30.07.2026), второй раз наступать не будем.
+export const REQUIRED_TYPES = ['flashcard', 'multiple_choice']
+
+const requiredInList = REQUIRED_TYPES.map(t => `'${t}'`).join(', ')
+
+export const LESSON_PASSED_HAVING = `count(DISTINCT e.word_id) FILTER (WHERE e.type IN (${requiredInList})) > 0
+  ${REQUIRED_TYPES.map(t => `AND count(DISTINCT e.word_id) FILTER (WHERE e.type = '${t}' AND uep.exercise_id IS NOT NULL)
+    = count(DISTINCT e.word_id) FILTER (WHERE e.type = '${t}')`).join('\n  ')}`
+
+// Тот же минимум, но числами: сколько слов урока требует каждый обязательный тип и сколько
+// уже отработано. Считаем по DISTINCT word_id и по user_exercise_progress — ровно как гейт,
+// иначе виджет покажет «40 из 40» там, где урок ещё не открылся.
+// Требует те же алиасы (e, uep) и GROUP BY e.lesson_id.
+export const REQUIRED_PROGRESS_SELECT = REQUIRED_TYPES.map(t => `
+  count(DISTINCT e.word_id) FILTER (WHERE e.type = '${t}')::int AS ${t}_total,
+  count(DISTINCT e.word_id) FILTER (WHERE e.type = '${t}' AND uep.exercise_id IS NOT NULL)::int AS ${t}_done`
+).join(',')
 
 // ISO-день недели (1=Пн … 7=Вс) для даты (UTC)
 function isoWeekday(date) {

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Строки виджета. Правятся вместе с остальными локалями: интерфейс у нас
+     целиком на языке ученика, и виджет не исключение. -->
+<resources>
+    <string name="widget_description">Fortschritt bis zur nächsten Lektion</string>
+    <string name="widget_loading">Lädt…</string>
+    <string name="widget_not_connected">Widget in den Einstellungen verbinden</string>
+    <string name="widget_progress">%1$d / %2$d</string>
+    <string name="widget_waiting">Neue Lektion: %1$s</string>
+    <string name="widget_no_schedule">Kursplan wählen</string>
+    <string name="widget_all_done">Alle Lektionen geschafft 🎉</string>
+    <string name="widget_no_lessons">Noch keine Lektionen</string>
+    <string name="widget_streak">%1$d Tage in Folge</string>
+    <string name="widget_tails">Rückstand: %1$d</string>
+    <string name="widget_stale">Stand %1$s</string>
+    <string name="widget_refresh_hint">Aktualisieren</string>
+</resources>

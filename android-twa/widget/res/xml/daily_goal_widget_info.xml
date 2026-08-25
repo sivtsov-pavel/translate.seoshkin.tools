@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- updatePeriodMillis="0" — обновлениями управляет WorkManager. Системный таймер всё равно
+     не даёт чаще получаса и будит устройство впустую. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="70dp"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/widget_daily_goal"
+    android:resizeMode="horizontal"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_description" />

@@ -17,3 +17,20 @@ export function isTouchDevice() {
 export function shouldAutoFocus() {
   return !isTouchDevice()
 }
+
+// ── Как приложение открыто ───────────────────────────────────────────────────
+// Нужно и блоку установки, и блоку виджета: виджет существует только внутри нашей
+// Android-обёртки, и предлагать его в браузере или на iPhone — обманывать человека.
+
+/** Приложение открыто как установленное (PWA/TWA), а не вкладкой браузера. */
+export function isStandalone() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+}
+
+/** Открыто внутри нашего Android-приложения (TWA): у него реферер android-app://. */
+export function isAndroidApp() {
+  if (typeof document === 'undefined') return false
+  if (document.referrer.startsWith('android-app://')) return true
+  return /wv|Android.*Version\/[\d.]+ Chrome/.test(navigator.userAgent || '') && isStandalone()
+}

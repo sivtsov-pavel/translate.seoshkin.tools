@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import AppInstallBlock from '../components/AppInstallBlock.jsx'
+import WidgetBlock from '../components/WidgetBlock.jsx'
 import { useSearchParams } from 'react-router-dom'
 import { useSettingsStore, applyVisual } from '../store/settings.js'
 import { useAuthStore } from '../store/auth.js'
@@ -386,6 +387,7 @@ export default function Settings() {
 
       {tab === 1 && <>
       <AppInstallBlock />
+      <WidgetBlock />
       {/* ── Обучение ── */}
       <Section icon="🎯" title={t.settings.sectionLearning}>
         <Row
