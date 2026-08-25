@@ -77,18 +77,24 @@ export default function WidgetBlock() {
         // Язык виджета хранится на сервере рядом с токеном: нативная часть о смене языка
         // в приложении узнать не может. Синхронизируем при каждом заходе в настройки —
         // запрос идемпотентный и ничего не делает, если язык не менялся.
-        if (s.enabled) api.patch('/widget/lang', { lang: localStorage.getItem('target_lang') || 'de' }).catch(() => {})
+        if (s.enabled) api.patch('/widget/lang', {
+          lang: localStorage.getItem('target_lang') || 'de',   // что учит
+          uiLang: lang,                                        // на чём читает
+        }).catch(() => {})
       })
       .catch(() => { if (alive) setError(true) })
     return () => { alive = false }
-  }, [available])
+  }, [available, lang])
 
   if (!available || !status) return null
 
   const enable = async () => {
     setBusy(true); setError(false)
     try {
-      const { token } = await api.post('/widget/token', { label: navigator.userAgent.slice(0, 60) })
+      const { token } = await api.post('/widget/token', {
+        label: navigator.userAgent.slice(0, 60),
+        uiLang: lang,
+      })
       setStatus(await api.get('/widget/status'))
       setJustEnabled(true)
       // Передаём токен нативной части. Если версия приложения старая и ловить некому,

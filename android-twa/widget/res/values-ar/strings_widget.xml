@@ -14,4 +14,14 @@
     <string name="widget_tails">متأخرات: %1$d</string>
     <string name="widget_stale">بيانات %1$s</string>
     <string name="widget_refresh_hint">تحديث</string>
+    <string name="widget_show_answer">أظهر الترجمة</string>
+    <string name="widget_knew">كنت أعرف</string>
+    <string name="widget_forgot">نسيت</string>
+    <string name="widget_correct">صحيح!</string>
+    <string name="widget_wrong">الصحيح: %1$s</string>
+    <string name="widget_phrase">جملة الدرس</string>
+    <string name="widget_got_it">فهمت</string>
+    <string name="widget_done_today">اكتمل الحد الأدنى 🎉</string>
+    <string name="widget_open_app">افتح التطبيق</string>
+    <string name="widget_speak_hint">استمع</string>
 </resources>

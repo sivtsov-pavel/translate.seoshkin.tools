@@ -14,4 +14,14 @@
     <string name="widget_tails">pendientes: %1$d</string>
     <string name="widget_stale">datos de %1$s</string>
     <string name="widget_refresh_hint">Actualizar</string>
+    <string name="widget_show_answer">Ver traducción</string>
+    <string name="widget_knew">Lo sabía</string>
+    <string name="widget_forgot">No lo sabía</string>
+    <string name="widget_correct">¡Correcto!</string>
+    <string name="widget_wrong">Correcto: %1$s</string>
+    <string name="widget_phrase">Frase de la lección</string>
+    <string name="widget_got_it">Entendido</string>
+    <string name="widget_done_today">Mínimo hecho 🎉</string>
+    <string name="widget_open_app">Abrir la app</string>
+    <string name="widget_speak_hint">Escuchar</string>
 </resources>

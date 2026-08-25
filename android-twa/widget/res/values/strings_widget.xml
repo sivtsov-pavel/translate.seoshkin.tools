@@ -14,4 +14,14 @@
     <string name="widget_tails">catch-up: %1$d</string>
     <string name="widget_stale">data from %1$s</string>
     <string name="widget_refresh_hint">Refresh</string>
+    <string name="widget_show_answer">Show translation</string>
+    <string name="widget_knew">Knew it</string>
+    <string name="widget_forgot">Forgot</string>
+    <string name="widget_correct">Correct!</string>
+    <string name="widget_wrong">Correct: %1$s</string>
+    <string name="widget_phrase">Phrase of the lesson</string>
+    <string name="widget_got_it">Got it</string>
+    <string name="widget_done_today">Minimum done 🎉</string>
+    <string name="widget_open_app">Open app</string>
+    <string name="widget_speak_hint">Listen</string>
 </resources>

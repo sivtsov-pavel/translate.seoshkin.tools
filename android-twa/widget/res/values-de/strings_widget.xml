@@ -14,4 +14,14 @@
     <string name="widget_tails">Rückstand: %1$d</string>
     <string name="widget_stale">Stand %1$s</string>
     <string name="widget_refresh_hint">Aktualisieren</string>
+    <string name="widget_show_answer">Übersetzung zeigen</string>
+    <string name="widget_knew">Gewusst</string>
+    <string name="widget_forgot">Vergessen</string>
+    <string name="widget_correct">Richtig!</string>
+    <string name="widget_wrong">Richtig: %1$s</string>
+    <string name="widget_phrase">Satz der Lektion</string>
+    <string name="widget_got_it">Verstanden</string>
+    <string name="widget_done_today">Minimum geschafft 🎉</string>
+    <string name="widget_open_app">App öffnen</string>
+    <string name="widget_speak_hint">Anhören</string>
 </resources>

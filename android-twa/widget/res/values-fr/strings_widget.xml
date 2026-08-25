@@ -14,4 +14,14 @@
     <string name="widget_tails">en retard : %1$d</string>
     <string name="widget_stale">données du %1$s</string>
     <string name="widget_refresh_hint">Actualiser</string>
+    <string name="widget_show_answer">Voir la traduction</string>
+    <string name="widget_knew">Je savais</string>
+    <string name="widget_forgot">Oublié</string>
+    <string name="widget_correct">Correct !</string>
+    <string name="widget_wrong">Correct : %1$s</string>
+    <string name="widget_phrase">Phrase de la leçon</string>
+    <string name="widget_got_it">Compris</string>
+    <string name="widget_done_today">Minimum atteint 🎉</string>
+    <string name="widget_open_app">Ouvrir l’app</string>
+    <string name="widget_speak_hint">Écouter</string>
 </resources>

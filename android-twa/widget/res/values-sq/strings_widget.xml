@@ -14,4 +14,14 @@
     <string name="widget_tails">mbetje: %1$d</string>
     <string name="widget_stale">të dhëna nga %1$s</string>
     <string name="widget_refresh_hint">Rifresko</string>
+    <string name="widget_show_answer">Shfaq përkthimin</string>
+    <string name="widget_knew">E dija</string>
+    <string name="widget_forgot">Nuk e dija</string>
+    <string name="widget_correct">Saktë!</string>
+    <string name="widget_wrong">Saktë: %1$s</string>
+    <string name="widget_phrase">Fraza e mësimit</string>
+    <string name="widget_got_it">E kuptova</string>
+    <string name="widget_done_today">Minimumi u krye 🎉</string>
+    <string name="widget_open_app">Hap aplikacionin</string>
+    <string name="widget_speak_hint">Dëgjo</string>
 </resources>

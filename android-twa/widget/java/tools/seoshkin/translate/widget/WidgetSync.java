@@ -17,9 +17,11 @@ public class WidgetSync {
 
     // Основной домен приложения. При смене домена правится здесь И в twa-manifest.json.
     public static final String BASE_URL  = "https://deutschlernen.ai";
-    public static final String STATE_URL = BASE_URL + "/api/widget/state";
+    public static final String STATE_URL  = BASE_URL + "/api/widget/state";
+    public static final String ANSWER_URL = BASE_URL + "/api/widget/answer";
 
     private static final String WORK_NOW      = "widget-now";
+    private static final String WORK_ANSWERS  = "widget-answers";
     private static final String WORK_PERIODIC = "widget-periodic";
 
     // Полчаса — компромисс: система всё равно не даёт периодике чаще 15 минут, а главную
@@ -36,6 +38,20 @@ public class WidgetSync {
                 .setConstraints(network())
                 .build();
         WorkManager.getInstance(ctx).enqueueUniqueWork(WORK_NOW, ExistingWorkPolicy.REPLACE, req);
+    }
+
+    /**
+     * Отправить накопленные ответы. Задержка нужна, чтобы человек успел увидеть подсветку
+     * верного варианта — иначе карточка сменится прямо под пальцем.
+     */
+    public static void sendAnswers(Context ctx, long delayMs) {
+        OneTimeWorkRequest req = new OneTimeWorkRequest.Builder(WidgetAnswerWorker.class)
+                .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
+                .build();
+        // APPEND_OR_REPLACE: два быстрых ответа подряд не должны отменять друг друга —
+        // иначе первый останется в очереди неотправленным до следующего раза.
+        WorkManager.getInstance(ctx).enqueueUniqueWork(
+                WORK_ANSWERS, ExistingWorkPolicy.APPEND_OR_REPLACE, req);
     }
 
     /** Фоновая подстраховка: смена суток, занятия с другого устройства. */

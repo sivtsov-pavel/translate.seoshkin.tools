@@ -6,7 +6,9 @@
 // Основной JWT в нативную часть не отдаём: он даёт полный доступ ко всему аккаунту.
 import { createHash, randomBytes } from 'crypto'
 import { db } from '../db/index.js'
-import { buildWidgetState } from '../services/widgetState.js'
+import { buildWidgetState, WIDGET_STATES } from '../services/widgetState.js'
+import { widgetCards, CARD_KINDS } from '../services/widgetCards.js'
+import { recordAttempt } from '../services/attempts.js'
 
 const TOKEN_TTL_DAYS = 180
 // Больше десяти живых виджетов у одного человека не бывает; лимит нужен, чтобы
@@ -57,10 +59,13 @@ export async function widgetRoutes(fastify) {
 
     const token = randomBytes(32).toString('base64url')
     const { rows } = await db.query(
-      `INSERT INTO widget_tokens (user_id, token_hash, device_label, target_lang, expires_at)
-       VALUES ($1, $2, $3, $4, NOW() + ($5 || ' days')::interval)
+      `INSERT INTO widget_tokens (user_id, token_hash, device_label, target_lang, ui_lang, expires_at)
+       VALUES ($1, $2, $3, $4, $5, NOW() + ($6 || ' days')::interval)
        RETURNING id, expires_at`,
-      [userId, hashToken(token), label, request.headers['x-target-lang'] || 'de', String(TOKEN_TTL_DAYS)])
+      [userId, hashToken(token), label,
+       request.headers['x-target-lang'] || 'de',
+       String(request.body?.uiLang || 'ru').slice(0, 8),
+       String(TOKEN_TTL_DAYS)])
 
     // Открытый токен существует только в этом ответе: в базе лежит его хеш.
     return { token, id: rows[0].id, expiresAt: rows[0].expires_at }
@@ -86,38 +91,77 @@ export async function widgetRoutes(fastify) {
   fastify.patch('/api/widget/lang', {
     preHandler: [fastify.authenticate],
   }, async (request) => {
-    const lang = String(request.body?.lang || request.headers['x-target-lang'] || 'de').slice(0, 8)
+    const lang   = String(request.body?.lang   || request.headers['x-target-lang'] || 'de').slice(0, 8)
+    const uiLang = String(request.body?.uiLang || 'ru').slice(0, 8)
     const { rowCount } = await db.query(
-      `UPDATE widget_tokens SET target_lang = $2
-       WHERE user_id = $1 AND revoked_at IS NULL AND target_lang <> $2`,
-      [request.user.id, lang])
+      `UPDATE widget_tokens SET target_lang = $2, ui_lang = $3
+       WHERE user_id = $1 AND revoked_at IS NULL AND (target_lang <> $2 OR ui_lang <> $3)`,
+      [request.user.id, lang, uiLang])
     return { ok: true, updated: rowCount }
+  })
+
+  // ── Ответы с виджета ──────────────────────────────────────────────────────
+  // Принимаем ПАЧКОЙ: виджет копит ответы в очереди и отправляет, когда есть сеть.
+  // Иначе ответ, данный в метро, просто пропадал бы — а для человека он «засчитан».
+  fastify.post('/api/widget/answer', async (request, reply) => {
+    const user = await resolveUser(fastify, request)
+    if (!user) return reply.status(401).send({ error: 'Unauthorized' })
+
+    const list = Array.isArray(request.body?.answers) ? request.body.answers : [request.body]
+    if (!list.length) return reply.status(400).send({ error: 'answers required' })
+
+    const accepted = []
+    for (const a of list.slice(0, 50)) {
+      const id = parseInt(a?.id)
+      if (!id) continue
+      try {
+        if (a.kind === CARD_KINDS.PHRASE) {
+          // Фраза «на послушать»: закрываем шаг «слушаю». Шаг «собираю предложение»
+          // требует ввода и остаётся в приложении.
+          await db.query(
+            `INSERT INTO user_phrase_progress (user_id, phrase_id, step_listen)
+             VALUES ($1, $2, TRUE)
+             ON CONFLICT (user_id, phrase_id) DO UPDATE SET step_listen = TRUE`,
+            [user.id, id])
+        } else {
+          // Упражнение: та же цепочка, что в приложении (SM-2, статус слова, попытка,
+          // снятие из хвостов) — services/attempts.js. Оценки те же: 5 верно, 1 неверно.
+          await recordAttempt(user.id, id, String(a.answer ?? ''), a.correct ? 5 : 1)
+        }
+        accepted.push(id)
+      } catch (e) {
+        request.log.warn({ err: e, id }, 'ответ с виджета не записан')
+      }
+    }
+
+    // Возвращаем свежее состояние: виджет сразу подвинет полосу, не дожидаясь
+    // следующего планового опроса.
+    const target = user.target_lang || request.headers['x-target-lang'] || 'de'
+    const state = await buildWidgetState(user.id, user.school_id ?? null, user.role, target)
+    state.cards = state.state === WIDGET_STATES.IN_PROGRESS && state.lesson
+      ? await widgetCards(user.id, state.lesson.id, uiLang(request, user))
+      : []
+    return { accepted, state }
   })
 
   // ── Состояние для самого виджета ──────────────────────────────────────────
   // Пускаем и по токену устройства, и по обычному JWT: второе нужно, чтобы показать
   // предпросмотр виджета в настройках, не выдавая токен раньше времени.
   fastify.get('/api/widget/state', async (request, reply) => {
-    const auth = request.headers.authorization || ''
-    const raw = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-    if (!raw) return reply.status(401).send({ error: 'Unauthorized' })
-
-    let user = await userByWidgetToken(raw)
-    if (!user) {
-      // Не токен виджета — пробуем обычный JWT (предпросмотр в настройках).
-      try {
-        const payload = fastify.jwt.verify(raw)
-        const { rows } = await db.query(
-          'SELECT id, role, school_id FROM users WHERE id = $1', [payload.id])
-        user = rows[0] ?? null
-      } catch { user = null }
-    }
+    const user = await resolveUser(fastify, request)
     if (!user) return reply.status(401).send({ error: 'Unauthorized' })
 
     // Виджету язык не откуда взять — используем сохранённый рядом с токеном.
     // Предпросмотр из настроек ходит с обычным JWT, там язык приходит заголовком.
     const target = user.target_lang || request.headers['x-target-lang'] || 'de'
     const state = await buildWidgetState(user.id, user.school_id ?? null, user.role, target)
+
+    // Карточки едут вместе с прогрессом одним ответом: виджет опрашивает сервер редко,
+    // и второй круг за вопросами означал бы «нажал, а карточки ещё нет».
+    // Язык вариантов — язык интерфейса ученика, а не изучаемый.
+    state.cards = state.state === WIDGET_STATES.IN_PROGRESS && state.lesson
+      ? await widgetCards(user.id, state.lesson.id, uiLang(request, user))
+      : []
 
     // ETag считаем БЕЗ updatedAt: иначе метка времени меняет ответ каждый раз и 304
     // не случается никогда — виджет качал бы полный ответ каждые полчаса зря.
@@ -130,11 +174,37 @@ export async function widgetRoutes(fastify) {
   })
 }
 
+// Кто спрашивает: сам виджет (узкий токен устройства) или приложение (обычный JWT —
+// нужен для предпросмотра в настройках, где токен ещё не выдан).
+async function resolveUser(fastify, request) {
+  const auth = request.headers.authorization || ''
+  const raw = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  if (!raw) return null
+
+  const byWidget = await userByWidgetToken(raw)
+  if (byWidget) return byWidget
+
+  try {
+    const payload = fastify.jwt.verify(raw)
+    const { rows } = await db.query(
+      'SELECT id, role, school_id FROM users WHERE id = $1', [payload.id])
+    return rows[0] ?? null
+  } catch {
+    return null
+  }
+}
+
+// Язык, на котором человек ЧИТАЕТ (варианты ответа, переводы) — не тот, который он учит.
+// У виджета он записан рядом с токеном, приложение шлёт его заголовком.
+function uiLang(request, user) {
+  return user.ui_lang || request.headers['x-ui-lang'] || 'ru'
+}
+
 // Пользователь по токену виджета. Отозванный или просроченный токен — как несуществующий:
 // виджет получит 401 и покажет «отключён в настройках», а не чужие числа.
 async function userByWidgetToken(token) {
   const { rows } = await db.query(
-    `SELECT u.id, u.role, u.school_id, t.id AS token_id, t.target_lang
+    `SELECT u.id, u.role, u.school_id, t.id AS token_id, t.target_lang, t.ui_lang
      FROM widget_tokens t JOIN users u ON u.id = t.user_id
      WHERE t.token_hash = $1 AND t.revoked_at IS NULL AND t.expires_at > NOW()`,
     [hashToken(token)])

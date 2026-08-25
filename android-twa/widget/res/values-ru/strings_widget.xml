@@ -14,4 +14,14 @@
     <string name="widget_tails">хвосты: %1$d</string>
     <string name="widget_stale">данные от %1$s</string>
     <string name="widget_refresh_hint">Обновить</string>
+    <string name="widget_show_answer">Показать перевод</string>
+    <string name="widget_knew">Знал</string>
+    <string name="widget_forgot">Не знал</string>
+    <string name="widget_correct">Верно!</string>
+    <string name="widget_wrong">Правильно: %1$s</string>
+    <string name="widget_phrase">Фраза урока</string>
+    <string name="widget_got_it">Понятно</string>
+    <string name="widget_done_today">Минимум сделан 🎉</string>
+    <string name="widget_open_app">Открыть приложение</string>
+    <string name="widget_speak_hint">Послушать</string>
 </resources>

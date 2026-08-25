@@ -27,6 +27,9 @@ public class WidgetBootstrapProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         Application app = (Application) getContext().getApplicationContext();
+        // Синтезатор поднимается заранее: из обработчика нажатия ждать его инициализацию
+        // нельзя, и половина нажатий 🔊 уходила бы в тишину.
+        WidgetSpeaker.warmUp(app);
         app.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             private int visible = 0;
 

@@ -54,7 +54,12 @@ public class WidgetSyncWorker extends Worker {
             if (code == HttpURLConnection.HTTP_NOT_MODIFIED) {
                 store.touch();                       // данные те же, но они свежие
             } else if (code == HttpURLConnection.HTTP_OK) {
+                int keepIndex = store.index();
+                org.json.JSONArray oldCards = store.cards();
                 store.save(readBody(conn), conn.getHeaderField("ETag"));
+                // save() ставит позицию в начало — это верно для свежей пачки. Но если
+                // сервер вернул ту же ленту, человек не должен терять место, на котором стоит.
+                if (keepIndex > 0 && sameFirstCard(oldCards, store.cards())) store.setIndex(keepIndex);
             } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 // Виджет выключили в настройках или токен истёк: забываем токен и кэш,
                 // виджет покажет «подключите в приложении».
@@ -76,6 +81,13 @@ public class WidgetSyncWorker extends Worker {
         } finally {
             if (conn != null) conn.disconnect();
         }
+    }
+
+    /** Та же ли лента пришла: сравниваем первую карточку. */
+    private static boolean sameFirstCard(org.json.JSONArray a, org.json.JSONArray b) {
+        if (a == null || b == null || a.length() == 0 || b.length() == 0) return false;
+        org.json.JSONObject x = a.optJSONObject(0), y = b.optJSONObject(0);
+        return x != null && y != null && x.optInt("id") == y.optInt("id");
     }
 
     private static String readBody(HttpURLConnection conn) throws Exception {

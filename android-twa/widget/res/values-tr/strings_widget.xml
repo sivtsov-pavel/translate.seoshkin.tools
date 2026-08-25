@@ -14,4 +14,14 @@
     <string name="widget_tails">biriken: %1$d</string>
     <string name="widget_stale">%1$s verisi</string>
     <string name="widget_refresh_hint">Yenile</string>
+    <string name="widget_show_answer">Çeviriyi göster</string>
+    <string name="widget_knew">Biliyordum</string>
+    <string name="widget_forgot">Bilmiyordum</string>
+    <string name="widget_correct">Doğru!</string>
+    <string name="widget_wrong">Doğru: %1$s</string>
+    <string name="widget_phrase">Dersin cümlesi</string>
+    <string name="widget_got_it">Anladım</string>
+    <string name="widget_done_today">Asgari tamam 🎉</string>
+    <string name="widget_open_app">Uygulamayı aç</string>
+    <string name="widget_speak_hint">Dinle</string>
 </resources>

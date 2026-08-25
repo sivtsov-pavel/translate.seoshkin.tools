@@ -14,4 +14,14 @@
     <string name="widget_tails">изостанали: %1$d</string>
     <string name="widget_stale">данни от %1$s</string>
     <string name="widget_refresh_hint">Обнови</string>
+    <string name="widget_show_answer">Покажи превода</string>
+    <string name="widget_knew">Знаех</string>
+    <string name="widget_forgot">Не знаех</string>
+    <string name="widget_correct">Вярно!</string>
+    <string name="widget_wrong">Вярно: %1$s</string>
+    <string name="widget_phrase">Фраза от урока</string>
+    <string name="widget_got_it">Ясно</string>
+    <string name="widget_done_today">Минимумът е готов 🎉</string>
+    <string name="widget_open_app">Отвори приложението</string>
+    <string name="widget_speak_hint">Чуй</string>
 </resources>
