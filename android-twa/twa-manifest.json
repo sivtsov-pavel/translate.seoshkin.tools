@@ -20,8 +20,8 @@
     "path": "/Users/pabloseoshkin/Klients/Projects/translate.seoshkin.tools-android-keys/android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.0.7",
-  "appVersionCode": 8,
+  "appVersionName": "1.0.8",
+  "appVersionCode": 9,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://deutschlernen.ai/manifest.webmanifest",

@@ -68,10 +68,9 @@ export default function WidgetBlock() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
-  // Состояние карточки на экране блокировки веб узнать у нативной части не может:
-  // связь односторонняя (intent://). Поэтому помним, что человек выбрал сам —
-  // и честно предупреждаем, что переключатель может разойтись с телефоном.
-  const [lockOn, setLockOn] = useState(() => localStorage.getItem('widget_lockscreen') === '1')
+  // Состояние карточки на экране блокировки приходит с сервера — там источник правды.
+  // Телефон приводит себя в соответствие при первом же обновлении виджета.
+  const [lockOn, setLockOn] = useState(false)
 
   // Виджет бывает только в Android-приложении — в браузере блока нет вовсе.
   const available = isAndroidApp()
@@ -82,7 +81,7 @@ export default function WidgetBlock() {
     Promise.all([api.get('/widget/status'), api.get('/widget/state').catch(() => null)])
       .then(([s, p]) => {
         if (!alive) return
-        setStatus(s); setPreview(p)
+        setStatus(s); setPreview(p); setLockOn(!!s.notifyOn)
         // Язык виджета хранится на сервере рядом с токеном: нативная часть о смене языка
         // в приложении узнать не может. Синхронизируем при каждом заходе в настройки —
         // запрос идемпотентный и ничего не делает, если язык не менялся.
@@ -114,10 +113,13 @@ export default function WidgetBlock() {
 
   // Уведомление включается на самом телефоне, серверу об этом знать незачем: токен
   // у приложения уже есть, передаём только флаг.
-  const toggleLockScreen = () => {
+  const toggleLockScreen = async () => {
     const next = !lockOn
     setLockOn(next)
-    localStorage.setItem('widget_lockscreen', next ? '1' : '0')
+    // Сервер — источник правды: телефон подхватит флаг при следующем обновлении, даже
+    // если intent-ссылка ниже почему-то не сработает.
+    try { await api.patch('/widget/notify', { on: next }) } catch { setError(true) }
+    // А это — чтобы карточка появилась или исчезла сразу, не дожидаясь обновления.
     window.location.href =
       `intent://widget-link?notify=${next ? 1 : 0}#Intent;scheme=dlwidget;package=${PACKAGE_ID};end`
   }

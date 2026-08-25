@@ -76,6 +76,11 @@ public class WidgetSyncWorker extends Worker {
             }
             store.clearError();
 
+            // Карточку на экране блокировки включает и выключает сервер: настройки
+            // приложения пишут флаг туда, а телефон приводит себя в соответствие.
+            // Раньше флаг жил только здесь, и настройки показывали выдумку.
+            applyNotifyFlag(ctx, store);
+
             // Картинки качаем здесь, в фоне: при отрисовке мы в главном потоке приёмника
             // и в сеть ходить нельзя — карточка осталась бы без картинки навсегда.
             prefetchImages(ctx, store);
@@ -91,6 +96,15 @@ public class WidgetSyncWorker extends Worker {
         } finally {
             if (conn != null) conn.disconnect();
         }
+    }
+
+    /** Привести уведомление в соответствие с флагом, пришедшим от сервера. */
+    static void applyNotifyFlag(Context ctx, WidgetStore store) {
+        org.json.JSONObject state = store.state();
+        if (state == null || !state.has("notify")) return;
+        boolean on = state.optBoolean("notify", false);
+        if (on != store.notificationOn()) store.setNotificationOn(on);
+        if (on) WidgetNotification.update(ctx); else WidgetNotification.hide(ctx);
     }
 
     /** Скачать картинки ленты и убрать из кэша всё лишнее. */

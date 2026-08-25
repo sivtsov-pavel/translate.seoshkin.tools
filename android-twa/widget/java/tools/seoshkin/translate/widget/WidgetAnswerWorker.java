@@ -98,6 +98,7 @@ public class WidgetAnswerWorker extends Worker {
                     store.setIndex(keepIndex);
                 }
                 WidgetSyncWorker.prefetchImages(ctx, store);
+                WidgetSyncWorker.applyNotifyFlag(ctx, store);
             }
             DailyGoalWidgetProvider.redrawAll(ctx);
             return Result.success();
