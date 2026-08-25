@@ -20,8 +20,8 @@
     "path": "/Users/pabloseoshkin/Klients/Projects/translate.seoshkin.tools-android-keys/android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.0.1",
-  "appVersionCode": 2,
+  "appVersionName": "1.0.2",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://deutschlernen.ai/manifest.webmanifest",
@@ -37,6 +37,8 @@
   "minSdkVersion": 21,
   "orientation": "portrait",
   "fingerprints": [],
-  "additionalTrustedOrigins": ["https://translate.seoshkin.tools"],
+  "additionalTrustedOrigins": [
+    "https://translate.seoshkin.tools"
+  ],
   "retainedBundles": []
 }
