@@ -31,4 +31,5 @@
     <string name="widget_continue">Продовжити</string>
     <string name="widget_today">сьогодні %1$d/%2$d</string>
     <string name="widget_left">до уроку %1$d</string>
+    <string name="widget_next">Далі</string>
 </resources>

@@ -27,7 +27,7 @@ export async function widgetRoutes(fastify) {
     preHandler: [fastify.authenticate],
   }, async (request) => {
     const { rows } = await db.query(
-      `SELECT id, device_label, created_at, last_used_at, notify_on
+      `SELECT id, device_label, created_at, last_used_at, notify_on, sound_on
        FROM widget_tokens
        WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > NOW()
        ORDER BY created_at DESC`, [request.user.id])
@@ -36,6 +36,9 @@ export async function widgetRoutes(fastify) {
       // Карточка на экране блокировки. Состояние хранится здесь, а не в телефоне:
       // связь с нативной частью односторонняя, и настройки иначе показывали бы выдумку.
       notifyOn: rows.some(r => r.notify_on),
+      // Озвучка слова при показе карточки. По умолчанию включена: приложение про язык,
+      // и слышать слово важнее, чем экономить тишину.
+      soundOn: rows.length > 0 ? rows.every(r => r.sound_on) : true,
       devices: rows.map(r => ({
         id: r.id,
         label: r.device_label,
@@ -158,6 +161,17 @@ export async function widgetRoutes(fastify) {
     return { ok: true, notifyOn: on, devices: rowCount }
   })
 
+  // ── Озвучка карточки: включить/выключить ──────────────────────────────────
+  fastify.patch('/api/widget/sound', {
+    preHandler: [fastify.authenticate],
+  }, async (request) => {
+    const on = request.body?.on === true
+    await db.query(
+      `UPDATE widget_tokens SET sound_on = $2
+       WHERE user_id = $1 AND revoked_at IS NULL`, [request.user.id, on])
+    return { ok: true, soundOn: on }
+  })
+
   // ── Состояние для самого виджета ──────────────────────────────────────────
   // Пускаем и по токену устройства, и по обычному JWT: второе нужно, чтобы показать
   // предпросмотр виджета в настройках, не выдавая токен раньше времени.
@@ -178,6 +192,7 @@ export async function widgetRoutes(fastify) {
       : []
     // Телефон приводит уведомление в соответствие с этим флагом при каждом обновлении.
     state.notify = user.notify_on === true
+    state.sound = user.sound_on !== false
 
     // ETag считаем БЕЗ updatedAt: иначе метка времени меняет ответ каждый раз и 304
     // не случается никогда — виджет качал бы полный ответ каждые полчаса зря.
@@ -220,7 +235,8 @@ function uiLang(request, user) {
 // виджет получит 401 и покажет «отключён в настройках», а не чужие числа.
 async function userByWidgetToken(token) {
   const { rows } = await db.query(
-    `SELECT u.id, u.role, u.school_id, t.id AS token_id, t.target_lang, t.ui_lang, t.notify_on
+    `SELECT u.id, u.role, u.school_id, t.id AS token_id, t.target_lang, t.ui_lang,
+            t.notify_on, t.sound_on
      FROM widget_tokens t JOIN users u ON u.id = t.user_id
      WHERE t.token_hash = $1 AND t.revoked_at IS NULL AND t.expires_at > NOW()`,
     [hashToken(token)])

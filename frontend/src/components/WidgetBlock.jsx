@@ -34,6 +34,8 @@ const T = {
   on2:       { ru: 'Включить', en: 'Turn on', de: 'Einschalten', uk: 'Увімкнути', es: 'Activar', fr: 'Activer', bg: 'Включи', tr: 'Aç', ar: 'تشغيل', sq: 'Aktivizo' },
   off2:      { ru: 'Выключить', en: 'Turn off', de: 'Ausschalten', uk: 'Вимкнути', es: 'Desactivar', fr: 'Désactiver', bg: 'Изключи', tr: 'Kapat', ar: 'إيقاف', sq: 'Çaktivizo' },
   lockSwipe: { ru: 'На экране блокировки потяните уведомление вниз — появятся варианты ответа.', en: 'On the lock screen, pull the notification down — the answer buttons appear.', de: 'Auf dem Sperrbildschirm die Benachrichtigung nach unten ziehen — dann erscheinen die Antworten.', uk: 'На екрані блокування потягніть сповіщення вниз — з’являться варіанти відповіді.', es: 'En la pantalla de bloqueo, desliza la notificación hacia abajo para ver las respuestas.', fr: 'Sur l’écran de verrouillage, faites glisser la notification vers le bas pour voir les réponses.', bg: 'На заключен екран плъзнете известието надолу — ще се появят отговорите.', tr: 'Kilit ekranında bildirimi aşağı çekin — cevap seçenekleri görünür.', ar: 'على شاشة القفل اسحب الإشعار للأسفل لتظهر خيارات الإجابة.', sq: 'Në ekranin e kyçjes tërhiq njoftimin poshtë — shfaqen përgjigjet.' },
+  soundTitle: { ru: 'Озвучивать слово', en: 'Speak the word', de: 'Wort vorlesen', uk: 'Озвучувати слово', es: 'Pronunciar la palabra', fr: 'Prononcer le mot', bg: 'Изговаряй думата', tr: 'Kelimeyi seslendir', ar: 'نطق الكلمة', sq: 'Shqiptoje fjalën' },
+  soundDesc:  { ru: 'Немецкое слово произносится, когда появляется карточка. Кнопка 🔊 работает всегда.', en: 'The German word is spoken when a card appears. The 🔊 button always works.', de: 'Das deutsche Wort wird beim Erscheinen der Karte vorgelesen. Die 🔊-Taste funktioniert immer.', uk: 'Німецьке слово озвучується, коли з’являється картка. Кнопка 🔊 працює завжди.', es: 'La palabra alemana se pronuncia al aparecer la tarjeta. El botón 🔊 funciona siempre.', fr: 'Le mot allemand est prononcé à l’apparition de la carte. Le bouton 🔊 fonctionne toujours.', bg: 'Немската дума се изговаря при поява на картата. Бутонът 🔊 работи винаги.', tr: 'Kart göründüğünde Almanca kelime seslendirilir. 🔊 düğmesi her zaman çalışır.', ar: 'تُنطق الكلمة الألمانية عند ظهور البطاقة. زر 🔊 يعمل دائمًا.', sq: 'Fjala gjermane shqiptohet kur shfaqet karta. Butoni 🔊 punon gjithmonë.' },
   error:     { ru: 'Не получилось. Попробуйте ещё раз.', en: 'Didn’t work. Please try again.', de: 'Hat nicht geklappt. Bitte erneut versuchen.', uk: 'Не вийшло. Спробуйте ще раз.', es: 'No funcionó. Inténtalo de nuevo.', fr: 'Échec. Réessayez.', bg: 'Не се получи. Опитайте пак.', tr: 'Olmadı. Tekrar deneyin.', ar: 'لم ينجح. حاول مرة أخرى.', sq: 'Nuk funksionoi. Provo sërish.' },
 }
 const tr = (key, lang) => T[key][lang] || T[key].en
@@ -71,6 +73,7 @@ export default function WidgetBlock() {
   // Состояние карточки на экране блокировки приходит с сервера — там источник правды.
   // Телефон приводит себя в соответствие при первом же обновлении виджета.
   const [lockOn, setLockOn] = useState(false)
+  const [soundOn, setSoundOn] = useState(true)
 
   // Виджет бывает только в Android-приложении — в браузере блока нет вовсе.
   const available = isAndroidApp()
@@ -81,7 +84,7 @@ export default function WidgetBlock() {
     Promise.all([api.get('/widget/status'), api.get('/widget/state').catch(() => null)])
       .then(([s, p]) => {
         if (!alive) return
-        setStatus(s); setPreview(p); setLockOn(!!s.notifyOn)
+        setStatus(s); setPreview(p); setLockOn(!!s.notifyOn); setSoundOn(s.soundOn !== false)
         // Язык виджета хранится на сервере рядом с токеном: нативная часть о смене языка
         // в приложении узнать не может. Синхронизируем при каждом заходе в настройки —
         // запрос идемпотентный и ничего не делает, если язык не менялся.
@@ -122,6 +125,12 @@ export default function WidgetBlock() {
     // А это — чтобы карточка появилась или исчезла сразу, не дожидаясь обновления.
     window.location.href =
       `intent://widget-link?notify=${next ? 1 : 0}#Intent;scheme=dlwidget;package=${PACKAGE_ID};end`
+  }
+
+  const toggleSound = async () => {
+    const next = !soundOn
+    setSoundOn(next)
+    try { await api.patch('/widget/sound', { on: next }) } catch { setError(true) }
   }
 
   const disable = async () => {
@@ -186,6 +195,26 @@ export default function WidgetBlock() {
             <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>
               {tr('lockDesc', lang)}
               {lockOn && <div style={{ marginTop: 4 }}>{tr('lockSwipe', lang)}</div>}
+            </div>
+          </div>
+
+          {/* Озвучка карточки */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>🔊 {tr('soundTitle', lang)}</div>
+              <button onClick={toggleSound}
+                style={{
+                  padding: '6px 14px', borderRadius: 10, fontWeight: 700, fontSize: 12,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  border: soundOn ? '1px solid var(--line)' : 'none',
+                  background: soundOn ? 'transparent' : 'var(--accent)',
+                  color: soundOn ? 'var(--ink)' : 'var(--accent-ink)',
+                }}>
+                {soundOn ? tr('off2', lang) : tr('on2', lang)}
+              </button>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>
+              {tr('soundDesc', lang)}
             </div>
           </div>
 

@@ -41,9 +41,13 @@ public class WidgetAnswerWorker extends Worker {
         Context ctx = getApplicationContext();
         WidgetStore store = new WidgetStore(ctx);
 
-        // Шаг вперёд делаем всегда, даже без сети: ответ уже в очереди, и человек
-        // вправе продолжать заниматься в метро.
-        store.setIndex(store.index() + 1);
+        // ВАЖНО: здесь НЕЛЬЗЯ двигать ленту вперёд.
+        //
+        // Раньше воркер делал setIndex(index + 1) — и при плохой связи, когда WorkManager
+        // повторяет попытку, каждый повтор пролистывал ещё одну карточку. Снаружи это
+        // выглядело как «перескакивает через пару упражнений» и «залипание»
+        // (Павел, 25.08.2026). Лента двигается только по кнопке «Далее», которую нажал
+        // человек, — как в упражнениях приложения.
         DailyGoalWidgetProvider.redrawAll(ctx);
 
         String token = store.token();

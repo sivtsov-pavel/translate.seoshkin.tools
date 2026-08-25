@@ -31,4 +31,5 @@
     <string name="widget_continue">Vazhdo</string>
     <string name="widget_today">sot %1$d/%2$d</string>
     <string name="widget_left">%1$d deri te mësimi</string>
+    <string name="widget_next">Tjetra</string>
 </resources>

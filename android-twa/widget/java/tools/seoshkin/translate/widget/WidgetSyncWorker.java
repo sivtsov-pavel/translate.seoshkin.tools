@@ -105,6 +105,9 @@ public class WidgetSyncWorker extends Worker {
         boolean on = state.optBoolean("notify", false);
         if (on != store.notificationOn()) store.setNotificationOn(on);
         if (on) WidgetNotification.update(ctx); else WidgetNotification.hide(ctx);
+
+        // Озвучка — такая же настройка с сервера, как и сама карточка на локскрине.
+        if (state.has("sound")) store.setSoundOn(state.optBoolean("sound", true));
     }
 
     /** Скачать картинки ленты и убрать из кэша всё лишнее. */

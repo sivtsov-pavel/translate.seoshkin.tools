@@ -30,6 +30,10 @@ public class WidgetStore {
     private static final String KEY_FLIPPED = "card_flipped"; // перевод у карточки уже открыт
     private static final String KEY_ERROR  = "last_error";    // почему не удалось обновиться
     private static final String KEY_NOTIFY = "notify_on";     // карточка в уведомлении включена
+    private static final String KEY_SOUND  = "sound_on";      // озвучивать слово при показе
+    private static final String KEY_ANSWERED = "answered";    // на текущую карточку уже ответили
+    private static final String KEY_ANS_OK   = "answered_ok";
+    private static final String KEY_ANS_IDX  = "answered_idx";
 
     private final SharedPreferences prefs;
 
@@ -55,6 +59,7 @@ public class WidgetStore {
                 .putLong(KEY_SYNCED, System.currentTimeMillis())
                 .putInt(KEY_INDEX, 0)          // свежая пачка — показываем с первой карточки
                 .putBoolean(KEY_FLIPPED, false)
+                .remove(KEY_ANSWERED).remove(KEY_ANS_OK).remove(KEY_ANS_IDX)
                 .apply();
     }
 
@@ -78,13 +83,44 @@ public class WidgetStore {
 
     public void setNotificationOn(boolean on) { prefs.edit().putBoolean(KEY_NOTIFY, on).apply(); }
 
+    // По умолчанию озвучка включена: приложение про язык, слышать слово важнее тишины.
+    public boolean soundOn() { return prefs.getBoolean(KEY_SOUND, true); }
+
+    public void setSoundOn(boolean on) { prefs.edit().putBoolean(KEY_SOUND, on).apply(); }
+
+    // ── Ответ на текущую карточку ────────────────────────────────────────────
+    // Держим здесь, а не в памяти: между нажатием и отрисовкой процесс могут выгрузить,
+    // и результат ответа пропал бы вместе с ним.
+    public boolean answered() { return prefs.getBoolean(KEY_ANSWERED, false); }
+
+    public boolean answeredCorrect() { return prefs.getBoolean(KEY_ANS_OK, false); }
+
+    public int answeredChoice() { return prefs.getInt(KEY_ANS_IDX, -1); }
+
+    public void setAnswered(boolean correct, int choice) {
+        prefs.edit()
+                .putBoolean(KEY_ANSWERED, true)
+                .putBoolean(KEY_ANS_OK, correct)
+                .putInt(KEY_ANS_IDX, choice)
+                .apply();
+    }
+
+    public void clearAnswered() {
+        prefs.edit().remove(KEY_ANSWERED).remove(KEY_ANS_OK).remove(KEY_ANS_IDX).apply();
+    }
+
     // ── Лента карточек ───────────────────────────────────────────────────────
     // Индекс живёт отдельно от ленты: пришли свежие карточки — начинаем сначала,
     // ответил на текущую — двигаем вперёд, не трогая саму ленту.
 
     public int index() { return prefs.getInt(KEY_INDEX, 0); }
 
-    public void setIndex(int i) { prefs.edit().putInt(KEY_INDEX, i).putBoolean(KEY_FLIPPED, false).apply(); }
+    public void setIndex(int i) {
+        prefs.edit().putInt(KEY_INDEX, i)
+                .putBoolean(KEY_FLIPPED, false)
+                .remove(KEY_ANSWERED).remove(KEY_ANS_OK).remove(KEY_ANS_IDX)
+                .apply();
+    }
 
     public boolean flipped() { return prefs.getBoolean(KEY_FLIPPED, false); }
 

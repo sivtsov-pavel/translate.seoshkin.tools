@@ -115,9 +115,11 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             }
 
             case ACTION_NEXT:
+                // Единственное место, где лента двигается вперёд.
                 store.setIndex(store.index() + 1);
+                store.clearAnswered();
                 redrawAll(ctx);
-                // Лента кончилась — просим свежую пачку.
+                speakCurrent(ctx, store);        // новая карточка сразу звучит
                 if (store.currentCard() == null) WidgetSync.requestNow(ctx);
                 break;
         }
@@ -134,13 +136,14 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             store.enqueueAnswer(a);
         } catch (Exception ignored) { }
 
-        // Сначала показываем результат — человек должен увидеть, что было правильно.
-        Reveal reveal = new Reveal(correct, chosen, card.optInt("correct", -1));
-        redrawAll(ctx, reveal);
+        // Результат запоминаем: карточка остаётся на экране, пока человек не нажмёт
+        // «Далее». Так же устроены упражнения в приложении, и это единственный способ
+        // не терять ответы при повторных отправках.
+        store.setAnswered(correct, chosen);
+        redrawAll(ctx);
 
-        // Отправку и переход к следующей карточке делает воркер: из onReceive нельзя ни
-        // ждать сеть, ни спать — процесс убьют вместе с недоделанной работой.
-        WidgetSync.sendAnswers(ctx, REVEAL_MS);
+        // Отправляем сразу, без задержки: показ результата больше не зависит от воркера.
+        WidgetSync.sendAnswers(ctx, 0);
     }
 
     // ── Отрисовка ────────────────────────────────────────────────────────────
@@ -209,6 +212,12 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         JSONObject card = store.currentCard();
         String state = s.optString("state", "");
 
+        // Ответ на текущую карточку уже дан — показываем результат и «Далее».
+        if (reveal == null && store.answered()) {
+            reveal = new Reveal(store.answeredCorrect(), store.answeredChoice(),
+                                card == null ? -1 : card.optInt("correct", -1));
+        }
+
         if (card != null && "in_progress".equals(state)) {
             renderCard(ctx, v, store, card, reveal, forNotification);
         } else if ("in_progress".equals(state)) {
@@ -269,9 +278,10 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         if ("mc".equals(kind)) {
             renderChoice(ctx, v, card, reveal, forNotification);
             v.setTextViewText(R.id.widget_line2, infoLine(ctx, state));
-            // Результат ответа — крупной строкой и цветом. Мелкая подпись внизу читалась
-            // плохо: «даже не понятно, верно сделал или как» (Павел, 25.08.2026).
-            if (reveal != null) showResult(ctx, v, card, reveal);
+            if (reveal != null) {
+                showResult(ctx, v, card, reveal);
+                showNext(ctx, v);
+            }
         } else if ("flip".equals(kind)) {
             renderFlip(ctx, v, store, card, reveal);
             v.setTextViewText(R.id.widget_line2, infoLine(ctx, state));
@@ -280,13 +290,16 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
                 v.setTextViewText(R.id.widget_answer,
                         (reveal.correct ? "✓ " : "✗ ") + card.optString("answer"));
                 v.setTextColor(R.id.widget_answer, reveal.correct ? 0xFF4E9A6E : 0xFFB3382C);
+                showNext(ctx, v);
             }
         } else {   // phrase
             v.setViewVisibility(R.id.widget_answer, View.VISIBLE);
             v.setTextViewText(R.id.widget_answer, card.optString("answer"));
             v.setViewVisibility(R.id.widget_flip_row, View.VISIBLE);
             v.setTextViewText(R.id.widget_flip_left, ctx.getString(R.string.widget_got_it));
-            v.setOnClickPendingIntent(R.id.widget_flip_left, answerIntent(ctx, true, -1));
+            v.setOnClickPendingIntent(R.id.widget_flip_left,
+                    reveal == null ? answerIntent(ctx, true, -1) : broadcast(ctx, ACTION_NEXT, 5));
+            if (reveal != null) v.setTextViewText(R.id.widget_flip_left, ctx.getString(R.string.widget_next));
             v.setViewVisibility(R.id.widget_flip_right, View.GONE);
             v.setTextViewText(R.id.widget_line2, ctx.getString(R.string.widget_phrase));
         }
@@ -409,6 +422,22 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             sb.append(ctx.getString(R.string.widget_tails, tails));
         }
         return sb.toString();
+    }
+
+    /** Кнопка «Далее» — пока не нажал, карточка не меняется. Железно, как в упражнениях. */
+    private static void showNext(Context ctx, RemoteViews v) {
+        v.setViewVisibility(R.id.widget_options, View.GONE);
+        v.setViewVisibility(R.id.widget_flip_row, View.VISIBLE);
+        v.setTextViewText(R.id.widget_flip_left, ctx.getString(R.string.widget_next));
+        v.setOnClickPendingIntent(R.id.widget_flip_left, broadcast(ctx, ACTION_NEXT, 5));
+        v.setViewVisibility(R.id.widget_flip_right, View.GONE);
+    }
+
+    /** Озвучить текущую карточку, если озвучка включена в настройках. */
+    static void speakCurrent(Context ctx, WidgetStore store) {
+        if (!store.soundOn()) return;
+        JSONObject card = store.currentCard();
+        if (card != null) WidgetSpeaker.speak(ctx, card.optString("speak", card.optString("question")));
     }
 
     /** Крупная строка результата: видно с одного взгляда, верно или нет. */
