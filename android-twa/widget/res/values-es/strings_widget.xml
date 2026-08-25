@@ -25,4 +25,6 @@
     <string name="widget_open_app">Abrir la app</string>
     <string name="widget_speak_hint">Escuchar</string>
     <string name="widget_error">No se pudo actualizar: %1$s</string>
+    <string name="widget_channel_name">Tarjeta de estudio</string>
+    <string name="widget_channel_desc">Tarjeta en la pantalla de bloqueo: responde sin desbloquear</string>
 </resources>

@@ -12,6 +12,7 @@
 // ничего не знает. Чем их наполнять, в каком порядке и подмешивать ли фразы — решает сервер.
 // Поэтому состав виджета можно менять обычным деплоем, не заставляя людей качать новый APK.
 import { db } from '../db/index.js'
+import { config } from '../config.js'
 import { REQUIRED_TYPES } from './drip.js'
 
 // Сколько карточек держим на телефоне про запас: примерно два подхода «включил экран,
@@ -52,7 +53,7 @@ export async function widgetCards(userId, lessonId, lang = 'ru', limit = CARDS_A
 async function exerciseCards(userId, lessonId, lang, limit) {
   const { rows } = await db.query(
     `SELECT e.id, e.type, e.payload, COALESCE(e.payload_translations, '{}') AS payload_translations,
-            w.word_de, w.translations AS word_translations, w.translation_ru
+            w.word_de, w.translations AS word_translations, w.translation_ru, w.image_url
      FROM exercises e
      LEFT JOIN words w ON w.id = e.word_id
      LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
@@ -97,6 +98,7 @@ export function choiceCard(row, lang) {
     id: row.id,
     question: word,
     speak: word,                       // что произносит виджет по кнопке 🔊
+    image: absoluteImage(row.image_url),
     options: picked.options,
     correct: picked.correct,
   }
@@ -119,6 +121,7 @@ export function flipCard(row, lang) {
     id: row.id,
     question: word,
     speak: word,
+    image: absoluteImage(row.image_url),
     answer: String(answer),
   }
 }
@@ -161,6 +164,14 @@ function mix(exercises, phrases, every) {
     if ((i + 1) % every === 0 && p < phrases.length) out.push(phrases[p++])
   })
   return out
+}
+
+// Картинка слова. Отдаём абсолютной ссылкой: у виджета нет никакой «текущей страницы»,
+// от которой можно отсчитать относительный путь. Картинки лежат у слов (words.image_url),
+// у самих упражнений их нет ни одной — проверено на бою 25.08.2026.
+function absoluteImage(url) {
+  if (!url) return null
+  return url.startsWith('http') ? url : config.publicUrl + url
 }
 
 // Немецкое слово: из словаря, иначе из вопроса упражнения. Служебный префикс вроде

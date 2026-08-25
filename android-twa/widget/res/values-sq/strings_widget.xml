@@ -25,4 +25,6 @@
     <string name="widget_open_app">Hap aplikacionin</string>
     <string name="widget_speak_hint">Dëgjo</string>
     <string name="widget_error">S’u përditësua: %1$s</string>
+    <string name="widget_channel_name">Kartë mësimi</string>
+    <string name="widget_channel_desc">Kartë në ekranin e kyçjes: përgjigju pa e shkyçur</string>
 </resources>

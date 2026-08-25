@@ -25,4 +25,6 @@
     <string name="widget_open_app">Відкрити застосунок</string>
     <string name="widget_speak_hint">Послухати</string>
     <string name="widget_error">Не вдалося оновити: %1$s</string>
+    <string name="widget_channel_name">Картка для навчання</string>
+    <string name="widget_channel_desc">Картка на екрані блокування: відповідайте не розблоковуючи</string>
 </resources>

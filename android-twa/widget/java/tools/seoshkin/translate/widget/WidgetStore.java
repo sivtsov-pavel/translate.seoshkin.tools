@@ -29,6 +29,7 @@ public class WidgetStore {
     private static final String KEY_QUEUE  = "answer_queue"; // ответы, ещё не дошедшие до сервера
     private static final String KEY_FLIPPED = "card_flipped"; // перевод у карточки уже открыт
     private static final String KEY_ERROR  = "last_error";    // почему не удалось обновиться
+    private static final String KEY_NOTIFY = "notify_on";     // карточка в уведомлении включена
 
     private final SharedPreferences prefs;
 
@@ -71,6 +72,11 @@ public class WidgetStore {
     }
 
     public void clearError() { prefs.edit().remove(KEY_ERROR).apply(); }
+
+    // ── Карточка на экране блокировки ────────────────────────────────────────
+    public boolean notificationOn() { return prefs.getBoolean(KEY_NOTIFY, false); }
+
+    public void setNotificationOn(boolean on) { prefs.edit().putBoolean(KEY_NOTIFY, on).apply(); }
 
     // ── Лента карточек ───────────────────────────────────────────────────────
     // Индекс живёт отдельно от ленты: пришли свежие карточки — начинаем сначала,

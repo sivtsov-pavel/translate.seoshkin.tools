@@ -25,4 +25,6 @@
     <string name="widget_open_app">Отвори приложението</string>
     <string name="widget_speak_hint">Чуй</string>
     <string name="widget_error">Неуспешно обновяване: %1$s</string>
+    <string name="widget_channel_name">Карта за учене</string>
+    <string name="widget_channel_desc">Карта на заключен екран: отговаряйте без отключване</string>
 </resources>

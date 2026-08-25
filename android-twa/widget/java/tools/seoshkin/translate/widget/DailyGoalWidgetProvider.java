@@ -146,17 +146,34 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
         int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, DailyGoalWidgetProvider.class));
         for (int id : ids) render(ctx, mgr, id, reveal);
+        // Карточка на экране блокировки показывает то же самое — обновляем вместе.
+        WidgetNotification.update(ctx);
     }
 
     private static void render(Context ctx, AppWidgetManager mgr, int widgetId, Reveal reveal) {
         WidgetStore store = new WidgetStore(ctx);
+        mgr.updateAppWidget(widgetId, buildViews(ctx, store, reveal, false));
+    }
+
+    /**
+     * Собирает вид карточки. Один и тот же для виджета и для уведомления на экране
+     * блокировки: расхождение между ними означало бы, что человек видит два разных
+     * состояния одного и того же занятия.
+     *
+     * @param forNotification true — вид для уведомления (там нет смысла в кнопке «обновить»)
+     */
+    public static RemoteViews buildViews(Context ctx, WidgetStore store, Reveal reveal,
+                                         boolean forNotification) {
         RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.widget_daily_goal);
 
         // Прячем всё необязательное; ниже покажем только то, что нужно этой карточке.
+        v.setViewVisibility(R.id.widget_image, View.GONE);
         v.setViewVisibility(R.id.widget_options, View.GONE);
         v.setViewVisibility(R.id.widget_flip_row, View.GONE);
         v.setViewVisibility(R.id.widget_answer, View.GONE);
         v.setViewVisibility(R.id.widget_question_row, View.GONE);
+        // В уведомлении кнопка «обновить» лишняя: оно и так обновляется после каждого ответа.
+        v.setViewVisibility(R.id.widget_refresh, forNotification ? View.GONE : View.VISIBLE);
         v.setOnClickPendingIntent(R.id.widget_refresh, broadcast(ctx, ACTION_REFRESH, 1));
 
         if (store.token() == null) {
@@ -164,8 +181,7 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             v.setProgressBar(R.id.widget_bar, 1, 0, false);
             v.setTextViewText(R.id.widget_line2, "");
             v.setOnClickPendingIntent(R.id.widget_root, openApp(ctx, "/settings"));
-            mgr.updateAppWidget(widgetId, v);
-            return;
+            return v;
         }
 
         JSONObject s = store.state();
@@ -177,8 +193,7 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             String err = store.lastError();
             v.setTextViewText(R.id.widget_line2, err == null ? "" : ctx.getString(R.string.widget_error, err));
             v.setOnClickPendingIntent(R.id.widget_root, openApp(ctx, "/"));
-            mgr.updateAppWidget(widgetId, v);
-            return;
+            return v;
         }
 
         renderHeader(ctx, v, s);
@@ -194,7 +209,7 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         }
 
         v.setOnClickPendingIntent(R.id.widget_root, openApp(ctx, s.optString("nextUrl", "/")));
-        mgr.updateAppWidget(widgetId, v);
+        return v;
     }
 
     private static void renderHeader(Context ctx, RemoteViews v, JSONObject s) {
@@ -220,6 +235,16 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
         v.setViewVisibility(R.id.widget_question_row, View.VISIBLE);
         v.setTextViewText(R.id.widget_question, card.optString("question"));
         v.setOnClickPendingIntent(R.id.widget_speak, broadcast(ctx, ACTION_SPEAK, 2));
+
+        // Картинка слова — только из кэша: качает её заранее воркер, здесь мы в главном
+        // потоке приёмника и в сеть ходить нельзя.
+        android.graphics.Bitmap image = WidgetImages.cached(ctx, card.optString("image", null));
+        if (image != null) {
+            v.setImageViewBitmap(R.id.widget_image, image);
+            v.setViewVisibility(R.id.widget_image, View.VISIBLE);
+        } else {
+            v.setViewVisibility(R.id.widget_image, View.GONE);
+        }
 
         if ("mc".equals(kind)) {
             renderChoice(ctx, v, card, reveal);

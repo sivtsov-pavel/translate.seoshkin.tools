@@ -25,4 +25,6 @@
     <string name="widget_open_app">Открыть приложение</string>
     <string name="widget_speak_hint">Послушать</string>
     <string name="widget_error">Не удалось обновить: %1$s</string>
+    <string name="widget_channel_name">Карточка для учёбы</string>
+    <string name="widget_channel_desc">Карточка на экране блокировки: отвечайте не разблокируя</string>
 </resources>

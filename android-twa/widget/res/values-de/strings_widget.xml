@@ -25,4 +25,6 @@
     <string name="widget_open_app">App öffnen</string>
     <string name="widget_speak_hint">Anhören</string>
     <string name="widget_error">Update fehlgeschlagen: %1$s</string>
+    <string name="widget_channel_name">Lernkarte</string>
+    <string name="widget_channel_desc">Karte auf dem Sperrbildschirm: antworten ohne zu entsperren</string>
 </resources>

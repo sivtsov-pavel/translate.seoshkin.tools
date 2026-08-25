@@ -25,4 +25,6 @@
     <string name="widget_open_app">Uygulamayı aç</string>
     <string name="widget_speak_hint">Dinle</string>
     <string name="widget_error">Güncellenemedi: %1$s</string>
+    <string name="widget_channel_name">Öğrenme kartı</string>
+    <string name="widget_channel_desc">Kilit ekranında kart: kilidi açmadan cevaplayın</string>
 </resources>

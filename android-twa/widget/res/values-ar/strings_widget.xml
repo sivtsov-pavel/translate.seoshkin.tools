@@ -25,4 +25,6 @@
     <string name="widget_open_app">افتح التطبيق</string>
     <string name="widget_speak_hint">استمع</string>
     <string name="widget_error">تعذّر التحديث: %1$s</string>
+    <string name="widget_channel_name">بطاقة تعلّم</string>
+    <string name="widget_channel_desc">بطاقة على شاشة القفل: أجب دون فتح القفل</string>
 </resources>

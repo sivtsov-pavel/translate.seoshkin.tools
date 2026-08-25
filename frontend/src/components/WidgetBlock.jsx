@@ -29,6 +29,10 @@ const T = {
   noSched:   { ru: 'Выберите расписание курса', en: 'Choose the course schedule', de: 'Kursplan wählen', uk: 'Оберіть розклад курсу', es: 'Elige el horario del curso', fr: 'Choisissez le planning du cours', bg: 'Изберете разписание на курса', tr: 'Kurs programını seçin', ar: 'اختر جدول الدورة', sq: 'Zgjidh orarin e kursit' },
   allDone:   { ru: 'Все уроки пройдены', en: 'All lessons done', de: 'Alle Lektionen geschafft', uk: 'Усі уроки пройдено', es: 'Todas las lecciones hechas', fr: 'Toutes les leçons terminées', bg: 'Всички уроци са минати', tr: 'Tüm dersler bitti', ar: 'أُنجزت كل الدروس', sq: 'Të gjitha mësimet u kryen' },
   noLessons: { ru: 'Уроков пока нет', en: 'No lessons yet', de: 'Noch keine Lektionen', uk: 'Уроків поки немає', es: 'Aún no hay lecciones', fr: 'Pas encore de leçons', bg: 'Още няма уроци', tr: 'Henüz ders yok', ar: 'لا دروس بعد', sq: 'Ende s’ka mësime' },
+  lockTitle: { ru: 'Карточка на экране блокировки', en: 'Card on the lock screen', de: 'Karte auf dem Sperrbildschirm', uk: 'Картка на екрані блокування', es: 'Tarjeta en la pantalla de bloqueo', fr: 'Carte sur l’écran de verrouillage', bg: 'Карта на заключен екран', tr: 'Kilit ekranında kart', ar: 'بطاقة على شاشة القفل', sq: 'Kartë në ekranin e kyçjes' },
+  lockDesc:  { ru: 'Отвечать можно не разблокируя телефон. Уведомление беззвучное.', en: 'Answer without unlocking the phone. The notification is silent.', de: 'Antworten, ohne das Handy zu entsperren. Die Benachrichtigung ist lautlos.', uk: 'Відповідати можна не розблоковуючи телефон. Сповіщення беззвучне.', es: 'Responde sin desbloquear el teléfono. La notificación es silenciosa.', fr: 'Répondez sans déverrouiller le téléphone. Notification silencieuse.', bg: 'Отговаряйте без да отключвате телефона. Известието е беззвучно.', tr: 'Telefonu açmadan cevaplayın. Bildirim sessizdir.', ar: 'أجب دون فتح قفل الهاتف. الإشعار صامت.', sq: 'Përgjigju pa e shkyçur telefonin. Njoftimi është pa zë.' },
+  on2:       { ru: 'Включить', en: 'Turn on', de: 'Einschalten', uk: 'Увімкнути', es: 'Activar', fr: 'Activer', bg: 'Включи', tr: 'Aç', ar: 'تشغيل', sq: 'Aktivizo' },
+  off2:      { ru: 'Выключить', en: 'Turn off', de: 'Ausschalten', uk: 'Вимкнути', es: 'Desactivar', fr: 'Désactiver', bg: 'Изключи', tr: 'Kapat', ar: 'إيقاف', sq: 'Çaktivizo' },
   error:     { ru: 'Не получилось. Попробуйте ещё раз.', en: 'Didn’t work. Please try again.', de: 'Hat nicht geklappt. Bitte erneut versuchen.', uk: 'Не вийшло. Спробуйте ще раз.', es: 'No funcionó. Inténtalo de nuevo.', fr: 'Échec. Réessayez.', bg: 'Не се получи. Опитайте пак.', tr: 'Olmadı. Tekrar deneyin.', ar: 'لم ينجح. حاول مرة أخرى.', sq: 'Nuk funksionoi. Provo sërish.' },
 }
 const tr = (key, lang) => T[key][lang] || T[key].en
@@ -103,6 +107,13 @@ export default function WidgetBlock() {
     } catch { setError(true) } finally { setBusy(false) }
   }
 
+  // Уведомление включается на самом телефоне, серверу об этом знать незачем: токен
+  // у приложения уже есть, передаём только флаг.
+  const setLockScreen = (on) => {
+    window.location.href =
+      `intent://widget-link?notify=${on ? 1 : 0}#Intent;scheme=dlwidget;package=${PACKAGE_ID};end`
+  }
+
   const disable = async () => {
     setBusy(true); setError(false)
     try {
@@ -146,6 +157,27 @@ export default function WidgetBlock() {
               <b>{line}</b>
             </div>
           )}
+          {/* Карточка на экране блокировки. Состояние живёт в приложении на телефоне,
+              а не на сервере: это настройка конкретного устройства, а не аккаунта. */}
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>🔒 {tr('lockTitle', lang)}</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setLockScreen(true)}
+                  style={{ padding: '6px 12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {tr('on2', lang)}
+                </button>
+                <button onClick={() => setLockScreen(false)}
+                  style={{ padding: '6px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {tr('off2', lang)}
+                </button>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>
+              {tr('lockDesc', lang)}
+            </div>
+          </div>
+
           {justEnabled && (
             <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 10, lineHeight: 1.5 }}>
               {tr('howto', lang)}

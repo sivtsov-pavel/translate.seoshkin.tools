@@ -25,4 +25,6 @@
     <string name="widget_open_app">Open app</string>
     <string name="widget_speak_hint">Listen</string>
     <string name="widget_error">Cannot update: %1$s</string>
+    <string name="widget_channel_name">Learning card</string>
+    <string name="widget_channel_desc">Card on the lock screen: answer without unlocking</string>
 </resources>

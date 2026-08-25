@@ -73,6 +73,10 @@ public class WidgetSyncWorker extends Worker {
             }
             store.clearError();
 
+            // Картинки качаем здесь, в фоне: при отрисовке мы в главном потоке приёмника
+            // и в сеть ходить нельзя — карточка осталась бы без картинки навсегда.
+            prefetchImages(ctx, store);
+
             DailyGoalWidgetProvider.redrawAll(ctx);
             return Result.success();
 
@@ -84,6 +88,21 @@ public class WidgetSyncWorker extends Worker {
         } finally {
             if (conn != null) conn.disconnect();
         }
+    }
+
+    /** Скачать картинки ленты и убрать из кэша всё лишнее. */
+    static void prefetchImages(Context ctx, WidgetStore store) {
+        org.json.JSONArray cards = store.cards();
+        java.util.HashSet<String> urls = new java.util.HashSet<>();
+        for (int i = 0; i < cards.length(); i++) {
+            org.json.JSONObject c = cards.optJSONObject(i);
+            String url = c == null ? null : c.optString("image", null);
+            if (url != null && !url.isEmpty() && !"null".equals(url)) {
+                urls.add(url);
+                WidgetImages.prefetch(ctx, url);
+            }
+        }
+        WidgetImages.cleanup(ctx, urls);
     }
 
     /** Та же ли лента пришла: сравниваем первую карточку. */
