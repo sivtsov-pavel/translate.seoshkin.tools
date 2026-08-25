@@ -38,8 +38,10 @@ import tools.seoshkin.translate.R;
 public class WidgetNotification {
 
     // v2: у канала v1 была важность LOW, а поменять её у существующего канала нельзя.
-    private static final String CHANNEL_ID     = "widget_card_v2";
-    private static final String CHANNEL_ID_OLD = "widget_card";
+    // v3: важность снова повышена — на Pixel с группировкой уведомлений карточка
+    // с важностью DEFAULT всё равно уезжала вниз и на экране блокировки терялась.
+    private static final String CHANNEL_ID = "widget_card_v3";
+    private static final String[] CHANNELS_OLD = { "widget_card", "widget_card_v2" };
     private static final int NOTIFICATION_ID = 4201;
 
     /** Показать или обновить карточку в уведомлении. Ничего не делает, если выключено. */
@@ -68,7 +70,9 @@ public class WidgetNotification {
                 .setSilent(true)                  // обновляется часто — звонить об этом незачем
                 .setShowWhen(false)
                 .setOnlyAlertOnce(true)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                // Учебная карточка — не новость: место ей вверху, а не в тихой куче.
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
                 // Содержимое видно на заблокированном экране — ради этого всё и делается.
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setCustomContentView(small)
@@ -119,15 +123,15 @@ public class WidgetNotification {
 
         // Канал с прежней (низкой) важностью убираем: именно из-за неё карточки не было
         // на экране блокировки.
-        if (nm.getNotificationChannel(CHANNEL_ID_OLD) != null) {
-            nm.deleteNotificationChannel(CHANNEL_ID_OLD);
+        for (String old : CHANNELS_OLD) {
+            if (nm.getNotificationChannel(old) != null) nm.deleteNotificationChannel(old);
         }
         if (nm.getNotificationChannel(CHANNEL_ID) != null) return;
 
         NotificationChannel ch = new NotificationChannel(
                 CHANNEL_ID,
                 ctx.getString(R.string.widget_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT);   // видно на локскрине
+                NotificationManager.IMPORTANCE_HIGH);      // не тонет в группировке Pixel
         ch.setDescription(ctx.getString(R.string.widget_channel_desc));
         ch.setShowBadge(false);
         ch.setSound(null, null);          // тишина делается здесь, а не понижением важности

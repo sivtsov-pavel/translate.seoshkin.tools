@@ -148,10 +148,11 @@ export async function buildWidgetState(userId, schoolId, role, targetLang = 'de'
 
   const base = resolveWidgetState({ lessons, passed, playable, needsSchedule, schedules })
 
-  const [tails, streak, tz] = await Promise.all([
+  const [tails, streak, tz, today] = await Promise.all([
     countTails(userId),
     countStreak(userId),
     db.query('SELECT timezone FROM users WHERE id = $1', [userId]).then(r => r.rows[0]?.timezone),
+    countToday(userId),
   ])
 
   const lesson = base.lesson
@@ -170,6 +171,10 @@ export async function buildWidgetState(userId, schoolId, role, targetLang = 'de'
     courseId: base.courseId ?? null,
     tails,
     streak,
+    // Дневная норма ученика — то самое число из настроек (у Павла 100). Это НЕ то же
+    // самое, что полоса «34/40»: та показывает, сколько шагов осталось до открытия
+    // следующего урока. Обе величины нужны на виджете, и путать их нельзя.
+    today,
     nextUrl: lesson && base.state === WIDGET_STATES.IN_PROGRESS ? `/lesson/${lesson.id}` : '/',
     updatedAt: new Date().toISOString(),
   }
@@ -182,6 +187,31 @@ export function isLessonPassed(lesson) {
   const types = REQUIRED_TYPES.map(t => lesson.required[t] ?? { done: 0, total: 0 })
   if (!types.some(x => x.total > 0)) return false
   return types.every(x => x.done >= x.total)
+}
+
+// Сколько упражнений сделано сегодня и какая у человека дневная норма.
+async function countToday(userId) {
+  const [{ rows: doneRows }, { rows: limitRows }] = await Promise.all([
+    db.query(
+      `SELECT count(*)::int AS n FROM exercise_attempts
+       WHERE user_id = $1 AND attempted_at >= CURRENT_DATE`, [userId]),
+    db.query(
+      `SELECT us.daily_limit, u.plan,
+              (SELECT config FROM platform_settings WHERE id = 1) AS pconfig
+       FROM users u LEFT JOIN user_settings us ON us.user_id = u.id
+       WHERE u.id = $1`, [userId]),
+  ])
+
+  let limit = limitRows[0]?.daily_limit ?? 50
+  // Та же поправка, что в /api/exercises: платформенный лимит режет личную цель,
+  // но только когда включена платная версия и человек не премиум.
+  const mon = limitRows[0]?.pconfig?.monetization
+  const plan = limitRows[0]?.plan ?? 'free'
+  if (mon?.paid_enabled && plan !== 'premium' && mon.free_daily_limit > 0) {
+    limit = Math.min(limit, mon.free_daily_limit)
+  }
+
+  return { done: doneRows[0]?.n ?? 0, limit }
 }
 
 // Хвосты одним числом — отложенные упражнения плюс отложенные фразы (как на карте пути).

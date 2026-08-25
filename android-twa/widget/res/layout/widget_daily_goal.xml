@@ -26,7 +26,7 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textColor="#C9A54A"
-            android:textSize="12sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             android:text="@string/widget_loading" />
 
@@ -78,15 +78,15 @@
             android:maxLines="2"
             android:ellipsize="end"
             android:textColor="#FFFFFF"
-            android:textSize="19sp"
+            android:textSize="23sp"
             android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/widget_speak"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="6dp"
-            android:padding="4dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:padding="8dp"
             android:src="@drawable/widget_sound"
             android:contentDescription="@string/widget_speak_hint" />
     </LinearLayout>
@@ -100,7 +100,7 @@
         android:maxLines="2"
         android:ellipsize="end"
         android:textColor="#C9A54A"
-        android:textSize="16sp"
+        android:textSize="18sp"
         android:visibility="gone" />
 
     <!-- Четыре варианта ответа, сеткой 2×2 -->
@@ -174,7 +174,7 @@
         android:layout_marginTop="8dp"
         android:maxLines="1"
         android:ellipsize="end"
-        android:textColor="#8A8A8A"
-        android:textSize="11sp"
+        android:textColor="#9A9A9A"
+        android:textSize="13sp"
         android:text="" />
 </LinearLayout>

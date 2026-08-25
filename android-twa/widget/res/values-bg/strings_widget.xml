@@ -28,4 +28,7 @@
     <string name="widget_channel_name">Карта за учене</string>
     <string name="widget_channel_desc">Карта на заключен екран: отговаряйте без отключване</string>
     <string name="widget_expand_hint">Плъзнете надолу, за да отговорите</string>
+    <string name="widget_continue">Продължи</string>
+    <string name="widget_today">днес %1$d/%2$d</string>
+    <string name="widget_left">до урока %1$d</string>
 </resources>

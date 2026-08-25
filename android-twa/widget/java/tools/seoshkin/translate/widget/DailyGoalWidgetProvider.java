@@ -203,8 +203,13 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
 
         if (card != null && "in_progress".equals(state)) {
             renderCard(ctx, v, store, card, reveal);
+        } else if ("in_progress".equals(state)) {
+            // Карточки в пачке кончились, а урок ещё не пройден. Раньше здесь появлялось
+            // «Минимум сделан 🎉» — виджет объявлял победу вместо того, чтобы принести
+            // следующую порцию. Теперь честная кнопка.
+            renderContinue(ctx, v, s);
         } else {
-            // Карточек нет: либо урок закрыт, либо ждём расписания, либо всё пройдено.
+            // Урок закрыт, ждём расписания или всё пройдено.
             v.setTextViewText(R.id.widget_line2, statusLine(ctx, s, store));
         }
 
@@ -246,12 +251,17 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             v.setViewVisibility(R.id.widget_image, View.GONE);
         }
 
+        JSONObject state = store.state();
+
         if ("mc".equals(kind)) {
             renderChoice(ctx, v, card, reveal);
-            v.setTextViewText(R.id.widget_line2, reveal == null ? "" : resultLine(ctx, card, reveal));
+            // Пока не ответил — показываем полезное (серия, дневная норма, сколько
+            // осталось до нового урока). Ответил — результат.
+            v.setTextViewText(R.id.widget_line2,
+                    reveal == null ? infoLine(ctx, state) : resultLine(ctx, card, reveal));
         } else if ("flip".equals(kind)) {
             renderFlip(ctx, v, store, card, reveal);
-            v.setTextViewText(R.id.widget_line2, "");
+            v.setTextViewText(R.id.widget_line2, infoLine(ctx, state));
         } else {   // phrase
             v.setViewVisibility(R.id.widget_answer, View.VISIBLE);
             v.setTextViewText(R.id.widget_answer, card.optString("answer"));
@@ -261,6 +271,24 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
             v.setViewVisibility(R.id.widget_flip_right, View.GONE);
             v.setTextViewText(R.id.widget_line2, ctx.getString(R.string.widget_phrase));
         }
+    }
+
+    /** Пачка кончилась: одна крупная кнопка, которая приносит следующие карточки. */
+    private static void renderContinue(Context ctx, RemoteViews v, JSONObject s) {
+        JSONObject req = s.optJSONObject("required");
+        boolean lessonDone = req != null && req.optInt("total") > 0
+                && req.optInt("done") >= req.optInt("total");
+
+        v.setViewVisibility(R.id.widget_flip_row, View.VISIBLE);
+        v.setTextViewText(R.id.widget_flip_left, ctx.getString(R.string.widget_continue));
+        v.setOnClickPendingIntent(R.id.widget_flip_left, broadcast(ctx, ACTION_REFRESH, 4));
+        v.setViewVisibility(R.id.widget_flip_right, View.GONE);
+
+        // «Минимум сделан» говорим только когда он ДЕЙСТВИТЕЛЬНО сделан — то есть
+        // обязательные упражнения урока закрыты полностью.
+        v.setTextViewText(R.id.widget_line2, lessonDone
+                ? ctx.getString(R.string.widget_done_today)
+                : infoLine(ctx, s));
     }
 
     /** «Выбери ответ»: четыре кнопки, после тапа — подсветка верного и неверного. */
@@ -320,6 +348,43 @@ public class DailyGoalWidgetProvider extends AppWidgetProvider {
     }
 
     // ── Строки состояния ─────────────────────────────────────────────────────
+
+    /**
+     * Нижняя строка: серия дней, дневная норма и сколько осталось до нового урока.
+     * Внизу виджета всё равно остаётся свободное место — пусть работает.
+     *
+     * Важно не путать два числа: «сегодня 12/100» — личная дневная норма из настроек,
+     * «до урока 48» — сколько обязательных шагов осталось до открытия следующего урока.
+     */
+    private static String infoLine(Context ctx, JSONObject s) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder();
+
+        int streak = s.optInt("streak");
+        if (streak > 0) sb.append(ctx.getString(R.string.widget_streak, streak));
+
+        JSONObject today = s.optJSONObject("today");
+        if (today != null && today.optInt("limit") > 0) {
+            if (sb.length() > 0) sb.append(" · ");
+            sb.append(ctx.getString(R.string.widget_today, today.optInt("done"), today.optInt("limit")));
+        }
+
+        JSONObject req = s.optJSONObject("required");
+        if (req != null && req.optInt("total") > 0) {
+            int left = Math.max(req.optInt("total") - req.optInt("done"), 0);
+            if (left > 0) {
+                if (sb.length() > 0) sb.append(" · ");
+                sb.append(ctx.getString(R.string.widget_left, left));
+            }
+        }
+
+        int tails = s.optInt("tails");
+        if (tails > 0 && sb.length() < 40) {
+            if (sb.length() > 0) sb.append(" · ");
+            sb.append(ctx.getString(R.string.widget_tails, tails));
+        }
+        return sb.toString();
+    }
 
     private static String resultLine(Context ctx, JSONObject card, Reveal reveal) {
         if (reveal.correct) return ctx.getString(R.string.widget_correct);
