@@ -46,7 +46,14 @@ export default function Path() {
   const [introBusy, setIntroBusy] = useState(false)
   // Тап по узлу раскрывает его, а не проваливает в упражнение: карта должна быть
   // интерактивной — сначала видно, что внутри станции, и уже оттуда выбираешь.
-  const [selected, setSelected] = useState(null)   // ключ выбранного узла
+  // Ключ выбранного узла. Три состояния, и это важно:
+  //   undefined — ещё ничего не трогали, плашку показываем у текущего урока;
+  //   <ключ>    — раскрыт этот узел;
+  //   null      — человек ЗАКРЫЛ плашку, не показываем ничего.
+  // Пока «закрыто» и «не трогали» были одним и тем же null, повторный тап по текущему
+  // уроку закрывал плашку и тут же открывал её заново — она не реагировала вовсе
+  // (жалоба Павла 05.09.2026).
+  const [selected, setSelected] = useState(undefined)
   const [details, setDetails] = useState(null)     // содержимое станции (грузим по тапу)
   // По умолчанию — только пройденный путь (просьба Павла, 13.08): вся дорога на
   // 36+ уроков превращает экран в бесконечную ленту. Выбор запоминаем на устройстве.
@@ -402,12 +409,20 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   // Ключ узла: у уроков он по lesson_id, у станций — по типу и цели
   const keyOf = (n, i) => `${n.kind}-${n.type || 'lesson'}-${n.lesson_id ?? n.topic_id ?? i}`
 
+  // Раскрыт ли узел — ОДНО правило на всё: и для отрисовки, и для тапа, и для того,
+  // где дорога расступается. Пока правило было продублировано, тап по текущему уроку
+  // (он раскрыт сам, без выбора) считал его закрытым и «открывал» повторно.
+  const isNodeOpen = (n, i) => selected === undefined
+    ? (n.kind === 'lesson' && n.state === 'current')
+    : selected === keyOf(n, i)
+
   // Раскрываем узел и подгружаем, что внутри станции (три озвучки, падежи и т.п.)
   const openNode = async (n, i) => {
     setCardH(0)   // высота меряется заново под новую плашку
-    const k = keyOf(n, i)
-    if (selected === k) { setSelected(null); setDetails(null); return }
-    setSelected(k); setDetails(null)
+    // Тап по раскрытому узлу — закрыть. null, а не undefined: «закрыто» не должно
+    // означать «вернуться к текущему уроку», иначе плашка не закрывается никогда.
+    if (isNodeOpen(n, i)) { setSelected(null); setDetails(null); return }
+    setSelected(keyOf(n, i)); setDetails(null)
     if (n.kind === 'checkpoint' && (n.type === 'speech' || n.type === 'grammar')) {
       const lid = n.lesson_id ?? (n.lesson_ids || [])[0]
       if (lid) {
@@ -428,8 +443,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
 
   // Какой узел раскрыт: по нему решаем, где дорога расступается под плашку.
   // Пусто выбранное — раскрыт текущий урок (так экран открывается сразу с делом).
-  const openIdx = items.findIndex((n, i) =>
-    selected ? keyOf(n, i) === selected : (n.kind === 'lesson' && n.state === 'current'))
+  const openIdx = items.findIndex(isNodeOpen)
   const shift = openIdx >= 0 && cardH ? cardH + 16 : 0
   const openRow = openIdx >= 0 ? Math.floor(openIdx / COLS) : -1
 
@@ -487,7 +501,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
       {points.map(({ n, x, y }, i) => {
         const k = keyOf(n, i)
         const isLesson = n.kind === 'lesson'
-        const isOpen = selected ? selected === k : (isLesson && n.state === 'current')
+        const isOpen = isNodeOpen(n, i)
         const isDone = n.state === 'done'
         const locked = n.state === 'locked'
         const color = isLesson ? '#9A5CD8' : (C[n.type] || C.speech)
