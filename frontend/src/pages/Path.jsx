@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, Puzzle, Layers, CheckCircle2, Gamepad2, SquarePen } from 'lucide-react'
 import { api } from '../api/client.js'
@@ -395,11 +395,16 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   }, [])
   const wide = vw >= 1024
 
+  // Высота раскрытой плашки. Плашка лежит ПОД узлом и без этого накрыла бы следующий —
+  // до него нельзя было бы дотянуться, не закрыв текущий. Меряем и раздвигаем дорогу.
+  const [cardH, setCardH] = useState(0)
+
   // Ключ узла: у уроков он по lesson_id, у станций — по типу и цели
   const keyOf = (n, i) => `${n.kind}-${n.type || 'lesson'}-${n.lesson_id ?? n.topic_id ?? i}`
 
   // Раскрываем узел и подгружаем, что внутри станции (три озвучки, падежи и т.п.)
   const openNode = async (n, i) => {
+    setCardH(0)   // высота меряется заново под новую плашку
     const k = keyOf(n, i)
     if (selected === k) { setSelected(null); setDetails(null); return }
     setSelected(k); setDetails(null)
@@ -421,12 +426,22 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   const VIEW_W = wide ? 1000 : 320
   const ROW_H = 150
 
+  // Какой узел раскрыт: по нему решаем, где дорога расступается под плашку.
+  // Пусто выбранное — раскрыт текущий урок (так экран открывается сразу с делом).
+  const openIdx = items.findIndex((n, i) =>
+    selected ? keyOf(n, i) === selected : (n.kind === 'lesson' && n.state === 'current'))
+  const shift = openIdx >= 0 && cardH ? cardH + 16 : 0
+  const openRow = openIdx >= 0 ? Math.floor(openIdx / COLS) : -1
+
   const points = items.map((n, i) => {
-    if (!wide) return { n, x: X_PATTERN[i % X_PATTERN.length], y: 60 + i * GAP_Y }
+    if (!wide) {
+      return { n, x: X_PATTERN[i % X_PATTERN.length], y: 60 + i * GAP_Y + (i > openIdx ? shift : 0) }
+    }
     const row = Math.floor(i / COLS)
     const colRaw = i % COLS
     const col = row % 2 === 0 ? colRaw : COLS - 1 - colRaw   // змейка: ряд туда, ряд обратно
-    return { n, x: (col + 0.5) * (VIEW_W / COLS), y: 80 + row * ROW_H }
+    // На широком экране раздвигаем не узлы, а ряды: иначе змейка порвётся посреди строки
+    return { n, x: (col + 0.5) * (VIEW_W / COLS), y: 80 + row * ROW_H + (row > openRow ? shift : 0) }
   })
   if (!points.length) return null
 
@@ -495,8 +510,13 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
           ? Math.round((n.progress || 0) * 100)
           : (n.total ? Math.round((n.done / n.total) * 100) : 0)
 
+        // Плашка — шириной не больше дороги: на телефоне она занимает её целиком,
+        // на широком экране остаётся карточкой.
+        const CW = 'min(300px, 100%)'
+
         return (
-          <div key={k} {...(isLesson && n.state === 'current' ? { 'data-current-node': '1' } : {})}
+          <Fragment key={k}>
+          <div {...(isLesson && n.state === 'current' ? { 'data-current-node': '1' } : {})}
             style={{ position: 'absolute', left: `${(x / VIEW_W) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
               <button onClick={() => openNode(n, i)}
@@ -528,20 +548,28 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
                 </span>
               </button>
 
-              {/* Плашка раскрытого узла. Кладём её АБСОЛЮТНО сбоку от круга: если
-                  оставить в потоке, узел вместе с плашкой центрируется и уезжает
-                  за край экрана — под боковое меню. Сторона выбирается по позиции:
-                  узлам левой половины плашка уходит вправо, правой — влево. */}
-              {isOpen && (
-                <div style={{
-                  position: 'absolute', top: '50%', transform: 'translateY(-50%)', zIndex: 6,
-                  ...(x < VIEW_W / 2 ? { left: `calc(100% + 12px)` } : { right: `calc(100% + 12px)` }),
-                }}>
-                  <NodeCard n={n} title={title} details={details} t={t} go={go} pct={pct} />
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Плашка раскрытого узла — ПОД кнопкой, а не сбоку.
+              Сбоку она вставала по стороне узла (левым — вправо, правым — влево) и у
+              правых узлов половина уезжала за край экрана: на телефоне рядом с кругом
+              просто нет места на карточку (жалоба Павла 05.09.2026).
+              Снизу место есть всегда. Позиция считается в координатах самой дороги, а
+              не узла, и прижимается clamp-ом внутрь неё — поэтому плашка целиком видна
+              и у крайнего левого, и у крайнего правого узла. */}
+          {isOpen && (
+            <div ref={el => { const h = el?.getBoundingClientRect().height; if (h && Math.abs(h - cardH) > 1) setCardH(h) }}
+              style={{
+              position: 'absolute', zIndex: 6,
+              top: y + size / 2 + 10,
+              width: CW,
+              left: `clamp(0px, calc(${(x / VIEW_W) * 100}% - ${CW} / 2), calc(100% - ${CW}))`,
+            }}>
+              <NodeCard n={n} title={title} details={details} t={t} go={go} pct={pct} />
+            </div>
+          )}
+          </Fragment>
         )
       })}
     </div>
