@@ -142,6 +142,10 @@ export default function Dashboard() {
   const total = stats?.total ?? 0
   const allLessons = stats?.lessons ?? []
   const needsSchedule = stats?.needs_schedule ?? []
+  // Курсы, где календарь поставлен автоматически (все семь дней) и человека о нём ещё
+  // не спрашивали. Раньше на этом месте висел баннер «выбери расписание», а курс до
+  // выбора стоял закрытым — теперь учиться можно сразу, но предложить свои дни надо.
+  const scheduleHint = stats?.schedule_hint ?? []
 
   // Выпадашку выбора курса убрали — показываем все уроки активного языка (курс меняется
   // через «Сменить курс» у приветствия, который переключает язык целиком).
@@ -203,6 +207,30 @@ export default function Dashboard() {
       {/* Выпадашку выбора курса убрали (дублировала «Сменить курс» у приветствия и путала) */}
 
       {needsScheduleBanner}
+
+      {/* Календарь по умолчанию: уроки уже открываются каждый день, предлагаем выбрать свои.
+          Отказ («оставить каждый день») гасит подсказку — иначе она висела бы вечно. */}
+      {scheduleHint.length > 0 && (
+        <div className="dl-banner dl-banner--accent"
+          onClick={() => navigate(`/courses/${scheduleHint[0].course_id}`)}
+          style={{ cursor: 'pointer' }}>
+          <span style={{ fontSize: 26 }}>📅</span>
+          <div className="dl-banner-text">
+            <div className="dl-banner-title">{t.path.introPickDays}</div>
+            <div className="dl-banner-sub">{t.path.introSchedule}</div>
+            <button
+              onClick={async (e) => {
+                e.stopPropagation()
+                try { await api.post(`/courses/${scheduleHint[0].course_id}/schedule/confirm`, {}) } catch {}
+                setStats(st => ({ ...st, schedule_hint: [] }))
+              }}
+              style={{ marginTop: 8, padding: '6px 12px', borderRadius: 999, border: '1px solid var(--line)',
+                background: 'var(--surface)', color: 'var(--ink-soft)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>
+              {t.path.introKeepDaily}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 🧩 Хвосты курса — пропущенные упражнения (проговори/диктант). Нужно добить для финиша. */}
       {tailsCount > 0 && (

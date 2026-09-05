@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { playableLessonIds, LESSON_PASSED_HAVING } from '../services/drip.js'
+import { playableLessonIds, ensureDefaultSchedules, LESSON_PASSED_HAVING } from '../services/drip.js'
 import { recordAttempt } from '../services/attempts.js'
 import { newExerciseIds } from '../services/newExercises.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
@@ -526,6 +526,8 @@ export async function exercisesRoutes(fastify) {
     const target = request.headers['x-target-lang'] || 'de'
     // Для ученика — строгий дрип: только разблокированные уроки; курсы без расписания → needs_schedule
     let needsScheduleCourses = []
+    // Курсы с календарём по умолчанию, о котором ученика ещё не спрашивали (см. drip.js)
+    let scheduleHint = []
     let playableSet = null // set разблокированных уроков ученика (для отметки закрытых на карте)
     // Мультиарендность (как в /api/lessons и /api/words): учитель видит уроки СВОЕЙ школы
     // плюс свои личные, супер-админ (id=1) — все. Раньше в учительской ветке фильтра не было
@@ -550,7 +552,10 @@ export async function exercisesRoutes(fastify) {
         GROUP BY l.id, l.title, l.description, l.date, l.is_set, l.course_id, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
     } else {
-      // Ученик видит готовые уроки СВОЕЙ школы (null-safe: без школы — как раньше, всё)
+      // Ученик видит готовые уроки СВОЕЙ школы (null-safe: без школы — как раньше, всё).
+      // Курс без своего календаря получает календарь по умолчанию (все семь дней) — учиться
+      // можно сразу, а выбор дней приложение предложит отдельным вопросом (см. drip.js).
+      scheduleHint = await ensureDefaultSchedules(userId, request.user.school_id ?? null, target)
       const { playable, needsSchedule } = await playableLessonIds(userId, request.user.school_id ?? null, target)
       needsScheduleCourses = needsSchedule
       playableSet = playable
@@ -717,7 +722,7 @@ export async function exercisesRoutes(fastify) {
       needsSchedule = cr
     }
 
-    return { total, done, byType, lessons, lessonsTotal, lessonsDone, needs_schedule: needsSchedule }
+    return { total, done, byType, lessons, lessonsTotal, lessonsDone, needs_schedule: needsSchedule, schedule_hint: scheduleHint }
   })
 
   // Словарь — per-user статус через user_word_status

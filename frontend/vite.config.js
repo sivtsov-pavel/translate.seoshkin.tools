@@ -15,6 +15,10 @@ export default defineConfig({
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-192-maskable.png', 'icons/icon-512-maskable.png', 'push-sw.js'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        // Главный бандл перевалил за дефолтные 2 МиБ (05.09.2026) — сборка падала,
+        // а без precache приложение молча теряло офлайн-режим. Поднимаем потолок.
+        // Правильное лечение — code-splitting: бандл давно пора резать (хвост в IDEAS).
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // Новый SW активируется сразу и берёт контроль над открытыми вкладками —
         // новые версии подхватываются без ручного сброса кеша
         skipWaiting: true,

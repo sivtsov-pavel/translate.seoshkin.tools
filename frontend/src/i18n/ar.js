@@ -916,6 +916,17 @@ export const ar = {
     lessonsPassed: 'دروس مكتملة',
     lockedTitle: 'الدرس مقفل',
     lockedHint: 'أكمل الدرس السابق — سيُفتح هذا بعده',
+    // زر عائم للدخول إلى الدرس (انظر NoviceActions)
+    resumeStart: 'ابدأ',
+    resumeContinue: 'تابع',
+    resumeRepeat: 'أعد',
+    extras: 'الألعاب والأقسام',
+    introTitle: 'من أين تبدأ',
+    introStart: 'اضغط زر «ابدأ» في الأسفل — يتابع دائمًا من حيث توقفت.',
+    introSchedule: 'تقويم دراستك الآن «كل يوم»: يُفتح درس جديد يوميًا. يمكنك اختيار أيامك.',
+    introOk: 'فهمت، لنبدأ',
+    introPickDays: 'اختيار أيامي',
+    introKeepDaily: 'اتركه كل يوم',
   },
   phrases: {
     title: 'الجمل',

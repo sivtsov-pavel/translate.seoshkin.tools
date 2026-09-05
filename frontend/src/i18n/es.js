@@ -914,6 +914,17 @@ export const es = {
     lessonsPassed: 'lecciones completadas',
     lockedTitle: 'Lección bloqueada',
     lockedHint: 'Termina la lección anterior — esta se abrirá después',
+    // Botón flotante para entrar en la clase (ver NoviceActions)
+    resumeStart: 'Empezar',
+    resumeContinue: 'Continuar',
+    resumeRepeat: 'Repetir',
+    extras: 'Juegos y secciones',
+    introTitle: 'Por dónde empezar',
+    introStart: 'Pulsa el botón «Empezar» abajo a la derecha: siempre continúa donde lo dejaste.',
+    introSchedule: 'Tu calendario está en «todos los días»: cada día se abre una lección nueva. Puedes elegir tus días.',
+    introOk: 'Entendido, vamos',
+    introPickDays: 'Elegir mis días',
+    introKeepDaily: 'Dejar todos los días',
   },
   phrases: {
     title: 'Frases',

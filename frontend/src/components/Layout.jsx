@@ -21,6 +21,7 @@ import { useCourseGateStore } from '../store/courseGate.js'
 import ProcessingBadge from './ProcessingBadge.jsx'
 import { api } from '../api/client.js'
 import { useUiModeStore } from '../store/uiMode.js'
+import { useIntroStore } from '../store/intro.js'
 import NoviceNav from './NoviceNav.jsx'
 import UiModeToggle from './UiModeToggle.jsx'
 import LangSwitcher from './LangSwitcher.jsx'
@@ -93,6 +94,7 @@ export default function Layout({ children }) {
   // Окно выбора языка (первый вход / «Сменить курс») — общий стор: кнопка-триггер теперь
   // на странице «Сегодня» (у приветствия), а не в этом меню, но модалку рендерим по-прежнему тут.
   const { open: gateOpen, setOpen: setGateOpen } = useCourseGateStore()
+  const introOpen = useIntroStore(s => s.open)   // окно «С чего начать» — тур ждёт его
   const [unreadChat, setUnreadChat] = useState(0)
   const [pushMsg, setPushMsg] = useState('')
   const [pushSending, setPushSending] = useState(false)
@@ -200,20 +202,23 @@ export default function Layout({ children }) {
   // Тур: авто-запуск ОДИН раз при первом входе (только на главной), дальше — по кнопке 🧭
   useEffect(() => {
     // Тур: первый вход (нет tour_seen_v1) ИЛИ сразу после выбора языка в гейте (run_tour_after).
-    // Не запускаем, пока открыто окно выбора языка.
-    if (user && location.pathname === '/' && !gateOpen && (!localStorage.getItem('tour_seen_v1') || localStorage.getItem('run_tour_after'))) {
+    // Не запускаем, пока открыто окно выбора языка или окно первого знакомства («С чего
+    // начать»): у нового ученика они всплывали одновременно, тур ложился поверх окна.
+    if (user && location.pathname === '/' && !gateOpen && !introOpen && (!localStorage.getItem('tour_seen_v1') || localStorage.getItem('run_tour_after'))) {
       localStorage.removeItem('run_tour_after')
       const tid = setTimeout(() => setTourRun(true), 800)
       return () => clearTimeout(tid)
     }
-  }, [user, location.pathname, gateOpen])
+  }, [user, location.pathname, gateOpen, introOpen])
   const startTour = () => { if (location.pathname !== '/') navigate('/'); setTimeout(() => setTourRun(true), location.pathname !== '/' ? 400 : 0) }
   const endTour = () => { setTourRun(false); setOpen(false); localStorage.setItem('tour_seen_v1', '1') }
 
   useEffect(() => {
     const measure = () => {
       const topbar = document.querySelector('.layout-topbar')
-      const bottomNav = document.querySelector('.bottom-nav')
+      // В режиме новичка нижняя полоса другая (.novice-tabbar) — без неё --bottom-nav-h
+      // оставался нулём, и плавающие кнопки садились прямо на таб-бар.
+      const bottomNav = document.querySelector('.bottom-nav') || document.querySelector('.novice-tabbar')
       const root = document.documentElement
       if (topbar) { const b = topbar.getBoundingClientRect().bottom; if (b > 0) root.style.setProperty('--topbar-h', Math.ceil(b) + 'px') }
       if (bottomNav) { const h = bottomNav.getBoundingClientRect().height; if (h > 0) root.style.setProperty('--bottom-nav-h', Math.ceil(h) + 'px') }

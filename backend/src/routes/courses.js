@@ -199,13 +199,25 @@ export async function coursesRoutes(fastify) {
     if (!wd.length) return reply.status(400).send({ error: 'Выбери хотя бы один день недели' })
     const start = start_date || new Date().toISOString().slice(0, 10)
 
+    // is_default сбрасываем: дни выбраны человеком, спрашивать про календарь больше не нужно
     const { rows } = await db.query(`
-      INSERT INTO course_schedules (user_id, course_id, weekdays, start_date)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (user_id, course_id) DO UPDATE SET weekdays = $3, start_date = $4
+      INSERT INTO course_schedules (user_id, course_id, weekdays, start_date, is_default)
+      VALUES ($1, $2, $3, $4, FALSE)
+      ON CONFLICT (user_id, course_id) DO UPDATE SET weekdays = $3, start_date = $4, is_default = FALSE
       RETURNING weekdays, start_date`,
       [request.user.id, courseId, wd, start])
     return rows[0]
+  })
+
+  // Ученик: «оставить каждый день» — ответ на предложение выбрать свой календарь.
+  // Дни не меняем (они и так все семь), гасим только флаг «человека ещё не спрашивали»,
+  // иначе окно всплывало бы при каждом заходе.
+  fastify.post('/api/courses/:id/schedule/confirm', { preHandler: [fastify.authenticate] }, async (request) => {
+    const courseId = parseInt(request.params.id)
+    await db.query(
+      'UPDATE course_schedules SET is_default = FALSE WHERE user_id = $1 AND course_id = $2',
+      [request.user.id, courseId])
+    return { ok: true }
   })
 
   // Учитель: удалить ВСЕ уроки курса (для чистой перезаливки). Сам курс остаётся.

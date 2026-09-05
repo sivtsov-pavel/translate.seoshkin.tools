@@ -4,7 +4,7 @@
 // осталось до конца раздела. Поэтому эндпоинт отдаёт готовые узлы с состояниями,
 // а не сырые списки, из которых клиенту пришлось бы это вычислять.
 import { db } from '../db/index.js'
-import { playableLessonIds, LESSON_PASSED_HAVING } from '../services/drip.js'
+import { playableLessonIds, ensureDefaultSchedules, LESSON_PASSED_HAVING } from '../services/drip.js'
 
 // Узлов в разделе: столько уроков показываем одной «дорогой», дальше — следующий раздел
 const SECTION_SIZE = 6
@@ -45,9 +45,13 @@ export async function pathRoutes(fastify) {
        GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, params)
     const passed = new Set(passedRows.map(r => r.lesson_id))
 
-    // Дрип: ученику доступны только разблокированные уроки, учителю — все свои
+    // Дрип: ученику доступны только разблокированные уроки, учителю — все свои.
+    // Перед этим заводим календарь по умолчанию (все семь дней), если своего нет:
+    // иначе новичок упирается в запертую дорогу и не понимает, что делать дальше.
     let playable = null
+    let scheduleHint = []
     if (role !== 'owner') {
+      scheduleHint = await ensureDefaultSchedules(userId, schoolId, target)
       const r = await playableLessonIds(userId, schoolId, target)
       playable = new Set(r.playable)
     }
@@ -311,6 +315,9 @@ export async function pathRoutes(fastify) {
         phrases: tailRows[0]?.phrases || 0,
         total: (tailRows[0]?.exercises || 0) + (tailRows[0]?.phrases || 0),
       },
+      // Курсы, где календарь поставлен автоматически и человека о нём ещё не спрашивали.
+      // Пусто — окно про расписание не показываем.
+      schedule_hint: scheduleHint,
     }
   })
 
@@ -405,4 +412,78 @@ export async function pathRoutes(fastify) {
     }
     return { deferred: exCount + phraseCount }
   })
+
+  // ── «Старт / Продолжить» ──────────────────────────────────────────────────
+  // Один вопрос, на который приложение обязано отвечать сразу: с чего мне продолжить.
+  // Три новых ученика подряд сказали, что при входе непонятно, что делать (05.09.2026),
+  // поэтому кнопка висит поверх всех экранов новичка и ей нужен дешёвый ответ:
+  // какой урок сейчас мой и начат ли он уже.
+  fastify.get('/api/path/resume', { preHandler: [fastify.authenticate] }, async (request) => {
+    const { id: userId, role } = request.user
+    const target = request.headers['x-target-lang'] || 'de'
+    const schoolId = request.user.school_id ?? null
+
+    const params = [userId, target]
+    let scope
+    if (role === 'owner') {
+      scope = 'l.owner_id = $1 AND l.target_lang = $2 AND l.is_set = false'
+    } else {
+      params.push(schoolId)
+      scope = "l.status = 'done' AND l.target_lang = $2 AND l.is_set = false AND ($3::int IS NULL OR l.school_id = $3)"
+    }
+
+    const { rows: lessons } = await db.query(
+      `SELECT l.id, l.lesson_number, l.title, COALESCE(l.title_translations, '{}') AS title_translations,
+              count(e.id)::int AS ex_total,
+              count(uep.exercise_id)::int AS ex_done
+       FROM lessons l
+       JOIN exercises e ON e.lesson_id = l.id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+       WHERE ${scope}
+       GROUP BY l.id
+       ORDER BY l.lesson_number NULLS LAST, l.id`, params)
+    if (!lessons.length) return { mode: 'empty' }
+
+    const { rows: passedRows } = await db.query(
+      `SELECT e.lesson_id FROM exercises e
+       JOIN lessons l ON l.id = e.lesson_id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+       WHERE ${scope}
+       GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, params)
+    const passed = new Set(passedRows.map(r => r.lesson_id))
+
+    let playable = null
+    if (role !== 'owner') {
+      const r = await playableLessonIds(userId, schoolId, target)
+      playable = new Set(r.playable)
+    }
+    const open = (id) => (playable ? playable.has(id) : true)
+
+    // Мой урок — первый непройденный из открытых. Всё пройдено → возвращаем последний
+    // открытый: кнопка тогда зовёт повторить, а не молчит.
+    const next = lessons.find(l => !passed.has(l.id) && open(l.id))
+    const lesson = next || [...lessons].reverse().find(l => open(l.id))
+    if (!lesson) return { mode: 'empty' }
+
+    // Хвосты — пропущенные упражнения: их предлагаем раньше нового материала
+    const { rows: tailRows } = await db.query(
+      `SELECT count(*)::int AS n FROM exercise_deferrals d
+        WHERE d.user_id = $1
+          AND NOT EXISTS (SELECT 1 FROM exercise_attempts a
+                           WHERE a.exercise_id = d.exercise_id AND a.user_id = $1)`, [userId])
+
+    return {
+      // start — ещё ни одного ответа в этом уроке, continue — продолжаем начатое,
+      // repeat — весь курс пройден, зовём повторить последний урок.
+      mode: !next ? 'repeat' : (lesson.ex_done > 0 ? 'continue' : 'start'),
+      lesson_id: lesson.id,
+      number: lesson.lesson_number,
+      title: lesson.title,
+      title_translations: lesson.title_translations,
+      ex_done: lesson.ex_done,
+      ex_total: lesson.ex_total,
+      tails: tailRows[0]?.n || 0,
+    }
+  })
+
 }

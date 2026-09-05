@@ -913,6 +913,17 @@ export const tr = {
     lessonsPassed: 'ders tamamlandı',
     lockedTitle: 'Ders kilitli',
     lockedHint: 'Önceki dersi bitir — bu sonra açılır',
+    // Derse girişin yüzen düğmesi (bkz. NoviceActions)
+    resumeStart: 'Başla',
+    resumeContinue: 'Devam et',
+    resumeRepeat: 'Tekrarla',
+    extras: 'Oyunlar ve bölümler',
+    introTitle: 'Nereden başlamalı',
+    introStart: 'Sağ alttaki “Başla” düğmesine dokun — her zaman kaldığın yerden devam eder.',
+    introSchedule: 'Çalışma takvimin şimdilik “her gün”: her gün yeni bir ders açılır. Kendi günlerini seçebilirsin.',
+    introOk: 'Anladım, başlayalım',
+    introPickDays: 'Kendi günlerimi seçeyim',
+    introKeepDaily: 'Her gün kalsın',
   },
   phrases: {
     title: 'Cümleler',

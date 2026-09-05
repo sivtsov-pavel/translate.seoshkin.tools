@@ -90,6 +90,58 @@ export function unlockDateForIndex(startDate, weekdays, index) {
 // Правила: внекурсовые уроки/наборы (course_id NULL) — всегда доступны. Курсовые:
 //  • нет расписания по курсу → все закрыты, курс в needsSchedule (заставляем выбрать календарь);
 //  • есть расписание → открыт урок, если наступил учебный день И предыдущий пройден (цепочка).
+// Календарь по умолчанию — все семь дней, старт сегодня.
+//
+// Курс без расписания закрыт ЦЕЛИКОМ: так задумано, чтобы человек сам выбрал ритм.
+// На практике получилось наоборот — новичок заходил в запертую дорогу и не понимал,
+// что от него хотят (жалоба Павла 05.09.2026: «мне приходится каждому объяснять»).
+// Поэтому расписание заводим сами и не мешаем начать, а выбор дней предлагаем потом,
+// одним вопросом (флаг is_default, миграция 073).
+//
+// Идемпотентно: ON CONFLICT DO NOTHING, повторный вызов ничего не меняет. Зовём только
+// из экранов, куда ученик приходит сам (/api/path, /api/exercises/stats) — из крона
+// пушей и виджета НЕ зовём: там записывать данные от имени спящего пользователя незачем.
+const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7]
+
+export async function ensureDefaultSchedules(userId, schoolId, targetLang = null) {
+  // Курсы, где у ученика есть готовые уроки, но своего календаря нет
+  const { rows: missing } = await db.query(
+    `SELECT DISTINCT l.course_id
+     FROM lessons l
+     WHERE l.status = 'done' AND l.is_set = false AND l.course_id IS NOT NULL
+       AND ($1::int IS NULL OR l.school_id = $1)
+       AND ($2::text IS NULL OR l.target_lang = $2)
+       AND NOT EXISTS (SELECT 1 FROM course_schedules cs
+                        WHERE cs.user_id = $3 AND cs.course_id = l.course_id)`,
+    [schoolId ?? null, targetLang, userId])
+
+  if (missing.length) {
+    // Дата старта — по ЛОКАЛЬНОЙ дате ученика, как и весь остальной дрип: иначе для
+    // UTC+2 поздним вечером курс стартует «завтрашним» числом и первый урок не открыт.
+    const { rows: tzRows } = await db.query('SELECT timezone FROM users WHERE id = $1', [userId])
+    const startDate = localParts(tzRows[0]?.timezone, new Date()).date
+    await db.query(
+      `INSERT INTO course_schedules (user_id, course_id, weekdays, start_date, is_default)
+       SELECT $1, cid, $2::int[], $3::date, TRUE FROM unnest($4::int[]) AS cid
+       ON CONFLICT (user_id, course_id) DO NOTHING`,
+      [userId, DEFAULT_WEEKDAYS, startDate, missing.map(r => r.course_id)])
+  }
+
+  // Курсы, где календарь стоит по умолчанию и человека о нём ещё не спрашивали —
+  // по ним фронт один раз показывает предложение выбрать свои дни.
+  const { rows: pending } = await db.query(
+    `SELECT c.id AS course_id, c.title
+     FROM course_schedules cs JOIN courses c ON c.id = cs.course_id
+     WHERE cs.user_id = $1 AND cs.is_default = TRUE
+       AND EXISTS (SELECT 1 FROM lessons l
+                    WHERE l.course_id = c.id AND l.status = 'done' AND l.is_set = false
+                      AND ($2::int IS NULL OR l.school_id = $2)
+                      AND ($3::text IS NULL OR l.target_lang = $3))
+     ORDER BY c.id`,
+    [userId, schoolId ?? null, targetLang])
+  return pending
+}
+
 export async function playableLessonIds(userId, schoolId, targetLang = null) {
   const { rows } = await db.query(
     `SELECT l.id, l.course_id, l.is_set

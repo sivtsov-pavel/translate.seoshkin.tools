@@ -8,6 +8,7 @@ import { useI18nStore } from '../store/i18n.js'
 import { useAuthStore } from '../store/auth.js'
 import { AutoSpeakToggle, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
 import UiModeToggle from './UiModeToggle.jsx'
+import NoviceActions from './NoviceActions.jsx'
 
 // Навигация режима «новичок» (макет 2a, docs/design_novichok).
 //
@@ -86,6 +87,9 @@ export default function NoviceNav() {
 
   return (
     <>
+      {/* Плавающие «Старт/Продолжить» и камера — на всех экранах новичка */}
+      <NoviceActions />
+
       {/* Телефон: две кнопки слева, две справа и вырез по центру — в нём круглая
           кнопка ИИ-тренера. Тренер главное действие приложения, поэтому он вынесен
           из ряда и виден всегда. */}

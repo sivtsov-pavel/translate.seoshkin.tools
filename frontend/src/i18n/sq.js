@@ -925,6 +925,17 @@ export const sq = {
     lessonsPassed: 'mësime të përfunduara',
     lockedTitle: 'Mësimi i kyçur',
     lockedHint: 'Përfundo mësimin e mëparshëm — ky hapet pas tij',
+    // Butoni pluskues për të hyrë në mësim (shih NoviceActions)
+    resumeStart: 'Fillo',
+    resumeContinue: 'Vazhdo',
+    resumeRepeat: 'Përsërit',
+    extras: 'Lojëra dhe seksione',
+    introTitle: 'Nga t’ia nisësh',
+    introStart: 'Shtyp butonin “Fillo” poshtë djathtas — ai vazhdon gjithmonë aty ku e le.',
+    introSchedule: 'Kalendari yt është “çdo ditë”: çdo ditë hapet një mësim i ri. Mund të zgjedhësh ditët e tua.',
+    introOk: 'E kuptova, t’ia nisim',
+    introPickDays: 'Zgjidh ditët e mia',
+    introKeepDaily: 'Lëre çdo ditë',
   },
   phrases: {
     title: 'Fraza',

@@ -37,16 +37,28 @@ export function useKeyboardInset() {
     const root = document.documentElement
     let timer
 
+    // Скроллим только в момент ПОЯВЛЕНИЯ клавиатуры, а не на каждое её шевеление.
+    //
+    // Первая версия дёргала скролл на любом resize/scroll вьюпорта, пока клавиатура
+    // открыта, — и экран прыгал ровно с первого набранного символа (жалоба про диктант,
+    // 05.09.2026). Причина: Android достраивает строку подсказок, как только начинаешь
+    // печатать; высота клавиатуры меняется → resize → плавный scrollIntoView → он сам
+    // меняет вьюпорт → снова resize. Круг замыкался, пока не отпустишь клавиатуру.
+    // Плюс в этот же момент CSS ужимает картинку слова — прыжок становился заметным.
+    let wasOpen = false
+
     const update = () => {
       const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
       root.style.setProperty('--keyboard-inset', `${inset}px`)
       const open = inset > KEYBOARD_MIN_PX
       root.classList.toggle('keyboard-open', open)
-      if (open) {
-        // Ждём пересчёта раскладки под новую высоту, иначе скроллим по старым координатам.
+      if (open && !wasOpen) {
+        // Ждём и пересчёта раскладки, и анимации ужимания картинки слова (0.18s в
+        // index.css): скролл к полю, которое в этот момент само едет вверх, промахивается.
         clearTimeout(timer)
-        timer = setTimeout(scrollFocusedIntoView, 120)
+        timer = setTimeout(scrollFocusedIntoView, 220)
       }
+      wasOpen = open
     }
 
     // Фокус мог прийти при уже открытой клавиатуре (переход между полями) — resize тогда молчит.

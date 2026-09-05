@@ -932,6 +932,17 @@ export const de = {
     lessonsPassed: 'Lektionen geschafft',
     lockedTitle: 'Lektion gesperrt',
     lockedHint: 'Schließe die vorige Lektion ab — diese folgt',
+    // Schwebende Taste zum Einstieg in die Übung (siehe NoviceActions)
+    resumeStart: 'Start',
+    resumeContinue: 'Weiter',
+    resumeRepeat: 'Wiederholen',
+    extras: 'Spiele und Bereiche',
+    introTitle: 'Womit anfangen',
+    introStart: 'Tippe unten rechts auf „Start“ — sie setzt immer dort fort, wo du aufgehört hast.',
+    introSchedule: 'Dein Lernkalender steht auf „jeden Tag“: täglich öffnet sich eine neue Lektion. Du kannst eigene Tage wählen.',
+    introOk: 'Alles klar, los geht’s',
+    introPickDays: 'Eigene Tage wählen',
+    introKeepDaily: 'Jeden Tag lassen',
   },
   phrases: {
     title: 'Sätze',

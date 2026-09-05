@@ -508,3 +508,84 @@ body.novice-mode .layout-drawer button {
 @media (min-width: 1024px) {
   .path-motivation { display: none; }
 }
+
+/* ── Плавающие кнопки новичка: «Старт/Продолжить» и камера ────────────────────
+   Точка входа в занятие. Первые ученики (05.09.2026) в один голос сказали, что
+   при возврате в приложение непонятно, куда нажимать: дорога есть, а кнопки нет.
+   Поэтому кнопка широкая, с подписью и висит поверх всего — её не надо искать. */
+.novice-actions {
+  position: fixed; z-index: 60; right: 14px;
+  bottom: calc(var(--bottom-nav-h, 92px) + 14px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+  pointer-events: none;   /* кликабельны только сами кнопки, не пустая колонка */
+}
+.novice-actions > * { pointer-events: auto; }
+
+.novice-act {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; cursor: pointer; font-weight: 800;
+  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, .65);
+}
+.novice-act--camera {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+}
+.novice-act--start {
+  padding: 14px 22px; border-radius: 999px; font-size: 16px;
+  background: var(--accent); color: var(--accent-ink);
+}
+.novice-act--start:active { transform: scale(.97); }
+
+/* Клавиатура открыта — кнопки прячем: они закрывают поле ввода */
+html.keyboard-open .novice-actions { display: none; }
+
+/* ПК и планшет: нижней полосы нет, справа внизу уже висит тренер (60px, отступ 26px) —
+   встаём слева от него с зазором и по его же нижней линии, иначе кнопки соприкасаются. */
+@media (min-width: 834px) {
+  .novice-actions { bottom: 26px; right: 98px; }
+}
+
+/* ── Раздел «Игры и разделы» на главной новичка ───────────────────────────────
+   В новом дизайне игры и «Любовь к детям» просто не перенесли с главной полного
+   интерфейса, и попасть в них стало неоткуда. Возвращаем блоком под дорогой. */
+.path-extras { margin-top: 26px; }
+.path-extras-title {
+  font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 10px 2px;
+}
+.path-extras-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+@media (min-width: 560px) { .path-extras-grid { grid-template-columns: repeat(3, 1fr); } }
+.path-extra {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 14px 13px; border-radius: 16px; text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+}
+.path-extra:active { transform: scale(.98); }
+.path-extra-ico {
+  width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
+  font-size: 19px; color: #fff;
+}
+.path-extra-title { font-size: 14px; font-weight: 800; line-height: 1.2; }
+.path-extra-sub { font-size: 11.5px; color: var(--ink-soft); line-height: 1.25; }
+
+/* ── Первое знакомство: что нажать и какой календарь ──────────────────────── */
+.novice-intro-overlay {
+  position: fixed; inset: 0; z-index: 200; background: rgba(0, 0, 0, .55);
+  display: flex; align-items: flex-end; justify-content: center; padding: 16px;
+}
+@media (min-width: 640px) { .novice-intro-overlay { align-items: center; } }
+.novice-intro {
+  width: 100%; max-width: 460px; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 20px; padding: 22px 20px 18px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .7);
+}
+.novice-intro h2 { font-size: 20px; margin: 0 0 10px; }
+.novice-intro p { font-size: 14.5px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 12px; }
+.novice-intro-btns { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; }
+.novice-intro-btn {
+  padding: 13px 16px; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+}
+.novice-intro-btn--main { background: var(--accent); color: var(--accent-ink); border-color: transparent; }

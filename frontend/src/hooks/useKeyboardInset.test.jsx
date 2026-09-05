@@ -59,8 +59,30 @@ describe('useKeyboardInset — поле ввода не должно прята�
     renderHook(() => useKeyboardInset())
     act(() => { vv.height = 450; fire('resize') })
     expect(scrollSpy).not.toHaveBeenCalled()          // ждём пересчёта раскладки
-    act(() => { vi.advanceTimersByTime(200) })
+    act(() => { vi.advanceTimersByTime(250) })
     expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' })
+    input.remove()
+  })
+
+  // Экран в диктанте прыгал с первого набранного символа: Android достраивает строку
+  // подсказок, высота клавиатуры меняется — и прежняя версия скроллила заново на каждое
+  // такое шевеление, а её же плавный скролл вызывал следующее. Пока клавиатура открыта,
+  // скроллить больше нечего.
+  it('пока клавиатура открыта, повторные resize/scroll не дёргают экран', () => {
+    const { vv, fire } = mockViewport()
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+    renderHook(() => useKeyboardInset())
+    act(() => { vv.height = 450; fire('resize') })
+    act(() => { vi.advanceTimersByTime(250) })
+    expect(scrollSpy).toHaveBeenCalledTimes(1)
+
+    scrollSpy.mockClear()
+    act(() => { vv.height = 420; fire('resize') })     // выехала строка подсказок
+    act(() => { vv.offsetTop = 8; fire('scroll') })    // и вьюпорт чуть уехал
+    act(() => { vi.advanceTimersByTime(500) })
+    expect(scrollSpy).not.toHaveBeenCalled()
     input.remove()
   })
 

@@ -926,6 +926,17 @@ export const en = {
     lessonsPassed: 'lessons done',
     lockedTitle: 'Lesson locked',
     lockedHint: 'Finish the previous lesson — this one opens next',
+    // Floating button that starts the lesson (see NoviceActions)
+    resumeStart: 'Start',
+    resumeContinue: 'Continue',
+    resumeRepeat: 'Repeat',
+    extras: 'Games and sections',
+    introTitle: 'Where to begin',
+    introStart: 'Tap the “Start” button in the bottom right — it always picks up where you left off.',
+    introSchedule: 'Your study calendar is set to “every day”: a new lesson opens daily. You can pick your own days.',
+    introOk: 'Got it, let’s go',
+    introPickDays: 'Pick my days',
+    introKeepDaily: 'Keep every day',
   },
   phrases: {
     title: 'Phrases',

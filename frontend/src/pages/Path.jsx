@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Heart, Puzzle, Layers, CheckCircle2, Gamepad2, SquarePen } from 'lucide-react'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { getLessonTitle } from '../utils/translation.js'
+import { useIntroStore } from '../store/intro.js'
 
 // Экран «Путь» (режим новичка), макет 2a из docs/design_novichok.
 //
@@ -33,6 +35,15 @@ export default function Path() {
   const navigate = useNavigate()
   const { t, lang } = useI18nStore()
   const [data, setData] = useState(null)
+  const [games, setGames] = useState([])          // готовые классные игры — как в полном интерфейсе
+  // Первое знакомство: что нажать и по каким дням учиться. Показываем один раз —
+  // отметку держим и на устройстве (чтобы не мигало до ответа сервера), и на сервере
+  // (флаг is_default у расписания гаснет, как только человек ответил).
+  // Состояние окна держим в сторе: по нему тур понимает, что стартовать ещё рано
+  // (иначе у нового ученика оба окна всплывают разом).
+  const introOpen = useIntroStore(s => s.open)
+  const setIntroOpen = useIntroStore(s => s.setOpen)
+  const [introBusy, setIntroBusy] = useState(false)
   // Тап по узлу раскрывает его, а не проваливает в упражнение: карта должна быть
   // интерактивной — сначала видно, что внутри станции, и уже оттуда выбираешь.
   const [selected, setSelected] = useState(null)   // ключ выбранного узла
@@ -47,9 +58,33 @@ export default function Path() {
     return !v
   })
 
+  // Экран закрылся с открытым окном — снимаем флаг, иначе тур не запустится уже никогда
+  useEffect(() => () => setIntroOpen(false), [])
+
   useEffect(() => {
-    api.get('/path').then(setData).catch(() => setData({ error: true }))
+    api.get('/path').then(d => {
+      setData(d)
+      // Окно показываем, если сервер говорит «календарь поставлен по умолчанию, человека
+      // не спрашивали», либо если этот ученик вообще впервые видит новый экран.
+      const seen = (() => { try { return localStorage.getItem('novice_intro_seen') === '1' } catch { return true } })()
+      if ((d?.schedule_hint?.length > 0) || !seen) setIntroOpen(true)
+    }).catch(() => setData({ error: true }))
+    api.get('/class-games').then(rows => setGames((rows || []).filter(g => g.status === 'ready'))).catch(() => {})
   }, [])
+
+  // Ответ на окно: либо идём выбирать свои дни, либо оставляем «каждый день».
+  const closeIntro = async (goSchedule) => {
+    const courseId = data?.schedule_hint?.[0]?.course_id
+    setIntroBusy(true)
+    try { localStorage.setItem('novice_intro_seen', '1') } catch {}
+    // Флаг «спрашивали» гасим в обоих случаях: выбор дней его тоже сбрасывает (PUT),
+    // но до страницы курса человек может и не дойти — второй раз окно не нужно.
+    if (courseId) { try { await api.post(`/courses/${courseId}/schedule/confirm`, {}) } catch {} }
+    setIntroBusy(false)
+    setIntroOpen(false)
+    if (goSchedule && courseId) navigate(`/courses/${courseId}`)
+    else if (goSchedule) navigate('/courses')
+  }
 
   // Дорога показывается целиком, поэтому подкручиваем к текущему узлу — иначе
   // ученик открывает экран на первом уроке и не понимает, где он сейчас.
@@ -198,6 +233,31 @@ export default function Path() {
           <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{tails.total}</span>
         </button>
       )}
+
+      {/* Игры и тёплые разделы. В новом дизайне их не перенесли с главной полного
+          интерфейса, и попасть в них стало неоткуда (жалоба Павла 05.09.2026:
+          «потеряли разделы, Любовь к детям надо вывести на главный»). */}
+      <div className="path-extras">
+        <div className="path-extras-title">{t.path.extras}</div>
+        <div className="path-extras-grid">
+          <Extra ico={<Heart size={19} />} tone="#e0576f" title={t.dashboard.loveTitle}
+            sub={t.dashboard.loveDesc} onClick={() => navigate('/love')} />
+          <Extra ico={<Layers size={19} />} tone="#9A5CD8" title={t.dashboard.matchTitle}
+            sub={t.dashboard.matchDesc} onClick={() => navigate('/game/match')} />
+          <Extra ico={<Puzzle size={19} />} tone="#2F8296" title={t.dashboard.crossTitle}
+            sub={t.dashboard.crossDesc} onClick={() => navigate('/game/crossword')} />
+          <Extra ico={<CheckCircle2 size={19} />} tone="#2E7D63" title={t.dashboard.chooseAnswerTitle}
+            sub={t.dashboard.chooseAnswerDesc} onClick={() => navigate('/exercise-session?type=multiple_choice')} />
+          <Extra ico={<SquarePen size={19} />} tone="#B07D1B" title={t.dashboard.createSetTitle}
+            sub={t.dashboard.createSetDesc} onClick={() => navigate('/vocabulary')} />
+          {/* Классная игра: пока учитель её не собрал, ведём в тот же список — иначе
+              кнопка молчит на нажатие и выглядит сломанной. */}
+          <Extra ico={<Gamepad2 size={19} />} tone="#E8863C" title={t.dashboard.classGameTitle}
+            sub={games.length ? t.dashboard.classGameReady : t.dashboard.classGameNot}
+            onClick={() => games.length && navigate(`/class-game/${games[0].id}`)}
+            muted={!games.length} />
+        </div>
+      </div>
       </div>
 
       {/* Правая колонка (макет 2a, только ПК): неделя, «что уже умею», сундук.
@@ -251,7 +311,38 @@ export default function Path() {
           </div>
         </div>
       </aside>
+
+      {/* Первое знакомство: одна кнопка «Старт» и один вопрос про календарь.
+          Раньше новичок не видел ни того, ни другого — и шёл спрашивать учителя. */}
+      {introOpen && (
+        <div className="novice-intro-overlay" onClick={() => closeIntro(false)}>
+          <div className="novice-intro" onClick={e => e.stopPropagation()}>
+            <h2>{t.path.introTitle}</h2>
+            <p>{t.path.introStart}</p>
+            {data.schedule_hint?.length > 0 && <p>{t.path.introSchedule}</p>}
+            <div className="novice-intro-btns">
+              <button className="novice-intro-btn novice-intro-btn--main" disabled={introBusy}
+                onClick={() => closeIntro(false)}>{t.path.introOk}</button>
+              {data.schedule_hint?.length > 0 && (
+                <button className="novice-intro-btn" disabled={introBusy}
+                  onClick={() => closeIntro(true)}>{t.path.introPickDays}</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+// Плитка раздела под дорогой: цветной значок, название, короткое пояснение.
+function Extra({ ico, tone, title, sub, onClick, muted = false }) {
+  return (
+    <button className="path-extra" onClick={onClick} style={{ opacity: muted ? 0.55 : 1 }}>
+      <span className="path-extra-ico" style={{ background: tone }}>{ico}</span>
+      <span className="path-extra-title">{title}</span>
+      <span className="path-extra-sub">{sub}</span>
+    </button>
   )
 }
 
