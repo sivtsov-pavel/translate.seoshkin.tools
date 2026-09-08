@@ -589,3 +589,47 @@ html.keyboard-open .novice-actions { display: none; }
   border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
 }
 .novice-intro-btn--main { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+
+/* ── Узлы дороги читаются как кнопки ──────────────────────────────────────────
+   Люди не понимали, что кружки нажимаются: карта читалась как картинка прогресса
+   (жалоба Павла 06.09.2026). Даём доступным узлам тень и отклик на нажатие —
+   статичный аффорданс, без движения: тридцать «дышащих» кружков разом дают ровно
+   ту рябь, от которой уходили в этом дизайне. Движение приберегли для одной
+   разовой подсказки ниже. */
+.path-node--tappable {
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .45) !important;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.path-node--tappable:active { transform: scale(.94); }
+
+/* Цель разовой подсказки — мягко пульсирует, пока человек не тапнул ни разу */
+@keyframes nv-node-hint {
+  0%, 100% { box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .45), 0 0 0 0 rgba(232, 176, 36, .55); }
+  50%      { box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .45), 0 0 0 10px rgba(232, 176, 36, 0); }
+}
+.path-node--hint { animation: nv-node-hint 1.9s ease-out infinite; }
+
+/* Само облачко: подпись и хвостик вниз, к кружку */
+.path-tap-hint { pointer-events: none; display: flex; justify-content: center; }
+.path-tap-hint-bubble {
+  position: relative;
+  background: var(--accent); color: var(--accent-ink);
+  border-radius: 14px; padding: 9px 13px;
+  font-size: 13px; font-weight: 700; line-height: 1.25; text-align: center;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .7);
+  animation: nv-hint-float 2.2s ease-in-out infinite;
+}
+.path-tap-hint-bubble::after {
+  content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+  border-left: 8px solid transparent; border-right: 8px solid transparent;
+  border-top: 8px solid var(--accent);
+}
+@keyframes nv-hint-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* Кому движение мешает — оставляем только тень */
+@media (prefers-reduced-motion: reduce) {
+  .path-node--hint, .path-tap-hint-bubble { animation: none; }
+}

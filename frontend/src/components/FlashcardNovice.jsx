@@ -115,10 +115,21 @@ export default function FlashcardNovice({
       {/* «В предложении» — слово в живом контексте, с подсветкой */}
       {exampleSentence && (
         <div style={{ borderRadius: 22, border: '1px solid var(--line)', background: 'var(--surface-2)', padding: '16px 18px', marginBottom: 14 }}>
-          <div style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.35 }} dir="ltr">
-            {match
-              ? <>{before}<span style={{ color: '#E8B024' }}>{match}</span>{after}</>
-              : exampleSentence}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 19, fontWeight: 600, lineHeight: 1.35 }} dir="ltr">
+              {match
+                ? <>{before}<span style={{ color: '#E8B024' }}>{match}</span>{after}</>
+                : exampleSentence}
+            </div>
+            {/* Озвучка примера. Само слово послушать можно было, а фразу с ним — нет,
+                хотя именно она показывает, как слово звучит в живой речи. */}
+            <button onClick={() => speak(exampleSentence)}
+              aria-label={t.exercise.listen || 'Слушать'} title={t.exercise.listen || 'Слушать'}
+              style={{ flex: 'none', width: 44, height: 44, borderRadius: 14, border: 'none',
+                background: '#9A5CD8', color: '#fff', fontSize: 18, cursor: 'pointer',
+                display: 'grid', placeItems: 'center' }}>
+              🔊
+            </button>
           </div>
           {/* Перевод примера — только после раскрытия: до него он подсказывал ответ,
               ведь изучаемое слово в переводе стоит открытым текстом. */}

@@ -924,6 +924,7 @@ export const tr = {
     introOk: 'Anladım, başlayalım',
     introPickDays: 'Kendi günlerimi seçeyim',
     introKeepDaily: 'Her gün kalsın',
+    tapHint: 'Herhangi bir daireye dokun — içinde ne var göstereyim',
   },
   phrases: {
     title: 'Cümleler',

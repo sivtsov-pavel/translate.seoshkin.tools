@@ -937,6 +937,7 @@ export const en = {
     introOk: 'Got it, let’s go',
     introPickDays: 'Pick my days',
     introKeepDaily: 'Keep every day',
+    tapHint: 'Tap any circle — I’ll show what’s inside',
   },
   phrases: {
     title: 'Phrases',

@@ -943,6 +943,7 @@ export const de = {
     introOk: 'Alles klar, los geht’s',
     introPickDays: 'Eigene Tage wählen',
     introKeepDaily: 'Jeden Tag lassen',
+    tapHint: 'Tippe auf einen Kreis — ich zeige, was drin ist',
   },
   phrases: {
     title: 'Sätze',

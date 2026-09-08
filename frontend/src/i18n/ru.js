@@ -693,6 +693,7 @@ export const ru = {
     introOk: 'Понятно, начнём',
     introPickDays: 'Выбрать свои дни',
     introKeepDaily: 'Оставить каждый день',
+    tapHint: 'Нажми на любой кружок — покажу, что внутри',
   },
   phrases: {
     title: 'Фразы',

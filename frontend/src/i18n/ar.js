@@ -927,6 +927,7 @@ export const ar = {
     introOk: 'فهمت، لنبدأ',
     introPickDays: 'اختيار أيامي',
     introKeepDaily: 'اتركه كل يوم',
+    tapHint: 'اضغط أي دائرة — سأريك ما بداخلها',
   },
   phrases: {
     title: 'الجمل',

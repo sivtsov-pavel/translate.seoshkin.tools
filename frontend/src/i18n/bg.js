@@ -919,6 +919,7 @@ export const bg = {
     introOk: 'Ясно, да започваме',
     introPickDays: 'Избери свои дни',
     introKeepDaily: 'Остави всеки ден',
+    tapHint: 'Натисни някое кръгче — ще покажа какво има вътре',
   },
   phrases: {
     title: 'Фрази',

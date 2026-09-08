@@ -68,6 +68,27 @@ export default function Path() {
   // Экран закрылся с открытым окном — снимаем флаг, иначе тур не запустится уже никогда
   useEffect(() => () => setIntroOpen(false), [])
 
+  // Прокрутил дорогу — плашка схлопывается. Пока она открыта, она занимает место на
+  // карте, и людям это мешало смотреть остальные узлы: закрывать её вторым тапом
+  // догадывались не все (жалоба Павла 06.09.2026). Прокрутка — естественный жест
+  // «мне сейчас не про этот узел».
+  //
+  // Взводим с задержкой: сразу после открытия экрана страница сама подкручивается к
+  // текущему узлу, и без паузы плашка закрывалась бы от собственной прокрутки.
+  useEffect(() => {
+    let armed = false
+    let from = window.scrollY
+    const arm = setTimeout(() => { armed = true; from = window.scrollY }, 700)
+    const onScroll = () => {
+      if (!armed) return
+      if (Math.abs(window.scrollY - from) < 60) return   // мелкое дрожание — не жест
+      setSelected(null)
+      setDetails(null)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { clearTimeout(arm); window.removeEventListener('scroll', onScroll) }
+  }, [selected])
+
   useEffect(() => {
     api.get('/path').then(d => {
       setData(d)
@@ -406,6 +427,13 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   // до него нельзя было бы дотянуться, не закрыв текущий. Меряем и раздвигаем дорогу.
   const [cardH, setCardH] = useState(0)
 
+  // Разовая подсказка «нажми на кружок». Люди не понимали, что узлы вообще нажимаются:
+  // карта читалась как картинка прогресса (жалоба Павла 06.09.2026). Показываем один
+  // раз до первого тапа по любому узлу — дальше человек уже знает.
+  const [tapHintSeen, setTapHintSeen] = useState(() => {
+    try { return localStorage.getItem('path_tap_hint_seen') === '1' } catch { return true }
+  })
+
   // Ключ узла: у уроков он по lesson_id, у станций — по типу и цели
   const keyOf = (n, i) => `${n.kind}-${n.type || 'lesson'}-${n.lesson_id ?? n.topic_id ?? i}`
 
@@ -419,6 +447,10 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   // Раскрываем узел и подгружаем, что внутри станции (три озвучки, падежи и т.п.)
   const openNode = async (n, i) => {
     setCardH(0)   // высота меряется заново под новую плашку
+    if (!tapHintSeen) {
+      setTapHintSeen(true)
+      try { localStorage.setItem('path_tap_hint_seen', '1') } catch {}
+    }
     // Тап по раскрытому узлу — закрыть. null, а не undefined: «закрыто» не должно
     // означать «вернуться к текущему уроку», иначе плашка не закрывается никогда.
     if (isNodeOpen(n, i)) { setSelected(null); setDetails(null); return }
@@ -444,6 +476,11 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   // Какой узел раскрыт: по нему решаем, где дорога расступается под плашку.
   // Пусто выбранное — раскрыт текущий урок (так экран открывается сразу с делом).
   const openIdx = items.findIndex(isNodeOpen)
+
+  // Куда показывает разовая подсказка: первый НЕ раскрытый доступный узел. Именно он и
+  // объясняет то, чего люди не понимали, — что нажимаются не только открытая плашка,
+  // а любой кружок. На раскрытый показывать бессмысленно: он и так раскрыт.
+  const hintIdx = tapHintSeen ? -1 : items.findIndex((n, i) => n.state !== 'locked' && !isNodeOpen(n, i))
   const shift = openIdx >= 0 && cardH ? cardH + 16 : 0
   const openRow = openIdx >= 0 ? Math.floor(openIdx / COLS) : -1
 
@@ -534,6 +571,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
             style={{ position: 'absolute', left: `${(x / VIEW_W) * 100}%`, top: y - size / 2, transform: 'translateX(-50%)', zIndex: isOpen ? 5 : 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
               <button onClick={() => openNode(n, i)}
+                className={locked ? 'path-node' : `path-node path-node--tappable${i === hintIdx ? ' path-node--hint' : ''}`}
                 style={{
                   width: size, height: size, borderRadius: radius, flex: 'none',
                   transform: shape === 'diamond' ? 'rotate(45deg)' : 'none',
@@ -564,6 +602,19 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
 
             </div>
           </div>
+
+          {/* Разовая подсказка «нажми на кружок» — облачком НАД узлом, с хвостиком вниз.
+              Ширину прижимаем внутрь дороги тем же clamp-ом, что и плашку. */}
+          {i === hintIdx && (
+            <div className="path-tap-hint" style={{
+              position: 'absolute', zIndex: 7,
+              top: y - size / 2 - 62,
+              width: 'min(220px, 100%)',
+              left: `clamp(0px, calc(${(x / VIEW_W) * 100}% - min(220px, 100%) / 2), calc(100% - min(220px, 100%)))`,
+            }}>
+              <div className="path-tap-hint-bubble">{t.path.tapHint}</div>
+            </div>
+          )}
 
           {/* Плашка раскрытого узла — ПОД кнопкой, а не сбоку.
               Сбоку она вставала по стороне узла (левым — вправо, правым — влево) и у

@@ -936,6 +936,7 @@ export const uk = {
     introOk: 'Зрозуміло, почнімо',
     introPickDays: 'Обрати свої дні',
     introKeepDaily: 'Залишити щодня',
+    tapHint: 'Натисни на будь-яке коло — покажу, що всередині',
   },
   phrases: {
     title: 'Фрази',

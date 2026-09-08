@@ -936,6 +936,7 @@ export const sq = {
     introOk: 'E kuptova, t’ia nisim',
     introPickDays: 'Zgjidh ditët e mia',
     introKeepDaily: 'Lëre çdo ditë',
+    tapHint: 'Prek çdo rreth — të tregoj çfarë ka brenda',
   },
   phrases: {
     title: 'Fraza',

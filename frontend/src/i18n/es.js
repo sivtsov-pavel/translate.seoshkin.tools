@@ -925,6 +925,7 @@ export const es = {
     introOk: 'Entendido, vamos',
     introPickDays: 'Elegir mis días',
     introKeepDaily: 'Dejar todos los días',
+    tapHint: 'Toca cualquier círculo: te muestro qué hay dentro',
   },
   phrases: {
     title: 'Frases',
