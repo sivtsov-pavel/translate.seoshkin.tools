@@ -659,6 +659,11 @@ export const en = {
     courseTip: '💡 Better to attach to a course — otherwise the lesson will hang separately in "Today".',
   },
   common: {
+    // Плашка «вышло обновление» (components/UpdatePrompt.jsx)
+    updateTitle: 'Update available',
+    updateDesc: 'Tap to load the new version',
+    updateBtn: 'Update',
+    updateLater: 'Later',
     loading: 'Loading...',
     error: 'Error',
     cancel: 'Cancel',

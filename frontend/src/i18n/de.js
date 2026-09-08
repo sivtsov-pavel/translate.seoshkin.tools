@@ -665,6 +665,11 @@ export const de = {
     courseTip: '💡 Am besten an einen Kurs binden — sonst bleibt die Lektion einzeln unter „Heute" hängen.',
   },
   common: {
+    // Плашка «вышло обновление» (components/UpdatePrompt.jsx)
+    updateTitle: 'Update verfügbar',
+    updateDesc: 'Tippe, um die neue Version zu laden',
+    updateBtn: 'Aktualisieren',
+    updateLater: 'Später',
     loading: 'Laden...',
     error: 'Fehler',
     cancel: 'Abbrechen',

@@ -658,6 +658,11 @@ export const sq = {
     courseTip: '💡 Më mirë lidhe me një kurs — përndryshe mësimi mbetet i veçuar te «Sot».',
   },
   common: {
+    // Плашка «вышло обновление» (components/UpdatePrompt.jsx)
+    updateTitle: 'Doli një përditësim',
+    updateDesc: 'Prek për të ngarkuar versionin e ri',
+    updateBtn: 'Përditëso',
+    updateLater: 'Më vonë',
     loading: 'Duke ngarkuar...',
     error: 'Gabim',
     cancel: 'Anulo',

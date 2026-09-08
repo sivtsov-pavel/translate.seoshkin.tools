@@ -652,7 +652,7 @@ export const tr = {
     bindCourseOption: (title) => `Kursa bağla: ${title}`,
     courseTip: '💡 Bir kursa bağlamak daha iyi — yoksa ders "Bugün"de ayrı asılı kalır.',
   },
-  common: { loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal', save: 'Kaydet', starting: "Başlıyor...", deleteLesson: "Ders silinsin mi? Tüm kelimeler ve alıştırmalar kalıcı olarak silinecek." },
+  common: { loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal', save: 'Kaydet', starting: "Başlıyor...", deleteLesson: "Ders silinsin mi? Tüm kelimeler ve alıştırmalar kalıcı olarak silinecek.", updateTitle: 'Güncelleme çıktı', updateDesc: 'Yeni sürümü yüklemek için dokun', updateBtn: 'Güncelle', updateLater: 'Sonra' },
   games: {
     loading: 'Yükleniyor…',
     moves: 'Hamle',

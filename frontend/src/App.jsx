@@ -30,6 +30,7 @@ import Wiki from './pages/Wiki.jsx'
 import Grammar from './pages/Grammar.jsx'
 import CheatSheet from './pages/CheatSheet.jsx'
 import LoveKids from './pages/LoveKids.jsx'
+import UpdatePrompt from './components/UpdatePrompt.jsx'
 import Crossword from './pages/Crossword.jsx'
 import Tutors from './pages/Tutors.jsx'
 import TextReader from './pages/TextReader.jsx'
@@ -129,6 +130,9 @@ export default function App() {
         <Route path="/terms"   element={<Terms />} />
         <Route path="/cookies" element={<Cookies />} />
       </Routes>
+
+      {/* «Вышло обновление» — поверх любой страницы, включая вход */}
+      <UpdatePrompt />
       <CookieConsent />
       <InstallPWA />
     </BrowserRouter>

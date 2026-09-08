@@ -647,7 +647,7 @@ export const bg = {
     bindCourseOption: (title) => `Свържи с курс: ${title}`,
     courseTip: '💡 По-добре свържи с курс — иначе урокът ще увисне отделно в „Днес".',
   },
-  common: { loading: 'Зареждане...', error: 'Грешка', cancel: 'Отказ', save: 'Запази', starting: "Стартиране...", deleteLesson: "Изтриване на урока? Всички думи и упражнения ще бъдат изтрити." },
+  common: { loading: 'Зареждане...', error: 'Грешка', cancel: 'Отказ', save: 'Запази', starting: "Стартиране...", deleteLesson: "Изтриване на урока? Всички думи и упражнения ще бъдат изтрити.", updateTitle: 'Излезе обновление', updateDesc: 'Натисни, за да заредиш новата версия', updateBtn: 'Обнови', updateLater: 'По-късно' },
   games: {
     loading: 'Зареждане…',
     moves: 'Ходове',

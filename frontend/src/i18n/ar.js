@@ -655,7 +655,7 @@ export const ar = {
     bindCourseOption: (title) => `ربط بالدورة: ${title}`,
     courseTip: '💡 يُفضَّل الربط بدورة — وإلا سيبقى الدرس منفصلاً في «اليوم».',
   },
-  common: { loading: 'جاري التحميل...', error: 'خطأ', cancel: 'إلغاء', save: 'حفظ', starting: "يبدأ...", deleteLesson: "حذف الدرس؟ سيتم حذف جميع الكلمات والتمارين نهائياً." },
+  common: { loading: 'جاري التحميل...', error: 'خطأ', cancel: 'إلغاء', save: 'حفظ', starting: "يبدأ...", deleteLesson: "حذف الدرس؟ سيتم حذف جميع الكلمات والتمارين نهائياً.", updateTitle: 'يوجد تحديث', updateDesc: 'اضغط لتحميل النسخة الجديدة', updateBtn: 'تحديث', updateLater: 'لاحقًا' },
   games: {
     loading: 'جارٍ التحميل…',
     moves: 'النقلات',

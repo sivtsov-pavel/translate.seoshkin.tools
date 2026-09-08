@@ -35,6 +35,10 @@ export default function FlashcardNovice({
   exampleSentence, exampleSentenceRu,
 }) {
   const [revealed, setRevealed] = useState(false)
+  // Перевод примера до ответа показываем ТОЛЬКО по просьбе: в нём изучаемое слово
+  // стоит открытым текстом, и включённый по умолчанию он просто выдаёт ответ.
+  // Кнопкой человек решает сам — подглядеть или сначала вспомнить.
+  const [exampleRuShown, setExampleRuShown] = useState(false)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading] = useState(false)
   const [inStudy, setInStudy] = useState(!!learned)
@@ -131,11 +135,18 @@ export default function FlashcardNovice({
               🔊
             </button>
           </div>
-          {/* Перевод примера — только после раскрытия: до него он подсказывал ответ,
-              ведь изучаемое слово в переводе стоит открытым текстом. */}
-          {revealed && exampleSentenceRu && (
-            <div style={{ fontSize: 15, color: 'var(--ink-soft)', marginTop: 6 }}>{exampleSentenceRu}</div>
-          )}
+          {/* Перевод примера. После ответа — сразу; до ответа — по кнопке, иначе он
+              подсказывает ответ (изучаемое слово стоит в нём открытым текстом). */}
+          {exampleSentenceRu && (revealed || exampleRuShown ? (
+            <div style={{ fontSize: 15, color: 'var(--ink-soft)', marginTop: 8 }}>{exampleSentenceRu}</div>
+          ) : (
+            <button onClick={() => setExampleRuShown(true)}
+              style={{ marginTop: 8, padding: '5px 12px', borderRadius: 999, cursor: 'pointer',
+                border: '1px dashed var(--line)', background: 'transparent', color: 'var(--ink-soft)',
+                fontSize: 12.5, fontWeight: 700, textTransform: 'lowercase' }}>
+              {t.exercise.translationLabel}
+            </button>
+          ))}
         </div>
       )}
 

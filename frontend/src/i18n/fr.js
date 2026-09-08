@@ -652,7 +652,7 @@ export const fr = {
     bindCourseOption: (title) => `Associer au cours : ${title}`,
     courseTip: "💡 Mieux vaut l'associer à un cours — sinon la leçon restera isolée dans « Aujourd'hui ».",
   },
-  common: { loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler', save: 'Enregistrer', starting: "Démarrage...", deleteLesson: "Supprimer la leçon? Tous les mots et exercices seront définitivement supprimés." },
+  common: { loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler', save: 'Enregistrer', starting: "Démarrage...", deleteLesson: "Supprimer la leçon? Tous les mots et exercices seront définitivement supprimés.", updateTitle: 'Mise à jour disponible', updateDesc: 'Touche pour charger la nouvelle version', updateBtn: 'Mettre à jour', updateLater: 'Plus tard' },
   games: {
     loading: 'Chargement…',
     moves: 'Coups',

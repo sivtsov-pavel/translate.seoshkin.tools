@@ -653,7 +653,7 @@ export const es = {
     bindCourseOption: (title) => `Vincular al curso: ${title}`,
     courseTip: '💡 Mejor vincúlalo a un curso — si no, la lección quedará suelta en «Hoy».',
   },
-  common: { loading: 'Cargando...', error: 'Error', cancel: 'Cancelar', save: 'Guardar', starting: "Iniciando...", deleteLesson: "¿Eliminar lección? Todas las palabras y ejercicios serán borrados permanentemente." },
+  common: { loading: 'Cargando...', error: 'Error', cancel: 'Cancelar', save: 'Guardar', starting: "Iniciando...", deleteLesson: "¿Eliminar lección? Todas las palabras y ejercicios serán borrados permanentemente.", updateTitle: 'Hay una actualización', updateDesc: 'Toca para cargar la nueva versión', updateBtn: 'Actualizar', updateLater: 'Más tarde' },
   games: {
     loading: 'Cargando…',
     moves: 'Movimientos',

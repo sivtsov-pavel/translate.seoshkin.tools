@@ -1051,6 +1051,11 @@ export const ru = {
     courseTip: '💡 Лучше привязать к курсу — иначе урок повиснет отдельно в «Сегодня».',
   },
   common: {
+    // Плашка «вышло обновление» (components/UpdatePrompt.jsx)
+    updateTitle: 'Вышло обновление',
+    updateDesc: 'Нажми, чтобы загрузить новую версию',
+    updateBtn: 'Обновить',
+    updateLater: 'Позже',
     loading: 'Загрузка...',
     error: 'Ошибка',
     cancel: 'Отмена',

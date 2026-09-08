@@ -186,6 +186,14 @@ export default function NoviceNav() {
                 <span>{item.label}</span>
               </button>
             ))}
+
+            {/* Метка сборки. В полном интерфейсе она есть в боковом меню, а у новичка
+                бокового меню нет — и проверить, обновилось ли приложение, было нечем.
+                Кеш у PWA/TWA липкий, и «у меня нет новой кнопки» начинается именно
+                с невозможности сказать, какая версия открыта. */}
+            <div style={{ textAlign: 'center', padding: '10px 0 2px', fontSize: 11, color: 'var(--ink-soft)', opacity: 0.7 }}>
+              {typeof __BUILD_TS__ !== 'undefined' ? __BUILD_TS__ : ''}
+            </div>
           </div>
         </>
       )}

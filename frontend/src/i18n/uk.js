@@ -658,6 +658,11 @@ export const uk = {
     courseTip: '💡 Краще прив’язати до курсу — інакше урок повисне окремо в «Сьогодні».',
   },
   common: {
+    // Плашка «вышло обновление» (components/UpdatePrompt.jsx)
+    updateTitle: 'Вийшло оновлення',
+    updateDesc: 'Натисни, щоб завантажити нову версію',
+    updateBtn: 'Оновити',
+    updateLater: 'Пізніше',
     loading: 'Завантаження...',
     error: 'Помилка',
     cancel: 'Скасувати',
