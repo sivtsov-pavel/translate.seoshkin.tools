@@ -49,6 +49,7 @@ export default function ExerciseSession() {
   // Позволяет продолжать «34 / 100» после выхода/возврата, а не начинать заново с «1».
   const [doneOffset, setDoneOffset] = useState(0)
   const [finished, setFinished]   = useState(false) // сессия закончилась — экран «Продолжить/Готово»
+  const [nothingToday, setNothingToday] = useState(false) // заходили в урок, а на сегодня всё сделано
   const [continuing, setContinuing] = useState(false)
   const [lessonDone, setLessonDone] = useState(false) // упражнений на сегодня больше нет — урок пройден
   const [tails, setTails]         = useState(0)     // «хвосты» — пропущенные упражнения этого урока
@@ -131,8 +132,17 @@ export default function ExerciseSession() {
         }
         // Уже отвеченное в этой сессии не повторяем — см. answeredIds выше.
         const fresh = list.filter(e => !answeredIds.current.has(e.id))
-        // Педагогический порядок типов: вопрос-ответ → флеш → буква → слово → предложение → проговори → диктант
-        const ordered = fresh.sort((a, b) => (TYPE_SEQ[a.type] ?? 99) - (TYPE_SEQ[b.type] ?? 99))
+        // Порядок типов. Когда сессия ограничена списком (types= с карты, кнопка «Начать»),
+        // идём в ПОРЯДКЕ ЭТОГО СПИСКА, а не по общему TYPE_SEQ: список задаёт тот, кто
+        // сессию открыл. Раньше общий порядок его перебивал, и «Начать» всегда стартовало
+        // с флеш-карточек, хотя просили начинать с «выбери ответ» (Павел, 09.09.2026).
+        const pick = typesParam ? typesParam.split(',').map(x => x.trim()).filter(Boolean) : null
+        const seq = (t) => {
+          if (!pick) return TYPE_SEQ[t] ?? 99
+          const i = pick.indexOf(t)
+          return i === -1 ? 99 : i
+        }
+        const ordered = fresh.sort((a, b) => seq(a.type) - seq(b.type))
         setExercises(ordered)
         setCurrent(0)
         return ordered
@@ -151,7 +161,18 @@ export default function ExerciseSession() {
     return ordered
   })
 
+  // Запуск сессии. Зависит от ПАРАМЕТРОВ АДРЕСА, а не только от монтирования: «Продолжить
+  // упражнения» переводит на следующий незакрытый тип через navigate(), компонент при этом
+  // остаётся тем же — и раньше сессия не перезагружалась вовсе. Экран замирал на финише с
+  // новым адресом в строке, и со стороны это выглядело как зависший урок (Павел, 09.09.2026).
+  const paramsKey = searchParams.toString()
   useEffect(() => {
+    // Полный сброс: иначе от прошлой сессии остаются финиш-экран, счётчик и память ответов
+    setLoading(true)
+    setFinished(false); setLessonDone(false); setNothingToday(false)
+    setCurrent(0); setInTails(false); setDoneOffset(0); setBetweenFan(false)
+    answeredIds.current = new Set()
+
     // Сессия «хвостов» по всему курсу (?tails=1) — все пропущенные упражнения активного языка
     if (searchParams.get('tails')) {
       api.get('/exercises/deferred?all=1').then(exs => {
@@ -165,8 +186,13 @@ export default function ExerciseSession() {
       api.get(`/exercises/done-today?type=${encodeURIComponent(type)}`)
         .then(r => setDoneOffset(r?.done || 0)).catch(() => {})
     }
-    loadExercises().finally(() => setLoading(false))
-  }, [])
+    loadExercises().then(list => {
+      // Пусто — значит на сегодня всё отработано (SM-2 отложил повторы на завтра). Раньше
+      // здесь молча делали navigate('/'): человек жал «Продолжить», его без объяснений
+      // возвращало на главную, и выглядело это поломкой. Показываем экран с итогом.
+      if (!list?.length) { setNothingToday(true); setFinished(true) }
+    }).finally(() => setLoading(false))
+  }, [paramsKey])   // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAnswer = async (quality, userAnswer = '') => {
     const ex = exercises[current]
@@ -299,15 +325,18 @@ export default function ExerciseSession() {
       <div className="full-page-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         {lessonDone && <Confetti />}
         <div style={{ maxWidth: 380, width: '100%', textAlign: 'center', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '32px 24px', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 52, marginBottom: 10 }}>{lessonDone && (exam || !type) ? '🏆' : '🎉'}</div>
+          <div style={{ fontSize: 52, marginBottom: 10 }}>{nothingToday ? '👌' : (lessonDone && (exam || !type) ? '🏆' : '🎉')}</div>
           <div style={{ fontFamily: 'var(--heading-font)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-            {lessonDone
+            {nothingToday
+              ? t.exercise.doneToday
+              : lessonDone
               ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
                  : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
               : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
           </div>
           <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 20px' }}>
-            {hasTails ? (t.exercise.tailsSub ? t.exercise.tailsSub(tails) : `Ты пропустил ${tails} упр. (проговори/диктант). Пройди их для полного финиша урока.`)
+            {nothingToday ? t.exercise.doneTodaySub
+              : hasTails ? (t.exercise.tailsSub ? t.exercise.tailsSub(tails) : `Ты пропустил ${tails} упр. (проговори/диктант). Пройди их для полного финиша урока.`)
               : lessonDone
                 ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉')
                    : (type ? (t.exercise.exercisesDoneSub || 'Все упражнения этого типа сделаны.') : (t.exercise.lessonPassedSub || 'Ты прошёл все упражнения урока! 🎉')))

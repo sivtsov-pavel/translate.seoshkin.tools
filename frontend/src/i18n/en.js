@@ -202,7 +202,7 @@ export const en = {
     dictation: 'Dictation',
     speech: 'Pronunciation',
     trainerSpeech: 'Pronunciation with the trainer',
-    tapToReveal: 'Tap to reveal answer', showAnswer: 'Show answer', praiseCorrect: 'Great!', praiseWrong: 'Almost! Try again',
+    tapToReveal: 'Tap to reveal answer', doneToday: 'Done for today', doneTodaySub: 'You have finished these. They will come back tomorrow for review', showAnswer: 'Show answer', praiseCorrect: 'Great!', praiseWrong: 'Almost! Try again',
     forgot: 'Forgot',
     hard: 'Hard',
     remembered: 'Got it!',

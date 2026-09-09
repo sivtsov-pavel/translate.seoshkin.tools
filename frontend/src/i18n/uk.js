@@ -202,7 +202,7 @@ export const uk = {
     dictation: 'Диктант',
     speech: 'Вимова',
     trainerSpeech: 'Вимова з тренером',
-    tapToReveal: 'Натисни щоб побачити відповідь', showAnswer: 'Показати відповідь', praiseCorrect: 'Чудово!', praiseWrong: 'Майже! Спробуй ще раз',
+    tapToReveal: 'Натисни щоб побачити відповідь', doneToday: 'На сьогодні все', doneTodaySub: 'Ці вправи ти вже зробив. Завтра вони повернуться на повторення', showAnswer: 'Показати відповідь', praiseCorrect: 'Чудово!', praiseWrong: 'Майже! Спробуй ще раз',
     forgot: 'Не памʼятаю',
     hard: 'Важко',
     remembered: 'Памʼятаю!',

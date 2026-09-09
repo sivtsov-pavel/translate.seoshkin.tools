@@ -202,7 +202,7 @@ export const es = {
     dictation: 'Dictado',
     speech: 'Pronunciación',
     trainerSpeech: 'Pronunciación con el entrenador',
-    tapToReveal: 'Toca para ver la respuesta', showAnswer: 'Ver respuesta', praiseCorrect: '¡Muy bien!', praiseWrong: '¡Casi! Inténtalo de nuevo',
+    tapToReveal: 'Toca para ver la respuesta', doneToday: 'Por hoy es todo', doneTodaySub: 'Ya hiciste estos ejercicios. Volverán mañana para repasar', showAnswer: 'Ver respuesta', praiseCorrect: '¡Muy bien!', praiseWrong: '¡Casi! Inténtalo de nuevo',
     forgot: 'No recuerdo',
     hard: 'Difícil',
     remembered: '¡Lo recuerdo!',

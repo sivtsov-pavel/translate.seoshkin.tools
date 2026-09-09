@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import CookieConsent from './components/CookieConsent.jsx'
 import InstallPWA from './components/InstallPWA.jsx'
 import { useUiModeStore } from './store/uiMode.js'
@@ -53,6 +53,12 @@ import Upgrade from './pages/Upgrade.jsx'
 import ClassGame from './pages/ClassGame.jsx'
 import Layout from './components/Layout.jsx'
 
+// Вход с виджета: /start/41 → занятие по уроку 41
+function StartLesson() {
+  const { lessonId } = useParams()
+  return <Navigate to={`/exercise-session?lesson_id=${lessonId}`} replace />
+}
+
 function ProtectedRoute({ children }) {
   const { token } = useAuthStore()
   return token ? children : <Navigate to="/login" replace />
@@ -88,6 +94,10 @@ export default function App() {
         <Route path="/lessons" element={<ProtectedRoute><Layout><LessonList /></Layout></ProtectedRoute>} />
         <Route path="/lessons/new" element={<ProtectedRoute><Layout><NewLesson /></Layout></ProtectedRoute>} />
         <Route path="/exercise-session" element={<ProtectedRoute><Layout><ExerciseSession /></Layout></ProtectedRoute>} />
+        {/* Точка входа с виджета домашнего экрана: путь без query, потому что нативная
+            часть дописывает к нему «?from=widget». Ведёт сразу в занятие — сессия сама
+            продолжит с неотвеченного. */}
+        <Route path="/start/:lessonId" element={<ProtectedRoute><StartLesson /></ProtectedRoute>} />
         <Route path="/vocabulary" element={<ProtectedRoute><Layout><Vocabulary /></Layout></ProtectedRoute>} />
         <Route path="/students"    element={<ProtectedRoute><Layout><Students   /></Layout></ProtectedRoute>} />
         <Route path="/courses"     element={<ProtectedRoute><Layout><CourseList /></Layout></ProtectedRoute>} />

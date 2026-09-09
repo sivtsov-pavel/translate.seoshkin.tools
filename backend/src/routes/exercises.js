@@ -170,6 +170,24 @@ export async function exercisesRoutes(fastify) {
     // было нельзя. Потолок оставляем как защиту от неадекватной выборки, но выше реального
     // максимума урока.
     const limit = lesson_id ? 2000 : dailyLimit
+
+    // «Пора повторять»: упражнение либо ни разу не сделано, либо подошёл его срок по SM-2.
+    //
+    // Раньше при открытом уроке (lesson_id) этот фильтр отключался начисто — урок отдавался
+    // ЦЕЛИКОМ, вместе с только что отвеченным. Отсюда жалоба Павла 09.09.2026: «прохожу 5 из
+    // 28, выхожу, возвращаюсь — и опять все 28 с начала». Оттуда же «виджет не засчитывает»:
+    // виджет считает по прогрессу и показывал 5 из 28 честно, а приложение открывало урок
+    // заново — расхождение выглядело как потерянный прогресс, хотя терялось только место.
+    //
+    // SM-2 после ЛЮБОГО ответа даёт интервал минимум в сутки (см. services/srs.js), поэтому
+    // фильтр сам по себе делает то, что нужно: сегодня отвеченное больше не подаётся, а
+    // завтра вернётся на повтор. Прорешать урок заново раньше срока — это «Повторить»
+    // (reset-lesson), там прогресс сбрасывается осознанно.
+    //
+    // Зачёт (exam) — исключение: он проверяет урок целиком, ему нужны все слова разом.
+    const dueClause = exam
+      ? '$2::date IS NOT NULL'
+      : 'COALESCE(uep.next_review_date, CURRENT_DATE) <= $2'
     const target = request.headers['x-target-lang'] || 'de'
     // Порядок раздачи для owner/практики. Поток уроков (без type) — БЛОКАМИ по уроку в
     // ЕСТЕСТВЕННОМ порядке (номер по возрастанию), чтобы заголовок не «скакал». У ученика
@@ -207,7 +225,7 @@ export async function exercisesRoutes(fastify) {
         ownerOrder = `(e.id = ANY($${np}::int[])) DESC, (e.lesson_id = ANY($${pp}::int[])) ASC, l.lesson_number ASC NULLS LAST, COALESCE(uep.next_review_date, CURRENT_DATE) ASC, RANDOM()`
       }
       query = SELECT + `
-        WHERE ${lesson_id ? '$2::date IS NOT NULL' : 'COALESCE(uep.next_review_date, CURRENT_DATE) <= $2'}
+        WHERE ${dueClause}
           AND l.target_lang = $${tp}
           ${passedClause}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
@@ -250,7 +268,7 @@ export async function exercisesRoutes(fastify) {
           AND ($${sp}::int IS NULL OR l.school_id = $${sp})
           ${gateClause}
           ${passedClause}
-          ${lesson_id ? 'AND $2::date IS NOT NULL' : 'AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2'}
+          AND ${dueClause}
           ${type      ? `AND e.type      = $${p - (lesson_id ? 1 : 0)}` : ''}
           ${lesson_id ? `AND e.lesson_id = $${p}` : ''}
           AND ($${typesP}::text[] IS NULL OR e.type = ANY($${typesP}::text[]))

@@ -458,20 +458,21 @@ export default function Layout({ children }) {
         {/* Слева: меню + назад */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setOpen(v => !v)} className="layout-hamburger" style={iconBtn} aria-label={t.nav.menu}><Menu size={20} /></button>
-          {/* «Назад» — со СЛОВОМ, а не голой стрелкой. Ученики, впервые держащие
-              приложение, значок в углу не читают как кнопку: три жалобы подряд были
-              про то, что «выйти из урока нечем» (09.09.2026). Рядом — «Домой»: назад
-              уводит на предыдущий экран, а нужен им обычно выход на главную, и
-              догадаться, что она прячется за названием языка в центре, невозможно. */}
+          {/* Хлебная крошка: домик, затем «Назад» со СЛОВОМ.
+              Значок в углу новички не читают как кнопку — отсюда и были жалобы, что из
+              урока «нечем выйти», поэтому у «Назад» подпись осталась. А у «Домой» слово
+              убрано: вместе с флагом и названием языка шапка на телефоне не помещалась
+              (Павел, 09.09.2026). Домик стоит ПЕРВЫМ и читается как путь «в начало →
+              на шаг назад», как хлебные крошки на сайтах. */}
           {location.pathname !== '/' && (
             <>
+              <button onClick={() => navigate('/')} className="dl-word-btn dl-word-btn--icon"
+                aria-label={t.nav.home} title={t.nav.home}>
+                <Home size={18} />
+              </button>
               <button onClick={() => navigate(-1)} className="dl-word-btn"
                 aria-label={t.nav.back} title={t.nav.back}>
                 <ArrowLeft size={17} /> {t.nav.back}
-              </button>
-              <button onClick={() => navigate('/')} className="dl-word-btn"
-                aria-label={t.nav.home} title={t.nav.home}>
-                <Home size={17} /> {t.nav.home}
               </button>
             </>
           )}
@@ -545,8 +546,9 @@ export default function Layout({ children }) {
       <header className="layout-desktop-topbar">
         {location.pathname !== '/' ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={() => navigate('/')} className="dl-word-btn dl-word-btn--icon"
+              aria-label={t.nav.home} title={t.nav.home}><Home size={18} /></button>
             <button onClick={() => navigate(-1)} className="dl-word-btn"><ArrowLeft size={17} /> {t.nav.back}</button>
-            <button onClick={() => navigate('/')} className="dl-word-btn"><Home size={17} /> {t.nav.home}</button>
           </div>
         ) : (
           <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{tgt.flag} {tgtName}</span>

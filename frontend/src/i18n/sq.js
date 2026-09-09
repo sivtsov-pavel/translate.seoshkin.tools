@@ -202,7 +202,7 @@ export const sq = {
     dictation: 'Diktim',
     speech: 'Shqiptimi',
     trainerSpeech: 'Shqiptimi me trajnerin',
-    tapToReveal: 'Kliko për të treguar përgjigjen', showAnswer: 'Shfaq përgjigjen', praiseCorrect: 'Shumë mirë!', praiseWrong: 'Pothuajse! Provo përsëri',
+    tapToReveal: 'Kliko për të treguar përgjigjen', doneToday: 'Për sot mbaroi', doneTodaySub: 'Këto ushtrime i ke bërë. Nesër kthehen për përsëritje', showAnswer: 'Shfaq përgjigjen', praiseCorrect: 'Shumë mirë!', praiseWrong: 'Pothuajse! Provo përsëri',
     forgot: 'Nuk mbaj mend',
     hard: 'Me vështirësi',
     remembered: 'Mbaj mend!',
