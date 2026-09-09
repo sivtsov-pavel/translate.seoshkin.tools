@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
-import { playCorrect, playWrong } from '../utils/sound.js'
+import { reactToAnswer } from '../utils/praise.js'
 
 // Упражнение «Падежи»: существительное в четырёх падежах на одной странице.
 // Формы приходят в payload.forms — посчитаны rule-based на бэке, без OpenAI.
@@ -23,7 +23,7 @@ const shuffle = arr => {
 }
 
 export default function Declension({ payload, onAnswer, lessonTitle, typeLabel }) {
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const { word_de, translation_ru, forms } = payload || {}
   const [mode, setMode] = useState('choose')
   const [answers, setAnswers] = useState({})
@@ -50,7 +50,7 @@ export default function Declension({ payload, onAnswer, lessonTitle, typeLabel }
 
   const check = () => {
     setChecked(true)
-    if (correctCount() === CASES.length) playCorrect(); else playWrong()
+    reactToAnswer(correctCount() === CASES.length, t, lang)
   }
 
   const next = () => {

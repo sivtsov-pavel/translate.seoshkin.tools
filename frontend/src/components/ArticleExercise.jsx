@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speak, speakAuto } from '../hooks/useSpeech.jsx'
-import { playCorrect, playWrong } from '../utils/sound.js'
+import { reactToAnswer } from '../utils/praise.js'
 import WordImage from './WordImage.jsx'
 
 // Упражнение «Артикль»: der / die / das к существительному.
@@ -14,7 +14,7 @@ import WordImage from './WordImage.jsx'
 const OPTIONS = ['der', 'die', 'das']
 
 export default function ArticleExercise({ payload, onAnswer, imageUrl }) {
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const [picked, setPicked] = useState(null)
   const { noun, article, translation_ru } = payload || {}
 
@@ -23,7 +23,7 @@ export default function ArticleExercise({ payload, onAnswer, imageUrl }) {
   const choose = (opt) => {
     if (picked) return
     setPicked(opt)
-    if (opt === article) playCorrect(); else playWrong()
+    reactToAnswer(opt === article, t, lang)
     // Верный ответ проговариваем целиком — так артикль и слово запоминаются вместе
     setTimeout(() => speak(`${article} ${noun}`), 250)
   }

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { speak } from '../hooks/useSpeech.jsx'
 import { useI18nStore } from '../store/i18n.js'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
-import { playCorrect, playWrong } from '../utils/sound.js'
+import { reactToAnswer } from '../utils/praise.js'
 
 // Упражнение «Склонение/спряжение»: инфинитив + 6 форм (ich/du/er/wir/ihr/sie) на одной странице.
 // Два режима: «выбрать» (варианты из форм этого же глагола) и «вписать руками». Формы приходят
@@ -14,7 +14,7 @@ const norm = s => String(s || '').trim().toLowerCase()
 const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
 
 export default function Conjugation({ payload, onAnswer, lessonTitle, typeLabel }) {
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const { infinitive, translation_ru, forms } = payload || {}
   const [mode, setMode] = useState('choose')          // 'choose' | 'type'
   const [answers, setAnswers] = useState({})           // { person: строка }
@@ -45,7 +45,7 @@ export default function Conjugation({ payload, onAnswer, lessonTitle, typeLabel 
     let ok = 0
     for (const p of PERSONS) if (norm(answers[p]) === norm(forms?.[p])) ok++
     setChecked(true)
-    if (ok === PERSONS.length) playCorrect(); else playWrong()
+    reactToAnswer(ok === PERSONS.length, t, lang)
   }
 
   const next = () => {

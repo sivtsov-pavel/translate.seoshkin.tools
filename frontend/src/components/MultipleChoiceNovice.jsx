@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, speak } from '../hooks/useSpeech.jsx'
 import { getTranslation, getEffectiveLang } from '../utils/translation.js'
-import { playCorrect, playWrong } from '../utils/sound.js'
+import { reactToAnswer } from '../utils/praise.js'
 import WordImage from './WordImage.jsx'
 import { useIdleHint } from '../hooks/useIdleHint.js'
 
@@ -45,7 +45,7 @@ export default function MultipleChoiceNovice({
   const choose = (idx) => {
     if (selected !== null) return
     setSelected(idx)
-    if (idx === correctIdx) playCorrect(); else playWrong()
+    reactToAnswer(idx === correctIdx, t, lang)
     // Крутим к самому низу: раньше останавливались на фидбеке, и кнопку «Дальше»
     // всё равно приходилось доскроливать руками.
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 150)
