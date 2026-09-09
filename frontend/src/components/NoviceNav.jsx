@@ -24,7 +24,10 @@ import NoviceActions from './NoviceActions.jsx'
 const SHAPE = { circle: 'circle', square: 'square', diamond: 'diamond' }
 
 const MAIN = (t) => [
-  { to: '/',           C: Home,      shape: SHAPE.circle,  tone: 'a', label: t.path.title },
+  // «Домой», а не «Путь»: метафору дороги ученики не связывали с выходом на главную и
+  // не могли вернуться из урока (жалоба Павла 09.09.2026). Слово должно совпадать со
+  // значком — домик и «Домой» понятны без объяснений.
+  { to: '/',           C: Home,      shape: SHAPE.circle,  tone: 'a', label: t.nav.home },
   { to: '/vocabulary', C: BookOpen,  shape: SHAPE.diamond, tone: 'c', label: t.nav.vocabulary },
   { to: '/reader',     C: Languages, shape: SHAPE.square,  tone: 'd', label: t.nav.reader },
 ]

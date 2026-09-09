@@ -458,8 +458,22 @@ export default function Layout({ children }) {
         {/* Слева: меню + назад */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setOpen(v => !v)} className="layout-hamburger" style={iconBtn} aria-label={t.nav.menu}><Menu size={20} /></button>
+          {/* «Назад» — со СЛОВОМ, а не голой стрелкой. Ученики, впервые держащие
+              приложение, значок в углу не читают как кнопку: три жалобы подряд были
+              про то, что «выйти из урока нечем» (09.09.2026). Рядом — «Домой»: назад
+              уводит на предыдущий экран, а нужен им обычно выход на главную, и
+              догадаться, что она прячется за названием языка в центре, невозможно. */}
           {location.pathname !== '/' && (
-            <button onClick={() => navigate(-1)} style={iconBtn} aria-label={t.nav.back} title={t.nav.back}><ArrowLeft size={20} color="var(--blue)" /></button>
+            <>
+              <button onClick={() => navigate(-1)} className="dl-word-btn"
+                aria-label={t.nav.back} title={t.nav.back}>
+                <ArrowLeft size={17} /> {t.nav.back}
+              </button>
+              <button onClick={() => navigate('/')} className="dl-word-btn"
+                aria-label={t.nav.home} title={t.nav.home}>
+                <Home size={17} /> {t.nav.home}
+              </button>
+            </>
           )}
         </div>
         {/* Центр: заголовок с флагом + немецкая полоска (как в макете) */}
@@ -530,7 +544,10 @@ export default function Layout({ children }) {
       {/* Десктопный мини-хедер (≥1024px) */}
       <header className="layout-desktop-topbar">
         {location.pathname !== '/' ? (
-          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--blue)', fontWeight: 700, fontSize: 14, padding: '6px 10px', borderRadius: 8 }}>← {t.nav.back}</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={() => navigate(-1)} className="dl-word-btn"><ArrowLeft size={17} /> {t.nav.back}</button>
+            <button onClick={() => navigate('/')} className="dl-word-btn"><Home size={17} /> {t.nav.home}</button>
+          </div>
         ) : (
           <span style={{ color: 'var(--ink-soft)', fontSize: 13 }}>{tgt.flag} {tgtName}</span>
         )}

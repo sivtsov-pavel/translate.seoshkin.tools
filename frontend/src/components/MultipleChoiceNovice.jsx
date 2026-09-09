@@ -4,6 +4,7 @@ import { speakAuto, speak } from '../hooks/useSpeech.jsx'
 import { getTranslation, getEffectiveLang } from '../utils/translation.js'
 import { playCorrect, playWrong } from '../utils/sound.js'
 import WordImage from './WordImage.jsx'
+import { useIdleHint } from '../hooks/useIdleHint.js'
 
 // «Выбери ответ» для режима новичка — макет 2b, экран D.
 //
@@ -20,6 +21,9 @@ export default function MultipleChoiceNovice({
   const answeredRef = useRef(false)
   // После ответа подкручиваем к фидбеку: иначе кнопка «Дальше» остаётся за экраном
   const resultRef = useRef(null)
+  // Пока ответ не выбран, нужное действие — тапнуть вариант. Завис на пять секунд —
+  // варианты мягко пульсируют: человеку видно, куда нажимать, без единого слова.
+  const stuck = useIdleHint(5000, selected === null)
 
   // Варианты берём на локали ученика, порядок перемешиваем один раз
   const { options, correctIdx } = useMemo(() => {
@@ -107,6 +111,7 @@ export default function MultipleChoiceNovice({
           const isWrong = selected === idx && idx !== correctIdx
           return (
             <button key={idx} onClick={() => choose(idx)} disabled={selected !== null}
+              className={stuck ? 'dl-idle-pulse' : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14, minHeight: 60, padding: '16px 18px',
                 borderRadius: 20, cursor: selected === null ? 'pointer' : 'default', textAlign: 'left',

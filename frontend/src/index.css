@@ -468,3 +468,37 @@ html.keyboard-open .exercise-session-page .word-image-bleed {
 
 /* Запас снизу, чтобы последняя строка формы не липла к клавиатуре при скролле. */
 html.keyboard-open .exercise-session-page .exercise-card-content::after { height: 48px; }
+
+/* ── Кнопки навигации СО СЛОВОМ ───────────────────────────────────────────────
+   Голая стрелка в углу для человека, впервые держащего приложение, — не кнопка,
+   а узор: три жалобы подряд были о том, что из урока «нечем выйти», хотя стрелка
+   стояла на месте (09.09.2026). Значок оставляем, но рядом обязательно слово, и
+   зона нажатия не меньше 44px по высоте — пальцем, а не ногтем. */
+.dl-word-btn {
+  display: flex; align-items: center; gap: 5px;
+  min-height: 40px; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--blue);
+  font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.dl-word-btn:active { transform: scale(.96); }
+
+/* На узких экранах шапка тесная: у «Домой» прячем слово, оставляя домик —
+   слово при этом остаётся у «Назад», которое и ищут в первую очередь. */
+@media (max-width: 380px) {
+  .dl-word-btn { padding: 8px 9px; gap: 4px; font-size: 13px; }
+}
+
+/* ── Подсказка «застрял»: пульс нужного действия ──────────────────────────────
+   Не объясняем заранее (инструкции никто не читает), а помогаем в момент, когда
+   человек завис: единственное нужное действие начинает мягко пульсировать.
+   Кто знает, что делать, этого не увидит — таймер сбрасывается любым касанием. */
+@keyframes dl-idle-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 176, 36, .55); }
+  50%      { box-shadow: 0 0 0 14px rgba(232, 176, 36, 0); }
+}
+.dl-idle-pulse { animation: dl-idle-pulse 1.7s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-idle-pulse { animation: none; }
+}

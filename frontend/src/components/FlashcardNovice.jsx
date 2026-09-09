@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useIdleHint } from '../hooks/useIdleHint.js'
 import { useI18nStore } from '../store/i18n.js'
 import { speakAuto, speak } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
@@ -39,6 +40,9 @@ export default function FlashcardNovice({
   // стоит открытым текстом, и включённый по умолчанию он просто выдаёт ответ.
   // Кнопкой человек решает сам — подглядеть или сначала вспомнить.
   const [exampleRuShown, setExampleRuShown] = useState(false)
+  // Пока ответ не раскрыт, единственное нужное действие — «Показать ответ». Если
+  // человек завис на пять секунд, кнопка начинает мягко пульсировать.
+  const stuck = useIdleHint(5000, !revealed)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading] = useState(false)
   const [inStudy, setInStudy] = useState(!!learned)
@@ -92,13 +96,21 @@ export default function FlashcardNovice({
                 {gender.article} · {gender.mark}
               </span>
             )}
-            {revealed
-              ? <span style={{ fontSize: 21, fontWeight: 500 }}>{answer}</span>
-              : <button onClick={() => setRevealed(true)}
-                  style={{ border: 'none', background: 'none', color: 'var(--ink-soft)', fontSize: 14, cursor: 'pointer', padding: 0 }}>
-                  {t.exercise.tapToReveal}
-                </button>}
+            {revealed && <span style={{ fontSize: 21, fontWeight: 500 }}>{answer}</span>}
           </div>
+
+          {/* «Показать ответ» — полноценная кнопка, а не серая строчка.
+              Жалоба ученика дословно: «пока я не нажму „показать ответ", я не в курсе,
+              что мне нужно нажать». Подсказка, набранная как текст, кнопкой не читается —
+              делаем её такой же крупной и цветной, как «Слушать». */}
+          {!revealed && (
+            <button onClick={() => setRevealed(true)}
+              className={stuck ? 'dl-idle-pulse' : undefined}
+              style={{ width: '100%', minHeight: 52, marginTop: 16, borderRadius: 15, border: 'none',
+                background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+              {t.exercise.showAnswer}
+            </button>
+          )}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button onClick={(e) => { e.stopPropagation(); speak(payload.question) }}

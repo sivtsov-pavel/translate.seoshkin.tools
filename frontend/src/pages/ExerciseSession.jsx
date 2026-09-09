@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Globe, Volume2, VolumeX, Star, Moon, SkipForward } from 'lucide-react'
+import { Globe, Volume2, VolumeX, Star, Moon, SkipForward, Home } from 'lucide-react'
 import { api } from '../api/client.js'
 import { isOnline, getOfflineExercises, answerOffline } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
@@ -21,6 +21,7 @@ import Declension from '../components/Declension.jsx'
 import ArticleExercise from '../components/ArticleExercise.jsx'
 import ExerciseErrorBoundary from '../components/ExerciseErrorBoundary.jsx'
 import Confetti from '../components/Confetti.jsx'
+import { useIdleHint } from '../hooks/useIdleHint.js'
 import { playFanfare } from '../utils/sound.js'
 
 // Порядок типов упражнений в уроке (педагогический, по просьбе Павла):
@@ -85,6 +86,10 @@ export default function ExerciseSession() {
   const { t, lang }               = useI18nStore()
   const { user }                  = useAuthStore()
   const novice = resolveUiMode(user) === 'novice'
+  // Завис надолго — показываем прямой выход. Из урока люди не могли выбраться: выход
+  // прятался за названием языка в шапке, а нижнюю панель они не связывали с «уйти
+  // отсюда» (жалобы учеников 09.09.2026). 25 секунд — чтобы не мешать тем, кто думает.
+  const lost = useIdleHint(25000, novice)
   const showOriginal = user?.role === 'owner' && origView
 
   // Пометить слово текущего упражнения «в изучение» (сложные/интересные слова)
@@ -510,6 +515,19 @@ export default function ExerciseSession() {
 
   return (
     <div className="full-page-layout exercise-session-page">
+      {/* Спасательная кнопка для растерявшихся. Вверху по центру: там пусто, и она не
+          накрывает ни варианты ответа, ни «Дальше». Исчезает от любого касания. */}
+      {lost && (
+        <button onClick={goHome}
+          style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 40,
+            display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 999,
+            border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)',
+            fontSize: 14, fontWeight: 800, cursor: 'pointer',
+            boxShadow: '0 10px 24px -12px rgba(0,0,0,.6)' }}>
+          <Home size={16} /> {t.nav.backHome}
+        </button>
+      )}
+
       {/* Мини-бейдж типа упражнения */}
       <div className="exercise-session-type">
         <span style={{ background: 'rgba(62,127,193,0.12)', color: 'var(--blue)', borderRadius: 8, padding: '2px 9px', fontWeight: 700, fontSize: 12, marginRight: 8 }}>
