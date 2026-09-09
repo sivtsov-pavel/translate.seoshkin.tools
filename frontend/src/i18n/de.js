@@ -206,7 +206,7 @@ export const de = {
     dictation: 'Diktat',
     speech: 'Aussprache',
     trainerSpeech: 'Aussprache mit dem Trainer',
-    tapToReveal: 'Tippen zum Aufdecken', showAnswer: 'Antwort zeigen',
+    tapToReveal: 'Tippen zum Aufdecken', showAnswer: 'Antwort zeigen', praiseCorrect: 'Sehr gut!', praiseWrong: 'Fast! Versuch es nochmal',
     forgot: 'Vergessen',
     hard: 'Schwierig',
     remembered: 'Gewusst!',

@@ -5,6 +5,7 @@ import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
 import { getLessonTitle } from '../utils/translation.js'
 import { useIntroStore } from '../store/intro.js'
+import { speak, speakAuto, uiLocale } from '../hooks/useSpeech.jsx'
 
 // Экран «Путь» (режим новичка), макет 2a из docs/design_novichok.
 //
@@ -99,6 +100,15 @@ export default function Path() {
     }).catch(() => setData({ error: true }))
     api.get('/class-games').then(rows => setGames((rows || []).filter(g => g.status === 'ready'))).catch(() => {})
   }, [])
+
+  // Окно знакомства проговариваем вслух. Читать умеют не все, а первый экран — ровно
+  // то место, где человек и застревает. Автоматически — через speakAuto, чтобы уважать
+  // выключенную озвучку; браузер может не дать говорить без касания, поэтому в окне
+  // есть ещё и кнопка «Слушать».
+  const introSpeech = () => [t.path.introTitle, t.path.introStart].join('. ')
+  useEffect(() => {
+    if (introOpen) speakAuto(introSpeech(), uiLocale(lang))
+  }, [introOpen])   // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ответ на окно: либо идём выбирать свои дни, либо оставляем «каждый день».
   const closeIntro = async (goSchedule) => {
@@ -349,6 +359,12 @@ export default function Path() {
             <p>{t.path.introStart}</p>
             {data.schedule_hint?.length > 0 && <p>{t.path.introSchedule}</p>}
             <div className="novice-intro-btns">
+              {/* Прослушать — на случай, когда браузер не дал озвучить сам (без касания
+                  он часто молчит) или человеку проще услышать ещё раз. */}
+              <button className="novice-intro-btn" type="button"
+                onClick={() => speak(introSpeech(), uiLocale(lang))}>
+                🔊 {t.exercise.listen || 'Слушать'}
+              </button>
               <button className="novice-intro-btn novice-intro-btn--main" disabled={introBusy}
                 onClick={() => closeIntro(false)}>{t.path.introOk}</button>
               {data.schedule_hint?.length > 0 && (
@@ -463,7 +479,9 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
     }
   }
 
-  const GAP_Y = 118
+  // Шаг по вертикали вырос: под кружком теперь стоит название узла, и без запаса
+  // подпись липла к следующему кружку.
+  const GAP_Y = 134
   const X_PATTERN = [160, 92, 228, 120, 200, 160]
 
   // Узкий экран — вертикальная змейка (как раньше). Широкий — горизонтальная:
@@ -471,7 +489,7 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
   // Колонок — по ширине экрана: дорога должна заполнять место, а не жаться влево.
   const COLS = vw >= 1700 ? 6 : vw >= 1400 ? 5 : 4
   const VIEW_W = wide ? 1000 : 320
-  const ROW_H = 150
+  const ROW_H = 168
 
   // Какой узел раскрыт: по нему решаем, где дорога расступается под плашку.
   // Пусто выбранное — раскрыт текущий урок (так экран открывается сразу с делом).
@@ -556,6 +574,10 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
               ? (getLessonTitle(n.title, n.title_translations, lang) || n.title || short[n.type])
               : t.path[{ speech: 'cpSpeech', grammar: 'cpGrammar', exam: 'cpExam' }[n.type]])
 
+        // Подпись под кружком. У урока номер уже стоит В кружке, поэтому из названия
+        // убираем приставку «Урок 7:» — иначе подпись начинается с того же числа.
+        const caption = isLesson ? String(title).replace(/^[^:]{1,24}\d[^:]{0,8}:\s*/, '') : title
+
         const inner = isLesson ? (isDone ? '✓' : (n.number ?? '•')) : short[n.type]
         const pct = isLesson
           ? Math.round((n.progress || 0) * 100)
@@ -602,6 +624,25 @@ function PathRoad({ items, short, lang, t, go, selected, setSelected, details, s
 
             </div>
           </div>
+
+          {/* Название узла ПОД кружком. Раньше в кружке стояли цифра или обрубок
+              («Речь», «Грам»), и карта читалась как схема: понять, что за урок и что
+              внутри, можно было только тапнув. С подписью она читается сразу, без
+              единого касания — а нашим ученикам лишний тап это лишний барьер.
+              У раскрытого узла подпись не нужна: там же стоит плашка с тем же названием. */}
+          {!isOpen && (
+            <div style={{
+              position: 'absolute', zIndex: 2, pointerEvents: 'none',
+              top: y + size / 2 + 6,
+              width: 'min(150px, 100%)',
+              left: `clamp(0px, calc(${(x / VIEW_W) * 100}% - min(150px, 100%) / 2), calc(100% - min(150px, 100%)))`,
+              textAlign: 'center', fontSize: 11, lineHeight: 1.2, fontWeight: 600,
+              color: locked ? 'var(--ink-soft)' : 'var(--ink)', opacity: locked ? 0.55 : 0.85,
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            }}>
+              {caption}
+            </div>
+          )}
 
           {/* Разовая подсказка «нажми на кружок» — облачком НАД узлом, с хвостиком вниз.
               Ширину прижимаем внутрь дороги тем же clamp-ом, что и плашку. */}

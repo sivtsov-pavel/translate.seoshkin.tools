@@ -204,7 +204,7 @@ export const ar = {
     dictation: 'إملاء',
     speech: 'نطق',
     trainerSpeech: 'النطق مع المدرّب',
-    tapToReveal: 'انقر لرؤية الإجابة', showAnswer: 'أظهر الإجابة',
+    tapToReveal: 'انقر لرؤية الإجابة', showAnswer: 'أظهر الإجابة', praiseCorrect: 'ممتاز!', praiseWrong: 'اقتربت! حاول مرة أخرى',
     forgot: 'نسيت',
     hard: 'صعب',
     remembered: 'تذكرت!',

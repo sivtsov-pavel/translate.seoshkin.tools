@@ -206,7 +206,7 @@ export const ru = {
     dictation: 'Диктант',
     speech: 'Проговори слова',
     trainerSpeech: 'Произношение с тренером',
-    tapToReveal: 'Нажмите чтобы показать ответ', showAnswer: 'Показать ответ',
+    tapToReveal: 'Нажмите чтобы показать ответ', showAnswer: 'Показать ответ', praiseCorrect: 'Отлично!', praiseWrong: 'Почти! Попробуй ещё раз',
     forgot: 'Не помню',
     hard: 'С трудом',
     remembered: 'Помню!',

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { speak } from '../hooks/useSpeech.jsx'
+import { speak, speakWithEvents, uiLocale } from '../hooks/useSpeech.jsx'
 import { useSpeechRecognition, isSpeechRecognitionSupported } from '../hooks/useSpeechRecognition.jsx'
 import { germanPhonetic } from '../utils/germanPhonetic.js'
 import { speechSimilarity } from '../utils/speechMatch.js'
@@ -218,7 +218,7 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
   const [phase, setPhase] = useState('ready')
   const [result, setResult] = useState(null)
   // Реакция наставника Pablo на произношение (объединение с тренером — живой аватар)
-  const [reactionClip, setReactionClip] = useState(null)
+  const [reacting, setReacting] = useState(false)   // идёт реакция Pablo (кружок + голос)
   // Блок результата — скроллим к нему, чтобы на маленьком экране его было видно без ручной прокрутки
   const resultRef = useRef(null)
 
@@ -239,12 +239,18 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
     const { quality, label, color } = scoreResult(sim)
     setResult({ transcript, sim, quality, label, color })
     setPhase('result')
-    // Pablo оживает и реагирует голосом+видео (клип со своей озвучкой «Sehr gut!» / «Nicht ganz»).
-    // Реакции выключены (тумблер 🔊 в сессии / Настройки) — короткий звук вместо голоса аватара.
+    // Pablo реагирует: кружок с цветной рамкой и похвала голосом НА ЯЗЫКЕ УЧЕНИКА.
+    // Раньше здесь играл видеоклип с немецким «Sehr gut» / «Nicht ganz» — в классе
+    // десять стран, и большинство слышало непонятный набор звуков (Павел, 09.09.2026).
+    // Клипы остаются у ИИ-тренера, где аватар говорит осмысленно; в упражнении их нет.
+    // Реакции выключены (тумблер 🔊 в сессии / Настройки) — короткий звук вместо голоса.
     if (localStorage.getItem('trainer_reactions') === 'false') {
       if (quality >= 3) playCorrect(); else playWrong()
     } else {
-      setReactionClip(quality >= 3 ? '/avatar/clips/correct.mp4' : '/avatar/clips/wrong.mp4')
+      setReacting(true)
+      speakWithEvents(quality >= 3 ? t.exercise.praiseCorrect : t.exercise.praiseWrong,
+        uiLocale(lang), { onEnd: () => setReacting(false) })
+      setTimeout(() => setReacting(false), 4000)   // страховка, если синтеза нет
     }
   }, [word_de])
 
@@ -258,17 +264,16 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
     else if (phase === 'listening' && !result) setPhase('ready')
   }, [listening])
 
-  // Скролл к результату: когда видео-реакция Пабло закончилась/не загрузилось (reactionClip
-  // сброшен в null) либо когда видео вообще не показывается — как только результат появился.
+  // Скролл к результату — когда реакция Pablo договорена (или её не было вовсе)
   useEffect(() => {
-    if (phase === 'result' && !reactionClip) {
+    if (phase === 'result' && !reacting) {
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 60)
     }
-  }, [phase, reactionClip])
+  }, [phase, reacting])
 
   const handleMic = () => {
     if (phase === 'result') {
-      setResult(null); setReactionClip(null); setPhase('ready')
+      setResult(null); setReacting(false); setPhase('ready')
       return
     }
     start()
@@ -301,11 +306,11 @@ export default function SpeechExercise({ payload, onAnswer, lessonTitle, typeLab
 
   return (
     <div className="exercise-card speech-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
-      {reactionClip ? (
+      {reacting ? (
         <div className="word-image-bleed">
-          <PabloCircle wordDe={word_de} reaction={result && result.quality >= 3 ? 'correct' : 'wrong'}>
-            <video src={reactionClip} autoPlay playsInline onEnded={() => setReactionClip(null)} onError={() => setReactionClip(null)} />
-          </PabloCircle>
+          {/* Кружок Pablo с цветной рамкой: зелёной или красной. Само видео убрано —
+              похвалу говорит синтез на языке ученика (см. handleResult). */}
+          <PabloCircle wordDe={word_de} reaction={result && result.quality >= 3 ? 'correct' : 'wrong'} />
         </div>
       ) : (
         <WordImage imageUrl={imageUrl} wordDe={word_de} bleed />

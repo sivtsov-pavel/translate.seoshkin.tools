@@ -202,7 +202,7 @@ export const bg = {
     dictation: 'Диктовка',
     speech: 'Произношение',
     trainerSpeech: 'Произношение с треньора',
-    tapToReveal: 'Натисни за отговор', showAnswer: 'Покажи отговора',
+    tapToReveal: 'Натисни за отговор', showAnswer: 'Покажи отговора', praiseCorrect: 'Отлично!', praiseWrong: 'Почти! Опитай пак',
     forgot: 'Забравих',
     hard: 'Трудно',
     remembered: 'Помня!',

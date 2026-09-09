@@ -11,6 +11,16 @@ export function targetLocale() {
   return TARGET_LOCALE[localStorage.getItem('target_lang') || 'de'] || 'de-DE'
 }
 
+// Локаль озвучки по языку ИНТЕРФЕЙСА — для подсказок самому ученику.
+// Отдельно от targetLocale: тот про изучаемый язык, а «нажми кнопку Старт» надо
+// произнести на родном. Многие наши ученики читают с трудом и приложений раньше
+// не видели — голос до них доходит там, где текст не работает.
+const UI_LOCALE = {
+  ru: 'ru-RU', uk: 'uk-UA', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR',
+  bg: 'bg-BG', tr: 'tr-TR', sq: 'sq-AL', ar: 'ar-SA',
+}
+export function uiLocale(lang) { return UI_LOCALE[lang] || 'ru-RU' }
+
 export function isAutoSpeakEnabled() {
   return localStorage.getItem(AUTO_KEY) !== 'false'
 }
@@ -23,22 +33,32 @@ function getSelectedVoiceName() {
   return localStorage.getItem(VOICE_KEY) || ''
 }
 
-function getDeVoices() {
+function getDeVoices(locale = targetLocale()) {
   if (!synth) return []
-  // Голоса для АКТИВНОГО изучаемого языка (мульти-таргет)
-  const prefix = targetLocale().slice(0, 2)
-  return synth.getVoices().filter(v => v.lang.startsWith(prefix))
+  // Голоса нужного языка. По умолчанию — активного изучаемого (мульти-таргет), но
+  // подсказки самому ученику произносятся на языке ЕГО интерфейса, и голос обязан
+  // соответствовать тексту.
+  const prefix = String(locale).slice(0, 2).toLowerCase()
+  return synth.getVoices().filter(v => v.lang.toLowerCase().startsWith(prefix))
 }
 
-function pickVoice() {
-  const prefix = targetLocale().slice(0, 2)
-  const saved = getSelectedVoiceName()
-  const voices = getDeVoices()
+// Голос ПОД ЯЗЫК ТЕКСТА, а не под изучаемый язык.
+//
+// Прежняя версия всегда брала голос активного курса: подсказку по-украински читал
+// немецкий голос — набор звуков вместо речи. У нас в классе десять стран, и для
+// подсказок это критично (замечание Павла 09.09.2026).
+//
+// Голоса нужного языка нет вовсе — возвращаем null: браузер сам подберёт по utt.lang,
+// и это всяко лучше, чем читать чужим голосом.
+function pickVoice(locale = targetLocale()) {
+  const prefix = String(locale).slice(0, 2).toLowerCase()
+  const voices = getDeVoices(locale)
   if (!voices.length) return null
-  // Сохранённый голос применяем только если он того же языка
+  // Выбранный в настройках голос — это выбор для ИЗУЧАЕМОГО языка. Применяем его
+  // только когда просят тот же язык, иначе он перебьёт язык подсказки.
+  const saved = getSelectedVoiceName()
   if (saved) { const s = voices.find(v => v.name === saved); if (s) return s }
-  // Предпочитаем Google-голос нужного языка
-  return voices.find(v => v.name.toLowerCase().includes('google') && v.lang.startsWith(prefix))
+  return voices.find(v => v.name.toLowerCase().includes('google') && v.lang.toLowerCase().startsWith(prefix))
       || voices[0]
 }
 
@@ -66,7 +86,7 @@ export function speak(text, lang = targetLocale(), rate = null) {
     const utt = new SpeechSynthesisUtterance(speakable(text))
     utt.lang = lang
     utt.rate = rate ?? getSavedRate()
-    const v = pickVoice()
+    const v = pickVoice(lang)
     if (v) utt.voice = v
     synth.speak(utt)
   }, 50)
@@ -85,7 +105,7 @@ export function speakWithEvents(text, lang = targetLocale(), { onStart, onEnd } 
     const utt = new SpeechSynthesisUtterance(speakable(text))
     utt.lang = lang
     utt.rate = getSavedRate()
-    const v = pickVoice()
+    const v = pickVoice(lang)
     if (v) utt.voice = v
     utt.onstart = () => onStart?.()
     utt.onend   = () => onEnd?.()

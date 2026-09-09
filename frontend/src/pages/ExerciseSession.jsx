@@ -411,8 +411,10 @@ export default function ExerciseSession() {
           )}
 
           <button onClick={goHome}
-            style={{ width: '100%', padding: '13px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-            {t.exercise.toHome || 'На главную'}
+            style={{ width: '100%', minHeight: 52, padding: '14px', borderRadius: 14, border: '1px solid var(--line)',
+              background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 16, fontWeight: 700, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Home size={18} /> {t.exercise.toHome || 'На главную'}
           </button>
         </div>
       </div>
@@ -495,9 +497,14 @@ export default function ExerciseSession() {
               💬 {t.exercise.trainWords || 'Тренер по словам урока'}
             </button>
           )}
+          {/* Выход из веера был набран мелким серым текстом «· На главную ·» — читался
+              как подпись, а не как кнопка, и люди упирались в тупик. Теперь такая же
+              кнопка, как остальные: рамка, размер, значок. */}
           <button onClick={goHome}
-            style={{ width: '100%', padding: '10px', borderRadius: 14, border: 'none', background: 'none', color: 'var(--ink-soft)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
-            · {t.exercise.toHome || 'На главную'} ·
+            style={{ width: '100%', minHeight: 50, padding: '13px', borderRadius: 14, border: '1px solid var(--line)',
+              background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Home size={17} /> {t.exercise.toHome || 'На главную'}
           </button>
           {/* «Больше не показывать» — прячет мини-веер навсегда (вернуть можно в Настройках) */}
           <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 10, fontSize: 12.5, color: 'var(--ink-soft)', cursor: 'pointer' }}>
