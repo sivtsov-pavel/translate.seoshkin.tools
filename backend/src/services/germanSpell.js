@@ -15,15 +15,23 @@
 //
 // 2. Немецкий строит составные слова из чего угодно, и словарь их не перечисляет:
 //    «Hausaufgabe», «Arbeitszimmer», «Krankenhaus» честно отсутствуют. Поэтому слово,
-//    которого нет в словаре, пробуем разрезать надвое (обе части не короче четырёх букв,
+//    которого нет в словаре, пробуем разрезать надвое (обе части не короче трёх букв,
 //    с учётом соединительного «s»: Arbeit+s+zimmer). Трёхсоставные вроде
 //    «Zweitschriftlernenden» так не ловятся — и это осознанный предел: проверка выдаёт
 //    ПРЕДУПРЕЖДЕНИЕ для человека, а не запрет, поэтому редкий ложный сигнал безвреден.
+//
+// Обратная сторона разреза: опечатка, случайно распавшаяся на два настоящих слова,
+// проходит. «fürzehn» вместо «vierzehn» = für + zehn, и словарь возражать не станет.
+// Ловится это только смыслом, то есть человеком или моделью — здесь не наш слой.
 import nspell from 'nspell'
 import dict from 'dictionary-de'
 
-const MIN_PART = 4        // короче — не самостоятельная часть составного слова
-const MIN_COMPOUND = 8    // короткие слова составными не считаем
+// Три буквы, а не четыре: иначе «Bahnhof» (Bahn+hof) и «Fußball» (Fuß+ball) — частые,
+// ничем не примечательные слова — попадали в список ошибок и зашумляли отчёт.
+const MIN_PART = 3
+// Шесть, а не восемь: «Bahnhof» и «Fußball» — семибуквенные, и при пороге 8 разрез
+// вообще не запускался, из-за чего они числились ошибками.
+const MIN_COMPOUND = 6
 
 let speller = null
 
@@ -65,7 +73,7 @@ export function isGermanWord(raw) {
       const tail = w.slice(i)
       if (known(sp, head) && known(sp, tail)) return true
       // соединительное «s»: Arbeit+s+zimmer
-      if (head.endsWith('s') && head.length > MIN_PART + 1 && known(sp, head.slice(0, -1)) && known(sp, tail)) return true
+      if (head.endsWith('s') && head.length > MIN_PART + 2 && known(sp, head.slice(0, -1)) && known(sp, tail)) return true
     }
   }
   return false
