@@ -85,11 +85,34 @@ export function unlockDateForIndex(startDate, weekdays, index) {
   return null
 }
 
-// Какие уроки ученик РЕАЛЬНО может проходить сейчас (строгий дрип, для всех курсов сразу).
-// Возвращает { playable:Set<lessonId>, needsSchedule:[course_id...] }.
-// Правила: внекурсовые уроки/наборы (course_id NULL) — всегда доступны. Курсовые:
-//  • нет расписания по курсу → все закрыты, курс в needsSchedule (заставляем выбрать календарь);
-//  • есть расписание → открыт урок, если наступил учебный день И предыдущий пройден (цепочка).
+// Уроки, ПРОЙДЕННЫЕ однажды (таблица user_lesson_passed, миграция 074).
+//
+// Читается всюду, где нужен список пройденного, и ОБЪЕДИНЯЕТСЯ с текущим расчётом по
+// правилу. Смысл: правило может перестать выполняться не потому, что ученик что-то забыл,
+// а потому что в урок добавили упражнений — так 10.09.2026 догенерация обнулила девять
+// пройденных уроков разом. Что заслужено однажды, не отнимаем.
+export async function fixedPassedLessons(userId) {
+  const { rows } = await db.query(
+    'SELECT lesson_id FROM user_lesson_passed WHERE user_id = $1', [userId])
+  return new Set(rows.map(r => r.lesson_id))
+}
+
+// Зафиксировать прохождение урока, если правило выполнено ПРЯМО СЕЙЧАС.
+// Зовётся после каждого ответа (services/attempts.js) — и из приложения, и из виджета.
+export async function markLessonPassed(userId, lessonId) {
+  if (!lessonId) return false
+  const { rows } = await db.query(
+    `SELECT 1 FROM exercises e
+     LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
+     WHERE e.lesson_id = $2
+     GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, [userId, lessonId])
+  if (!rows.length) return false
+  await db.query(
+    `INSERT INTO user_lesson_passed (user_id, lesson_id) VALUES ($1, $2)
+     ON CONFLICT DO NOTHING`, [userId, lessonId])
+  return true
+}
+
 // Календарь по умолчанию — все семь дней, старт сегодня.
 //
 // Курс без расписания закрыт ЦЕЛИКОМ: так задумано, чтобы человек сам выбрал ритм.
@@ -142,6 +165,11 @@ export async function ensureDefaultSchedules(userId, schoolId, targetLang = null
   return pending
 }
 
+// Какие уроки ученик РЕАЛЬНО может проходить сейчас (строгий дрип, для всех курсов сразу).
+// Возвращает { playable:Set<lessonId>, needsSchedule:[course_id...] }.
+// Правила: внекурсовые уроки/наборы (course_id NULL) — всегда доступны. Курсовые:
+//  • нет расписания по курсу → все закрыты, курс в needsSchedule (заставляем выбрать календарь);
+//  • есть расписание → открыт урок, если наступил учебный день И предыдущий пройден (цепочка).
 export async function playableLessonIds(userId, schoolId, targetLang = null) {
   const { rows } = await db.query(
     `SELECT l.id, l.course_id, l.is_set
@@ -180,7 +208,10 @@ export async function playableLessonIds(userId, schoolId, targetLang = null) {
      GROUP BY e.lesson_id
      HAVING ${LESSON_PASSED_HAVING}`,
     [userId, courseLessonIds])
+  // К расчёту по правилу добавляем однажды зафиксированное: пополнение урока новыми
+  // упражнениями не должно закрывать то, что ученик уже прошёл (миграция 074).
   const passedSet = new Set(passedRows.map(r => r.lesson_id))
+  for (const id of await fixedPassedLessons(userId)) passedSet.add(id)
 
   // Уроки, в которых ученик УЖЕ занимался (есть хотя бы одно выполненное упражнение).
   // Нужны гейту: правила прохождения со временем ужесточаются, и без этого набора любое

@@ -11,6 +11,7 @@ import { db } from '../db/index.js'
 import {
   playableLessonIds,
   unlockDateForIndex,
+  fixedPassedLessons,
   REQUIRED_TYPES,
   REQUIRED_PROGRESS_SELECT,
 } from './drip.js'
@@ -133,7 +134,12 @@ export async function buildWidgetState(userId, schoolId, role, targetLang = 'de'
 
   // Пройденные — по сумме обязательных типов. Это та же формула, что LESSON_PASSED_HAVING,
   // просто применённая к уже посчитанным числам: лишний запрос в базу не нужен.
+  //
+  // Плюс однажды зафиксированное (миграция 074). Без этого виджет расходился с приложением
+  // ровно там, где урок пополнили: приложение помнит, что урок пройден, а виджет считает
+  // по свежим числам и показывает «47 из 48» — так и было 10.09.2026.
   const passed = new Set(lessons.filter(isLessonPassed).map(l => l.id))
+  for (const id of await fixedPassedLessons(userId)) passed.add(id)
 
   let playable = null, needsSchedule = []
   if (role !== 'owner') {

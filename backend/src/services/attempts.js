@@ -6,6 +6,7 @@
 // считается не так, как то же упражнение в приложении — и прогресс разъедется.
 import { db } from '../db/index.js'
 import { sm2 } from './srs.js'
+import { markLessonPassed } from './drip.js'
 
 /**
  * @param {number} userId
@@ -45,7 +46,7 @@ export async function recordAttempt(userId, exerciseId, userAnswer, quality) {
 
   // Per-user статус слова
   const { rows: exRows } = await db.query(
-    'SELECT word_id FROM exercises WHERE id = $1', [exerciseId]
+    'SELECT word_id, lesson_id FROM exercises WHERE id = $1', [exerciseId]
   )
   if (exRows[0]?.word_id) {
     const wordStatus = newReps >= 5 ? 'known' : newReps >= 1 ? 'learning' : 'new'
@@ -65,6 +66,11 @@ export async function recordAttempt(userId, exerciseId, userAnswer, quality) {
 
   // Прошёл упражнение → снимаем его из «хвостов» (если было пропущено)
   await db.query('DELETE FROM exercise_deferrals WHERE user_id=$1 AND exercise_id=$2', [userId, exerciseId])
+
+  // Урок закрылся этим ответом → фиксируем факт (миграция 074). Дальше пополнение урока
+  // новыми упражнениями уже не отнимет пройденное: правило пересчитывается, отметка — нет.
+  // Здесь же, а не в роуте, потому что этим путём идут и ответы с виджета.
+  try { await markLessonPassed(userId, exRows[0]?.lesson_id) } catch (e) { console.error('markLessonPassed:', e.message) }
 
   return { correct: quality >= 3, nextReviewDate }
 }

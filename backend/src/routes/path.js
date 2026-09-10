@@ -4,7 +4,7 @@
 // осталось до конца раздела. Поэтому эндпоинт отдаёт готовые узлы с состояниями,
 // а не сырые списки, из которых клиенту пришлось бы это вычислять.
 import { db } from '../db/index.js'
-import { playableLessonIds, ensureDefaultSchedules, LESSON_PASSED_HAVING } from '../services/drip.js'
+import { playableLessonIds, ensureDefaultSchedules, fixedPassedLessons, LESSON_PASSED_HAVING } from '../services/drip.js'
 
 // Узлов в разделе: столько уроков показываем одной «дорогой», дальше — следующий раздел
 const SECTION_SIZE = 6
@@ -43,7 +43,10 @@ export async function pathRoutes(fastify) {
        LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
        WHERE ${scope}
        GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, params)
+    // К расчёту добавляем однажды зафиксированное: пополнение урока новыми упражнениями
+    // не должно закрывать уже пройденное (миграция 074).
     const passed = new Set(passedRows.map(r => r.lesson_id))
+    for (const id of await fixedPassedLessons(userId)) passed.add(id)
 
     // Дрип: ученику доступны только разблокированные уроки, учителю — все свои.
     // Перед этим заводим календарь по умолчанию (все семь дней), если своего нет:
@@ -451,6 +454,7 @@ export async function pathRoutes(fastify) {
        WHERE ${scope}
        GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, params)
     const passed = new Set(passedRows.map(r => r.lesson_id))
+    for (const id of await fixedPassedLessons(userId)) passed.add(id)   // см. миграцию 074
 
     let playable = null
     if (role !== 'owner') {

@@ -1,6 +1,6 @@
 import { db } from '../db/index.js'
 import { sm2 } from '../services/srs.js'
-import { playableLessonIds, ensureDefaultSchedules, LESSON_PASSED_HAVING } from '../services/drip.js'
+import { playableLessonIds, ensureDefaultSchedules, fixedPassedLessons, LESSON_PASSED_HAVING } from '../services/drip.js'
 import { recordAttempt } from '../services/attempts.js'
 import { newExerciseIds } from '../services/newExercises.js'
 import { checkSentence, translateSentences, enrichWords, translateWordsToAllLangs, translateExercisePayloads, translateLessonTitles, translateMcOptionsToGerman, translateSingle } from '../services/claude.js'
@@ -216,7 +216,9 @@ export async function exercisesRoutes(fastify) {
            JOIN lessons l ON l.id = e.lesson_id
            WHERE l.owner_id = $1 AND l.target_lang = $2 AND l.is_set = false
            GROUP BY e.lesson_id HAVING ${LESSON_PASSED_HAVING}`, [userId, target])
-        const passedIds = pr.map(r => r.lesson_id)
+        // Однажды пройденное учитываем наравне с расчётом (миграция 074): иначе после
+        // пополнения урока его нетронутые упражнения снова полезут в общий поток.
+        const passedIds = [...new Set([...pr.map(r => r.lesson_id), ...await fixedPassedLessons(userId)])]
         params.push(passedIds); const pp = params.length
         params.push(await newExerciseIds(userId, target)); const np = params.length
         if (!lesson_id) passedClause = `AND (NOT (uep.exercise_id IS NULL AND e.lesson_id = ANY($${pp}::int[])) OR e.id = ANY($${np}::int[]))`
@@ -400,9 +402,16 @@ export async function exercisesRoutes(fastify) {
         `DELETE FROM user_word_status WHERE user_id = $1
            AND word_id IN (SELECT w.id FROM words w JOIN lessons l ON l.id = w.lesson_id WHERE l.course_id = $2)`,
         [userId, courseId])
+      // Отметку «урок пройден» тоже снимаем: это полный сброс курса, прогресса больше нет,
+      // и оставленная отметка сделала бы уроки вечно пройденными (миграция 074).
+      await db.query(
+        `DELETE FROM user_lesson_passed WHERE user_id = $1
+           AND lesson_id IN (SELECT id FROM lessons WHERE course_id = $2)`,
+        [userId, courseId])
     } else {
       await db.query('DELETE FROM user_exercise_progress WHERE user_id = $1', [userId])
       await db.query('DELETE FROM user_word_status WHERE user_id = $1', [userId])
+      await db.query('DELETE FROM user_lesson_passed WHERE user_id = $1', [userId])
     }
     return { ok: true }
   })
