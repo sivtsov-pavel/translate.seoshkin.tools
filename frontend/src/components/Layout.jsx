@@ -464,17 +464,14 @@ export default function Layout({ children }) {
               убрано: вместе с флагом и названием языка шапка на телефоне не помещалась
               (Павел, 09.09.2026). Домик стоит ПЕРВЫМ и читается как путь «в начало →
               на шаг назад», как хлебные крошки на сайтах. */}
+          {/* Только «Назад», со словом. Домик отсюда убран (Павел, 10.09.2026): на телефоне
+              рядом с флагом и названием языка шапка не помещалась, а выход на главную и
+              так есть в нижней панели отдельным пунктом «Домой». */}
           {location.pathname !== '/' && (
-            <>
-              <button onClick={() => navigate('/')} className="dl-word-btn dl-word-btn--icon"
-                aria-label={t.nav.home} title={t.nav.home}>
-                <Home size={18} />
-              </button>
-              <button onClick={() => navigate(-1)} className="dl-word-btn"
-                aria-label={t.nav.back} title={t.nav.back}>
-                <ArrowLeft size={17} /> {t.nav.back}
-              </button>
-            </>
+            <button onClick={() => navigate(-1)} className="dl-word-btn"
+              aria-label={t.nav.back} title={t.nav.back}>
+              <ArrowLeft size={17} /> {t.nav.back}
+            </button>
           )}
         </div>
         {/* Центр: заголовок с флагом + немецкая полоска (как в макете) */}

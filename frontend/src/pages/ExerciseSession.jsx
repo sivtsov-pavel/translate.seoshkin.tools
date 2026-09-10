@@ -555,6 +555,11 @@ export default function ExerciseSession() {
           накрывает ни варианты ответа, ни «Дальше». Исчезает от любого касания. */}
       {lost && (
         <button onClick={goHome}
+          // Хук «человек завис» слушает pointerdown на window и прячет кнопку — то есть
+          // ДО того, как случится click: кнопка исчезала из DOM, и нажатие уходило в
+          // пустоту (жалоба Павла 10.09.2026: «при нажатии на главную не переходит»).
+          // Гасим всплытие только на самой кнопке: клик работает, таймер не сбрасывается.
+          onPointerDown={(e) => e.stopPropagation()}
           style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 40,
             display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 999,
             border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)',

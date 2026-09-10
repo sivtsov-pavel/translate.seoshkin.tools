@@ -633,3 +633,20 @@ html.keyboard-open .novice-actions { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .path-node--hint, .path-tap-hint-bubble { animation: none; }
 }
+
+/* Блоки вне карточки упражнения (варианты ответа, кнопка «Дальше») в полном интерфейсе
+   красятся в цвет поверхности — общее правило из index.css, оно нужно там кнопкам
+   флеш-карты. В режиме новичка из-за него под ответами лежала белая плита, которой
+   неоткуда взяться: фон страницы бежевый, а кнопки и так со своим фоном
+   (жалоба Павла 10.09.2026 — «странный белый фон под кнопками»). */
+body.novice-mode .exercise-session-content > div > *:not(.exercise-card) {
+  background: transparent;
+}
+
+/* Карточка слова и варианты ответа стояли вплотную: общее правило в index.css обнуляет
+   у карточки нижний отступ через !important, и инлайн-стиль компонента до неё не доходит.
+   Возвращаем ровно то расстояние, что и между кнопками ответов (12) — разнобой читался
+   как случайность (Павел, 10.09.2026). */
+body.novice-mode .exercise-session-page .exercise-card {
+  margin-bottom: 12px !important;
+}

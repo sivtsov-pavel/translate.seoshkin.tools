@@ -62,7 +62,9 @@ export default function MultipleChoiceNovice({
   return (
     <div style={{ width: '100%', paddingBottom: 16 }}>
       {/* Слово с картинкой — крупным блоком, как в макете */}
-      <div className="exercise-card" style={{ borderRadius: 26, background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 16, padding: 20 }}>
+      {/* Отступ снизу — ровно такой же, как расстояние между кнопками ответов (12):
+          разнобой в 16 и 12 читался как случайность (Павел, 10.09.2026). */}
+      <div className="exercise-card" style={{ borderRadius: 26, background: 'var(--surface)', border: '1px solid var(--line)', marginBottom: 12, padding: 20 }}>
         {/* Картинка — внутри карточки, со своими полями и скруглением (макет 2b):
             в край она упиралась и «приклеивала» к себе слово. Подложка заполняет
             свободное место, если картинка не квадратная. */}
@@ -92,7 +94,7 @@ export default function MultipleChoiceNovice({
           а ответ нужен сразу. Ширина — как у вариантов, чтобы блоки были одной колонкой. */}
       {selected !== null && (
         <div style={{
-          marginBottom: 14, padding: '14px 16px', borderRadius: 18,
+          marginBottom: 12, padding: '14px 16px', borderRadius: 18,
           background: ok ? 'rgba(63,191,143,0.16)' : 'rgba(192,57,43,0.12)',
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
