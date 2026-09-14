@@ -33,6 +33,9 @@ const T = {
   lockDesc:  { ru: 'Отвечать можно не разблокируя телефон. Уведомление беззвучное.', en: 'Answer without unlocking the phone. The notification is silent.', de: 'Antworten, ohne das Handy zu entsperren. Die Benachrichtigung ist lautlos.', uk: 'Відповідати можна не розблоковуючи телефон. Сповіщення беззвучне.', es: 'Responde sin desbloquear el teléfono. La notificación es silenciosa.', fr: 'Répondez sans déverrouiller le téléphone. Notification silencieuse.', bg: 'Отговаряйте без да отключвате телефона. Известието е беззвучно.', tr: 'Telefonu açmadan cevaplayın. Bildirim sessizdir.', ar: 'أجب دون فتح قفل الهاتف. الإشعار صامت.', sq: 'Përgjigju pa e shkyçur telefonin. Njoftimi është pa zë.' },
   on2:       { ru: 'Включить', en: 'Turn on', de: 'Einschalten', uk: 'Увімкнути', es: 'Activar', fr: 'Activer', bg: 'Включи', tr: 'Aç', ar: 'تشغيل', sq: 'Aktivizo' },
   off2:      { ru: 'Выключить', en: 'Turn off', de: 'Ausschalten', uk: 'Вимкнути', es: 'Desactivar', fr: 'Désactiver', bg: 'Изключи', tr: 'Kapat', ar: 'إيقاف', sq: 'Çaktivizo' },
+  fullTitle: { ru: 'Карточка вместо замка', en: 'Card before unlocking', de: 'Karte vor dem Entsperren', uk: 'Картка замість замка', es: 'Tarjeta antes de desbloquear', fr: 'Carte avant le déverrouillage', bg: 'Карта преди отключване', tr: 'Kilidi açmadan önce kart', ar: 'بطاقة قبل فتح القفل', sq: 'Kartë para shkyçjes' },
+  fullDesc: { ru: 'Включаешь экран — карточка открывается сразу, поверх замка. Ответил — кнопка «Разблокировать» открывает телефон (если стоит PIN, система спросит его, как обычно).', en: 'Turn the screen on and the card opens right over the lock screen. Answer it, then “Unlock” opens the phone (with a PIN set, the system still asks for it).', de: 'Bildschirm an — die Karte erscheint direkt über dem Sperrbildschirm. Nach der Antwort öffnet „Entsperren“ das Telefon (bei PIN fragt das System wie gewohnt danach).', uk: 'Вмикаєш екран — картка одразу поверх замка. Відповів — кнопка «Розблокувати» відкриває телефон (якщо стоїть PIN, система запитає його, як завжди).', es: 'Enciendes la pantalla y la tarjeta aparece sobre el bloqueo. Tras responder, “Desbloquear” abre el teléfono (si hay PIN, el sistema lo pedirá igual).', fr: 'À l’allumage de l’écran, la carte s’affiche par-dessus le verrouillage. Après la réponse, « Déverrouiller » ouvre le téléphone (avec un code, le système le demande comme d’habitude).', bg: 'Включваш екрана и картата се появява над заключването. След отговор „Отключи“ отваря телефона (при PIN системата пак ще го поиска).', tr: 'Ekranı açtığında kart doğrudan kilit ekranının üstünde çıkar. Yanıtladıktan sonra “Kilidi aç” telefonu açar (PIN varsa sistem yine sorar).', ar: 'عند تشغيل الشاشة تظهر البطاقة فوق شاشة القفل. بعد الإجابة يفتح زر «فتح القفل» الهاتف (وإذا كان هناك رمز PIN فسيطلبه النظام كالمعتاد).', sq: 'Kur ndez ekranin, karta shfaqet mbi ekranin e kyçur. Pas përgjigjes, “Shkyç” hap telefonin (nëse ke PIN, sistemi e kërkon si zakonisht).' },
+  fullPerm: { ru: 'Android спросит разрешение «Поверх других приложений» — без него система не даёт показать карточку. Появится и постоянное уведомление, что приложение работает: это цена режима.', en: 'Android will ask for the “Display over other apps” permission — without it the card cannot appear. A permanent “app is running” notification comes with it: that is the price of this mode.', de: 'Android fragt nach „Über anderen Apps anzeigen“ — ohne diese Berechtigung kann die Karte nicht erscheinen. Dazu kommt eine dauerhafte Benachrichtigung, dass die App läuft: das ist der Preis.', uk: 'Android попросить дозвіл «Поверх інших застосунків» — без нього картку показати не можна. З’явиться й постійне сповіщення, що застосунок працює: це ціна режиму.', es: 'Android pedirá el permiso “Mostrar sobre otras apps”; sin él la tarjeta no puede aparecer. También habrá una notificación permanente de que la app está activa: ese es el precio.', fr: 'Android demandera l’autorisation « Par-dessus les autres applis » : sans elle, la carte ne peut pas s’afficher. Une notification permanente « l’application fonctionne » apparaîtra aussi : c’est le prix.', bg: 'Android ще поиска разрешение „Над други приложения“ — без него картата не може да се покаже. Ще има и постоянно известие, че приложението работи: това е цената.', tr: 'Android “Diğer uygulamaların üzerinde göster” iznini ister; onsuz kart görünemez. Ayrıca uygulamanın çalıştığını belirten kalıcı bir bildirim olur: bu modun bedeli.', ar: 'سيطلب أندرويد إذن «العرض فوق التطبيقات الأخرى» — بدونه لا يمكن إظهار البطاقة. وسيظهر إشعار دائم بأن التطبيق يعمل: هذا ثمن هذا الوضع.', sq: 'Android do të kërkojë lejen “Shfaq mbi aplikacionet e tjera” — pa të karta nuk shfaqet. Do të shfaqet edhe një njoftim i përhershëm se aplikacioni po punon: kjo është çmimi.' },
   lockSwipe: { ru: 'На экране блокировки потяните уведомление вниз — появятся варианты ответа.', en: 'On the lock screen, pull the notification down — the answer buttons appear.', de: 'Auf dem Sperrbildschirm die Benachrichtigung nach unten ziehen — dann erscheinen die Antworten.', uk: 'На екрані блокування потягніть сповіщення вниз — з’являться варіанти відповіді.', es: 'En la pantalla de bloqueo, desliza la notificación hacia abajo para ver las respuestas.', fr: 'Sur l’écran de verrouillage, faites glisser la notification vers le bas pour voir les réponses.', bg: 'На заключен екран плъзнете известието надолу — ще се появят отговорите.', tr: 'Kilit ekranında bildirimi aşağı çekin — cevap seçenekleri görünür.', ar: 'على شاشة القفل اسحب الإشعار للأسفل لتظهر خيارات الإجابة.', sq: 'Në ekranin e kyçjes tërhiq njoftimin poshtë — shfaqen përgjigjet.' },
   soundTitle: { ru: 'Озвучивать слово', en: 'Speak the word', de: 'Wort vorlesen', uk: 'Озвучувати слово', es: 'Pronunciar la palabra', fr: 'Prononcer le mot', bg: 'Изговаряй думата', tr: 'Kelimeyi seslendir', ar: 'نطق الكلمة', sq: 'Shqiptoje fjalën' },
   soundDesc:  { ru: 'Немецкое слово произносится, когда появляется карточка. Кнопка 🔊 работает всегда.', en: 'The German word is spoken when a card appears. The 🔊 button always works.', de: 'Das deutsche Wort wird beim Erscheinen der Karte vorgelesen. Die 🔊-Taste funktioniert immer.', uk: 'Німецьке слово озвучується, коли з’являється картка. Кнопка 🔊 працює завжди.', es: 'La palabra alemana se pronuncia al aparecer la tarjeta. El botón 🔊 funciona siempre.', fr: 'Le mot allemand est prononcé à l’apparition de la carte. Le bouton 🔊 fonctionne toujours.', bg: 'Немската дума се изговаря при поява на картата. Бутонът 🔊 работи винаги.', tr: 'Kart göründüğünde Almanca kelime seslendirilir. 🔊 düğmesi her zaman çalışır.', ar: 'تُنطق الكلمة الألمانية عند ظهور البطاقة. زر 🔊 يعمل دائمًا.', sq: 'Fjala gjermane shqiptohet kur shfaqet karta. Butoni 🔊 punon gjithmonë.' },
@@ -74,6 +77,9 @@ export default function WidgetBlock() {
   // Телефон приводит себя в соответствие при первом же обновлении виджета.
   const [lockOn, setLockOn] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
+  // Карточка поверх замка — настройка ЭТОГО телефона: сервер о ней не знает, приложение
+  // прочитать из браузера нельзя. Помним выбор здесь, а правду держит само приложение.
+  const [fullOn, setFullOn] = useState(() => localStorage.getItem('widget_full_lock') === '1')
 
   // Виджет бывает только в Android-приложении — в браузере блока нет вовсе.
   const available = isAndroidApp()
@@ -125,6 +131,16 @@ export default function WidgetBlock() {
     // А это — чтобы карточка появилась или исчезла сразу, не дожидаясь обновления.
     window.location.href =
       `intent://widget-link?notify=${next ? 1 : 0}#Intent;scheme=dlwidget;package=${PACKAGE_ID};end`
+  }
+
+  const toggleFullLock = () => {
+    const next = !fullOn
+    setFullOn(next)
+    localStorage.setItem('widget_full_lock', next ? '1' : '0')
+    // Включение уводит в системные настройки за разрешением «поверх других окон», если
+    // его ещё нет: без него Android 14+ блокирует показ карточки (проверено 14.09.2026).
+    window.location.href =
+      `intent://widget-link?lock=${next ? 1 : 0}#Intent;scheme=dlwidget;package=${PACKAGE_ID};end`
   }
 
   const toggleSound = async () => {
@@ -195,6 +211,28 @@ export default function WidgetBlock() {
             <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>
               {tr('lockDesc', lang)}
               {lockOn && <div style={{ marginTop: 4 }}>{tr('lockSwipe', lang)}</div>}
+            </div>
+          </div>
+
+          {/* Карточка ВМЕСТО замка: шаг до разблокировки. Отдельно от уведомления —
+              это разные режимы, и цена у них разная. */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>🔓 {tr('fullTitle', lang)}</div>
+              <button onClick={toggleFullLock}
+                style={{
+                  padding: '6px 14px', borderRadius: 10, fontWeight: 700, fontSize: 12,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  border: fullOn ? '1px solid var(--line)' : 'none',
+                  background: fullOn ? 'transparent' : 'var(--accent)',
+                  color: fullOn ? 'var(--ink)' : 'var(--accent-ink)',
+                }}>
+                {fullOn ? tr('off2', lang) : tr('on2', lang)}
+              </button>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>
+              {tr('fullDesc', lang)}
+              <div style={{ marginTop: 4 }}>{tr('fullPerm', lang)}</div>
             </div>
           </div>
 
