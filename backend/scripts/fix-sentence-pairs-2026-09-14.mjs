@@ -39,10 +39,18 @@ const LANG_RE = {
 
 const bare = (w) => String(w || '').replace(/^(der|die|das|el|la|los|las|the|a|an)\s+/i, '').trim()
 
+// Слово «есть в примере», если совпал его корень без двух последних букв: так проходят
+// «geht» для «gehen», «books» для «book» — морфологии мы не знаем и знать не обязаны.
+//
+// Словарная статья бывает ФРАЗОЙ: «to put away», «I'd like ...», «What kind of...?».
+// Искать в примере корень всей фразы бессмысленно — проверяем по самому длинному
+// значимому слову. Без этого 21 верный пример был отвергнут собственной проверкой.
 function mentions(text, word) {
-  const b = bare(word).toLowerCase()
+  const b = bare(word).toLowerCase().replace(/[.…?!,]+/g, ' ').trim()
   if (!b) return false
-  const stem = b.slice(0, Math.max(b.length - 2, 3))
+  const parts = b.split(/\s+/).filter(w => w.length > 2 && !['the', 'and', 'for', 'you'].includes(w))
+  const key = parts.length ? parts.sort((a, c) => c.length - a.length)[0] : b
+  const stem = key.slice(0, Math.max(key.length - 2, 3))
   return String(text || '').toLowerCase().includes(stem)
 }
 
