@@ -41,7 +41,10 @@ const exercises = JSON.parse(prodSql(`
 
 const words = JSON.parse(prodSql(`
   SELECT COALESCE(json_agg(row_to_json(t)), '[]') FROM (
-    SELECT w.id, w.word_de, w.lesson_id, l.target_lang
+    -- is_function_word обязателен: без него проверка служебных слов ругается и на уже
+    -- помеченные («ist», «und», «die» — 34 штуки), а правило, которое нельзя погасить,
+    -- обесценивает весь отчёт: в нём тонут настоящие находки.
+    SELECT w.id, w.word_de, w.lesson_id, w.is_function_word, l.target_lang
     FROM words w JOIN lessons l ON l.id = w.lesson_id
     WHERE TRUE ${langFilter}) t`))
 
