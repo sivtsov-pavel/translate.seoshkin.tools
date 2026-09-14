@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Золотая кнопка приложения (#C9A54A — theme-color сайта): главное действие
+     на экране поверх блокировки должно читаться с первого взгляда. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#C9A54A" />
+    <corners android:radius="16dp" />
+</shape>

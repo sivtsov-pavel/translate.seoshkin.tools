@@ -32,4 +32,11 @@
     <string name="widget_today">sot %1$d/%2$d</string>
     <string name="widget_left">%1$d deri te mësimi</string>
     <string name="widget_next">Tjetra</string>
+    <!-- Карточка поверх экрана блокировки (LockCardActivity) -->
+    <string name="lock_unlock">Shkyç</string>
+    <string name="lock_hint">Përgjigju kartës — pastaj shkyçe</string>
+    <string name="lock_channel_name">Karta në ekranin e kyçur</string>
+    <string name="lock_channel_desc">E mban kartën gati për ekranin e kyçur</string>
+    <string name="lock_service_title">Deutsch Lernen</string>
+    <string name="lock_service_text">Karta shfaqet kur ndizet ekrani</string>
 </resources>

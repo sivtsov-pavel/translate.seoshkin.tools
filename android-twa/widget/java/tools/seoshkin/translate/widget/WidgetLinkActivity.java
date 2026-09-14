@@ -2,10 +2,12 @@ package tools.seoshkin.translate.widget;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 
 /**
  * Мост между настройками в приложении и нативной частью.
@@ -52,6 +54,28 @@ public class WidgetLinkActivity extends Activity {
             } else {
                 WidgetNotification.update(this);
             }
+        }
+
+        // Карточка ПОВЕРХ замка — отдельный тумблер, по умолчанию выключен.
+        //
+        // Разрешение «поверх других окон» здесь не прихоть: с Android 14 система блокирует
+        // запуск активности из фона (Background Activity Launch), и foreground-сервиса для
+        // исключения НЕ ХВАТАЕТ — проверено на эмуляторе Android 16 14.09.2026, в логах
+        // «Background activity launch blocked». С выданным разрешением карточка появляется.
+        // Поэтому включаем режим только вместе с ним, а иначе ведём человека в настройки:
+        // тумблер «включён», за которым ничего не происходит, — худший из вариантов.
+        String lock = data.getQueryParameter("lock");
+        if (lock != null) {
+            boolean on = "1".equals(lock);
+            if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                store.setLockOn(false);
+                startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName())));
+                finish();
+                return;
+            }
+            store.setLockOn(on);
+            LockCardService.apply(this);
         }
 
         finish();

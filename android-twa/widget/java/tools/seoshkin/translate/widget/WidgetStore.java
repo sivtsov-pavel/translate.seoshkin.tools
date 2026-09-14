@@ -30,6 +30,7 @@ public class WidgetStore {
     private static final String KEY_FLIPPED = "card_flipped"; // перевод у карточки уже открыт
     private static final String KEY_ERROR  = "last_error";    // почему не удалось обновиться
     private static final String KEY_NOTIFY = "notify_on";     // карточка в уведомлении включена
+    private static final String KEY_LOCK   = "lock_on";       // карточка ПОВЕРХ экрана блокировки
     private static final String KEY_SOUND  = "sound_on";      // озвучивать слово при показе
     private static final String KEY_ANSWERED = "answered";    // на текущую карточку уже ответили
     private static final String KEY_ANS_OK   = "answered_ok";
@@ -107,6 +108,15 @@ public class WidgetStore {
     public boolean notificationOn() { return prefs.getBoolean(KEY_NOTIFY, false); }
 
     public void setNotificationOn(boolean on) { prefs.edit().putBoolean(KEY_NOTIFY, on).apply(); }
+
+    /**
+     * Карточка поверх экрана блокировки. По умолчанию ВЫКЛЮЧЕНА и включается осознанно:
+     * режим требует постоянно живого сервиса, а значит уведомления «приложение работает»
+     * и заметного расхода батареи (см. LockCardService).
+     */
+    public boolean lockOn() { return prefs.getBoolean(KEY_LOCK, false); }
+
+    public void setLockOn(boolean on) { prefs.edit().putBoolean(KEY_LOCK, on).apply(); }
 
     // По умолчанию озвучка включена: приложение про язык, слышать слово важнее тишины.
     public boolean soundOn() { return prefs.getBoolean(KEY_SOUND, true); }

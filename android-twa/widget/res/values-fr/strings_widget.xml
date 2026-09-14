@@ -32,4 +32,11 @@
     <string name="widget_today">aujourd’hui %1$d/%2$d</string>
     <string name="widget_left">%1$d avant la leçon</string>
     <string name="widget_next">Suivant</string>
+    <!-- Карточка поверх экрана блокировки (LockCardActivity) -->
+    <string name="lock_unlock">Déverrouiller</string>
+    <string name="lock_hint">Réponds à la carte, puis déverrouille</string>
+    <string name="lock_channel_name">Carte sur l’écran de verrouillage</string>
+    <string name="lock_channel_desc">Garde la carte prête pour l’écran de verrouillage</string>
+    <string name="lock_service_title">Deutsch Lernen</string>
+    <string name="lock_service_text">La carte apparaît à l’allumage de l’écran</string>
 </resources>

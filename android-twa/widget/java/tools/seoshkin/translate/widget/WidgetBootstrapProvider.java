@@ -30,6 +30,9 @@ public class WidgetBootstrapProvider extends ContentProvider {
         // Синтезатор поднимается заранее: из обработчика нажатия ждать его инициализацию
         // нельзя, и половина нажатий 🔊 уходила бы в тишину.
         WidgetSpeaker.warmUp(app);
+        // Сторож экрана блокировки поднимается вместе с процессом: он и включается-то
+        // только тумблером, но после перезагрузки телефона его надо вернуть к жизни.
+        try { LockCardService.apply(app); } catch (Exception ignored) { }
         app.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             private int visible = 0;
 

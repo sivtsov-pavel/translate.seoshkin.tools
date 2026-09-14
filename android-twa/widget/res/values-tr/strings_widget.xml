@@ -32,4 +32,11 @@
     <string name="widget_today">bugün %1$d/%2$d</string>
     <string name="widget_left">derse %1$d</string>
     <string name="widget_next">İleri</string>
+    <!-- Карточка поверх экрана блокировки (LockCardActivity) -->
+    <string name="lock_unlock">Kilidi aç</string>
+    <string name="lock_hint">Kartı yanıtla, sonra kilidi aç</string>
+    <string name="lock_channel_name">Kilit ekranı kartı</string>
+    <string name="lock_channel_desc">Kartı kilit ekranı için hazır tutar</string>
+    <string name="lock_service_title">Deutsch Lernen</string>
+    <string name="lock_service_text">Ekran açıldığında kart görünür</string>
 </resources>

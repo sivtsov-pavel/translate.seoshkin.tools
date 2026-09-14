@@ -32,4 +32,11 @@
     <string name="widget_today">сьогодні %1$d/%2$d</string>
     <string name="widget_left">до уроку %1$d</string>
     <string name="widget_next">Далі</string>
+    <!-- Карточка поверх экрана блокировки (LockCardActivity) -->
+    <string name="lock_unlock">Розблокувати</string>
+    <string name="lock_hint">Дай відповідь — і відкривай телефон</string>
+    <string name="lock_channel_name">Картка на екрані блокування</string>
+    <string name="lock_channel_desc">Тримає картку напоготові для екрана блокування</string>
+    <string name="lock_service_title">Deutsch Lernen</string>
+    <string name="lock_service_text">Картка з’явиться, коли увімкнеться екран</string>
 </resources>
