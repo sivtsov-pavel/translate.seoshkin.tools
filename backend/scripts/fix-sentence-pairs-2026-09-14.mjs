@@ -65,7 +65,12 @@ const { rows } = await db.query(`
      AND e.payload->>'example_ru' IS NOT NULL
    ORDER BY e.lesson_id, e.id`)
 
-// (а) слова нет в эталоне
+// (а) слова нет в эталоне — СПРАВОЧНО, не переписываем.
+//
+// Проверено выборкой 11.09 и ещё раз 14.09: почти все такие «находки» ложные, потому что
+// признак не знает морфологии. «anschauen» → «Ich schaue den Film an», «können» → «ich
+// kann», «haben» → «hat» — примеры верные и даже более ценные, чем шаблонные. Переписать
+// их значило бы испортить хороший материал ради красивого числа.
 const noWord = rows.filter(r => !mentions(r.example, r.word))
 
 // (б) общий эталон внутри урока: оставляем в покое то упражнение, чьё слово в нём есть
@@ -74,16 +79,21 @@ for (const r of rows) (groups[`${r.lesson_id}|${r.example}`] ||= []).push(r)
 const shared = []
 for (const list of Object.values(groups)) {
   if (list.length < 2) continue
-  const keeper = list.find(r => mentions(r.example, r.word))
+  // Одно упражнение группы эталон заслуженно оставляет себе: то, чьё слово в нём есть.
+  // Не нашлось (морфология — см. выше) — оставляем первое: лучше не тронуть лишнего.
+  const keeper = list.find(r => mentions(r.example, r.word)) || list[0]
   for (const r of list) if (r !== keeper) shared.push(r)
 }
 
+// Переписываем ТОЛЬКО группу (б): там расхождение доказано — один эталон на несколько
+// заданий, и минимум одно из них чужое.
 const seen = new Set()
-const broken = [...noWord, ...shared].filter(r => !seen.has(r.id) && seen.add(r.id))
+const broken = shared.filter(r => !seen.has(r.id) && seen.add(r.id))
 const work = LIMIT ? broken.slice(0, LIMIT) : broken
 
 console.log(`Упражнений «напиши предложение»: ${rows.length}`)
-console.log(`Слова нет в эталоне: ${noWord.length}; общий эталон в уроке: ${shared.length}`)
+console.log(`Слова нет в эталоне: ${noWord.length} (справочно, НЕ трогаем — предел признака)`)
+console.log(`Общий эталон в уроке: ${shared.length} — их и переписываем`)
 console.log(`К перегенерации (без повторов): ${broken.length}${LIMIT ? ` (взято ${work.length})` : ''}`)
 const batches = Math.ceil(work.length / 20)
 console.log(`Батчей по 20: ${batches}, gpt-4o-mini, оценка ≈ $${(batches * 0.0007).toFixed(3)}`)
