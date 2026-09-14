@@ -72,6 +72,9 @@ const PAYLOAD_FIXES = {
   185107: { example: 'Können Sie das für mich übersetzen?', example_ru: 'Вы можете перевести это для меня?' },
   185112: { example: 'Ich kaufe das für dich.',             example_ru: 'Я покупаю это для тебя.' },
   185117: { example: 'Kannst du mich hören?',               example_ru: 'Ты меня слышишь?' },
+  // Родное упражнение слова «mich»: эталон про «переведите для меня», а задание —
+  // «Я люблю себя». Собрать одно по другому нельзя.
+  185320: { example: 'Kannst du mich hören?',               example_ru: 'Ты меня слышишь?' },
 }
 
 // ── C. Упражнения без слова → к какому слову привязать ────────────────────────
@@ -161,10 +164,22 @@ const rollback = { exercises: [], words: [] }
 {
   let n = 0
   for (const [id, wordId] of Object.entries(LINKS)) {
-    const { rows } = await db.query('SELECT word_id FROM exercises WHERE id = $1', [id])
-    if (!rows[0] || rows[0].word_id === wordId) continue
-    say(`C: #${id} → слово ${wordId}`)
-    if (apply) await db.query('UPDATE exercises SET word_id = $2 WHERE id = $1', [id, wordId])
+    const { rows } = await db.query('SELECT * FROM exercises WHERE id = $1', [id])
+    if (!rows[0] || rows[0].word_id === Number(wordId)) continue
+    // У слова уже есть упражнение этого типа? Тогда сирота — лишняя копия второго
+    // прохода генерации, а не потерянное упражнение: привязка упрётся в уникальный
+    // индекс (lesson_id, word_id, type). Такую копию убираем.
+    const { rows: twin } = await db.query(
+      `SELECT id FROM exercises WHERE word_id = $1 AND type = $2 AND lesson_id = $3`,
+      [wordId, rows[0].type, rows[0].lesson_id])
+    if (twin.length) {
+      say(`C: #${id} — у слова ${wordId} уже есть ${rows[0].type} (#${twin[0].id}), копию удаляем`)
+      rollback.exercises.push(rows[0])
+      if (apply) await db.query('DELETE FROM exercises WHERE id = $1', [id])
+    } else {
+      say(`C: #${id} → слово ${wordId}`)
+      if (apply) await db.query('UPDATE exercises SET word_id = $2 WHERE id = $1', [id, wordId])
+    }
     n++
   }
   for (const id of DUP_EXERCISES) {
