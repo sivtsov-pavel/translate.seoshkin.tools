@@ -19,7 +19,12 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
   const [error, setError] = useState('')
   const { t, lang } = useI18nStore()
   const pTranslations = payloadTranslations || exercise.payload_translations
-  const { word_de, translation_ru, hint_ru, example, example_ru } = exercise.payload
+  const { word_de, translation_ru, hint_ru, example, example_ru, example_translations } = exercise.payload
+  // Задание-фраза на языке УЧЕНИКА. Русский остаётся запасным вариантом: у части
+  // упражнений перевода ещё нет, и лучше показать русский, чем пустое место.
+  // Без этого ученик с турецким или украинским интерфейсом получал задание по-русски —
+  // дыра в мультилокали, найденная аудитом 14.09.2026.
+  const displayTask = getTranslation(example_translations, lang, example_ru)
   // Режим ПЕРЕВОДА: есть русская фраза-задание и эталон. Свободное сочинение на A1 не
   // работает — ученик ещё не строит фразы сам, а списанный со страницы пример проверка
   // оценивала на 2 из 5. Старые упражнения без example_ru показываем по-прежнему.
@@ -58,7 +63,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
     return (
       <SentenceBuild
         payload={exercise.payload}
-        task={example_ru}
+        task={displayTask}
         reference={example}
         translation={displayTranslation}
         imageUrl={exercise.image_url}
@@ -90,7 +95,7 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
               {t.exercise.translateToTarget || 'Напиши это предложение по-немецки:'}
             </p>
             <div style={{ fontSize: 19, fontWeight: 600, color: 'var(--ink)', padding: '12px 14px', background: 'var(--surface-2)', borderRadius: 12, border: '1px solid var(--line)' }}>
-              {example_ru}
+              {displayTask}
             </div>
           </>
         ) : (
