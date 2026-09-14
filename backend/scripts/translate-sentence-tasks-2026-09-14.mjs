@@ -11,7 +11,9 @@
 //
 // Русский не переводим — он уже есть в example_ru и служит запасным вариантом.
 //
-// 💸 gpt-4o-mini, батчами по 15 фраз: за один запрос все девять языков сразу.
+// 💸 gpt-4o-mini, батчами по 10 фраз: за один запрос все девять языков сразу. По 15 ответ
+// иногда упирался в потолок токенов и обрывался на полуслове — JSON не разбирался, и
+// батч терялся целиком. Замер на 150 заданиях: $0.0088, то есть вся база ≈ $0.25.
 // Идемпотентно: упражнения, где переводы уже есть, пропускаются, поэтому прогон можно
 // повторять и добивать остаток после сбоя.
 //
@@ -46,8 +48,8 @@ const need = rows.filter(r => CODES.some(c => !r.have?.[c]))
 const work = LIMIT ? need.slice(0, LIMIT) : need
 
 console.log(`Заданий всего: ${rows.length}, без полного перевода: ${need.length}`)
-const batches = Math.ceil(work.length / 15)
-console.log(`Батчей по 15: ${batches}, gpt-4o-mini, оценка ≈ $${(batches * 0.0025).toFixed(2)}`)
+const batches = Math.ceil(work.length / 10)
+console.log(`Батчей по 10: ${batches}, gpt-4o-mini, оценка ≈ $${(batches * 0.0006).toFixed(2)}`)
 
 if (!work.length) { console.log('Всё переведено.'); process.exit(0) }
 if (!apply) {
@@ -60,8 +62,8 @@ if (!apply) {
 resetUsage()
 let done = 0, skipped = 0
 
-for (let i = 0; i < work.length; i += 15) {
-  const items = work.slice(i, i + 15)
+for (let i = 0; i < work.length; i += 10) {
+  const items = work.slice(i, i + 10)
   const list = items.map((r, k) => `${k}: ${r.task}`).join('\n')
   const prompt = `Переведи каждую фразу на девять языков: ${CODES.map(c => `${c} (${LANGS[c]})`).join(', ')}.
 Это учебные задания: переводи точно по смыслу, коротко и естественно, без пояснений.
@@ -70,7 +72,7 @@ for (let i = 0; i < work.length; i += 15) {
 ${list}`
   try {
     const res = await platformClient.chat.completions.create({
-      model: 'gpt-4o-mini', max_tokens: 4000, messages: [{ role: 'user', content: prompt }],
+      model: 'gpt-4o-mini', max_tokens: 6000, messages: [{ role: 'user', content: prompt }],
     })
     trackUsage('gpt-4o-mini', res.usage)
     const txt = res.choices[0].message.content
@@ -94,7 +96,7 @@ ${list}`
   } catch (e) {
     console.error(`  батч ${i}: ${e.message}`)
   }
-  if ((i / 15) % 20 === 0) console.log(`  ${i + items.length} / ${work.length}, переведено ${done}`)
+  if ((i / 10) % 20 === 0) console.log(`  ${i + items.length} / ${work.length}, переведено ${done}`)
 }
 
 const cost = usageCostUSD()
