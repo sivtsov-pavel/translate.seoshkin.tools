@@ -216,6 +216,11 @@ export const tr = {
     sentencePlaceholder: 'Almanca cümle yazın...',
     sentenceExample: 'Örnek',
     translateToTarget: 'Bu cümleyi Almanca yaz:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Bu cümleyi kelimelerden kur:',
+    buildHint: 'Kelimelere sırayla dokun',
+    buildClear: 'Baştan başla',
+    writeMyself: 'Kendim yazayım',
     yourSentence: 'Senin cümlen',
     correctedVersion: 'Düzeltilmiş versiyon',
     yourAnswer: 'Cevabın',

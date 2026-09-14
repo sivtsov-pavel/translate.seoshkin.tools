@@ -220,6 +220,11 @@ export const de = {
     sentencePlaceholder: 'Schreibe einen Satz auf Deutsch...',
     sentenceExample: 'Beispiel',
     translateToTarget: 'Schreibe diesen Satz auf Deutsch:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Setze diesen Satz aus den Wörtern zusammen:',
+    buildHint: 'Tippe die Wörter der Reihe nach an',
+    buildClear: 'Von vorn',
+    writeMyself: 'Selbst schreiben',
     yourSentence: 'Dein Satz',
     correctedVersion: 'Korrigierte Version',
     yourAnswer: 'Deine Antwort',

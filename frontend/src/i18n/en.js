@@ -216,6 +216,11 @@ export const en = {
     sentencePlaceholder: 'Write a sentence in German...',
     sentenceExample: 'Example',
     translateToTarget: 'Write this sentence in the target language:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Build this sentence from the words:',
+    buildHint: 'Tap the words in order',
+    buildClear: 'Start over',
+    writeMyself: 'Write it myself',
     yourSentence: 'Your sentence',
     correctedVersion: 'Corrected version',
     yourAnswer: 'Your answer',

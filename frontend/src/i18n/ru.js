@@ -220,6 +220,11 @@ export const ru = {
     sentencePlaceholder: 'Напишите предложение на немецком...',
     sentenceExample: 'Пример',
     translateToTarget: 'Напиши это предложение по-немецки:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Собери эту фразу из слов:',
+    buildHint: 'Нажимай слова по порядку',
+    buildClear: 'Заново',
+    writeMyself: 'Написать самому',
     yourSentence: 'Ваше предложение',
     correctedVersion: 'Исправленный вариант',
     yourAnswer: 'Твой ответ',

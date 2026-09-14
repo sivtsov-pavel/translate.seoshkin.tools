@@ -194,10 +194,15 @@ export default function ExerciseSession() {
     }).finally(() => setLoading(false))
   }, [paramsKey])   // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleAnswer = async (quality, userAnswer = '') => {
+  // alreadyRecorded — попытку уже записал сервер в своём обработчике. Так делает
+  // check-sentence: он сам считает SM-2 и пишет exercise_attempts. Раньше условие
+  // было по ТИПУ («кроме sentence_write»), но у сборки предложения (SentenceBuild)
+  // проверка идёт на клиенте и модель не зовётся — по типу такой ответ терялся бы
+  // молча: ученик собрал фразу, а прогресс не двинулся.
+  const handleAnswer = async (quality, userAnswer = '', alreadyRecorded = false) => {
     const ex = exercises[current]
     answeredIds.current.add(ex.id)
-    if (ex.type !== 'sentence_write') {
+    if (!alreadyRecorded) {
       try {
         if (!isOnline()) throw new Error('offline')
         await api.post(`/exercises/${ex.id}/attempt`, { userAnswer: String(userAnswer), quality, lang })

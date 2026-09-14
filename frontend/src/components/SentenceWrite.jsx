@@ -5,10 +5,14 @@ import { getTranslation } from '../utils/translation.js'
 import AvatarReaction from './AvatarReaction.jsx'
 import ExerciseCardHeader from './ExerciseCardHeader.jsx'
 import TapText from './TapText.jsx'
+import SentenceBuild from './SentenceBuild.jsx'
+import { canBuild } from '../utils/sentenceBuild.js'
 import { shouldAutoFocus } from '../utils/device.js'
 
 export default function SentenceWrite({ exercise, onAnswer, payloadTranslations, showOriginal, lessonTitle, typeLabel }) {
   const [sentence, setSentence] = useState('')
+  // Свободный ввод по просьбе ученика — из режима сборки по кнопке «написать самому»
+  const [manual, setManual] = useState(false)
   const [result, setResult] = useState(null)
   const [reaction, setReaction] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -22,6 +26,9 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
   const isTranslation = Boolean(example_ru && example)
   const displayTranslation = getTranslation(exercise.translations, lang, exercise.translation_ru || translation_ru)
   const displayHint = getTranslation(pTranslations, lang, hint_ru)
+  // Режим СБОРКИ (A0, с 14.09.2026) — основной, когда есть эталон длиннее одного слова.
+  // Свободный перевод остаётся вторым путём: он тяжелее и стоит платного вызова модели.
+  const isBuild = isTranslation && canBuild(example) && !manual
 
   const handleCheck = async (e) => {
     e.preventDefault()
@@ -46,6 +53,22 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
   }
 
   const qualityStars = (q) => '★'.repeat(q) + '☆'.repeat(5 - q)
+
+  if (isBuild) {
+    return (
+      <SentenceBuild
+        payload={exercise.payload}
+        task={example_ru}
+        reference={example}
+        translation={displayTranslation}
+        imageUrl={exercise.image_url}
+        lessonTitle={lessonTitle}
+        typeLabel={typeLabel}
+        onManual={() => setManual(true)}
+        onAnswer={onAnswer}
+      />
+    )
+  }
 
   return (
     <div className="exercise-card" style={{ border: '2px solid var(--line)', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: 'var(--surface)' }}>
@@ -148,7 +171,8 @@ export default function SentenceWrite({ exercise, onAnswer, payloadTranslations,
           )}
 
           <button
-            onClick={() => onAnswer(result.quality, sentence)}
+            /* true — попытку уже записал check-sentence на сервере, второй раз не пишем */
+            onClick={() => onAnswer(result.quality, sentence, true)}
             style={{ padding: '10px 24px', fontSize: 16, background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600 }}>
             {t.exercise.next}
           </button>

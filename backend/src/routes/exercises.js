@@ -1,5 +1,4 @@
 import { db } from '../db/index.js'
-import { sm2 } from '../services/srs.js'
 import { playableLessonIds, ensureDefaultSchedules, fixedPassedLessons, LESSON_PASSED_HAVING } from '../services/drip.js'
 import { recordAttempt } from '../services/attempts.js'
 import { newExerciseIds } from '../services/newExercises.js'
@@ -948,48 +947,12 @@ export async function exercisesRoutes(fastify) {
     const result = await checkSentence(word_de, translation_ru, sentence, lang || 'ru',
       example_ru ? example : null, example_ru || null)
 
-    const { rows: progRows } = await db.query(
-      `SELECT * FROM user_exercise_progress WHERE user_id = $1 AND exercise_id = $2`,
-      [userId, exerciseId]
-    )
-    const prog = progRows[0] ?? { easiness_factor: 2.5, interval_days: 0, repetitions: 0 }
-
-    const { newEf, newInterval, newReps } = sm2(
-      result.quality,
-      parseFloat(prog.easiness_factor),
-      prog.interval_days,
-      prog.repetitions
-    )
-
-    const nextReview = new Date()
-    nextReview.setDate(nextReview.getDate() + newInterval)
-    const nextReviewDate = nextReview.toISOString().slice(0, 10)
-
-    await db.query(
-      `INSERT INTO user_exercise_progress
-         (user_id, exercise_id, easiness_factor, interval_days, repetitions, next_review_date)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT (user_id, exercise_id) DO UPDATE
-         SET easiness_factor = $3, interval_days = $4,
-             repetitions = $5, next_review_date = $6`,
-      [userId, exerciseId, newEf, newInterval, newReps, nextReviewDate]
-    )
-
-    if (ex.word_id) {
-      const wordStatus = newReps >= 5 ? 'known' : newReps >= 1 ? 'learning' : 'new'
-      await db.query(
-        `INSERT INTO user_word_status (user_id, word_id, status)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (user_id, word_id) DO UPDATE SET status = $3`,
-        [userId, ex.word_id, wordStatus]
-      )
-    }
-
-    await db.query(
-      `INSERT INTO exercise_attempts (exercise_id, user_id, user_answer, is_correct, quality)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [exerciseId, userId, sentence, result.correct, result.quality]
-    )
+    // Запись ответа — через общий recordAttempt, как у всех остальных типов.
+    // Здесь лежала СВОЯ копия цепочки SM-2, и она успела отстать: не снимала
+    // упражнение из хвостов и не звала markLessonPassed (миграция 074), то есть
+    // ответом «напиши предложение» урок не закрывался, а тем же ответом с виджета —
+    // закрывался. Две копии одной логики всегда расходятся.
+    const { nextReviewDate } = await recordAttempt(userId, exerciseId, sentence, result.quality)
 
     return { ...result, nextReviewDate }
   })

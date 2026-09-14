@@ -216,6 +216,11 @@ export const fr = {
     sentencePlaceholder: 'Écris une phrase en allemand...',
     sentenceExample: 'Exemple',
     translateToTarget: 'Écris cette phrase en allemand :',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Reconstitue cette phrase avec les mots :',
+    buildHint: 'Touche les mots dans l’ordre',
+    buildClear: 'Recommencer',
+    writeMyself: 'L’écrire moi-même',
     yourSentence: 'Ta phrase',
     correctedVersion: 'Version corrigée',
     yourAnswer: 'Ta réponse',

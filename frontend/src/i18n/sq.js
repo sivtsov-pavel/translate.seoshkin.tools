@@ -216,6 +216,11 @@ export const sq = {
     sentencePlaceholder: 'Shkruaj fjali në gjermanisht...',
     sentenceExample: 'Shembull',
     translateToTarget: 'Shkruaje këtë fjali në gjermanisht:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Ndërto këtë fjali me fjalët:',
+    buildHint: 'Prek fjalët me radhë',
+    buildClear: 'Nga fillimi',
+    writeMyself: 'Ta shkruaj vetë',
     yourSentence: 'Fjalia juaj',
     correctedVersion: 'Versioni i korrigjuar',
     yourAnswer: 'Përgjigja jote',

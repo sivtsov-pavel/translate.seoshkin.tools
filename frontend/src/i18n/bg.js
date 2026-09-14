@@ -216,6 +216,11 @@ export const bg = {
     sentencePlaceholder: 'Напиши изречение на немски...',
     sentenceExample: 'Пример',
     translateToTarget: 'Напиши това изречение на немски:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Състави това изречение от думите:',
+    buildHint: 'Натискай думите по ред',
+    buildClear: 'Отначало',
+    writeMyself: 'Ще напиша сам',
     yourSentence: 'Твоето изречение',
     correctedVersion: 'Поправен вариант',
     yourAnswer: 'Твоят отговор',

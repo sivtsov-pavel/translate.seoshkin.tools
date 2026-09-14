@@ -218,6 +218,11 @@ export const ar = {
     sentencePlaceholder: 'اكتب جملة بالألمانية...',
     sentenceExample: 'مثال',
     translateToTarget: 'اكتب هذه الجملة بالألمانية:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'كوّن هذه الجملة من الكلمات:',
+    buildHint: 'اضغط على الكلمات بالترتيب',
+    buildClear: 'من البداية',
+    writeMyself: 'سأكتبها بنفسي',
     yourSentence: 'جملتك',
     correctedVersion: 'النسخة المصححة',
     yourAnswer: 'إجابتك',

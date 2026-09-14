@@ -216,6 +216,11 @@ export const uk = {
     sentencePlaceholder: 'Напишіть речення німецькою...',
     sentenceExample: 'Приклад',
     translateToTarget: 'Напиши це речення німецькою:',
+    // Сборка предложения из слов — режим A0 (SentenceBuild)
+    buildTask: 'Склади цю фразу зі слів:',
+    buildHint: 'Натискай слова по порядку',
+    buildClear: 'Спочатку',
+    writeMyself: 'Написати самому',
     yourSentence: 'Ваше речення',
     correctedVersion: 'Виправлений варіант',
     yourAnswer: 'Твоя відповідь',
