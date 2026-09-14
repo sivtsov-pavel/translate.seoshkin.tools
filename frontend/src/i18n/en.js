@@ -619,6 +619,7 @@ export const en = {
     pickOneDay: 'Choose at least one day',
     startLabel: 'Start:',
     updateBtn: 'Update',
+    updateBusy: 'Updating…',
     exAbbrev: 'ex.',
     regenRowBtn: '⚙️ Exercises',
     regenRowTitle: 'Regenerate exercises from existing words (without scanning photos)',

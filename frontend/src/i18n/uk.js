@@ -618,6 +618,7 @@ export const uk = {
     pickOneDay: 'Вибери хоча б один день',
     startLabel: 'Старт:',
     updateBtn: 'Оновити',
+    updateBusy: 'Оновлюю…',
     exAbbrev: 'упр.',
     regenRowBtn: '⚙️ Упражнення',
     regenRowTitle: 'Пересоздати вправи з існуючих слів (без сканування фото)',

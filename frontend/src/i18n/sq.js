@@ -618,6 +618,7 @@ export const sq = {
     pickOneDay: 'Zgjidh të paktën një ditë',
     startLabel: 'Fillimi:',
     updateBtn: 'Përditëso',
+    updateBusy: 'Po përditësohet…',
     exAbbrev: 'ushtr.',
     regenRowBtn: '⚙️ Ushtrime',
     regenRowTitle: 'Rikrijo ushtrimet nga fjalët ekzistuese (pa skanimin e fotos)',

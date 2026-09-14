@@ -608,6 +608,7 @@ export const bg = {
     pickOneDay: 'Избери поне един ден',
     startLabel: 'Старт:',
     updateBtn: 'Обнови',
+    updateBusy: 'Обновявам…',
     exAbbrev: 'упр.',
     regenRowBtn: '⚙️ Упражнения',
     regenRowTitle: 'Пресъздай упражнения от съществуващите думи (без сканиране на снимки)',

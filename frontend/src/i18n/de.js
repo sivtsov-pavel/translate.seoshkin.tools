@@ -625,6 +625,7 @@ export const de = {
     pickOneDay: 'Wähle mindestens einen Tag',
     startLabel: 'Start:',
     updateBtn: 'Aktualisieren',
+    updateBusy: 'Aktualisiere…',
     exAbbrev: 'üpr.',
     regenRowBtn: '⚙️ Übungen',
     regenRowTitle: 'Übungen aus vorhandenen Wörtern neu erstellen (ohne Foto-Scan)',

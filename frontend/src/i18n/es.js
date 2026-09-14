@@ -614,6 +614,7 @@ export const es = {
     pickOneDay: 'Elige al menos un día',
     startLabel: 'Inicio:',
     updateBtn: 'Actualizar',
+    updateBusy: 'Actualizando…',
     exAbbrev: 'ej.',
     regenRowBtn: '⚙️ Ejercicios',
     regenRowTitle: 'Recrear ejercicios a partir de palabras existentes (sin escanear fotos)',

@@ -616,6 +616,7 @@ export const ar = {
     pickOneDay: 'اختر يومًا واحدًا على الأقل',
     startLabel: 'البداية:',
     updateBtn: 'تحديث',
+    updateBusy: 'جارٍ التحديث…',
     exAbbrev: 'تمارين.',
     regenRowBtn: '⚙️ تمارين',
     regenRowTitle: 'إعادة إنشاء التمارين من الكلمات الموجودة (دون مسح الصور)',

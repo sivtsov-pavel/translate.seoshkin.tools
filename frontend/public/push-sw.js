@@ -28,3 +28,10 @@ self.addEventListener('notificationclick', (event) => {
     })
   )
 })
+
+// Команда от страницы «встань немедленно»: её шлёт кнопка «Обновить» (store/appUpdate.js).
+// Обычно воркер и так встаёт сам (skipWaiting в сборке), но если он почему-то остался
+// ждать — страница обслуживается старым, и перезагрузка отдаёт старую версию.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting()
+})

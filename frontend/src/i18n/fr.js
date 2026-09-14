@@ -613,6 +613,7 @@ export const fr = {
     pickOneDay: 'Choisis au moins un jour',
     startLabel: 'Début :',
     updateBtn: 'Mettre à jour',
+    updateBusy: 'Mise à jour…',
     exAbbrev: 'ex.',
     regenRowBtn: '⚙️ Exercices',
     regenRowTitle: 'Recréer des exercices à partir des mots existants (sans scanner de photo)',

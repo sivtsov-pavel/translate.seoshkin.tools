@@ -1,6 +1,6 @@
 import { RefreshCw } from 'lucide-react'
 import { useI18nStore } from '../store/i18n.js'
-import { useAppUpdateStore } from '../store/appUpdate.js'
+import { useAppUpdateStore, applyUpdate } from '../store/appUpdate.js'
 
 // Плашка «Вышло обновление» — внизу экрана, поверх всего.
 //
@@ -12,7 +12,7 @@ import { useAppUpdateStore } from '../store/appUpdate.js'
 // Перезагрузка по кнопке: она забирает новые файлы, которые service worker уже скачал.
 export default function UpdatePrompt() {
   const { t } = useI18nStore()
-  const { ready, hidden, hide } = useAppUpdateStore()
+  const { ready, hidden, busy, hide, setBusy } = useAppUpdateStore()
   if (!ready || hidden) return null
 
   return (
@@ -37,10 +37,14 @@ export default function UpdatePrompt() {
           color: 'var(--ink-soft)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
         {t.common.updateLater}
       </button>
-      <button onClick={() => window.location.reload()}
+      {/* Кнопка не исчезает молча: пока идёт переход, она честно говорит, что занята.
+          Раньше плашка просто пропадала, и понять, сработало ли, было нельзя. */}
+      <button onClick={() => { setBusy(); applyUpdate() }} disabled={busy}
         style={{ flex: 'none', padding: '10px 16px', borderRadius: 12, border: 'none',
-          background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-        {t.common.updateBtn}
+          background: busy ? 'var(--line)' : 'var(--accent)',
+          color: busy ? 'var(--ink-soft)' : 'var(--accent-ink)',
+          fontSize: 14, fontWeight: 800, cursor: busy ? 'default' : 'pointer' }}>
+        {busy ? (t.common.updateBusy || '…') : t.common.updateBtn}
       </button>
     </div>
   )

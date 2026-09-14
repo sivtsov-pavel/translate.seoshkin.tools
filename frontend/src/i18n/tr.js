@@ -613,6 +613,7 @@ export const tr = {
     pickOneDay: 'En az bir gün seç',
     startLabel: 'Başlangıç:',
     updateBtn: 'Güncelle',
+    updateBusy: 'Güncelleniyor…',
     exAbbrev: 'eg.',
     regenRowBtn: '⚙️ Alıştırmalar',
     regenRowTitle: 'Mevcut kelimelerden alıştırmaları yeniden oluştur (fotoğraf taraması olmadan)',

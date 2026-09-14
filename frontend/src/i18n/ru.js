@@ -630,6 +630,7 @@ export const ru = {
     pickOneDay: 'Выбери хотя бы один день',
     startLabel: 'Старт:',
     updateBtn: 'Обновить',
+    updateBusy: 'Обновляю…',
     // Строка урока в курсе
     exAbbrev: 'упр.',
     regenRowBtn: '⚙️ Упражнения',

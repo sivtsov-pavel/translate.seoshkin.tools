@@ -23,6 +23,10 @@ export function watchForUpdates() {
 
   const { setReady } = useAppUpdateStore.getState()
   let lastCheck = 0
+  // Был ли контроллер на старте. Без этого мы принимали за обновление ПЕРВУЮ установку
+  // service worker (чистый браузер, очищенные данные): плашка появлялась там, где
+  // обновлять нечего, человек жал кнопку и, разумеется, ничего не менялось.
+  const hadController = !!navigator.serviceWorker.controller
 
   const check = async () => {
     const now = Date.now()
@@ -49,8 +53,11 @@ export function watchForUpdates() {
     })
   }).catch(() => {})
 
-  // Новый SW взял управление — версия точно новее той, что открыта
-  navigator.serviceWorker.addEventListener('controllerchange', () => setReady())
+  // Новый SW взял управление. Считаем это обновлением, только если контроллер был и
+  // раньше: иначе это первая установка воркера, а не новая версия.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) setReady()
+  })
 
   check()
   document.addEventListener('visibilitychange', () => {
