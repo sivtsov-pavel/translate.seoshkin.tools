@@ -20,9 +20,26 @@ const APPLY = process.argv.includes('--apply')
 const IDS = (process.argv.find(a => a.startsWith('--ids='))?.split('=')[1] || '')
   .split(',').map(Number).filter(Boolean)
 const LIMIT = parseInt(process.argv.find(a => a.startsWith('--limit='))?.split('=')[1] || '0', 10)
+// --langs=ru — перевести только на нужные локали вместо всех девяти.
+//
+// Считать надо не по числу упражнений, а по числу ПАР «упражнение × язык»:
+// «выбери ответ» и «напиши предложение» держат подсказку и варианты УЖЕ
+// по-русски (для них русский — источник, а не перевод), поэтому при --langs=ru
+// им переводить нечего, и в работу попадает только «заполни пропуск».
+// Немецкий интерфейс падает на русский запасным вариантом (LANG_FALLBACK).
+const LANGS = (process.argv.find(a => a.startsWith('--langs='))?.split('=')[1] || '')
+  .split(',').map(s => s.trim()).filter(Boolean)
+const FROM_RU = ['multiple_choice', 'sentence_write']   // источник — русский
+const onlyLangs = LANGS.length ? LANGS : null
 
 // Переводятся только те типы, которые умеет translateExercisePayloads
-const TYPES = ['fill_blank', 'multiple_choice', 'sentence_write']
+let TYPES = ['fill_blank', 'multiple_choice', 'sentence_write']
+// Если из запрошенных языков для типов «из русского» не остаётся ни одного —
+// такие упражнения в работу не берём вовсе, иначе платим за пустой ответ.
+if (onlyLangs && !onlyLangs.some(l => l !== 'ru' && l !== 'de')) {
+  TYPES = TYPES.filter(t => !FROM_RU.includes(t))
+  console.log(`(языки ${onlyLangs.join(', ')}: «выбери ответ» и «напиши предложение» уже на русском — берём только «заполни пропуск»)`)
+}
 
 const { rows } = await db.query(
   `SELECT e.id, e.type, e.payload
@@ -37,7 +54,11 @@ console.log(`\nУпражнений без переводов payload: ${rows.le
 const byType = {}
 for (const r of targets) byType[r.type] = (byType[r.type] || 0) + 1
 for (const [t, n] of Object.entries(byType)) console.log(`   ${t}: ${n}`)
-console.log(`Смета: ~$${(targets.length * 0.0006).toFixed(3)} (gpt-4o-mini, батчи по 15)`)
+// Цена по ЗАМЕРУ, а не на глаз: журнал операций за 29.09 даёт $0.0001 за
+// упражнение на девять языков (было насчитано $0.0006 — ошибка в 6 раз).
+const perLang = 0.0001 / 9
+const langCount = onlyLangs ? onlyLangs.filter(l => l !== 'de').length || 1 : 9
+console.log(`Смета: ~$${(targets.length * perLang * langCount).toFixed(3)} (gpt-4o-mini, ${langCount} яз., батчи по 15)`)
 
 if (!targets.length) process.exit(0)
 if (!APPLY) {
@@ -52,7 +73,7 @@ for (let i = 0; i < targets.length; i += 15) {
   const batch = targets.slice(i, i + 15)
   try {
     // Функция ВОЗВРАЩАЕТ переводы, записывает их вызывающий
-    const results = await translateExercisePayloads(batch)
+    const results = await translateExercisePayloads(batch, onlyLangs)
     for (const [id, langs] of Object.entries(results || {})) {
       await db.query(
         `UPDATE exercises SET payload_translations = COALESCE(payload_translations,'{}'::jsonb) || $1::jsonb
@@ -65,6 +86,6 @@ for (let i = 0; i < targets.length; i += 15) {
 
 await logOperation({ kind: 'translate', status: 'ok', provider: 'openai', model: 'gpt-4o-mini',
   costUsd: usageCostUSD(), items: done,
-  message: `Переводы payload дописаны: ${done} из ${targets.length}` }).catch(() => {})
+  message: `Переводы payload дописаны: ${done} из ${targets.length}${onlyLangs ? ` (языки: ${onlyLangs.join(',')})` : ''}` }).catch(() => {})
 console.log(`\nГотово: ${done} из ${targets.length}. Потрачено: $${usageCostUSD().toFixed(4)}`)
 process.exit(0)

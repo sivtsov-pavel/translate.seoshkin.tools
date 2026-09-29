@@ -48,3 +48,27 @@ export async function applyUpdate() {
   } catch { /* нет SW или запрещены кеши — перезагружаемся как есть */ }
   window.location.reload()
 }
+
+// Жёсткий сброс: снести ВСЕ кеши и сам service worker.
+//
+// Отличается от applyUpdate тем, что не спрашивает воркер вежливо, а выкидывает
+// его целиком. Нужно ровно в одном случае: обновление «не приезжает» никакими
+// кнопками — воркер завис в промежуточном состоянии, и договориться с ним уже
+// нельзя. Цена — приложение заново скачает картинки слов для офлайна, поэтому
+// это не кнопка на каждый день.
+//
+// Каждый шаг в своём try/catch: в приватном окне и при запрете данных сайта
+// caches и serviceWorker бросают сами по себе, и падение на первом шаге
+// оставило бы остальные несделанными.
+export async function hardResetApp() {
+  try {
+    const regs = await navigator.serviceWorker?.getRegistrations?.() || []
+    await Promise.all(regs.map(r => r.unregister().catch(() => {})))
+  } catch { /* SW недоступен — значит и сносить нечего */ }
+  try {
+    const names = await caches.keys()
+    await Promise.all(names.map(n => caches.delete(n).catch(() => {})))
+  } catch { /* кеши запрещены браузером */ }
+  // Перезагружаемся мимо HTTP-кеша: без метки браузер может отдать свой index.html
+  window.location.replace(`${window.location.pathname}?fresh=${Date.now()}`)
+}

@@ -1,0 +1,182 @@
+{
+ "removed": [
+  {
+   "id": 187490,
+   "lesson_id": 642,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 3,
+    "options": [
+     "Привет, кто ты?",
+     "Как вас зовут?",
+     "Как тебя зовут?",
+     "Привет, как меня зовут?"
+    ],
+    "question": "Wie heißt das на русском: Привет как мeне зoвут?"
+   },
+   "target_lang": "de",
+   "qWord": "Привет как мeне зoвут"
+  },
+  {
+   "id": 199519,
+   "lesson_id": 339,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 2,
+    "options": [
+     "компьютер",
+     "телефон",
+     "мобильная связь",
+     "интернет"
+    ],
+    "question": "Wie heißt das auf Russisch: der Mobilfunk?"
+   },
+   "target_lang": "de",
+   "word": {
+    "id": 9264,
+    "lesson_id": 339,
+    "word_de": "der Mobilfunk",
+    "translation_ru": "мобильная связь"
+   }
+  },
+  {
+   "id": 187495,
+   "lesson_id": 642,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 3,
+    "options": [
+     "Доброе утро",
+     "Здравствуйте",
+     "Спасибо",
+     "Привет"
+    ],
+    "question": "Wie heißt das auf Russisch: Servus?"
+   },
+   "target_lang": "de",
+   "word": {
+    "id": 9051,
+    "lesson_id": 648,
+    "word_de": "Servus",
+    "translation_ru": "Привет (австрийское и южно-германское)",
+    "target_lang": "de"
+   }
+  },
+  {
+   "id": 187505,
+   "lesson_id": 642,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 3,
+    "options": [
+     "Дорогой",
+     "Заботиться",
+     "Твоя",
+     "Моя"
+    ],
+    "question": "Wie heißt das auf Russisch: Neine?"
+   },
+   "target_lang": "de",
+   "word": {
+    "id": 9055,
+    "lesson_id": 648,
+    "word_de": "Neine",
+    "translation_ru": "Моя",
+    "target_lang": "de"
+   }
+  },
+  {
+   "id": 187545,
+   "lesson_id": 642,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 3,
+    "options": [
+     "До свидания",
+     "Спасибо",
+     "Добро пожаловать",
+     "Привет"
+    ],
+    "question": "Wie heißt das auf Russisch: Moin Moin?"
+   },
+   "target_lang": "de",
+   "word": {
+    "id": 9056,
+    "lesson_id": 648,
+    "word_de": "Moin Moin",
+    "translation_ru": "Привет",
+    "target_lang": "de"
+   }
+  },
+  {
+   "id": 187575,
+   "lesson_id": 642,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 3,
+    "options": [
+     "Доброе утро",
+     "Спасибо",
+     "Как дела?",
+     "До свидания"
+    ],
+    "question": "Wie heißt das auf Russisch: Mach's gut?"
+   },
+   "target_lang": "de",
+   "word": {
+    "id": 9057,
+    "lesson_id": 648,
+    "word_de": "Mach's gut",
+    "translation_ru": "Всего хорошего",
+    "target_lang": "de"
+   }
+  },
+  {
+   "id": 187636,
+   "lesson_id": 642,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 0,
+    "options": [
+     "Планегг",
+     "Берлин",
+     "Мюнхен",
+     "Франкфурт"
+    ],
+    "question": "Wie heißt das auf Russisch: Planegg?"
+   },
+   "target_lang": "de",
+   "word": {
+    "id": 9049,
+    "lesson_id": 642,
+    "word_de": "Planegg",
+    "translation_ru": "Планегг"
+   }
+  },
+  {
+   "id": 187245,
+   "lesson_id": 642,
+   "type": "multiple_choice",
+   "payload": {
+    "correct": 2,
+    "options": [
+     "обувь",
+     "куртка",
+     "футболка",
+     "пальто"
+    ],
+    "question": "Wie heißt das auf Russisch: T-shirt?"
+   },
+   "target_lang": "de",
+   "word": {
+    "id": 9050,
+    "lesson_id": 647,
+    "word_de": "T-shirt",
+    "translation_ru": "футболка",
+    "target_lang": "de"
+   }
+  }
+ ],
+ "relinked": [],
+ "moved": []
+}

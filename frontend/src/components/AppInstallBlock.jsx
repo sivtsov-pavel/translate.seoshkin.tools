@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useI18nStore } from '../store/i18n.js'
 // Определение режима запуска — общее с блоком виджета (utils/device.js)
 import { isStandalone, isAndroidApp } from '../utils/device.js'
+import { hardResetApp } from '../store/appUpdate.js'
 
 // Блок «Установить приложение» в настройках: PWA и APK рядом, с честным объяснением
 // разницы. Стандарт для всех наших приложений (см. ~/.claude/CLAUDE.md).
@@ -30,12 +31,16 @@ const T = {
   pwaNotNeeded: { ru: 'Отдельно ставить PWA не нужно — это другой способ установки того же приложения.', en: 'No need to install the PWA separately — it is another way to install the same app.', de: 'Die PWA muss nicht zusätzlich installiert werden — sie ist nur ein anderer Weg zur selben App.', uk: 'Окремо ставити PWA не потрібно — це інший спосіб встановлення того самого застосунку.', es: 'No hace falta instalar la PWA aparte: es otra forma de instalar la misma app.', fr: 'Inutile d’installer la PWA séparément : c’est une autre façon d’installer la même application.', bg: 'Не е нужно да инсталирате PWA отделно — това е друг начин за същото приложение.', tr: 'PWA’yı ayrıca kurmaya gerek yok — aynı uygulamanın başka bir kurulum yolu.', ar: 'لا حاجة لتثبيت PWA بشكل منفصل — إنها طريقة أخرى لتثبيت التطبيق نفسه.', sq: 'Nuk duhet instaluar PWA veçmas — është mënyrë tjetër për të njëjtin aplikacion.' },
   version:    { ru: 'Версия на сайте', en: 'Version on the site', de: 'Version auf der Seite', uk: 'Версія на сайті', es: 'Versión en el sitio', fr: 'Version sur le site', bg: 'Версия на сайта', tr: 'Sitedeki sürüm', ar: 'الإصدار على الموقع', sq: 'Versioni në sajt' },
   autoUpdate: { ru: 'Само приложение — это тот же сайт в обёртке, поэтому новые возможности приезжают сами. Перекачивать APK нужно, только когда меняется сама оболочка.', en: 'The app wraps the same site, so new features arrive on their own. Re-downloading the APK is only needed when the shell itself changes.', de: 'Die App umhüllt dieselbe Website, neue Funktionen kommen von selbst. Ein neues APK braucht es nur, wenn sich die Hülle ändert.', uk: 'Застосунок — це той самий сайт в обгортці, тож нові можливості приїздять самі. Перезавантажувати APK треба лише коли змінюється сама оболонка.', es: 'La app envuelve el mismo sitio: las novedades llegan solas. Solo hace falta bajar el APK de nuevo si cambia la propia carcasa.', fr: 'L’app enveloppe le même site : les nouveautés arrivent seules. Retélécharger l’APK n’est utile que si la coque change.', bg: 'Приложението е същият сайт в обвивка — новите функции идват сами. APK се сваля наново само когато се променя обвивката.', tr: 'Uygulama aynı siteyi sarar, yenilikler kendiliğinden gelir. APK’yı yeniden indirmek yalnızca kabuk değişince gerekir.', ar: 'التطبيق غلاف للموقع نفسه، لذا تصل الميزات الجديدة تلقائيًا. إعادة تنزيل APK لازمة فقط عند تغيّر الغلاف.', sq: 'Aplikacioni mbështjell të njëjtin sajt, prandaj risitë vijnë vetë. APK-ja rishkarkohet vetëm kur ndryshon vetë guaska.' },
+  resetName:  { ru: 'Сбросить кеш приложения', en: 'Reset app cache', de: 'App-Cache zurücksetzen', uk: 'Скинути кеш застосунку', es: 'Restablecer la caché', fr: 'Réinitialiser le cache', bg: 'Изчисти кеша', tr: 'Uygulama önbelleğini sıfırla', ar: 'إعادة ضبط ذاكرة التطبيق', sq: 'Rivendos memorien e aplikacionit' },
+  resetDesc:  { ru: 'Если обновление не приезжает и кнопка «Обновить» не помогает. Приложение заново скачает картинки для офлайна — на это уйдёт минута.', en: 'Use it when an update will not arrive and the “Update” button does not help. The app will re-download offline images — that takes a minute.', de: 'Wenn ein Update nicht ankommt und der „Aktualisieren“-Knopf nicht hilft. Die App lädt die Offline-Bilder neu — das dauert eine Minute.', uk: 'Якщо оновлення не приїжджає і кнопка «Оновити» не допомагає. Застосунок заново завантажить картинки для офлайну — це займе хвилину.', es: 'Cuando la actualización no llega y el botón «Actualizar» no ayuda. La app volverá a descargar las imágenes sin conexión: tarda un minuto.', fr: 'Quand la mise à jour n’arrive pas et que le bouton « Mettre à jour » n’y fait rien. L’app retéléchargera les images hors ligne — cela prend une minute.', bg: 'Когато обновлението не идва и бутонът «Обнови» не помага. Приложението ще изтегли наново офлайн картинките — отнема минута.', tr: 'Güncelleme gelmiyorsa ve «Güncelle» düğmesi işe yaramıyorsa. Uygulama çevrimdışı görselleri yeniden indirir — bir dakika sürer.', ar: 'عندما لا يصل التحديث ولا يفيد زر «تحديث». سيعيد التطبيق تنزيل صور وضع عدم الاتصال — يستغرق دقيقة.', sq: 'Kur përditësimi nuk vjen dhe butoni «Përditëso» nuk ndihmon. Aplikacioni do t’i shkarkojë sërish figurat për offline — zgjat një minutë.' },
+  resetBusy:  { ru: 'Сбрасываю…', en: 'Resetting…', de: 'Wird zurückgesetzt…', uk: 'Скидаю…', es: 'Restableciendo…', fr: 'Réinitialisation…', bg: 'Изчиствам…', tr: 'Sıfırlanıyor…', ar: 'جارٍ إعادة الضبط…', sq: 'Duke rivendosur…' },
 }
 const tr = (key, lang) => T[key][lang] || T[key].en
 
 
 export default function AppInstallBlock() {
   const { lang } = useI18nStore()
+  const [resetting, setResetting] = useState(false)
   const inApp = isAndroidApp()
   // Версия APK, лежащего на сайте. Нужна, чтобы человек видел, есть ли смысл качать
   // заново: раньше понять это было невозможно вообще никак.
@@ -117,6 +122,22 @@ export default function AppInstallBlock() {
         </div>
         <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4 }}>{tr('apkDesc', lang)}</div>
         <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 6, opacity: 0.85 }}>{tr('autoUpdate', lang)}</div>
+      </div>
+
+      {/* Жёсткий сброс кеша — последнее средство, когда обновление не приезжает
+          ничем. Стоит неброско и с объяснением цены: приложение заново скачает
+          картинки для офлайна, поэтому нажимать его «на всякий случай» незачем. */}
+      <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{tr('resetName', lang)}</div>
+          <button onClick={() => { setResetting(true); hardResetApp() }} disabled={resetting}
+            style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--line)',
+              background: 'var(--surface-2)', color: 'var(--ink)', fontWeight: 700, fontSize: 13,
+              whiteSpace: 'nowrap', cursor: resetting ? 'default' : 'pointer', opacity: resetting ? 0.6 : 1 }}>
+            {resetting ? tr('resetBusy', lang) : '🧹'}
+          </button>
+        </div>
+        <div style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 4 }}>{tr('resetDesc', lang)}</div>
       </div>
     </div>
   )

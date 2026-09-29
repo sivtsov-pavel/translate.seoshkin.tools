@@ -28,6 +28,12 @@ const LANG = process.argv.find(a => a.startsWith('--lang='))?.split('=')[1] || n
 const IDS = (process.argv.find(a => a.startsWith('--ids='))?.split('=')[1] || '')
   .split(',').map(Number).filter(Boolean)
 const LIMIT = parseInt(process.argv.find(a => a.startsWith('--limit='))?.split('=')[1] || '0', 10)
+// --langs=de — перевести только на нужные локали вместо всех девяти.
+// Названия и описания написаны ПО-РУССКИ, поэтому русский здесь источник, а не
+// перевод: при «ру и нем» переводить остаётся один немецкий.
+const LANGS = (process.argv.find(a => a.startsWith('--langs='))?.split('=')[1] || '')
+  .split(',').map(s => s.trim()).filter(Boolean).filter(l => l !== 'ru')
+const onlyLangs = LANGS.length ? LANGS : null
 
 // Номер отрезаем: переводить «Урок 38» незачем, число и так видно
 const bareTitle = (t) => String(t || '').replace(/^\s*(Урок|Lektion|Lesson|Lección)\s*\d+\s*[:.\-–]\s*/iu, '').trim()
@@ -56,7 +62,8 @@ for (const r of targets.slice(0, 8)) {
   console.log(`  #${r.id} ${r.title} → нет: ${need}`)
 }
 if (targets.length > 8) console.log(`  … и ещё ${targets.length - 8}`)
-console.log(`Смета: ~$${(targets.length * 0.0005).toFixed(3)} (gpt-4o-mini, 1 вызов на урок)`)
+const langCount = onlyLangs ? onlyLangs.length : 9
+console.log(`Смета: ~$${(targets.length * 0.0005 * langCount / 9).toFixed(3)} (gpt-4o-mini, ${langCount} яз., 1 вызов на урок)`)
 
 if (!targets.length) process.exit(0)
 if (!APPLY) {
@@ -69,7 +76,7 @@ resetUsage()
 let done = 0, skipped = 0
 for (const r of targets) {
   try {
-    const tr = await translateLessonMeta(bareTitle(r.title), r.description || '')
+    const tr = await translateLessonMeta(bareTitle(r.title), r.description || '', onlyLangs)
     const titleT = tr.title || {}, descT = tr.description || {}
     if (!Object.keys(titleT).length && !Object.keys(descT).length) { skipped++; continue }
     await db.query(
@@ -85,6 +92,6 @@ for (const r of targets) {
 
 await logOperation({ kind: 'translate', status: 'ok', provider: 'openai', model: 'gpt-4o-mini',
   costUsd: usageCostUSD(), items: done,
-  message: `Локали названий/описаний уроков: ${done}${skipped ? `, пропущено ${skipped}` : ''}` }).catch(() => {})
+  message: `Локали названий/описаний уроков: ${done}${onlyLangs ? ` (${onlyLangs.join(',')})` : ''}${skipped ? `, пропущено ${skipped}` : ''}` }).catch(() => {})
 console.log(`\nГотово: ${done} из ${targets.length}${skipped ? `, пропущено ${skipped}` : ''}. Потрачено: $${usageCostUSD().toFixed(4)}`)
 process.exit(0)
