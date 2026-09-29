@@ -204,6 +204,8 @@ export const tr = {
     trainerSpeech: 'Antrenörle telaffuz',
     tapToReveal: 'Cevabı görmek için dokun', doneToday: 'Bugünlük bu kadar', doneTodaySub: 'Bu alıştırmaları yaptın. Yarın tekrar için geri gelecekler', showAnswer: 'Cevabı göster', praiseCorrect: 'Harika!', praiseWrong: 'Az kaldı! Tekrar dene',
     forgot: 'Unuttum',
+    understood: 'Anladım',
+    notUnderstood: 'Anlamadım',
     hard: 'Zor',
     remembered: 'Hatırladım!',
     checkAnswer: 'Kontrol et',

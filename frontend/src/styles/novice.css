@@ -650,3 +650,30 @@ body.novice-mode .exercise-session-content > div > *:not(.exercise-card) {
 body.novice-mode .exercise-session-page .exercise-card {
   margin-bottom: 12px !important;
 }
+
+/* ── Карточка по высоте экрана ────────────────────────────────────────────────
+   Квадратная картинка занимала всю ширину колонки. На телефоне колонка узкая и
+   это правильно, а на ноуте колонка 620px давала картинку 620×620: одна она
+   съедала экран, и до кнопок ответа приходилось прокручивать. Прокрутка на
+   каждой карточке — то, что бесит (Павел, 28.09.2026).
+
+   Ограничиваем картинку долей высоты ОКНА. Пропорцию держит aspect-ratio, так
+   что достаточно задать ширину — высота считается сама. dvh, а не vh: на
+   мобильных браузерах vh считается по экрану без адресной строки и врёт. */
+body.novice-mode .novice-card-media {
+  width: min(100%, 34dvh, 340px);
+  margin-inline: auto;
+}
+
+/* На телефоне в портрете картинка — главный носитель смысла, и места по ширине
+   мало: там оставляем во всю ширину, как было. */
+@media (max-width: 640px) and (orientation: portrait) {
+  body.novice-mode .novice-card-media { width: 100%; max-width: 100%; }
+}
+
+/* На ноуте (низкий и широкий экран) поджимаем и поля, чтобы карточка целиком
+   влезала между шапкой и нижним меню. */
+@media (min-width: 700px) and (max-height: 900px) {
+  body.novice-mode .exercise-card-content { padding: 14px 20px 16px !important; }
+  body.novice-mode .exercise-word-de { font-size: 28px !important; }
+}

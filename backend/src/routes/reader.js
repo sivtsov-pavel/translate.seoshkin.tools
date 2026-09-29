@@ -142,7 +142,8 @@ export async function readerRoutes(fastify) {
   }, async (request, reply) => {
     const lessonId = parseInt(request.params.id)
     const { rows: words } = await db.query(
-      `SELECT word_de, translation_ru, example_sentence, example_sentence_ru
+      `SELECT word_de, translation_ru, example_sentence, example_sentence_ru,
+              COALESCE(example_translations, '{}') AS example_translations
        FROM words
        WHERE lesson_id = $1
          AND example_sentence IS NOT NULL

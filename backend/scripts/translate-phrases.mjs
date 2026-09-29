@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-// Переводы фраз на 10 локалей. Без переводов экран набора показывает только целевой
+// Переводы фраз на 10 локалей. Берём фразу, если не хватает ХОТЯ БЫ ОДНОГО языка:
+// проверка только по 'ru' пропускала фразы, переведённые наполовину (у шести была
+// одна русская строка, и на девяти интерфейсах из десяти они оставались немыми). Без переводов экран набора показывает только целевой
 // язык — понять смысл нельзя, а шаг «слушаю» в тренажёре остаётся без вариантов ответа.
 //
 // 💸 Тратит OpenAI (gpt-4o-mini) батчами по 20 фраз. Ориентир: ~$0.25 на 316 фраз.
@@ -17,8 +19,8 @@ const BATCH = 20
 const { rows: pending } = await db.query(
   `SELECT p.id, p.text, t.lang
    FROM phrases p JOIN phrase_topics t ON t.id = p.topic_id
-   WHERE p.translations = '{}'::jsonb OR NOT (p.translations ? 'ru')
-   ORDER BY p.id`)
+   WHERE NOT (p.translations ?& ARRAY['ru','uk','en','bg','tr','ar','es','fr','sq'])
+   ORDER BY t.lang, p.id`)
 
 console.log(`\nФраз без переводов: ${pending.length}`)
 console.log(`Батчей по ${BATCH}: ${Math.ceil(pending.length / BATCH)}. Ориентир цены: ~$${(pending.length * 0.0008).toFixed(2)}\n`)
@@ -38,7 +40,9 @@ for (let i = 0; i < pending.length; i += BATCH) {
   try {
     // Тот же механизм, что переводит предложения уроков: на вход массив строк,
     // на выходе массив объектов {ru, uk, en, …} в том же порядке.
-    const out = await translateSentencesAllLangs(batch.map(p => p.text))
+    // Язык фраз берём из темы: батч всегда однороден по языку (запрос упорядочен
+    // по id внутри языка), а без явного указания промпт считает любую фразу немецкой.
+    const out = await translateSentencesAllLangs(batch.map(p => p.text), batch[0].lang)
     for (let j = 0; j < batch.length; j++) {
       const langs = out[j]
       if (!langs || !Object.keys(langs).length) continue

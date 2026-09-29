@@ -204,6 +204,8 @@ export const fr = {
     trainerSpeech: 'Prononciation avec le formateur',
     tapToReveal: 'Appuie pour voir la réponse', doneToday: 'Terminé pour aujourd’hui', doneTodaySub: 'Tu as déjà fait ces exercices. Ils reviendront demain pour la révision', showAnswer: 'Voir la réponse', praiseCorrect: 'Très bien !', praiseWrong: 'Presque ! Essaie encore',
     forgot: "J'ai oublié",
+    understood: 'Compris',
+    notUnderstood: 'Pas encore',
     hard: 'Difficile',
     remembered: 'Je me souviens !',
     checkAnswer: 'Vérifier',

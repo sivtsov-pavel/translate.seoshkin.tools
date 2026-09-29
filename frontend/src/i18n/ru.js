@@ -208,6 +208,8 @@ export const ru = {
     trainerSpeech: 'Произношение с тренером',
     tapToReveal: 'Нажмите чтобы показать ответ', doneToday: 'На сегодня всё', doneTodaySub: 'Эти упражнения ты уже сделал. Завтра они вернутся на повторение', showAnswer: 'Показать ответ', praiseCorrect: 'Отлично!', praiseWrong: 'Почти! Попробуй ещё раз',
     forgot: 'Не помню',
+    understood: 'Понятно',
+    notUnderstood: 'Не понятно',
     hard: 'С трудом',
     remembered: 'Помню!',
     checkAnswer: 'Проверить',

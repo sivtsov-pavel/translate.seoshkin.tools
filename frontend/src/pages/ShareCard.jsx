@@ -31,6 +31,7 @@ export default function ShareCard() {
 
   const ttsLang = TTS[word.target_lang] || 'de-DE'
   const translation = getTranslation(word.translations, lang, word.translation_ru)
+  const exampleTr = getTranslation(word.example_translations, lang, word.example_sentence_ru)
 
   const addToPhrasebook = async () => {
     try {
@@ -59,7 +60,7 @@ export default function ShareCard() {
               {word.example_sentence}
               <button onClick={() => speak(word.example_sentence, ttsLang)} title={t.share.listenExample}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, marginLeft: 6 }}>🔊</button>
-              {word.example_sentence_ru && <div style={{ fontSize: 13, marginTop: 4, fontStyle: 'normal' }}>{word.example_sentence_ru}</div>}
+              {exampleTr && <div style={{ fontSize: 13, marginTop: 4, fontStyle: 'normal' }}>{exampleTr}</div>}
             </div>
           )}
 

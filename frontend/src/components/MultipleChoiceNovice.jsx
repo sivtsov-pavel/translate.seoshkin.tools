@@ -69,7 +69,7 @@ export default function MultipleChoiceNovice({
             в край она упиралась и «приклеивала» к себе слово. Подложка заполняет
             свободное место, если картинка не квадратная. */}
         {imageUrl && (
-          <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
+          <div className="novice-card-media" style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
             display: 'grid', placeItems: 'center', marginBottom: 18, aspectRatio: '1 / 1' }}>
             <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
           </div>

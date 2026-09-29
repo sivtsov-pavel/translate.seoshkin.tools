@@ -1214,7 +1214,10 @@ export async function generateClassPairs(words, count = 12) {
 
 // Перевод фраз на все локали интерфейса (кроме de). Возвращает массив объектов
 // {ru, uk, en, bg, tr, ar, es, fr, sq} в том же порядке, что и sentences.
-export async function translateSentencesAllLangs(sentences) {
+// sourceLang — язык САМИХ предложений. Раньше в промпте было зашито «немецкое
+// предложение»: для английского и испанского курсов модель получала неверную
+// подсказку о том, что читает (грабли «язык передавать явно», OPERATIONS.md).
+export async function translateSentencesAllLangs(sentences, sourceLang = 'de') {
   const LANGS = { ru: 'русский', uk: 'українська', en: 'English', bg: 'български', tr: 'Türkçe', ar: 'العربية', es: 'español', fr: 'français', sq: 'shqip' }
   const codes = Object.keys(LANGS)
   const out = sentences.map(() => ({}))
@@ -1223,7 +1226,8 @@ export async function translateSentencesAllLangs(sentences) {
     const batch = sentences.slice(i, i + BATCH)
     const list = batch.map((s, j) => `${j + 1}. ${s}`).join('\n')
     const langList = codes.map(c => `"${c}" (${LANGS[c]})`).join(', ')
-    const prompt = `Переведи каждое немецкое предложение на ВСЕ языки: ${langList}.
+    const srcName = TARGET_LANG_NAMES[sourceLang] || 'немецкий'
+    const prompt = `Переведи каждое предложение (язык оригинала — ${srcName}) на ВСЕ языки: ${langList}.
 Верни ТОЛЬКО JSON вида {"1":{"ru":"...","uk":"...","en":"...","bg":"...","tr":"...","ar":"...","es":"...","fr":"...","sq":"..."}, ...} для номеров 1..${batch.length}.
 Предложения:\n${list}`
     try {

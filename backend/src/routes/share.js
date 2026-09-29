@@ -9,6 +9,7 @@ export async function shareRoutes(fastify) {
     const { rows } = await db.query(
       `SELECT w.id, w.word_de, w.translation_ru, w.translations, w.image_url,
               w.example_sentence, w.example_sentence_ru,
+              COALESCE(w.example_translations, '{}') AS example_translations,
               COALESCE(l.target_lang, 'de') AS target_lang
        FROM words w
        LEFT JOIN lessons l ON l.id = w.lesson_id

@@ -204,6 +204,8 @@ export const bg = {
     trainerSpeech: 'Произношение с треньора',
     tapToReveal: 'Натисни за отговор', doneToday: 'За днес стига', doneTodaySub: 'Тези упражнения вече ги направи. Утре ще се върнат за преговор', showAnswer: 'Покажи отговора', praiseCorrect: 'Отлично!', praiseWrong: 'Почти! Опитай пак',
     forgot: 'Забравих',
+    understood: 'Разбрах',
+    notUnderstood: 'Не разбрах',
     hard: 'Трудно',
     remembered: 'Помня!',
     checkAnswer: 'Провери',

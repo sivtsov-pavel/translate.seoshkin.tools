@@ -1,19 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
-import { useIdleHint } from '../hooks/useIdleHint.js'
 import { useI18nStore } from '../store/i18n.js'
-import { speakAuto, speak } from '../hooks/useSpeech.jsx'
+import { speakSequence, speakSequenceAuto } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
 import { getTranslation } from '../utils/translation.js'
 import TapText from './TapText.jsx'
 
 // Карточка слова для режима новичка — макет 2b, экран C.
 //
-// Отличия от обычной карточки: фото занимает весь верх блока, слово крупное (34),
-// рядом чип рода, ниже пример «в предложении» с подсветкой изучаемого слова.
-// Оценок по-прежнему три (SM-2 без них деградирует), но по макету крупных кнопок две —
-// «Понятно» и «Ещё не выучил», а «Сложно» стоит между ними неброской строкой.
+// Поток (просьба Павла 28.09.2026): карточка сама читает слово, затем через паузу
+// предложение с этим словом, а человек отвечает одно — «Понятно» или «Не понятно».
+// Поэтому здесь НЕТ шага «Показать ответ» и перевод не спрятан: это карточка на
+// понимание, а не на вспоминание. Проверка памяти осталась в режиме эксперта
+// (обычный Flashcard) — его не трогаем.
 //
-// Обычный Flashcard не трогаем: он работает и остаётся для режима эксперта.
+// Оценка уходит в SM-2 как 5 или 1. Средней оценки нет сознательно: при видимом
+// переводе «с трудом» человеку выбирать не из чего, и кнопка только путала бы.
 
 // Род по артиклю: в макете чип вида «die · f»
 const GENDER = { der: 'm', die: 'f', das: 'n' }
@@ -33,33 +34,33 @@ function highlight(sentence, word) {
 
 export default function FlashcardNovice({
   payload, onAnswer, imageUrl, translations, translationRu, wordId, onMarkLearning, learned,
-  exampleSentence, exampleSentenceRu,
+  exampleSentence, exampleSentenceRu, exampleTranslations,
 }) {
-  const [revealed, setRevealed] = useState(false)
-  // Перевод примера до ответа показываем ТОЛЬКО по просьбе: в нём изучаемое слово
-  // стоит открытым текстом, и включённый по умолчанию он просто выдаёт ответ.
-  // Кнопкой человек решает сам — подглядеть или сначала вспомнить.
-  const [exampleRuShown, setExampleRuShown] = useState(false)
-  // Пока ответ не раскрыт, единственное нужное действие — «Показать ответ». Если
-  // человек завис на пять секунд, кнопка начинает мягко пульсировать.
-  const stuck = useIdleHint(5000, !revealed)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading] = useState(false)
   const [inStudy, setInStudy] = useState(!!learned)
   const gradeRef = useRef(0)
   const { t, lang } = useI18nStore()
 
-  useEffect(() => { speakAuto(payload.question) }, [payload.question])
-
   const answer = getTranslation(translations, lang, translationRu || payload.answer)
   const gender = genderOf(payload.question)
   const [before, match, after] = highlight(exampleSentence, payload.question)
+  // Перевод примера на язык ИНТЕРФЕЙСА. Русская колонка остаётся запасным
+  // вариантом: у части слов девяти локалей ещё нет, и пустая строка там, где
+  // раньше был хоть какой-то перевод, — шаг назад.
+  const exampleTr = getTranslation(exampleTranslations, lang, exampleSentenceRu)
+
+  // Слово, пауза, предложение с ним — одной цепочкой. Зависимость по тексту
+  // примера тоже нужна: карточки идут подряд, и без неё вторая карточка с тем же
+  // словом (единственное/множественное) читала бы пример от первой.
+  useEffect(() => {
+    speakSequenceAuto([payload.question, exampleSentence])
+  }, [payload.question, exampleSentence])
 
   const grade = (q) => {
     if (grading) return
     setGrading(true)
     gradeRef.current = q
-    if (q === 3) { setTimeout(() => onAnswer(q), 300); return }
     setReaction(q >= 4 ? 'correct' : 'wrong')
   }
 
@@ -71,15 +72,15 @@ export default function FlashcardNovice({
 
   return (
     <div style={{ width: '100%' }}>
-      <div className="exercise-card" onClick={!revealed ? () => setRevealed(true) : undefined}
+      <div className="exercise-card"
         style={{ borderRadius: 28, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)',
-          marginBottom: 14, cursor: revealed ? 'default' : 'pointer', userSelect: 'none' }}>
-        {/* Картинка — во всю ширину блока, как в «вопрос-ответ» (просьба Павла 13.08):
-            режим fill убирает старую медиа-область 4:3 с потолком высоты, из-за
-            которой фото здесь выглядело мельче, чем в соседнем упражнении. */}
+          marginBottom: 14, userSelect: 'none' }}>
+        {/* Картинка — во всю ширину блока (просьба Павла 13.08). Высоту ограничивает
+            .novice-card-media: на ноуте квадрат в колонку 620px съедал весь экран. */}
         <div style={{ padding: 20, paddingBottom: 0 }}>
-          <div style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
-            display: 'grid', placeItems: 'center', aspectRatio: '1 / 1' }}>
+          <div className="novice-card-media"
+            style={{ borderRadius: 20, overflow: 'hidden', background: 'var(--surface-2)',
+              display: 'grid', placeItems: 'center', aspectRatio: '1 / 1' }}>
             <AvatarReaction imageUrl={imageUrl} wordDe={payload.question} reaction={reaction} fill
               onReactionEnd={() => onAnswer(gradeRef.current)} />
           </div>
@@ -96,24 +97,13 @@ export default function FlashcardNovice({
                 {gender.article} · {gender.mark}
               </span>
             )}
-            {revealed && <span style={{ fontSize: 21, fontWeight: 500 }}>{answer}</span>}
+            <span style={{ fontSize: 21, fontWeight: 500 }}>{answer}</span>
           </div>
 
-          {/* «Показать ответ» — полноценная кнопка, а не серая строчка.
-              Жалоба ученика дословно: «пока я не нажму „показать ответ", я не в курсе,
-              что мне нужно нажать». Подсказка, набранная как текст, кнопкой не читается —
-              делаем её такой же крупной и цветной, как «Слушать». */}
-          {!revealed && (
-            <button onClick={() => setRevealed(true)}
-              className={stuck ? 'dl-idle-pulse' : undefined}
-              style={{ width: '100%', minHeight: 52, marginTop: 16, borderRadius: 15, border: 'none',
-                background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
-              {t.exercise.showAnswer}
-            </button>
-          )}
-
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={(e) => { e.stopPropagation(); speak(payload.question) }}
+            {/* «Слушать» повторяет всю цепочку целиком — слово и пример.
+                Отдельно слово человек уже услышал, а повторить обычно хотят оба. */}
+            <button onClick={(e) => { e.stopPropagation(); speakSequence([payload.question, exampleSentence]) }}
               style={{ flex: 1, minHeight: 52, borderRadius: 15, border: 'none', background: '#9A5CD8', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
               🔊 {t.exercise.listen || 'Слушать'}
             </button>
@@ -128,58 +118,31 @@ export default function FlashcardNovice({
         </div>
       </div>
 
-      {/* «В предложении» — слово в живом контексте, с подсветкой */}
+      {/* «В предложении» — слово в живом контексте, с подсветкой и переводом */}
       {exampleSentence && (
-        <div style={{ borderRadius: 22, border: '1px solid var(--line)', background: 'var(--surface-2)', padding: '16px 18px', marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 19, fontWeight: 600, lineHeight: 1.35 }} dir="ltr">
-              {match
-                ? <>{before}<span style={{ color: '#E8B024' }}>{match}</span>{after}</>
-                : exampleSentence}
-            </div>
-            {/* Озвучка примера. Само слово послушать можно было, а фразу с ним — нет,
-                хотя именно она показывает, как слово звучит в живой речи. */}
-            <button onClick={() => speak(exampleSentence)}
-              aria-label={t.exercise.listen || 'Слушать'} title={t.exercise.listen || 'Слушать'}
-              style={{ flex: 'none', width: 44, height: 44, borderRadius: 14, border: 'none',
-                background: '#9A5CD8', color: '#fff', fontSize: 18, cursor: 'pointer',
-                display: 'grid', placeItems: 'center' }}>
-              🔊
-            </button>
+        <div style={{ borderRadius: 22, border: '1px solid var(--line)', background: 'var(--surface-2)', padding: '14px 18px', marginBottom: 14 }}>
+          <div style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.35 }} dir="ltr">
+            {match
+              ? <>{before}<span style={{ color: '#E8B024' }}>{match}</span>{after}</>
+              : exampleSentence}
           </div>
-          {/* Перевод примера. После ответа — сразу; до ответа — по кнопке, иначе он
-              подсказывает ответ (изучаемое слово стоит в нём открытым текстом). */}
-          {exampleSentenceRu && (revealed || exampleRuShown ? (
-            <div style={{ fontSize: 15, color: 'var(--ink-soft)', marginTop: 8 }}>{exampleSentenceRu}</div>
-          ) : (
-            <button onClick={() => setExampleRuShown(true)}
-              style={{ marginTop: 8, padding: '5px 12px', borderRadius: 999, cursor: 'pointer',
-                border: '1px dashed var(--line)', background: 'transparent', color: 'var(--ink-soft)',
-                fontSize: 12.5, fontWeight: 700, textTransform: 'lowercase' }}>
-              {t.exercise.translationLabel}
-            </button>
-          ))}
+          {exampleTr && (
+            <div style={{ fontSize: 15, color: 'var(--ink-soft)', marginTop: 6 }}>{exampleTr}</div>
+          )}
         </div>
       )}
 
-      {/* Три равные кнопки оценки. Раньше «С трудом» стояла голой строкой без рамки
-          и читалась как случайный текст, а не как выбор. */}
-      {revealed && (
-        <div style={{ display: 'flex', gap: 8, opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>
-          <button onClick={() => grade(1)}
-            style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            {t.exercise.forgot}
-          </button>
-          <button onClick={() => grade(3)}
-            style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            {t.exercise.hard}
-          </button>
-          <button onClick={() => grade(5)}
-            style={{ flex: 1.2, minHeight: 58, borderRadius: 16, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
-            {t.exercise.remembered}
-          </button>
-        </div>
-      )}
+      {/* Две кнопки: понял / не понял */}
+      <div style={{ display: 'flex', gap: 10, opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>
+        <button onClick={() => grade(1)}
+          style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+          {t.exercise.notUnderstood}
+        </button>
+        <button onClick={() => grade(5)}
+          style={{ flex: 1.2, minHeight: 58, borderRadius: 16, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 17, fontWeight: 800, cursor: 'pointer' }}>
+          {t.exercise.understood}
+        </button>
+      </div>
     </div>
   )
 }

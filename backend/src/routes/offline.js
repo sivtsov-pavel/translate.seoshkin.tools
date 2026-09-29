@@ -34,6 +34,7 @@ export async function offlineRoutes(fastify) {
       `SELECT DISTINCT ON (w.word_de) w.id, w.word_de, w.translation_ru,
               COALESCE(w.translations, '{}') AS translations,
               w.example_sentence, w.example_sentence_ru,
+              COALESCE(w.example_translations, '{}') AS example_translations,
               COALESCE(w.image_url, (
                 SELECT e.image_url FROM exercises e
                 WHERE e.word_id = w.id AND e.image_url IS NOT NULL LIMIT 1

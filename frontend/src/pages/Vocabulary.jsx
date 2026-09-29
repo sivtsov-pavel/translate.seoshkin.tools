@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { api, uploadFiles } from '../api/client.js'
 import { isOnline, getOfflineWords } from '../offline/store.js'
 import { useI18nStore } from '../store/i18n.js'
+import { getTranslation } from '../utils/translation.js'
 import { useAuthStore } from '../store/auth.js'
 import { SpeakButton, speak } from '../hooks/useSpeech.jsx'
 import { cardUrl, shareLink } from '../utils/share.js'
@@ -788,7 +789,7 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
   const fileRef                         = useRef(null)
   const editRef                         = useRef(null)
   const { user } = useAuthStore()
-  const { t } = useI18nStore()
+  const { t, lang } = useI18nStore()
   const isMobile = useIsMobile()
 
   // Селект статуса — на мобиле рендерится под фото, на ПК справа (стиль передаётся)
@@ -957,9 +958,9 @@ function VocabWord({ word, statusLabels, onStatusChange, selected, onToggleSelec
               <span style={{ fontSize: 13, color: 'var(--ink-soft)', fontStyle: 'italic' }}>{word.example_sentence}</span>
               <SpeakButton text={word.example_sentence} size={13} />
             </div>
-            {word.example_sentence_ru && (
+            {getTranslation(word.example_translations, lang, word.example_sentence_ru) && (
               <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 2 }}>
-                {word.example_sentence_ru}
+                {getTranslation(word.example_translations, lang, word.example_sentence_ru)}
               </div>
             )}
           </div>

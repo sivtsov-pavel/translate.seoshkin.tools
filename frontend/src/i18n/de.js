@@ -208,6 +208,8 @@ export const de = {
     trainerSpeech: 'Aussprache mit dem Trainer',
     tapToReveal: 'Tippen zum Aufdecken', doneToday: 'Für heute fertig', doneTodaySub: 'Diese Übungen sind erledigt. Morgen kommen sie zur Wiederholung zurück', showAnswer: 'Antwort zeigen', praiseCorrect: 'Sehr gut!', praiseWrong: 'Fast! Versuch es nochmal',
     forgot: 'Vergessen',
+    understood: 'Verstanden',
+    notUnderstood: 'Noch nicht',
     hard: 'Schwierig',
     remembered: 'Gewusst!',
     checkAnswer: 'Prüfen',

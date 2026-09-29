@@ -206,6 +206,8 @@ export const ar = {
     trainerSpeech: 'النطق مع المدرّب',
     tapToReveal: 'انقر لرؤية الإجابة', doneToday: 'انتهيت لليوم', doneTodaySub: 'أنجزت هذه التمارين. ستعود غدًا للمراجعة', showAnswer: 'أظهر الإجابة', praiseCorrect: 'ممتاز!', praiseWrong: 'اقتربت! حاول مرة أخرى',
     forgot: 'نسيت',
+    understood: 'فهمت',
+    notUnderstood: 'لم أفهم',
     hard: 'صعب',
     remembered: 'تذكرت!',
     checkAnswer: 'تحقق',

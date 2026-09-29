@@ -277,7 +277,8 @@ export async function analyticsRoutes(fastify) {
     const wordsDe = hard.map(w => w.word_de)
     const { rows: full } = await db.query(
       `SELECT DISTINCT ON (lower(word_de)) word_de, translation_ru, example_sentence,
-              example_sentence_ru, image_url, translations, source
+              example_sentence_ru, COALESCE(example_translations, '{}') AS example_translations,
+              image_url, translations, source
        FROM words WHERE word_de = ANY($1::text[])
        ORDER BY lower(word_de), (image_url IS NOT NULL) DESC`, [wordsDe])
     if (!full.length) return reply.status(400).send({ error: 'Не удалось собрать слова' })
@@ -305,10 +306,10 @@ export async function analyticsRoutes(fastify) {
     for (const w of full) {
       await db.query(
         `INSERT INTO words (lesson_id, user_id, word_de, translation_ru, example_sentence,
-           example_sentence_ru, image_url, translations, source)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (lesson_id, word_de) DO NOTHING`,
+           example_sentence_ru, example_translations, image_url, translations, source)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (lesson_id, word_de) DO NOTHING`,
         [lessonId, userId, w.word_de, w.translation_ru, w.example_sentence,
-         w.example_sentence_ru, w.image_url, w.translations, w.source || 'personal'])
+         w.example_sentence_ru, w.example_translations, w.image_url, w.translations, w.source || 'personal'])
     }
 
     // Генерируем упражнения из слов (дешёвый gpt-4o-mini, без картинок)

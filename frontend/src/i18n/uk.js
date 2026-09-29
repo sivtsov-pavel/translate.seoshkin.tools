@@ -204,6 +204,8 @@ export const uk = {
     trainerSpeech: 'Вимова з тренером',
     tapToReveal: 'Натисни щоб побачити відповідь', doneToday: 'На сьогодні все', doneTodaySub: 'Ці вправи ти вже зробив. Завтра вони повернуться на повторення', showAnswer: 'Показати відповідь', praiseCorrect: 'Чудово!', praiseWrong: 'Майже! Спробуй ще раз',
     forgot: 'Не памʼятаю',
+    understood: 'Зрозуміло',
+    notUnderstood: 'Не зрозуміло',
     hard: 'Важко',
     remembered: 'Памʼятаю!',
     checkAnswer: 'Перевірити',

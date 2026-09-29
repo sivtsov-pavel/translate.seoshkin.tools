@@ -204,6 +204,8 @@ export const en = {
     trainerSpeech: 'Pronunciation with the trainer',
     tapToReveal: 'Tap to reveal answer', doneToday: 'Done for today', doneTodaySub: 'You have finished these. They will come back tomorrow for review', showAnswer: 'Show answer', praiseCorrect: 'Great!', praiseWrong: 'Almost! Try again',
     forgot: 'Forgot',
+    understood: 'Got it',
+    notUnderstood: 'Not yet',
     hard: 'Hard',
     remembered: 'Got it!',
     checkAnswer: 'Check',

@@ -80,6 +80,7 @@ function speakable(text) {
 
 export function speak(text, lang = targetLocale(), rate = null) {
   if (!synth) return
+  seqToken++   // рвём цепочку speakSequence, если она идёт: иначе её onend продолжит читать поверх
   synth.cancel()
   // Chrome bug: cancel() и speak() в одном тике → utterance молча сбрасывается
   setTimeout(() => {
@@ -90,6 +91,41 @@ export function speak(text, lang = targetLocale(), rate = null) {
     if (v) utt.voice = v
     synth.speak(utt)
   }, 50)
+}
+
+// Несколько кусков подряд с паузой между ними: слово → пауза → предложение с ним.
+// Очередь синтеза пауз не делает и все куски слипаются в одну фразу, поэтому
+// следующий ставим по onend предыдущего.
+//
+// seqToken — защита от наложения. cancel() у большинства браузеров дёргает onend
+// текущего utterance, и без метки цепочка продолжила бы читать поверх новой речи:
+// человек нажал «Слушать», а ему в ответ хвост прошлой карточки.
+let seqToken = 0
+export function speakSequence(parts, lang = targetLocale(), gapMs = 500) {
+  if (!synth) return
+  const list = (parts || []).map(p => speakable(p)).filter(Boolean)
+  if (!list.length) return
+  const token = ++seqToken
+  synth.cancel()
+  const step = (i) => {
+    if (token !== seqToken || i >= list.length) return
+    setTimeout(() => {
+      if (token !== seqToken) return
+      const utt = new SpeechSynthesisUtterance(list[i])
+      utt.lang = lang
+      utt.rate = getSavedRate()
+      const v = pickVoice(lang)
+      if (v) utt.voice = v
+      utt.onend = () => step(i + 1)
+      utt.onerror = () => step(i + 1)
+      synth.speak(utt)
+    }, i === 0 ? 50 : gapMs)
+  }
+  step(0)
+}
+
+export function speakSequenceAuto(parts, lang = targetLocale()) {
+  if (isAutoSpeakEnabled()) speakSequence(parts, lang)
 }
 
 export function speakAuto(text, lang = targetLocale()) {
@@ -115,6 +151,7 @@ export function speakWithEvents(text, lang = targetLocale(), { onStart, onEnd } 
 }
 
 export function cancel() {
+  seqToken++
   synth?.cancel()
 }
 

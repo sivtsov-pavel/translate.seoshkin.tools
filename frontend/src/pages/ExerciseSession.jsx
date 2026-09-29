@@ -642,7 +642,7 @@ export default function ExerciseSession() {
 
       <ExerciseErrorBoundary resetKey={ex.id} onSkip={() => { const n = current + 1; if (n >= exercises.length) endSession(); else setCurrent(n) }}>
         {ex.type === 'flashcard' && (novice
-          ? <FlashcardNovice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} exampleSentence={ex.example_sentence} exampleSentenceRu={ex.example_sentence_ru} />
+          ? <FlashcardNovice key={ex.id} payload={ex.payload} onAnswer={handleAnswer} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} exampleSentence={ex.example_sentence} exampleSentenceRu={ex.example_sentence_ru} exampleTranslations={ex.example_translations} />
           : <Flashcard      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} translations={ex.translations} translationRu={ex.translation_ru} showOriginal={showOriginal} wordId={ex.word_id} onMarkLearning={markLearning} learned={starred.has(ex.word_id)} />)}
         {ex.type === 'fill_blank'      && <FillBlank      key={ex.id} payload={ex.payload} onAnswer={handleAnswer} lessonTitle={lessonTitle} typeLabel={typeLabel} imageUrl={ex.image_url} payloadTranslations={ex.payload_translations} translations={ex.translations} translationRu={ex.translation_ru} exerciseId={ex.id} showOriginal={showOriginal} />}
         {ex.type === 'multiple_choice' && (novice
