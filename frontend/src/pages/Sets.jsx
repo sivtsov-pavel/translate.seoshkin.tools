@@ -16,6 +16,40 @@ const THEME_ICON = {
 }
 const iconFor = (theme) => THEME_ICON[theme] || '📦'
 
+// Метка пройденности плитки. Одна на обе вкладки: у наборов слов и фраз она
+// обязана выглядеть одинаково, иначе ученик решит, что это разные вещи.
+//
+// Три состояния, а не два: «не начинал» (полоски нет вовсе), «в работе»
+// (полоска с долей) и «пройден» (галочка). Без среднего состояния набор,
+// открытый наполовину, выглядит как нетронутый — ровно та потеря ориентира,
+// на которую жалуется Павел.
+function SetProgress({ done, total }) {
+  if (!total) return null
+  const complete = done >= total
+  const ratio = Math.min(1, done / total)
+  return (
+    <div style={{ width: '100%', marginTop: 2 }}>
+      <div style={{ height: 5, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
+        <div style={{ width: `${ratio * 100}%`, height: '100%', borderRadius: 999,
+          background: complete ? 'var(--good, #3BA55D)' : 'var(--accent)' }} />
+      </div>
+      <div style={{ fontSize: 11.5, marginTop: 4, fontWeight: 700,
+        color: complete ? 'var(--good, #3BA55D)' : 'var(--ink-soft)' }}>
+        {complete ? '✓ ' : ''}{done}/{total}
+      </div>
+    </div>
+  )
+}
+
+// Галочка в углу плитки — видна одним взглядом по сетке, не вчитываясь в цифры
+function DoneBadge() {
+  return (
+    <div style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: '50%',
+      background: 'var(--good, #3BA55D)', color: '#fff', fontSize: 13, fontWeight: 800,
+      display: 'grid', placeItems: 'center', lineHeight: 1 }}>✓</div>
+  )
+}
+
 export default function Sets() {
   const t = useI18nStore(s => s.t)
   const navigate = useNavigate()
@@ -70,17 +104,19 @@ export default function Sets() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14 }}>
             {topics?.map(topic => (
               <div key={topic.id} onClick={() => navigate(`/phrases/${topic.id}`)} style={{
-                cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16,
+                position: 'relative',
+                cursor: 'pointer', background: 'var(--surface)', borderRadius: 16,
+                border: `1px solid ${topic.total && topic.done >= topic.total ? 'var(--good, #3BA55D)' : 'var(--line)'}`,
                 padding: '18px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center',
               }}>
+                {topic.total > 0 && topic.done >= topic.total && <DoneBadge />}
                 <div style={{ fontSize: 40, lineHeight: 1 }}>{topic.emoji || '🗣'}</div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{topic.title}</div>
                 {topic.title_local && (
                   <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{topic.title_local}</div>
                 )}
-                <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>
-                  {topic.level} · {topic.done}/{topic.total}
-                </div>
+                <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{topic.level}</div>
+                <SetProgress done={topic.done} total={topic.total} />
               </div>
             ))}
           </div>
@@ -98,17 +134,24 @@ export default function Sets() {
           // Иконку берём по русскому ключу темы, а подпись — локализованную
           const icon = iconFor(s.set_theme)
           const theme = getLessonTitle(s.title, s.title_translations, lang) || s.set_theme || s.title
+          const exDone = s.exercises_done || 0
+          const exTotal = s.exercises_total || 0
+          const complete = exTotal > 0 && exDone >= exTotal
+          const edge = complete ? 'var(--good, #3BA55D)' : 'var(--line)'
           return (
             <div key={s.id} onClick={() => navigate(`/exercise-session?lesson_id=${s.id}`)} style={{
-              cursor: 'pointer', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16,
+              position: 'relative',
+              cursor: 'pointer', background: 'var(--surface)', border: `1px solid ${edge}`, borderRadius: 16,
               padding: '18px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center',
               transition: 'border-color .15s, transform .15s',
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+              onMouseLeave={e => { e.currentTarget.style.borderColor = edge; e.currentTarget.style.transform = 'translateY(0)' }}>
+              {complete && <DoneBadge />}
               <div style={{ fontSize: 40, lineHeight: 1 }}>{icon}</div>
               <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{theme}</div>
               <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.vocabulary.wordsCount(s.words_total || 0)}</div>
+              <SetProgress done={exDone} total={exTotal} />
             </div>
           )
         })}

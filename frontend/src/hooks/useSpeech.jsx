@@ -101,20 +101,24 @@ export function speak(text, lang = targetLocale(), rate = null) {
 // текущего utterance, и без метки цепочка продолжила бы читать поверх новой речи:
 // человек нажал «Слушать», а ему в ответ хвост прошлой карточки.
 let seqToken = 0
-export function speakSequence(parts, lang = targetLocale(), gapMs = 500) {
-  if (!synth) return
-  const list = (parts || []).map(p => speakable(p)).filter(Boolean)
-  if (!list.length) return
+export function speakSequence(parts, lang = targetLocale(), { gapMs = 500, onDone } = {}) {
+  // Кусок — строка (читается на lang) или { text, lang }: немецкая фраза и её
+  // перевод произносятся РАЗНЫМИ голосами, иначе перевод звучит набором звуков.
+  const list = (parts || [])
+    .map(p => (typeof p === 'string' ? { text: speakable(p), lang } : { text: speakable(p?.text), lang: p?.lang || lang }))
+    .filter(p => p.text)
+  if (!synth || !list.length) { onDone?.(); return () => {} }
   const token = ++seqToken
   synth.cancel()
   const step = (i) => {
-    if (token !== seqToken || i >= list.length) return
+    if (token !== seqToken) return
+    if (i >= list.length) { onDone?.(); return }
     setTimeout(() => {
       if (token !== seqToken) return
-      const utt = new SpeechSynthesisUtterance(list[i])
-      utt.lang = lang
+      const utt = new SpeechSynthesisUtterance(list[i].text)
+      utt.lang = list[i].lang
       utt.rate = getSavedRate()
-      const v = pickVoice(lang)
+      const v = pickVoice(list[i].lang)
       if (v) utt.voice = v
       utt.onend = () => step(i + 1)
       utt.onerror = () => step(i + 1)
@@ -122,6 +126,14 @@ export function speakSequence(parts, lang = targetLocale(), gapMs = 500) {
     }, i === 0 ? 50 : gapMs)
   }
   step(0)
+  // Вернувшаяся функция отменяет ИМЕННО эту цепочку и не трогает чужую
+  return () => { if (token === seqToken) { seqToken++; synth.cancel() } }
+}
+
+// То же обещанием — когда нужно дождаться конца, а не гадать с таймером.
+// Прежний «ждём 1.8 секунды и жмём следующую» рубил длинные фразы на полуслове.
+export function speakSequenceAsync(parts, lang = targetLocale(), opts = {}) {
+  return new Promise(resolve => { speakSequence(parts, lang, { ...opts, onDone: resolve }) })
 }
 
 export function speakSequenceAuto(parts, lang = targetLocale()) {

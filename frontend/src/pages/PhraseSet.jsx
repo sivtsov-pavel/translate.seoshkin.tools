@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client.js'
 import { useI18nStore } from '../store/i18n.js'
-import { speak, speakAppend, isSpeakTranslationEnabled, SpeakTranslationToggle } from '../hooks/useSpeech.jsx'
+import { speakSequence, speakSequenceAsync, isSpeakTranslationEnabled, SpeakTranslationToggle, uiLocale, targetLocale } from '../hooks/useSpeech.jsx'
 import PhraseTrainer from '../components/PhraseTrainer.jsx'
 
 // Экран набора фраз: тема, картинка, нумерованный список с эмодзи, озвучка.
@@ -28,14 +28,30 @@ export default function PhraseSet() {
   // Останавливаем проигрывание при уходе со страницы — иначе голос догоняет в другом разделе
   useEffect(() => () => { stopRef.current = true }, [])
 
+  // Фраза на изучаемом языке, затем её перевод — голосом того языка, на котором
+  // перевод написан (у нас десять интерфейсов, и русский голос читает турецкий
+  // текст набором звуков).
+  //
+  // Раньше здесь были speak() + speakAppend() и ожидание по таймеру. speak()
+  // откладывает свою фразу на 50 мс (обход бага Chrome), а speakAppend ставит
+  // перевод в очередь сразу — перевод успевал вперёд немецкого; следующий
+  // speak() делал cancel() и рубил недочитанное. Отсюда «читает то только
+  // немецкий, то только русский». Теперь очередь одна и ждём её конца, а не
+  // угаданных 1.8 секунды.
+  const partsFor = (p) => (
+    isSpeakTranslationEnabled() && p.translation
+      ? [{ text: p.text, lang: targetLocale() }, { text: p.translation, lang: uiLocale(lang) }]
+      : [{ text: p.text, lang: targetLocale() }]
+  )
+
   const playAll = async () => {
     if (playing) { stopRef.current = true; setPlaying(false); return }
     setPlaying(true); stopRef.current = false
     for (const p of data.phrases) {
       if (stopRef.current) break
-      speak(p.text)
-      if (isSpeakTranslationEnabled() && p.translation) speakAppend(p.translation)
-      await new Promise(r => setTimeout(r, Math.max(1800, p.text.length * 90)))
+      await speakSequenceAsync(partsFor(p), targetLocale(), { gapMs: 350 })
+      if (stopRef.current) break
+      await new Promise(r => setTimeout(r, 400))
     }
     setPlaying(false)
   }
@@ -76,10 +92,7 @@ export default function PhraseSet() {
 
       <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {phrases.map((p, i) => (
-          <li key={p.id} onClick={() => {
-            speak(p.text)
-            if (isSpeakTranslationEnabled() && p.translation) speakAppend(p.translation)
-          }}
+          <li key={p.id} onClick={() => { stopRef.current = true; setPlaying(false); speakSequence(partsFor(p), targetLocale(), { gapMs: 350 }) }}
             style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '11px 4px',
               borderBottom: '1px solid var(--line)', cursor: 'pointer' }}>
             <span style={{ width: 26, height: 26, flex: 'none', borderRadius: '50%', background: 'var(--surface-2)',

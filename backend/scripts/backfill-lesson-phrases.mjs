@@ -22,6 +22,11 @@ const LIMIT = parseInt(process.argv.find(a => a.startsWith('--limit='))?.split('
 const LEVEL = process.argv.find(a => a.startsWith('--level='))?.split('=')[1] || 'A1'
 const LANG  = process.argv.find(a => a.startsWith('--lang='))?.split('=')[1] || null
 const WITH_SETS = process.argv.includes('--with-sets')
+// --ids=645,646 — точечно. Нужен, когда дыра в конкретных уроках (например, после
+// разбивки большого урока набор фраз остаётся только у первой части), а --limit
+// берёт первые по порядку и до них не доходит.
+const IDS = process.argv.find(a => a.startsWith('--ids='))?.split('=')[1]
+  ?.split(',').map(Number).filter(Boolean) || null
 
 // Уроки-алфавит («Буква B» из пяти слов) исключаем: связных бытовых фраз из набора
 // букв не выходит, а платить за них всё равно пришлось бы.
@@ -35,7 +40,8 @@ const { rows: lessons } = await db.query(`
     AND l.title !~* '^(буква|letter|letra)\\s'
     AND ($1::text IS NULL OR l.target_lang = $1)
     AND ($2::bool OR l.is_set = false)
-  ORDER BY l.lesson_number NULLS LAST, l.id`, [LANG, WITH_SETS])
+    AND ($3::int[] IS NULL OR l.id = ANY($3::int[]))
+  ORDER BY l.lesson_number NULLS LAST, l.id`, [LANG, WITH_SETS, IDS])
 
 const targets = LIMIT ? lessons.slice(0, LIMIT) : lessons
 console.log(`\nУроков без набора фраз: ${lessons.length}${LIMIT ? `, берём ${targets.length}` : ''}`)

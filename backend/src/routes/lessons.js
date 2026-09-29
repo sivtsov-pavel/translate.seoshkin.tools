@@ -93,11 +93,17 @@ export async function lessonsRoutes(fastify) {
           (l.preview->>'savedAt' IS NOT NULL) AS has_preview,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL)::int AS words_total,
           COUNT(DISTINCT e.word_id) FILTER (WHERE e.word_id IS NOT NULL AND w.image_url IS NOT NULL)::int AS words_with_images,
-          COUNT(DISTINCT e.id)::int AS exercises_total
+          COUNT(DISTINCT e.id)::int AS exercises_total,
+          -- Сколько упражнений урока/набора человек уже трогал. По этому же признаку
+          -- считает прогресс «Путь» (routes/path.js): наличие строки прогресса, а не
+          -- её содержимое. Нужно, чтобы на плитке набора была видна метка «пройдено» —
+          -- без неё в двух десятках наборов не сообразить, куда идти дальше.
+          COUNT(DISTINCT uep.exercise_id)::int AS exercises_done
        FROM lessons l
        LEFT JOIN lesson_media lm ON lm.lesson_id = l.id
        LEFT JOIN exercises e ON e.lesson_id = l.id
        LEFT JOIN words w ON w.id = e.word_id
+       LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = ${parseInt(userId)}
        ${filter}
        GROUP BY l.id
        -- Внутри одного дня сортируем по номеру урока: уроки, разбитые из большого
