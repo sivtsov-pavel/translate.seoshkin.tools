@@ -1,0 +1,520 @@
+{
+  "at": "2026-09-29T06:34:13.524Z",
+  "words": [
+    {
+      "id": 9052,
+      "lesson_id": 642,
+      "user_id": 1,
+      "word_de": "предложение",
+      "translation_ru": "предложение",
+      "example_sentence": "Das ist ein einfaches Angebot.",
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "status": "new",
+      "created_at": "2026-09-24T09:11:17.471Z",
+      "image_url": "/uploads/word-images/word_448.webp?v=4",
+      "example_sentence_ru": "Это простое предложение.",
+      "translations": {},
+      "source": "extra",
+      "media_id": null,
+      "is_function_word": false,
+      "example_translations": {
+        "ar": "هذا عرض بسيط.",
+        "bg": "Това е просто предложение.",
+        "en": "This is a simple offer.",
+        "es": "Esta es una oferta simple.",
+        "fr": "C'est une offre simple.",
+        "ru": "Это простое предложение.",
+        "sq": "Kjo është një ofertë e thjeshtë.",
+        "tr": "Bu basit bir teklif.",
+        "uk": "Це проста пропозиція."
+      },
+      "lesson_number": 42,
+      "target_lang": "de",
+      "ex": 7,
+      "progress": 0
+    },
+    {
+      "id": 9053,
+      "lesson_id": 642,
+      "user_id": 1,
+      "word_de": "Где",
+      "translation_ru": "где",
+      "example_sentence": "Wo ist die Schule?",
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "status": "new",
+      "created_at": "2026-09-24T09:11:17.475Z",
+      "image_url": "/uploads/word-images/word_1827.webp?v=4",
+      "example_sentence_ru": "Где школа?",
+      "translations": {},
+      "source": "extra",
+      "media_id": null,
+      "is_function_word": false,
+      "example_translations": {
+        "ar": "أين المدرسة؟",
+        "bg": "Къде е училището?",
+        "en": "Where is the school?",
+        "es": "¿Dónde está la escuela?",
+        "fr": "Où est l'école ?",
+        "ru": "Где школа?",
+        "sq": "Ku është shkolla?",
+        "tr": "Okul nerede?",
+        "uk": "Де школа?"
+      },
+      "lesson_number": 42,
+      "target_lang": "de",
+      "ex": 7,
+      "progress": 0
+    },
+    {
+      "id": 9054,
+      "lesson_id": 642,
+      "user_id": 1,
+      "word_de": "доска",
+      "translation_ru": "доска",
+      "example_sentence": "Die Tafel ist grün.",
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "status": "new",
+      "created_at": "2026-09-24T09:11:17.479Z",
+      "image_url": "/uploads/word-images/word_4425.webp?v=3",
+      "example_sentence_ru": "Доска зеленая.",
+      "translations": {},
+      "source": "extra",
+      "media_id": null,
+      "is_function_word": false,
+      "example_translations": {
+        "ar": "اللوح أخضر.",
+        "bg": "Дъската е зелена.",
+        "en": "The board is green.",
+        "es": "La pizarra es verde.",
+        "fr": "Le tableau est vert.",
+        "ru": "Доска зеленая.",
+        "sq": "Tabela është e gjelbër.",
+        "tr": "Tahta yeşil.",
+        "uk": "Дошка зелена."
+      },
+      "lesson_number": 42,
+      "target_lang": "de",
+      "ex": 7,
+      "progress": 0
+    }
+  ],
+  "exercises": [
+    {
+      "id": 187936,
+      "lesson_id": 642,
+      "word_id": 9052,
+      "type": "dictation",
+      "payload": {
+        "word_de": "предложение",
+        "translation_ru": "предложение"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.487Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187901,
+      "lesson_id": 642,
+      "word_id": 9052,
+      "type": "fill_blank",
+      "payload": {
+        "blank": "предложение",
+        "options": [
+          "предложение",
+          "Wort",
+          "Frage"
+        ],
+        "sentence": "Ich schreibe ein ___."
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.415Z",
+      "image_url": null,
+      "payload_translations": {
+        "ru": "Я пишу предложение."
+      }
+    },
+    {
+      "id": 187900,
+      "lesson_id": 642,
+      "word_id": 9052,
+      "type": "flashcard",
+      "payload": {
+        "answer": "предложение",
+        "question": "предложение"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.414Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187904,
+      "lesson_id": 642,
+      "word_id": 9052,
+      "type": "letter_fill",
+      "payload": {
+        "answer": "предложение",
+        "masked": "п_едлож_ние",
+        "word_de": "предложение",
+        "translation_ru": "предложение"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.419Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187902,
+      "lesson_id": 642,
+      "word_id": 9052,
+      "type": "multiple_choice",
+      "payload": {
+        "correct": 0,
+        "options": [
+          "предложение",
+          "слово",
+          "дом",
+          "книга"
+        ],
+        "question": "Wie heißt das auf Russisch: предложение?"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.417Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187903,
+      "lesson_id": 642,
+      "word_id": 9052,
+      "type": "sentence_write",
+      "payload": {
+        "example": "Das ist ein langer Satz.",
+        "word_de": "предложение",
+        "example_ru": "Это длинное предложение.",
+        "translation_ru": "предложение"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.418Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187937,
+      "lesson_id": 642,
+      "word_id": 9052,
+      "type": "speech",
+      "payload": {
+        "word_de": "предложение",
+        "translation_ru": "предложение"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.490Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187938,
+      "lesson_id": 642,
+      "word_id": 9053,
+      "type": "dictation",
+      "payload": {
+        "word_de": "Где",
+        "translation_ru": "где"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.492Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187906,
+      "lesson_id": 642,
+      "word_id": 9053,
+      "type": "fill_blank",
+      "payload": {
+        "blank": "Где",
+        "options": [
+          "Когда",
+          "Где",
+          "Как"
+        ],
+        "sentence": "___ ist dein Buch?"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.423Z",
+      "image_url": null,
+      "payload_translations": {
+        "ru": "Где твоя книга?"
+      }
+    },
+    {
+      "id": 187905,
+      "lesson_id": 642,
+      "word_id": 9053,
+      "type": "flashcard",
+      "payload": {
+        "answer": "где",
+        "question": "Где"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.421Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187909,
+      "lesson_id": 642,
+      "word_id": 9053,
+      "type": "letter_fill",
+      "payload": {
+        "answer": "Где",
+        "masked": "Г_е",
+        "word_de": "Где",
+        "translation_ru": "где"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.427Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187907,
+      "lesson_id": 642,
+      "word_id": 9053,
+      "type": "multiple_choice",
+      "payload": {
+        "correct": 2,
+        "options": [
+          "кто",
+          "что",
+          "где",
+          "как"
+        ],
+        "question": "Wie heißt das auf Russisch: Где?"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.424Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187908,
+      "lesson_id": 642,
+      "word_id": 9053,
+      "type": "sentence_write",
+      "payload": {
+        "example": "Wo ist dein Haus?",
+        "word_de": "Где",
+        "example_ru": "Где твой дом?",
+        "translation_ru": "где"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.425Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187939,
+      "lesson_id": 642,
+      "word_id": 9053,
+      "type": "speech",
+      "payload": {
+        "word_de": "Где",
+        "translation_ru": "где"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.494Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187940,
+      "lesson_id": 642,
+      "word_id": 9054,
+      "type": "dictation",
+      "payload": {
+        "word_de": "доска",
+        "translation_ru": "доска"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.497Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187911,
+      "lesson_id": 642,
+      "word_id": 9054,
+      "type": "fill_blank",
+      "payload": {
+        "blank": "доска",
+        "options": [
+          "доска",
+          "Wand",
+          "Tafel"
+        ],
+        "sentence": "Ich schreibe an der ___."
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.431Z",
+      "image_url": null,
+      "payload_translations": {
+        "ru": "Я пишу на доске."
+      }
+    },
+    {
+      "id": 187910,
+      "lesson_id": 642,
+      "word_id": 9054,
+      "type": "flashcard",
+      "payload": {
+        "answer": "доска",
+        "question": "доска"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.429Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187914,
+      "lesson_id": 642,
+      "word_id": 9054,
+      "type": "letter_fill",
+      "payload": {
+        "answer": "доска",
+        "masked": "д__ка",
+        "word_de": "доска",
+        "translation_ru": "доска"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.436Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187912,
+      "lesson_id": 642,
+      "word_id": 9054,
+      "type": "multiple_choice",
+      "payload": {
+        "correct": 0,
+        "options": [
+          "доска",
+          "книга",
+          "стол",
+          "ноутбук"
+        ],
+        "question": "Wie heißt das auf Russisch: доска?"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.433Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187913,
+      "lesson_id": 642,
+      "word_id": 9054,
+      "type": "sentence_write",
+      "payload": {
+        "example": "Ich schreibe etwas an die Tafel.",
+        "word_de": "доска",
+        "example_ru": "Я что-то пишу на доске.",
+        "translation_ru": "доска"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.434Z",
+      "image_url": null,
+      "payload_translations": {}
+    },
+    {
+      "id": 187941,
+      "lesson_id": 642,
+      "word_id": 9054,
+      "type": "speech",
+      "payload": {
+        "word_de": "доска",
+        "translation_ru": "доска"
+      },
+      "easiness_factor": "2.50",
+      "interval_days": 0,
+      "repetitions": 0,
+      "next_review_date": "2026-09-24T00:00:00.000Z",
+      "created_at": "2026-09-24T09:11:37.500Z",
+      "image_url": null,
+      "payload_translations": {}
+    }
+  ]
+}
