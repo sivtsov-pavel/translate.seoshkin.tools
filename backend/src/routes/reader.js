@@ -2,26 +2,10 @@ import { db } from '../db/index.js'
 import { translateParagraphs, translateSingle, extractWordsFromImage, extractSentencesFromImage } from '../services/claude.js'
 import { saveCameraWords, distributeWordsToSets } from '../services/processor.js'
 import { unlink } from 'fs/promises'
+import { aiFailure } from '../services/aiFailure.js'
 
 const MODEL_MAP = { smart: 'gpt-4o', mini: 'gpt-4o-mini' }
 
-// Отказ ИИ-провайдера словами, а не «не удалось разобрать фото».
-//
-// Причина отказа почти всегда одна из трёх, и лечатся они по-разному: кончился
-// баланс (пополнить), провайдер придержал запросы (подождать), фото правда не
-// читается (переснять). Один текст на все три заставляет человека переснимать
-// фото, пока не надоест, — а снимок ни при чём (жалоба Павла 29.09.2026).
-function aiFailure(e) {
-  const msg = String(e?.message || '')
-  const code = e?.code || e?.error?.code || ''
-  if (/insufficient_quota|no credits remaining|credit_balance_exhausted|billing/i.test(msg + code)) {
-    return { status: 503, body: { code: 'ai_quota', error: 'Разбор фото временно недоступен: на ИИ-ключе закончился баланс. Фото в порядке — попробуйте позже.' } }
-  }
-  if (e?.status === 429 || /rate.?limit/i.test(msg + code)) {
-    return { status: 503, body: { code: 'ai_busy', error: 'ИИ сейчас перегружен. Подождите минуту и попробуйте снова.' } }
-  }
-  return { status: 500, body: { code: 'ai_failed', error: 'Не удалось разобрать фото. Попробуйте снять ровнее и при хорошем свете.' } }
-}
 
 export async function readerRoutes(fastify) {
   // Камера: фото → извлекаем немецкие слова + перевод; помечаем какие уже в словаре
