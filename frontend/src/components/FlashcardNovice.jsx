@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useIdleHint } from '../hooks/useIdleHint.js'
 import { useI18nStore } from '../store/i18n.js'
 import { speakSequence, speakSequenceAuto } from '../hooks/useSpeech.jsx'
 import AvatarReaction from './AvatarReaction.jsx'
@@ -7,14 +8,18 @@ import TapText from './TapText.jsx'
 
 // Карточка слова для режима новичка — макет 2b, экран C.
 //
-// Поток (просьба Павла 28.09.2026): карточка сама читает слово, затем через паузу
-// предложение с этим словом, а человек отвечает одно — «Понятно» или «Не понятно».
-// Поэтому здесь НЕТ шага «Показать ответ» и перевод не спрятан: это карточка на
-// понимание, а не на вспоминание. Проверка памяти осталась в режиме эксперта
-// (обычный Flashcard) — его не трогаем.
+// Поток (уточнён Павлом 29.09.2026 — вернулись к прежнему, с двумя добавками):
 //
-// Оценка уходит в SM-2 как 5 или 1. Средней оценки нет сознательно: при видимом
-// переводе «с трудом» человеку выбирать не из чего, и кнопка только путала бы.
+//   1. Карточка сама читает слово, затем через паузу предложение с ним.
+//   2. Перевод СЛОВА спрятан до «Показать ответ» — это проверка памяти.
+//   3. Перевод ПРЕДЛОЖЕНИЯ виден сразу: по нему человек читает смысл по-русски и
+//      думает, как сказать это по-немецки. Именно этого не хватало раньше.
+//   4. После раскрытия снизу выезжают ТРИ оценки.
+//
+// Почему три, а не две. 28.09 оценок оставили две, и это была ошибка: в SM-2
+// (backend/src/services/srs.js) оценка 3 снижает лёгкость на 0.14, НЕ сбрасывая
+// прогресс. Без неё остаётся «интервал вырос» или «сброс в ноль», и слово,
+// которое знаешь наполовину, вечно начинает заново. Павел это заметил сам.
 
 // Род по артиклю: в макете чип вида «die · f»
 const GENDER = { der: 'm', die: 'f', das: 'n' }
@@ -36,6 +41,10 @@ export default function FlashcardNovice({
   payload, onAnswer, imageUrl, translations, translationRu, wordId, onMarkLearning, learned,
   exampleSentence, exampleSentenceRu, exampleTranslations,
 }) {
+  const [revealed, setRevealed] = useState(false)
+  // Завис на пять секунд — «Показать ответ» начинает мягко пульсировать.
+  // Жалоба ученика дословно: «пока я не нажму, я не в курсе, что мне нужно нажать».
+  const stuck = useIdleHint(5000, !revealed)
   const [reaction, setReaction] = useState(null)
   const [grading, setGrading] = useState(false)
   const [inStudy, setInStudy] = useState(!!learned)
@@ -57,10 +66,16 @@ export default function FlashcardNovice({
     speakSequenceAuto([payload.question, exampleSentence])
   }, [payload.question, exampleSentence])
 
+  // Сбрасывать revealed при смене слова не нужно: сессия отдаёт карточку с
+  // key={ex.id} (pages/ExerciseSession.jsx), компонент пересоздаётся и состояние
+  // начинается заново. Лишний эффект тут только сбивал бы с толку.
   const grade = (q) => {
     if (grading) return
     setGrading(true)
     gradeRef.current = q
+    // «С трудом» без реакции аватара: она читается как оценка «верно/неверно»,
+    // а середина — ни то, ни другое.
+    if (q === 3) { setTimeout(() => onAnswer(q), 300); return }
     setReaction(q >= 4 ? 'correct' : 'wrong')
   }
 
@@ -72,9 +87,9 @@ export default function FlashcardNovice({
 
   return (
     <div style={{ width: '100%' }}>
-      <div className="exercise-card"
+      <div className="exercise-card" onClick={!revealed ? () => setRevealed(true) : undefined}
         style={{ borderRadius: 28, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)',
-          marginBottom: 14, userSelect: 'none' }}>
+          marginBottom: 14, cursor: revealed ? 'default' : 'pointer', userSelect: 'none' }}>
         {/* Картинка — во всю ширину блока (просьба Павла 13.08). Высоту ограничивает
             .novice-card-media: на ноуте квадрат в колонку 620px съедал весь экран. */}
         <div style={{ padding: 20, paddingBottom: 0 }}>
@@ -97,8 +112,17 @@ export default function FlashcardNovice({
                 {gender.article} · {gender.mark}
               </span>
             )}
-            <span style={{ fontSize: 21, fontWeight: 500 }}>{answer}</span>
+            {revealed && <span style={{ fontSize: 21, fontWeight: 500 }}>{answer}</span>}
           </div>
+
+          {!revealed && (
+            <button onClick={() => setRevealed(true)}
+              className={stuck ? 'dl-idle-pulse' : undefined}
+              style={{ width: '100%', minHeight: 52, marginTop: 16, borderRadius: 15, border: 'none',
+                background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+              {t.exercise.showAnswer}
+            </button>
+          )}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             {/* «Слушать» повторяет всю цепочку целиком — слово и пример.
@@ -132,17 +156,25 @@ export default function FlashcardNovice({
         </div>
       )}
 
-      {/* Две кнопки: понял / не понял */}
-      <div style={{ display: 'flex', gap: 10, opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>
-        <button onClick={() => grade(1)}
-          style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
-          {t.exercise.notUnderstood}
-        </button>
-        <button onClick={() => grade(5)}
-          style={{ flex: 1.2, minHeight: 58, borderRadius: 16, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 17, fontWeight: 800, cursor: 'pointer' }}>
-          {t.exercise.understood}
-        </button>
-      </div>
+      {/* Три оценки, выезжают снизу после раскрытия — как было до 28.09.
+          Средняя нужна SM-2: без неё половинчатое знание нечем выразить. */}
+      {revealed && (
+        <div className="dl-grades-in"
+          style={{ display: 'flex', gap: 8, opacity: grading ? 0.6 : 1, pointerEvents: grading ? 'none' : 'auto' }}>
+          <button onClick={() => grade(1)}
+            style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'transparent', color: 'var(--ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            {t.exercise.notUnderstood}
+          </button>
+          <button onClick={() => grade(3)}
+            style={{ flex: 1, minHeight: 58, borderRadius: 16, border: '2px solid var(--line)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            {t.exercise.hard}
+          </button>
+          <button onClick={() => grade(5)}
+            style={{ flex: 1.2, minHeight: 58, borderRadius: 16, border: 'none', background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+            {t.exercise.understood}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -677,3 +677,17 @@ body.novice-mode .novice-card-media {
   body.novice-mode .exercise-card-content { padding: 14px 20px 16px !important; }
   body.novice-mode .exercise-word-de { font-size: 28px !important; }
 }
+
+/* Оценки выезжают снизу после «Показать ответ» — так это и было до 28.09, и
+   так человек замечает, что появился выбор (Павел, 29.09.2026). Движение
+   короткое: длинная анимация на каждой карточке начинает раздражать к десятой. */
+@keyframes dl-grades-in {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.dl-grades-in { animation: dl-grades-in .18s ease-out both; }
+
+/* Кому движение мешает — система об этом знает, и мы её слушаем */
+@media (prefers-reduced-motion: reduce) {
+  .dl-grades-in { animation: none; }
+}
