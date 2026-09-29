@@ -75,8 +75,20 @@ if (fs.existsSync(CACHE)) {
   } catch { /* битый кэш — просто переспросим модель */ }
 }
 if (!classified) {
-  classified = await classifyWordsToThemes(
-    words.map(w => ({ de: w.word_de, tr: w.translation_ru })), lesson.target_lang)
+  try {
+    classified = await classifyWordsToThemes(
+      words.map(w => ({ de: w.word_de, tr: w.translation_ru })), lesson.target_lang)
+  } catch (e) {
+    // Стек на пол-экрана не говорит человеку ничего. Самая частая причина —
+    // кончился баланс OpenAI, и тогда ответ один: пополнить и повторить.
+    const quota = /insufficient_quota|no credits remaining|credit_balance_exhausted/i.test(e.message || '')
+    console.error(quota
+      ? `\n💸 Баланс OpenAI кончился — классифицировать темы нечем.\n` +
+        `   Пополнить: https://platform.openai.com/settings/organization/billing/\n` +
+        `   Либо положить готовый раскрой в ${CACHE} и запустить снова — тогда вызова не будет.`
+      : `\nКлассификация не удалась: ${e.message}`)
+    process.exit(1)
+  }
   if (classified.length !== words.length) {
     console.error(`⚠️ Классификатор вернул ${classified.length} из ${words.length} — не режу, повтори запуск`)
     process.exit(1)
@@ -213,9 +225,13 @@ for (const l of shifted) {
 
 const partIds = [lesson.id]
 
-// Часть 1 — это сам исходный урок: меняем только название
-await db.query(`UPDATE lessons SET title = $1, title_translations = '{}'::jsonb,
-                       description = NULL, description_translations = '{}'::jsonb WHERE id = $2`,
+// Часть 1 — это сам исходный урок: меняем только название.
+//
+// Описание и его локали НЕ обнуляем здесь. Прежняя версия стирала их сразу, а
+// заполняла ниже — и если шаг меты падал (например, кончился баланс OpenAI),
+// урок оставался вообще без описания, то есть хуже, чем до разбивки.
+// Ниже они перезаписываются целиком — но только когда есть чем.
+await db.query(`UPDATE lessons SET title = $1 WHERE id = $2`,
   [`Урок ${LESSON_NUMBER}: ${titleOf(buckets[0])}`, lesson.id])
 console.log(`  ✓ Урок ${LESSON_NUMBER}: ${titleOf(buckets[0])} (исходный, слов ${buckets[0].words.length})`)
 
@@ -255,14 +271,19 @@ for (let i = 0; i < PARTS; i++) {
     const meta = await generateLessonMeta(ws, [], lesson.target_lang, sents.map(s => s.text))
     const title = `Урок ${LESSON_NUMBER + i}: ${titleOf(buckets[i])}`
     const tr = await translateLessonMeta(titleOf(buckets[i]), meta?.description || '')
+    // Перезаписываем ЦЕЛИКОМ, а не сливаем: у первой части в этих полях лежит
+    // описание прежнего большого урока, и слияние оставило бы чужие локали.
     await db.query(
       `UPDATE lessons SET description = COALESCE($1, description),
-              title_translations = COALESCE(title_translations,'{}'::jsonb) || $2::jsonb,
-              description_translations = COALESCE(description_translations,'{}'::jsonb) || $3::jsonb
+              title_translations = $2::jsonb,
+              description_translations = $3::jsonb
        WHERE id = $4`,
       [meta?.description || null, JSON.stringify(tr.title || {}), JSON.stringify(tr.description || {}), id])
     console.log(`  ✓ описание и локали: ${title}`)
-  } catch (e) { console.error(`  ✖ мета части ${LESSON_NUMBER + i}: ${e.message}`) }
+  } catch (e) {
+    console.error(`  ✖ мета части ${LESSON_NUMBER + i}: ${e.message}`)
+    console.error(`     описание осталось прежним — впишите вручную или повторите шаг позже`)
+  }
 }
 
 await logOperation({
