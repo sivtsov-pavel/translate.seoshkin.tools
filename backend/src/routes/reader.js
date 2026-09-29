@@ -5,6 +5,24 @@ import { unlink } from 'fs/promises'
 
 const MODEL_MAP = { smart: 'gpt-4o', mini: 'gpt-4o-mini' }
 
+// Отказ ИИ-провайдера словами, а не «не удалось разобрать фото».
+//
+// Причина отказа почти всегда одна из трёх, и лечатся они по-разному: кончился
+// баланс (пополнить), провайдер придержал запросы (подождать), фото правда не
+// читается (переснять). Один текст на все три заставляет человека переснимать
+// фото, пока не надоест, — а снимок ни при чём (жалоба Павла 29.09.2026).
+function aiFailure(e) {
+  const msg = String(e?.message || '')
+  const code = e?.code || e?.error?.code || ''
+  if (/insufficient_quota|no credits remaining|credit_balance_exhausted|billing/i.test(msg + code)) {
+    return { status: 503, body: { code: 'ai_quota', error: 'Разбор фото временно недоступен: на ИИ-ключе закончился баланс. Фото в порядке — попробуйте позже.' } }
+  }
+  if (e?.status === 429 || /rate.?limit/i.test(msg + code)) {
+    return { status: 503, body: { code: 'ai_busy', error: 'ИИ сейчас перегружен. Подождите минуту и попробуйте снова.' } }
+  }
+  return { status: 500, body: { code: 'ai_failed', error: 'Не удалось разобрать фото. Попробуйте снять ровнее и при хорошем свете.' } }
+}
+
 export async function readerRoutes(fastify) {
   // Камера: фото → извлекаем немецкие слова + перевод; помечаем какие уже в словаре
   fastify.post('/api/reader/camera', { preHandler: [fastify.authenticate] }, async (request, reply) => {
@@ -17,9 +35,10 @@ export async function readerRoutes(fastify) {
     try {
       words = await extractWordsFromImage(filepath, lang, target)
     } catch (e) {
-      fastify.log.error({ e }, 'camera extract')
+      fastify.log.error({ msg: e?.message, code: e?.code, status: e?.status }, 'camera extract')
       unlink(filepath).catch(() => {})
-      return reply.status(500).send({ error: 'Не удалось разобрать фото' })
+      const f = aiFailure(e)
+      return reply.status(f.status).send(f.body)
     }
     unlink(filepath).catch(() => {})
     // Помечаем какие слова уже есть в словаре (и берём их перевод на локаль)
@@ -46,9 +65,10 @@ export async function readerRoutes(fastify) {
     try {
       sentences = await extractSentencesFromImage(filepath, lang, target)
     } catch (e) {
-      fastify.log.error({ e }, 'camera sentences')
+      fastify.log.error({ msg: e?.message, code: e?.code, status: e?.status }, 'camera sentences')
       unlink(filepath).catch(() => {})
-      return reply.status(500).send({ error: 'Не удалось разобрать фото' })
+      const f = aiFailure(e)
+      return reply.status(f.status).send(f.body)
     }
     unlink(filepath).catch(() => {})
     // Помечаем слова разбора: есть ли в словаре + перевод на локаль

@@ -44,7 +44,12 @@ export async function uploadFiles(url, formData) {
   const res = await fetch(`${BASE}${url}`, { method: 'POST', headers, body: formData })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))
-    throw new Error(err.error || 'Ошибка загрузки')
+    // Код причины тащим вместе с текстом: он машинный и не зависит от языка,
+    // поэтому экран может показать СВОЙ перевод, а не русскую строку сервера.
+    const e = new Error(err.error || 'Ошибка загрузки')
+    if (err.code) e.code = err.code
+    e.status = res.status
+    throw e
   }
   return res.json()
 }

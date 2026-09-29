@@ -632,6 +632,12 @@ export const fr = {
     btn: 'Mots depuis une photo',
     busy: 'Analyse de la photo…',
     busyHint: "L'IA reconnaît les mots, quelques secondes",
+    errTitle: 'Analyse impossible',
+    err: {
+      ai_quota: "Le crédit de la clé IA est épuisé : l'analyse des photos est temporairement indisponible. La photo est correcte, réessayez plus tard.",
+      ai_busy: "L'IA est surchargée en ce moment. Attendez une minute et réessayez.",
+      ai_failed: 'Impossible d’analyser la photo. Essayez de la prendre bien droite et avec un bon éclairage.',
+    },
     titleParse: 'Analyse de la photo',
     titleWords: (n) => `Mots depuis la photo (${n})`,
     selectWords: 'Coche les mots',
@@ -660,7 +666,7 @@ export const fr = {
     bindCourseOption: (title) => `Associer au cours : ${title}`,
     courseTip: "💡 Mieux vaut l'associer à un cours — sinon la leçon restera isolée dans « Aujourd'hui ».",
   },
-  common: { loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler', save: 'Enregistrer', starting: "Démarrage...", deleteLesson: "Supprimer la leçon? Tous les mots et exercices seront définitivement supprimés.", updateTitle: 'Mise à jour disponible', updateDesc: 'Touche pour charger la nouvelle version', updateBtn: 'Mettre à jour', updateLater: 'Plus tard' },
+  common: { close: 'Fermer', loading: 'Chargement...', error: 'Erreur', cancel: 'Annuler', save: 'Enregistrer', starting: "Démarrage...", deleteLesson: "Supprimer la leçon? Tous les mots et exercices seront définitivement supprimés.", updateTitle: 'Mise à jour disponible', updateDesc: 'Touche pour charger la nouvelle version', updateBtn: 'Mettre à jour', updateLater: 'Plus tard' },
   games: {
     loading: 'Chargement…',
     moves: 'Coups',

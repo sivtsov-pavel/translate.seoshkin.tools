@@ -633,6 +633,12 @@ export const es = {
     btn: 'Palabras de la foto',
     busy: 'Analizando la foto…',
     busyHint: 'La IA reconoce palabras, unos segundos',
+    errTitle: 'No se pudo analizar',
+    err: {
+      ai_quota: 'El saldo de la clave de IA se ha agotado: el análisis de fotos no está disponible temporalmente. La foto está bien, inténtalo más tarde.',
+      ai_busy: 'La IA está sobrecargada ahora mismo. Espera un minuto e inténtalo de nuevo.',
+      ai_failed: 'No se pudo analizar la foto. Intenta tomarla más recta y con buena luz.',
+    },
     titleParse: 'Análisis de foto',
     titleWords: (n) => `Palabras de la foto (${n})`,
     selectWords: 'Marca las palabras con las casillas',
@@ -661,7 +667,7 @@ export const es = {
     bindCourseOption: (title) => `Vincular al curso: ${title}`,
     courseTip: '💡 Mejor vincúlalo a un curso — si no, la lección quedará suelta en «Hoy».',
   },
-  common: { loading: 'Cargando...', error: 'Error', cancel: 'Cancelar', save: 'Guardar', starting: "Iniciando...", deleteLesson: "¿Eliminar lección? Todas las palabras y ejercicios serán borrados permanentemente.", updateTitle: 'Hay una actualización', updateDesc: 'Toca para cargar la nueva versión', updateBtn: 'Actualizar', updateLater: 'Más tarde' },
+  common: { close: 'Cerrar', loading: 'Cargando...', error: 'Error', cancel: 'Cancelar', save: 'Guardar', starting: "Iniciando...", deleteLesson: "¿Eliminar lección? Todas las palabras y ejercicios serán borrados permanentemente.", updateTitle: 'Hay una actualización', updateDesc: 'Toca para cargar la nueva versión', updateBtn: 'Actualizar', updateLater: 'Más tarde' },
   games: {
     loading: 'Cargando…',
     moves: 'Movimientos',

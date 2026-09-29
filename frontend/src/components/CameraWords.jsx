@@ -17,7 +17,9 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
   const [busy, setBusy] = useState(false)
   const [words, setWords] = useState(null)   // [{de, tr, inDict, _save}]
   const [sentences, setSentences] = useState(null) // [{original, translation, words:[{de,tr,inDict}]}]
-  const [err, setErr] = useState('')
+  // Ошибку держим кодом и текстом: код — чтобы показать свой перевод,
+  // текст — запасной вариант, если код незнакомый.
+  const [err, setErr] = useState(null)
   const [savedCount, setSavedCount] = useState(0)
   const [lessons, setLessons] = useState([])
   const [courses, setCourses] = useState([])
@@ -92,7 +94,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    setBusy(true); setErr(''); setWords(null); setSentences(null); setSavedCount(0)
+    setBusy(true); setErr(null); setWords(null); setSentences(null); setSavedCount(0)
     try {
       const fd = new FormData()
       fd.append('file', file)
@@ -107,7 +109,7 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
         const r = await uploadFiles(`/reader/camera?lang=${lang}`, fd)
         setWords((r.words || []).map(w => ({ ...w, _save: !w.inDict })))
       }
-    } catch (e) { setErr(e.message || t.common.error) }
+    } catch (e) { setErr({ code: e.code, text: e.message || t.common.error }) }
     finally { setBusy(false) }
   }
 
@@ -163,7 +165,30 @@ export default function CameraWords({ renderTrigger, mode = 'words' }) {
         </div>
       )}
 
-      {err && <div style={{ color: 'var(--red)', marginTop: 8, fontSize: 13 }}>{err}</div>}
+      {/* Отказ показываем окном, а не красной строчкой 13-м шрифтом под кнопкой:
+          человек смотрел на полноэкранный спиннер, тот исчез — и надпись где-то
+          внизу страницы он просто не видит. Выглядит как «фотик вылетел»
+          (жалоба Павла 29.09.2026). */}
+      {err && (
+        <div onClick={() => setErr(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 4600, background: 'rgba(0,0,0,.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 380, background: 'var(--surface)', borderRadius: 18,
+              padding: '22px 20px', textAlign: 'center', border: '1px solid var(--line)' }}>
+            <div style={{ fontSize: 38, lineHeight: 1 }}>{err.code === 'ai_quota' ? '💸' : err.code === 'ai_busy' ? '⏳' : '📷'}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginTop: 10 }}>{t.camera.errTitle}</div>
+            <div style={{ fontSize: 14, color: 'var(--ink-soft)', marginTop: 8, lineHeight: 1.45 }}>
+              {(err.code && t.camera.err?.[err.code]) || err.text}
+            </div>
+            <button onClick={() => setErr(null)}
+              style={{ width: '100%', minHeight: 48, marginTop: 18, borderRadius: 14, border: 'none',
+                background: 'var(--accent)', color: 'var(--accent-ink)', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>
+              {t.common.close}
+            </button>
+          </div>
+        </div>
+      )}
 
       {(words || sentences) && (
         <div onClick={closeModal} style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>

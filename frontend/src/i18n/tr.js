@@ -632,6 +632,12 @@ export const tr = {
     btn: 'Fotoğraftan kelimeler',
     busy: 'Fotoğraf çözümleniyor…',
     busyHint: 'YZ kelimeleri tanıyor, birkaç saniye',
+    errTitle: 'Çözümleme yapılamadı',
+    err: {
+      ai_quota: 'Yapay zekâ anahtarının bakiyesi bitti — fotoğraf çözümlemesi geçici olarak kullanılamıyor. Fotoğrafta sorun yok, lütfen daha sonra deneyin.',
+      ai_busy: 'Yapay zekâ şu anda yoğun. Bir dakika bekleyip tekrar deneyin.',
+      ai_failed: 'Fotoğraf çözümlenemedi. Daha düz ve iyi ışıkta çekmeyi deneyin.',
+    },
     titleParse: 'Fotoğraf çözümü',
     titleWords: (n) => `Fotoğraftan kelimeler (${n})`,
     selectWords: 'Kelimeleri işaretle',
@@ -660,7 +666,7 @@ export const tr = {
     bindCourseOption: (title) => `Kursa bağla: ${title}`,
     courseTip: '💡 Bir kursa bağlamak daha iyi — yoksa ders "Bugün"de ayrı asılı kalır.',
   },
-  common: { loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal', save: 'Kaydet', starting: "Başlıyor...", deleteLesson: "Ders silinsin mi? Tüm kelimeler ve alıştırmalar kalıcı olarak silinecek.", updateTitle: 'Güncelleme çıktı', updateDesc: 'Yeni sürümü yüklemek için dokun', updateBtn: 'Güncelle', updateLater: 'Sonra' },
+  common: { close: 'Kapat', loading: 'Yükleniyor...', error: 'Hata', cancel: 'İptal', save: 'Kaydet', starting: "Başlıyor...", deleteLesson: "Ders silinsin mi? Tüm kelimeler ve alıştırmalar kalıcı olarak silinecek.", updateTitle: 'Güncelleme çıktı', updateDesc: 'Yeni sürümü yüklemek için dokun', updateBtn: 'Güncelle', updateLater: 'Sonra' },
   games: {
     loading: 'Yükleniyor…',
     moves: 'Hamle',
