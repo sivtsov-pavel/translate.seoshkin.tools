@@ -55,6 +55,10 @@ export default function ExerciseSession() {
   const [tails, setTails]         = useState(0)     // «хвосты» — пропущенные упражнения этого урока
   // Сколько упражнений урока ещё ждёт СЕГОДНЯ — по нему решаем, показывать ли «Продолжить»
   const [remaining, setRemaining]  = useState(0)
+  // Доля урока, уже отработанная. Показываем ЕЁ, а не остаток: после подхода из 12 строка
+  // «осталось 320» возвращает ту самую гору, ради ухода от которой подход и укорочен.
+  const [lessonDoneEx, setLessonDoneEx]   = useState(0)
+  const [lessonTotalEx, setLessonTotalEx] = useState(0)
   const [inTails, setInTails]     = useState(false) // сейчас проходим хвосты
   const [lessonFlow, setLessonFlow] = useState(null) // позиция в курсе + следующий урок (финиш-экран)
   // Что уже ОТВЕЧЕНО в этой сессии. «Продолжить упражнения» перезапрашивает сервер, а тот
@@ -237,8 +241,19 @@ export default function ExerciseSession() {
       try { const d = await api.get(`/exercises/deferred?lesson_id=${lessonId}`); n = Array.isArray(d) ? d.length : 0 } catch {}
       setTails(n)
       // Партия кончилась — но в уроке могут ждать ещё десятки упражнений.
-      try { const r = await api.get(`/exercises/remaining?lesson_id=${lessonId}`); setRemaining(r?.count ?? 0) } catch {}
-      setLessonDone(true) // урок «пройден» по упражнениям; если n>0 — предложим добить хвосты
+      let rem = 0
+      try {
+        const r = await api.get(`/exercises/remaining?lesson_id=${lessonId}`)
+        rem = r?.count ?? 0
+        setRemaining(rem)
+        setLessonDoneEx(r?.done ?? 0); setLessonTotalEx(r?.total ?? 0)
+      } catch {}
+      // Урок пройден, только когда на сегодня в нём НИЧЕГО не осталось. Раньше здесь стояло
+      // безусловное true: конец любой партии объявлялся «Урок пройден!» — при трёх сотнях
+      // несделанных упражнений внутри. Пока партия была размером с урок, это почти совпадало
+      // с правдой; с подходом из 12 ложь всплывала бы каждые две минуты. И это прямой вклад
+      // в «прогресс не считается»: вчера экран сказал «пройден», сегодня урок снова не пройден.
+      setLessonDone(rem === 0)
     } else if (lessonId || inTails) {
       setLessonDone(true) // хвосты пройдены / тип урока
     }
@@ -321,7 +336,10 @@ export default function ExerciseSession() {
     // «Полный финиш урока» — показываем веер продолжения. Не для практики по типу и не для зачёт-режима.
     // Веер показываем и после короткой сессии с карты: там сессия ограничена
     // типами, урок ещё не закрыт, и без веера ученик упирался в одну кнопку.
-    const showFan = !exam && !type && (lessonDone || Boolean(searchParams.get('types')))
+    // Веер продолжения (прогресс курса, следующий урок, выбор другого) показываем после
+    // любого захода в урок, а не только когда урок закрыт целиком: lessonDone теперь говорит
+    // правду, и по старому условию веер пропадал бы после каждого промежуточного подхода.
+    const showFan = !exam && !type && (Boolean(lessonId) || Boolean(searchParams.get('types')))
     const next = lessonFlow?.next
     const total = lessonFlow?.total || 0
     const pct = total ? Math.round((lessonFlow.passed / total) * 100) : 0
@@ -337,7 +355,7 @@ export default function ExerciseSession() {
               : lessonDone
               ? (exam ? (t.exercise.examPassed || 'Зачёт сдан! Урок пройден')
                  : (type ? (t.exercise.exercisesDone || 'Упражнения пройдены!') : (t.exercise.lessonPassed || 'Урок пройден!')))
-              : (t.exercise.batchDone || 'Молодец! Упражнения пройдены')}
+              : (t.exercise.batchClosed || 'Подход закрыт')}
           </div>
           <p style={{ color: 'var(--ink-soft)', fontSize: 14, margin: '0 0 20px' }}>
             {nothingToday ? t.exercise.doneTodaySub
@@ -345,7 +363,7 @@ export default function ExerciseSession() {
               : lessonDone
                 ? (exam ? (t.exercise.examPassedSub || 'Все слова урока пройдены. Так держать! 🎉')
                    : (type ? (t.exercise.exercisesDoneSub || 'Все упражнения этого типа сделаны.') : (t.exercise.lessonPassedSub || 'Ты прошёл все упражнения урока! 🎉')))
-                : (t.exercise.batchDoneSub || 'Продолжим следующую партию.')}
+                : (t.exercise.batchClosedSub || 'Двенадцать упражнений позади. Можно идти дальше, можно закрыть — результат уже засчитан.')}
           </p>
 
           {/* Прогресс по курсу — «Урок X из N · Y%» + полоса. Мотивирует идти дальше. */}
@@ -366,7 +384,11 @@ export default function ExerciseSession() {
           {(!lessonDone || remaining > 0) && (
             <button onClick={continuePractice} disabled={continuing}
               style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: 'var(--ink)', color: 'var(--bg)', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
-              {continuing ? '…' : `${t.exercise.continueEx || 'Продолжить упражнения'}${remaining > 0 ? ` (${remaining})` : ''} →`}
+              {/* Числа остатка на кнопке больше нет. «Продолжить упражнения (320)» — это
+                  приглашение, которое отпугивает: человек только что закрыл подход из 12
+                  и первым делом видит, что сделал 4%. Зовём на следующий короткий подход,
+                  а движение по уроку показываем полосой ниже. */}
+              {continuing ? '…' : `${t.exercise.oneMoreBatch || 'Ещё подход'} →`}
             </button>
           )}
 
@@ -399,11 +421,18 @@ export default function ExerciseSession() {
           )}
 
           {/* Честно говорим, что урок ещё не пройден целиком — без блокировки, но видно */}
-          {remaining > 0 && showFan && (
-            <div style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--surface-2)', color: 'var(--ink-soft)', fontSize: 13, marginBottom: 10, lineHeight: 1.5 }}>
-              {t.exercise.notFullyDone
-                ? t.exercise.notFullyDone(remaining)
-                : `В уроке осталось ${remaining} упражнений. Слово запоминается, когда пройдены все типы, а не только карточки.`}
+          {/* Движение по уроку — долей, а не остатком. Полоса растёт после каждого подхода;
+              число «осталось N» показывало ровно обратное — что до конца далеко. */}
+          {remaining > 0 && showFan && lessonTotalEx > 0 && (
+            <div style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--surface-2)', marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                <span>{t.exercise.lessonProgress || 'Урок пройден'}</span>
+                <span style={{ color: 'var(--ink-soft)' }}>{Math.round((lessonDoneEx / lessonTotalEx) * 100)}%</span>
+              </div>
+              <div style={{ height: 8, borderRadius: 6, background: 'var(--surface)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${Math.round((lessonDoneEx / lessonTotalEx) * 100)}%`,
+                  background: 'var(--good)', borderRadius: 6, transition: 'width .4s' }} />
+              </div>
             </div>
           )}
 
@@ -578,6 +607,16 @@ export default function ExerciseSession() {
       <div className="exercise-session-type">
         <span style={{ background: 'rgba(62,127,193,0.12)', color: 'var(--blue)', borderRadius: 8, padding: '2px 9px', fontWeight: 700, fontSize: 12, marginRight: 8 }}>
           {doneOffset + current + 1} / {doneOffset + exercises.length}
+        </span>
+        {/* Повтор или новое. Без этой метки знакомая карточка читается как «вчерашнее не
+            засчиталось»: 30.09.2026 из 133 упражнений дня 95 были вчерашними, и SM-2 вернул
+            их по сроку — то есть ровно так, как должен. Подпись превращает поломку в правило. */}
+        <span style={{
+          borderRadius: 8, padding: '2px 9px', fontWeight: 700, fontSize: 12, marginRight: 8,
+          background: ex.is_review ? 'var(--yellow-soft)' : 'rgba(63,191,143,0.14)',
+          color: ex.is_review ? 'var(--gold-dark)' : 'var(--good)',
+        }}>
+          {ex.is_review ? t.exercise.isReview : t.exercise.isNew}
         </span>
         {/* Название типа теперь показывается внутри карточки упражнения (над 📚 lessonTitle) — здесь дубль убран */}
         {/* Пропустить голосовое (проговори/диктант) в хвосты — если не осознанный выбор типа */}
