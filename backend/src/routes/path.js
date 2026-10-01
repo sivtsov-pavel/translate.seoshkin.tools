@@ -5,6 +5,7 @@
 // а не сырые списки, из которых клиенту пришлось бы это вычислять.
 import { db } from '../db/index.js'
 import { playableLessonIds, ensureDefaultSchedules, fixedPassedLessons, LESSON_PASSED_HAVING } from '../services/drip.js'
+import { computeStreak } from '../services/streak.js'
 
 // Узлов в разделе: столько уроков показываем одной «дорогой», дальше — следующий раздел
 const SECTION_SIZE = 6
@@ -229,14 +230,10 @@ export async function pathRoutes(fastify) {
       `SELECT DISTINCT (a.attempted_at AT TIME ZONE 'UTC')::date AS d
        FROM exercise_attempts a WHERE a.user_id = $1
        ORDER BY d DESC LIMIT 60`, [userId])
-    let streak = 0
-    const today = new Date(); today.setUTCHours(0, 0, 0, 0)
-    for (const row of streakRows) {
-      const d = new Date(row.d); d.setUTCHours(0, 0, 0, 0)
-      const diff = Math.round((today - d) / 86400000)
-      if (diff === streak || (streak === 0 && diff === 1)) streak++
-      else break
-    }
+    // Счёт общий с дашбордом (services/streak.js). Здешняя копия считала неверно: если
+    // сегодня ещё не занимались, серия схлопывалась до 1 — у Павла 1 октября вместо двух
+    // дней подряд (29 и 30 сентября) стояла единица.
+    const streak = computeStreak(streakRows.map(r => r.d))
 
     // Хвосты одним числом: пропущенные упражнения плюс пропущенные фразы.
     // Раньше их было видно только внутри урока, и общая картина не собиралась.

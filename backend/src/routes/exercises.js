@@ -1,4 +1,5 @@
 import { db } from '../db/index.js'
+import { computeStreak } from '../services/streak.js'
 import { playableLessonIds, ensureDefaultSchedules, fixedPassedLessons, LESSON_PASSED_HAVING } from '../services/drip.js'
 import { recordAttempt } from '../services/attempts.js'
 import { newExerciseIds } from '../services/newExercises.js'
@@ -440,15 +441,9 @@ export async function exercisesRoutes(fastify) {
     const { rows: days } = await db.query(
       `SELECT DISTINCT (attempted_at AT TIME ZONE 'UTC')::date AS d
        FROM exercise_attempts WHERE user_id = $1 ORDER BY d DESC LIMIT 400`, [userId])
-    let streak = 0
-    if (days.length) {
-      const oneDay = 86400000
-      const todayUTC = new Date(new Date().toISOString().slice(0, 10)).getTime()
-      const set = new Set(days.map(r => new Date(r.d).getTime()))
-      // старт: сегодня если есть активность, иначе вчера
-      let cursor = set.has(todayUTC) ? todayUTC : todayUTC - oneDay
-      while (set.has(cursor)) { streak++; cursor -= oneDay }
-    }
+    // Счёт общий с экраном «Путь» (services/streak.js). Здесь он был верным, там — нет,
+    // и расхождение двух копий одного правила держалось до 01.10.2026.
+    const streak = computeStreak(days.map(r => r.d))
 
     return {
       lessons: { done: ld[0]?.done ?? 0, total: lt[0]?.total ?? 0 },
