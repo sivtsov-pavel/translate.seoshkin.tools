@@ -38,7 +38,7 @@
   "orientation": "portrait",
   "fingerprints": [],
   "additionalTrustedOrigins": [
-    "https://translate.seoshkin.tools"
+    "translate.seoshkin.tools"
   ],
   "retainedBundles": []
 }
