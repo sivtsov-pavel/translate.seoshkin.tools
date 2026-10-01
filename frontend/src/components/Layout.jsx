@@ -79,8 +79,17 @@ export default function Layout({ children }) {
   const E = ex(lang)
   // Название изучаемого языка НА ЯЗЫКЕ ИНТЕРФЕЙСА (Intl), а не хардкод «Немецкий»
   const tgtCode = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
+  // Название языка пробуем на своей локали, затем на английской, и лишь потом берём
+  // захардкоженное русское. Браузер знает не все языки: для албанской локали
+  // Intl.DisplayNames не отдаёт ничего, и в интерфейсе на албанском немецкий назывался
+  // «Немецкий» — русское слово посреди албанского экрана.
   let tgtName = tgt.name
-  try { const n = new Intl.DisplayNames([lang || 'ru'], { type: 'language' }).of(tgtCode); if (n) tgtName = n.charAt(0).toUpperCase() + n.slice(1) } catch { /* фолбэк */ }
+  for (const loc of [lang, 'en'].filter(Boolean)) {
+    try {
+      const n = new Intl.DisplayNames([loc], { type: 'language' }).of(tgtCode)
+      if (n && n !== tgtCode) { tgtName = n.charAt(0).toUpperCase() + n.slice(1); break }
+    } catch { /* эта локаль браузеру неизвестна — пробуем следующую */ }
+  }
   const { theme, toggle: toggleTheme } = useThemeStore()
   const adminOp = useAdminOpStore()
   const { fetchSettings } = useSettingsStore()
