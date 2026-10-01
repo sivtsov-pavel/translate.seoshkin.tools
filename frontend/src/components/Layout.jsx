@@ -80,13 +80,21 @@ export default function Layout({ children }) {
   // Название изучаемого языка НА ЯЗЫКЕ ИНТЕРФЕЙСА (Intl), а не хардкод «Немецкий»
   const tgtCode = (typeof localStorage !== 'undefined' && localStorage.getItem('target_lang')) || 'de'
   // Название языка пробуем на своей локали, затем на английской, и лишь потом берём
-  // захардкоженное русское. Браузер знает не все языки: для албанской локали
-  // Intl.DisplayNames не отдаёт ничего, и в интерфейсе на албанском немецкий назывался
-  // «Немецкий» — русское слово посреди албанского экрана.
+  // захардкоженное русское.
+  //
+  // ⚠️ Ответ Intl.DisplayNames нельзя брать на веру: своей локали он молча подменяет
+  // ЧУЖУЮ. Для албанской Chrome отдаёт «немецкий» — русское слово, потому что данных по
+  // албанскому у него нет и он свалился на локаль браузера. Ни исключения, ни пустого
+  // ответа при этом нет, поймать подмену можно только одним способом: спросить
+  // resolvedOptions().locale и сверить с тем, что просили. Проверено в браузере на бою —
+  // девять локалей из десяти отвечают честно, албанская подменяется.
   let tgtName = tgt.name
   for (const loc of [lang, 'en'].filter(Boolean)) {
     try {
-      const n = new Intl.DisplayNames([loc], { type: 'language' }).of(tgtCode)
+      const dn = new Intl.DisplayNames([loc], { type: 'language' })
+      const used = String(dn.resolvedOptions().locale || '').split('-')[0]
+      if (used !== String(loc).split('-')[0]) continue   // подмена — ответу верить нельзя
+      const n = dn.of(tgtCode)
       if (n && n !== tgtCode) { tgtName = n.charAt(0).toUpperCase() + n.slice(1); break }
     } catch { /* эта локаль браузеру неизвестна — пробуем следующую */ }
   }
