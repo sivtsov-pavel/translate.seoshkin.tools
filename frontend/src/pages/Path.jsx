@@ -8,6 +8,7 @@ import { useIntroStore } from '../store/intro.js'
 import { speak, speakAuto, uiLocale } from '../hooks/useSpeech.jsx'
 import { roadPath, layoutNodes, splitRoadBySections, NODE_SIZE } from './path/road.js'
 import { RoadNode, TypeIcon, TYPE_COLOR } from './path/nodes.jsx'
+import { useViewport } from './path/useViewport.js'
 
 // Экран «Путь» (режим новичка) — карта уроков по макету docs/maket-home.
 //
@@ -22,34 +23,6 @@ import { RoadNode, TypeIcon, TYPE_COLOR } from './path/nodes.jsx'
 //
 // Вся механика тапов осталась прежней: она выстрадана жалобами и переписыванию не подлежит
 // (05.09, 06.09, 09.09.2026) — см. комментарии у selected, прокрутки и подсказки.
-
-// Ширины из SPEC. Телефон — одна колонка, планшет — колонка 600, ПК — 720 плюс правая колонка.
-const BP_TABLET = 768
-const BP_DESK   = 1280
-
-function useViewport() {
-  const [w, setW] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 390))
-  useEffect(() => {
-    const onResize = () => setW(window.innerWidth)
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-  return {
-    w,
-    isPhone: w < BP_TABLET,
-    isDesk: w >= BP_DESK,
-    // Ширина полотна карты и во сколько раз сжать горизонтальные смещения узлов.
-    // На телефоне дорога та же, просто уже: 390px не вмещают размах в 340px между крайними
-    // узлами, и без сжатия крайние уезжали бы за экран вместе с подписями.
-    view:  w >= BP_DESK ? 720 : w >= BP_TABLET ? 600 : 340,
-    scale: w >= BP_DESK ? 1 : w >= BP_TABLET ? 0.88 : 0.42,
-    // Шаг на телефоне БОЛЬШЕ, чем на ПК, хотя узлы там мельче. Причина в сжатии по
-    // горизонтали: при scale 0.42 соседние узлы почти на одной вертикали, и подпись
-    // одного ложится на кружок другого. На ПК их разводит размах в 340px, на телефоне
-    // разводить нечем — остаётся вертикаль.
-    step:  w >= BP_DESK ? 118 : w >= BP_TABLET ? 112 : 128,
-  }
-}
 
 export default function Path() {
   const navigate = useNavigate()
@@ -86,9 +59,12 @@ export default function Path() {
     setShowAll(all)
   }
 
-  // Какие пройденные разделы человек раскрыл вручную (клик по свёрнутой полосе)
-  const [expanded, setExpanded] = useState(() => new Set())
-  const toggleSection = (i) => setExpanded(prev => {
+  // Разделы, которые человек переключил РУКАМИ. Храним не «раскрытые», а «перевёрнутые
+  // относительно умолчания»: умолчание зависит от режима дороги (в «Мой раздел» пройденные
+  // свёрнуты, в «Вся дорога» раскрыто всё), и список раскрытых пришлось бы пересобирать
+  // при каждом переключении.
+  const [flipped, setFlipped] = useState(() => new Set())
+  const toggleSection = (i) => setFlipped(prev => {
     const next = new Set(prev)
     next.has(i) ? next.delete(i) : next.add(i)
     return next
@@ -190,9 +166,16 @@ export default function Path() {
   }
 
   const buckets = splitRoadBySections(items, sections)
-  // Какие разделы показываем. «Мой раздел» — текущий и соседние пройденные полосой;
-  // «Вся дорога» — всё. Пройденные по умолчанию свёрнуты и разворачиваются кликом.
+  // Какие разделы показываем. «Мой раздел» — текущий и соседние; «Вся дорога» — всё.
   const visibleSections = showAll ? sections : sections.filter((s, i) => i >= curSection - 1)
+  // Раскрыт ли раздел. В «Мой раздел» пройденные свёрнуты в полосу (их много, и дорога
+  // превращалась в ленту), в «Вся дорога» раскрыто ВСЁ — включая ещё не открытые уроки.
+  // Ради этого тумблер и нужен: Павел 01.10.2026 — «не показывается вся карта, чтобы
+  // пройти все заново». Клик по разделу переворачивает умолчание в любую сторону.
+  const isSectionOpen = (s, i) => {
+    const byDefault = showAll || s.state === 'current'
+    return flipped.has(i) ? !byDefault : byDefault
+  }
 
   return (
     <div className="path-layout">
@@ -212,15 +195,16 @@ export default function Path() {
 
         {visibleSections.map((s) => {
           const i = sections.indexOf(s)
-          const open = s.state !== 'done' || expanded.has(i)
+          const open = isSectionOpen(s, i)
           return (
             <Fragment key={i}>
               <SectionHead section={s} t={t} lang={lang} open={open}
-                onToggle={() => s.state === 'done' && toggleSection(i)}
+                onToggle={() => toggleSection(i)}
                 onRepeat={() => navigate(`/exercise-session?lesson_id=${s.lesson_ids[0]}`)} />
-              {open && s.state !== 'future' && (
+              {open && (
                 <Road items={buckets[i] || []} vp={vp} t={t} lang={lang} go={go}
                   chest={s.state === 'current' ? chest : null}
+                  dim={s.state === 'future'}
                   selected={selected} setSelected={setSelected}
                   details={details} setDetails={setDetails} />
               )}
@@ -414,7 +398,7 @@ function SectionHead({ section, t, lang, open, onToggle, onRepeat }) {
 }
 
 // ── Дорога одного раздела ───────────────────────────────────────────────────────────────
-function Road({ items, vp, t, lang, go, chest, selected, setSelected, details, setDetails }) {
+function Road({ items, vp, t, lang, go, chest, dim, selected, setSelected, details, setDetails }) {
   // Высота раскрытой карточки. На телефоне она лежит ПОД узлом и без этого накрыла бы
   // следующий — до него нельзя было бы дотянуться, не закрыв текущий.
   const [cardH, setCardH] = useState(0)
@@ -489,7 +473,7 @@ function Road({ items, vp, t, lang, go, chest, selected, setSelected, details, s
   const filled = points.length ? Math.max(0, Math.min(1, (firstGap - 0.5) / points.length)) : 0
 
   return (
-    <div className="path-road" style={{ height }}>
+    <div className={`path-road${dim ? ' path-road--dim' : ''}`} style={{ height }}>
       <svg viewBox={`0 0 ${vp.view} ${height}`} preserveAspectRatio="xMidYMin meet"
         className="path-road-svg" aria-hidden>
         {/* Три слоя: полотно, белый пунктир по центру, пройденный участок поверх */}

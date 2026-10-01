@@ -604,7 +604,7 @@ export async function exercisesRoutes(fastify) {
       params = [userId, today, target]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
-               l.date AS lesson_date, l.is_set AS is_set, l.course_id,
+               l.date AS lesson_date, l.is_set AS is_set, l.course_id, l.lesson_number,
                COALESCE(l.title_translations, '{}') AS lesson_title_translations,
                COALESCE(l.description_translations, '{}') AS lesson_description_translations,
                e.type, COUNT(*)::int AS count
@@ -612,7 +612,7 @@ export async function exercisesRoutes(fastify) {
         JOIN lessons l ON l.id = e.lesson_id
         LEFT JOIN user_exercise_progress uep ON uep.exercise_id = e.id AND uep.user_id = $1
         WHERE COALESCE(uep.next_review_date, CURRENT_DATE) <= $2 AND l.target_lang = $3${teacherScope}
-        GROUP BY l.id, l.title, l.description, l.date, l.is_set, l.course_id, l.title_translations, l.description_translations, e.type
+        GROUP BY l.id, l.title, l.description, l.date, l.is_set, l.course_id, l.lesson_number, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
     } else {
       // Ученик видит готовые уроки СВОЕЙ школы (null-safe: без школы — как раньше, всё).
@@ -625,7 +625,7 @@ export async function exercisesRoutes(fastify) {
       params = [userId, today, target, request.user.school_id ?? null, [...playable]]
       query = `
         SELECT l.id AS lesson_id, l.title AS lesson_title, l.description AS lesson_description,
-               l.date AS lesson_date, l.is_set AS is_set, l.course_id,
+               l.date AS lesson_date, l.is_set AS is_set, l.course_id, l.lesson_number,
                COALESCE(l.title_translations, '{}') AS lesson_title_translations,
                COALESCE(l.description_translations, '{}') AS lesson_description_translations,
                e.type, COUNT(*)::int AS count
@@ -636,7 +636,7 @@ export async function exercisesRoutes(fastify) {
           AND ($4::int IS NULL OR l.school_id = $4)
           AND l.id = ANY($5::int[])
           AND COALESCE(uep.next_review_date, CURRENT_DATE) <= $2
-        GROUP BY l.id, l.title, l.description, l.date, l.is_set, l.course_id, l.title_translations, l.description_translations, e.type
+        GROUP BY l.id, l.title, l.description, l.date, l.is_set, l.course_id, l.lesson_number, l.title_translations, l.description_translations, e.type
         ORDER BY l.id, e.type`
     }
 
@@ -661,7 +661,7 @@ export async function exercisesRoutes(fastify) {
     const lessonsMap = {}
     for (const r of rows) {
       if (!lessonsMap[r.lesson_id]) {
-        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_title: r.lesson_title, lesson_title_translations: r.lesson_title_translations, lesson_description: r.lesson_description, lesson_date: r.lesson_date, is_set: r.is_set, total: 0, byType: {}, words_count: 0 }
+        lessonsMap[r.lesson_id] = { lesson_id: r.lesson_id, lesson_number: r.lesson_number, lesson_title: r.lesson_title, lesson_title_translations: r.lesson_title_translations, lesson_description: r.lesson_description, lesson_date: r.lesson_date, is_set: r.is_set, total: 0, byType: {}, words_count: 0 }
       }
       lessonsMap[r.lesson_id].byType[r.type] = r.count
       lessonsMap[r.lesson_id].total += r.count
@@ -683,6 +683,7 @@ export async function exercisesRoutes(fastify) {
             params: [target] }
       const { rows: allLes } = await db.query(
         `SELECT l.id AS lesson_id, l.title AS lesson_title, l.date AS lesson_date, l.is_set AS is_set, l.course_id,
+                l.lesson_number,
                 l.description AS lesson_description,
                 COALESCE(l.title_translations,'{}') AS lesson_title_translations,
                 COALESCE(l.description_translations,'{}') AS lesson_description_translations

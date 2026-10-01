@@ -46,6 +46,14 @@ export function TypeBadge({ type }) {
  * Один узел дороги. Всегда <button> с aria-label: карта проходится с клавиатуры,
  * а область нажатия не меньше 44px даже у самого мелкого, запертого узла.
  */
+/** Доля узла в процентах: у урока — по упражнениям, у станции — по её шагам. */
+export function nodePct(node) {
+  const done = node.kind === 'lesson' ? node.ex_done : node.done
+  const total = node.kind === 'lesson' ? node.ex_total : node.total
+  if (!total) return 0
+  return Math.max(0, Math.min(100, Math.round((done / total) * 100)))
+}
+
 export function RoadNode({ node, title, label, onOpen, isOpen, tabIndex }) {
   // Внутри урока стоит его НОМЕР, а не значок типа. У станции тип — главное, что о ней надо
   // знать; у урока тип один на всех (значок книги в каждом кружке — шум), а номер отвечает
@@ -55,6 +63,12 @@ export function RoadNode({ node, title, label, onOpen, isOpen, tabIndex }) {
   const locked = node.state === 'locked'
   const done = node.state === 'done'
   const current = node.state === 'current'
+  // Ободок прогресса вокруг узла: сколько из урока уже сделано. Он был в прежней карте,
+  // и Павел попросил вернуть (01.10.2026): «пропал прогресс с плиток… было удобно и
+  // красиво». В макете на этом месте сплошное золотое кольцо — здесь оно становится дугой
+  // и начинает нести смысл, ничего не теряя из вида.
+  const pct = nodePct(node)
+  const showArc = !locked && !done && pct > 0
 
   if (node.type === 'chest') {
     return (
@@ -73,14 +87,21 @@ export function RoadNode({ node, title, label, onOpen, isOpen, tabIndex }) {
     )
   }
 
+  // Класс ставим из JS, а не ловим наличие дуги селектором :has(): он есть не во всех
+  // браузерах, которыми к нам ходят, а узел без кольца выглядел бы сломанным.
   const cls = ['path-node',
     current ? 'path-node--current' : done ? 'path-node--done' : locked ? 'path-node--locked' : 'path-node--open',
-    isOpen ? 'is-open' : ''].filter(Boolean).join(' ')
+    showArc ? 'has-arc' : '', isOpen ? 'is-open' : ''].filter(Boolean).join(' ')
 
   return (
-    <button className={cls} onClick={onOpen} aria-label={label} tabIndex={tabIndex}
+    <button className={cls} onClick={onOpen}
+      aria-label={showArc ? `${label}, ${pct}%` : label} tabIndex={tabIndex}
       style={locked ? undefined : { '--node': c.main, '--node-d': c.dark }}>
       {current && <span className="path-node-ring" aria-hidden />}
+      {showArc && (
+        <span className="path-node-arc" aria-hidden
+          style={{ '--pct': pct, '--arc-c': current ? 'var(--gold-ring)' : c.main }} />
+      )}
       <span className="path-node-face">
         {locked ? <Lock size={22} strokeWidth={2.4} aria-hidden />
           : done ? <Check size={28} strokeWidth={3.2} aria-hidden />

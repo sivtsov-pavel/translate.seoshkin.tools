@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from 'react'
+import { Fragment, useEffect, useState, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   BookOpenText, Zap, Flame, Play, CheckCircle2, Layers, Puzzle, SquarePen,
-  Gamepad2, Search, Volume2, RotateCcw, Pencil, ChevronUp, ChevronDown, Check,
+  Gamepad2, Search, Volume2, RotateCcw, Pencil, ChevronUp, ChevronDown,
   Star, Sparkles, MessageCircle, Heart, ArrowRight, Mic, BarChart3, Printer,
   Camera, GraduationCap, Lock, Languages,
 } from 'lucide-react'
@@ -15,6 +15,9 @@ import { SpeakButton } from '../hooks/useSpeech.jsx'
 import { getTranslation, getLessonTitle, getLessonDesc } from '../utils/translation.js'
 import AdSlot from '../components/AdSlot.jsx'
 import CameraWords from '../components/CameraWords.jsx'
+import { roadPath, layoutNodes, NODE_SIZE } from './path/road.js'
+import { RoadNode } from './path/nodes.jsx'
+import { useViewport } from './path/useViewport.js'
 import '../styles/dashboard-v3.css'
 
 // Языки → флаг/название/полоска флага (для шапки курса)
@@ -154,8 +157,13 @@ export default function Dashboard() {
   const match = l => !q || (getLessonTitle(l.lesson_title, l.lesson_title_translations, lang) || l.lesson_title || '').toLowerCase().includes(q)
   const shown = filtered.filter(match)
 
-  // Уроки (не наборы) в порядке прохождения (старые → новые = снизу вверх нитки)
-  const books = shown.filter(l => !l.is_set).sort((a, b) => ts(a.lesson_date) - ts(b.lesson_date) || a.lesson_id - b.lesson_id)
+  // Уроки (не наборы) в порядке прохождения — ПО НОМЕРУ, а дата только для тех, у кого
+  // номера нет. Раньше сортировали по дате: на дороге уроки шли 4 → 6 → 5, и пока в кружках
+  // стояли иконки, этого не было видно. С номерами в кружках (01.10.2026) расхождение
+  // бросается в глаза и читается как сбой — хотя сбой был всегда, просто молчал.
+  const num = l => (l.lesson_number == null ? Infinity : l.lesson_number)
+  const books = shown.filter(l => !l.is_set)
+    .sort((a, b) => num(a) - num(b) || ts(a.lesson_date) - ts(b.lesson_date) || a.lesson_id - b.lesson_id)
   const setsAll = shown.filter(l => l.is_set).sort((a, b) => b.lesson_id - a.lesson_id)
   const completedIds = new Set((completed || []).map(c => c.id))
   // Текущий — первый НЕпройденный и НЕзакрытый (locked уроки видно, но проходить нельзя)
@@ -592,51 +600,95 @@ function MetricCard({ Icon, title, value, total, color, pct }) {
 }
 
 /* ================= НИТКА УРОКОВ ================= */
+// Карта уроков в режиме эксперта — та же дорога, что у новичка.
+//
+// Здесь была своя реализация: змейка по шести смещениям, кривая «через середину» и узлы
+// с иконками-звёздами. Две карты в одном приложении расходятся всегда, и эта уже отстала —
+// Павел 01.10.2026: «в режиме эксперт карта выводится старая, давай адаптируем под наш
+// новый макет». Теперь геометрия и узлы общие (pages/path/*), а эксперту остаётся его
+// карточка урока снизу — со словами, типами упражнений и сбросом.
 function LessonPath({ lessons, selectedId, onSelect, lang }) {
-  const NODE = 64, GAP_Y = 118
-  const xPattern = [0, -78, 74, -46, 52, 0, -70]
-  const points = useMemo(() => lessons.map((l, i) => ({
-    ...l, x: 160 + xPattern[i % xPattern.length], y: 50 + i * GAP_Y,
+  const vp = useViewport()
+  const { t } = useI18nStore()
+
+  // Приводим данные дашборда к виду, который понимает общая карта. Состояние «upcoming»
+  // у нас называется «open»: урок доступен, но ещё не начат.
+  const items = useMemo(() => lessons.map((l, i) => ({
+    kind: 'lesson',
+    lesson_id: l.lesson_id,
+    number: l.lesson_number ?? i + 1,
+    title: l.lesson_title,
+    title_translations: l.lesson_title_translations,
+    state: l.status === 'upcoming' ? 'open' : l.status,
+    // Ободок прогресса считаем по mastered_ex, а НЕ по done_ex. Это две разные величины,
+    // и их легко перепутать (о чём предупреждает комментарий в routes/exercises.js):
+    // done_ex — то, что SRS отодвинул в будущее, то есть «сегодня повторять не надо».
+    // Утром, пока человек ещё не занимался, done_ex равен нулю у всех уроков — ободок
+    // был бы пуст даже у наполовину пройденного. mastered_ex — сделанное хотя бы раз,
+    // ровно то же, что показывает карта новичка.
+    ex_done: l.mastered_ex ?? 0,
+    ex_total: l.total_ex ?? 0,
   })), [lessons])
+
+  const points = useMemo(() => layoutNodes(items, {
+    centerX: vp.view / 2, startY: 60, step: vp.step,
+    // Карточка урока у эксперта живёт отдельным блоком снизу, место под неё не нужно.
+    // Но текущий узел крупнее остальных (96 против 64), и его подпись в две строки
+    // налезала на следующий кружок — поэтому небольшой запас всё же нужен.
+    afterCurrent: 34,
+    scale: vp.scale,
+  }), [items, vp.view, vp.step, vp.scale])
+
   if (!points.length) return null
 
-  const pathD = (() => {
-    if (points.length < 2) return `M ${points[0].x} ${points[0].y}`
-    let d = `M ${points[0].x} ${points[0].y}`
-    for (let i = 1; i < points.length; i++) {
-      const p0 = points[i - 1], p1 = points[i], midY = (p0.y + p1.y) / 2
-      d += ` C ${p0.x} ${midY}, ${p1.x} ${midY}, ${p1.x} ${p1.y}`
-    }
-    return d
-  })()
-  const height = points[points.length - 1].y + 90
-  const doneCount = points.filter(p => p.status === 'done').length
+  const d = roadPath(points.map(p => [p.x, p.y]))
+  const height = points[points.length - 1].y + 110
+  // Нить зелёная до ПЕРВОГО непройденного узла — то есть до места, где путь реально
+  // прерывается, а не до последнего пройденного: по нему линия закрашивала и пробелы.
+  let firstGap = items.findIndex(n => n.state !== 'done')
+  if (firstGap === -1) firstGap = points.length
+  const filled = Math.max(0, Math.min(1, (firstGap - 0.5) / points.length))
 
   return (
-    <div className="dl-path" style={{ height }}>
-      <svg className="dl-path-svg" viewBox={`0 0 320 ${height}`} preserveAspectRatio="none">
-        <path d={pathD} className="dl-thread-bg" />
-        <path d={pathD} className="dl-thread-done"
-          style={{ strokeDasharray: 2000, strokeDashoffset: 2000 - (2000 * (doneCount + 0.5)) / points.length }} />
+    <div className="path-road" style={{ height }}>
+      <svg viewBox={`0 0 ${vp.view} ${height}`} preserveAspectRatio="xMidYMin meet"
+        className="path-road-svg" aria-hidden>
+        <path d={d} fill="none" stroke="var(--road)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={d} fill="none" stroke="#fff" strokeWidth="3" strokeDasharray="2 14" opacity=".9" strokeLinecap="round" />
+        <path d={d} fill="none" stroke="var(--road-done)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round"
+          pathLength="1" style={{ strokeDasharray: 1, strokeDashoffset: 1 - filled, transition: 'stroke-dashoffset .6s ease-out' }} />
+        <path d={d} fill="none" stroke="#fff" strokeWidth="3" opacity=".55"
+          pathLength="1" style={{ strokeDasharray: 1, strokeDashoffset: 1 - filled }} />
       </svg>
-      {/* Горизонталь кружков — в ПРОЦЕНТАХ той же 320px-сетки, что и viewBox тропинки:
-          SVG растягивается на ширину контейнера, кружки едут вместе с ним → линия обнимает кружки */}
-      {points.map(p => (
-        <button key={p.lesson_id} data-node-lesson={p.lesson_id}
-          className={`dl-node dl-node--${p.status}` + (p.lesson_id === selectedId ? ' dl-node--selected' : '')}
-          style={{ left: `${(p.x / 320) * 100}%`, transform: 'translateX(-50%)', top: p.y - NODE / 2, width: NODE, height: NODE }}
-          onClick={() => onSelect(p.lesson_id)}
-          title={getLessonTitle(p.lesson_title, p.lesson_title_translations, lang)}>
-          <span className="dl-node-icon">
-            {p.status === 'done' ? <Check size={22} strokeWidth={2.6} />
-              : p.status === 'current' ? <Star size={22} fill="currentColor" />
-              : p.status === 'locked' ? <Lock size={20} />
-              : <Star size={22} />}
-          </span>
-          {p.status === 'current' && <span className="dl-node-pulse" />}
-          <span className="dl-node-label">{getLessonTitle(p.lesson_title, p.lesson_title_translations, lang)}</span>
-        </button>
-      ))}
+
+      {points.map((p, i) => {
+        const n = items[i]
+        const size = NODE_SIZE[n.state] || 64
+        const title = getLessonTitle(n.title, n.title_translations, lang) || `${t.path.lesson} ${n.number}`
+        // Из подписи убираем приставку «Урок 7:» — номер уже стоит в кружке
+        const caption = String(title).replace(/^[^:]{1,24}\d[^:]{0,8}:\s*/, '')
+        return (
+          <Fragment key={n.lesson_id}>
+            <div className="path-node-slot"
+              style={{ left: `${(p.x / vp.view) * 100}%`, top: p.y - size / 2, width: size, height: size,
+                zIndex: n.lesson_id === selectedId ? 4 : 2 }}
+              {...(n.state === 'current' ? { 'data-current-node': '1' } : {})}
+              data-node-lesson={n.lesson_id}>
+              {n.state === 'current' && <span className="path-now">{t.path.now}</span>}
+              <RoadNode node={n} title={title} label={`${title}, ${t.path.lesson} ${n.number}`}
+                isOpen={n.lesson_id === selectedId} onOpen={() => onSelect(n.lesson_id)} />
+            </div>
+            <div className="path-cap" style={{
+              top: p.y + size / 2 + 16,
+              left: `clamp(0px, calc(${(p.x / vp.view) * 100}% - 75px), calc(100% - 150px))`,
+              opacity: n.state === 'locked' ? 0.55 : 1,
+            }}>
+              <span className="path-cap-title">{caption}</span>
+              <span className="path-cap-sub">{t.path.lesson} {n.number}</span>
+            </div>
+          </Fragment>
+        )
+      })}
     </div>
   )
 }

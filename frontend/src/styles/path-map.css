@@ -178,6 +178,9 @@
 
 /* ── Дорога ─────────────────────────────────────────────────────────────────── */
 .path-road { position: relative; width: 100%; }
+/* Будущий раздел в режиме «Вся дорога» — приглушён, но виден: карта впереди должна
+   читаться как карта, а не как пустое место (SPEC, раздел 4). */
+.path-road--dim { opacity: .55; }
 .path-road-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
 .path-node-slot { position: absolute; transform: translateX(-50%); }
@@ -218,6 +221,28 @@
   background: var(--purple); color: #fff;
   border: 7px solid var(--gold-ring); box-shadow: 0 6px 0 var(--gold-ring-d);
 }
+/* У текущего узла кольцо рисует дуга прогресса — сплошную рамку убираем совсем.
+   Прозрачной её сделать мало: рамка осталась бы зазором, и между кружком и дугой
+   светилась бы полоса фона — кольцо читалось как два разных. */
+.path-node--current.has-arc .path-node-face { border: none; box-shadow: 0 5px 0 var(--purple-d); }
+
+/* ── Ободок прогресса вокруг узла ────────────────────────────────────────────
+   Сколько из урока уже сделано. Был в прежней карте, Павел попросил вернуть
+   (01.10.2026): «пропал прогресс с плиток… было удобно и красиво». В макете на этом
+   месте сплошное золотое кольцо — здесь оно стало дугой и понесло смысл.
+   Маской вырезаем середину: без неё conic-gradient залил бы весь круг и закрыл узел. */
+.path-node-arc {
+  position: absolute; inset: calc(-1 * var(--arc-w, 6px)); border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from -90deg,
+    var(--arc-c, var(--gold-ring)) calc(var(--pct, 0) * 1%), var(--arc-track, rgba(0, 0, 0, .09)) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--arc-w, 6px)), #000 calc(100% - var(--arc-w, 6px) + 1px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - var(--arc-w, 6px)), #000 calc(100% - var(--arc-w, 6px) + 1px));
+}
+.path-node--current .path-node-arc { --arc-w: 9px; --arc-track: rgba(227, 174, 58, .3); }
+.path-node--open    .path-node-arc { --arc-w: 5px; }
+/* Пульс уводим наружу за дугу: наложенные друг на друга, они читались как два кольца,
+   и доля прогресса в этой каше терялась. */
+.path-node--current.has-arc .path-node-ring { inset: -22px; border-width: 2px; opacity: .5; }
 /* Пульсирующее кольцо: у текущего узла оно единственное, что движется на экране —
    глаз находит «где я» без поиска. */
 .path-node-ring {
