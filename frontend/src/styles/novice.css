@@ -371,49 +371,6 @@ body.novice-mode .layout-drawer button {
   min-height: 46px;
 }
 
-/* ── Правая колонка «Пути» на ПК (макет 2a) ───────────────────────────────────
-   Неделя, «что уже умею» и сундук. На телефоне и планшете скрыта: там эти
-   данные отвлекают от дороги, а места под них нет. */
-.path-aside { display: none; }
-
-@media (min-width: 1200px) {
-  .path-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; align-items: start; }
-  .path-aside {
-    display: flex; flex-direction: column; gap: 14px;
-    padding: 14px 16px 40px; border-left: 1px solid var(--line); min-height: 100%;
-  }
-  .path-main { margin: 0 auto; }
-}
-.path-aside-tiles { display: flex; gap: 10px; }
-.path-aside-card { padding: 16px 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
-.path-aside-card--chest { background: rgba(232, 176, 36, 0.12); border-color: rgba(232, 176, 36, 0.35); }
-.path-aside-title { font-size: 14px; font-weight: 800; }
-
-
-/* ── Правая колонка «Пути» на ПК (макет 2a) ───────────────────────────────────
-   Неделя, «что уже умею» и сундук. На телефоне и планшете скрыта: там эти
-   данные отвлекают от дороги, а места под них нет. */
-.path-aside { display: none; }
-
-@media (min-width: 1024px) {
-  .path-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 330px); gap: 20px; align-items: start; }
-  .path-aside {
-    display: flex; flex-direction: column; gap: 14px;
-    padding: 16px 18px 40px; border-left: 1px solid var(--line);
-  }
-  body.novice-mode .main-content { padding-left: 230px; }
-}
-.path-aside-tiles { display: flex; gap: 10px; }
-.path-aside-card { padding: 16px 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
-.path-aside-card--chest { background: rgba(232, 176, 36, 0.12); border-color: rgba(232, 176, 36, 0.35); }
-.path-aside-title { font-size: 14px; font-weight: 800; }
-
-/* Верхние плитки метрик прячем там, где есть правая колонка со статистикой —
-   иначе серия, XP и уроки показываются дважды на одном экране. */
-@media (min-width: 1024px) {
-  .path-top-tiles { display: none !important; }
-}
-
 /* ── Полоса с ассистентом на планшете и ПК ────────────────────────────────────
    Внизу остаётся та же полоса с прогибом и круглой кнопкой ИИ-тренера, но без
    пунктов навигации: они уже есть в боковой панели, и дублировать их незачем.
@@ -436,78 +393,6 @@ body.novice-mode .layout-drawer button {
 .novice-fab-desktop { display: none; }
 @media (min-width: 834px) { .novice-fab-desktop { display: flex; } }
 
-
-/* Горизонтальная змейка шире вертикальной ленты: на широком экране центр
-   разворачиваем на всю доступную ширину, иначе узлы сжимаются в колонку. */
-.path-main { max-width: 560px; margin: 0 auto; padding: 10px 16px 40px; }
-
-@media (min-width: 1024px) {
-  /* Горизонтальная змейка занимает всю ширину центра — иначе узлы жмутся
-     в узкую колонку посреди пустого экрана. */
-  .path-main { max-width: none; width: 100%; margin: 0; padding: 16px 24px 40px; }
-}
-
-/* ── Заголовок раздела (макет 2a) ─────────────────────────────────────────────
-   В макете это не карточка, а крупная строка с подписью и полосками прогресса
-   справа. Рамка и фон делали из неё «плашку», которая спорила с картой. */
-.path-head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
-  margin-bottom: 18px; cursor: pointer;
-}
-.path-head > div:first-child { flex: 1 1 auto; min-width: 0; }
-.path-head-title {
-  margin: 0; font-size: 21px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em;
-}
-.path-head-sub { margin-top: 4px; font-size: 13.5px; color: var(--ink-soft); }
-/* Полоски прогресса не должны отжимать заголовок: их много (по числу уроков),
-   поэтому ограничиваем блок по ширине и делаем сегменты тонкими. */
-.path-head-bars {
-  display: flex; gap: 4px; flex: 0 1 auto; padding-top: 10px;
-  max-width: 45%; overflow: hidden; justify-content: flex-end;
-}
-.path-head-bars > span { display: block; width: 14px; height: 6px; border-radius: 3px; flex: none; }
-
-@media (min-width: 1024px) {
-  .path-head-title { font-size: 26px; }
-  .path-head-bars > span { width: 18px; height: 7px; }
-}
-
-
-/* Дорога тянется на всю ширину центра — фиксированной ширины у неё нет */
-.path-road { width: 100%; }
-
-/* ── Общий отступ контента в режиме новичка ───────────────────────────────────
-   Причина «двойного отступа» на ВСЕХ страницах: прежняя вёрстка на ≥1024px
-   двигает контент под старый сайдбар (margin-left: 220px), а панель новичка
-   добавляла свой padding-left поверх. Итог — 450px пустоты слева.
-   Здесь сбрасываем чужой отступ и оставляем только ширину нашей панели. */
-@media (min-width: 834px) {
-  body.novice-mode .main-content {
-    margin-left: 0 !important;
-    padding-left: 96px !important;
-    padding-right: 16px !important;
-  }
-}
-
-@media (min-width: 1200px) {
-  body.novice-mode .main-content {
-    padding-left: 230px !important;
-    padding-right: 24px !important;
-  }
-}
-
-/* Раскрытый узел не должен подлезать под боковую панель или улетать за экран:
-   дороге даём поля, а плашке — предел ширины. */
-.path-road { padding: 0 8px; }
-@media (min-width: 834px) {
-  .path-road { padding: 0 24px; }
-}
-
-/* Мотивационный блок (неделя и «что уже умею») показываем только там, где нет
-   правой колонки — иначе он дублируется. */
-@media (min-width: 1024px) {
-  .path-motivation { display: none; }
-}
 
 /* ── Плавающие кнопки новичка: «Старт/Продолжить» и камера ────────────────────
    Точка входа в занятие. Первые ученики (05.09.2026) в один голос сказали, что
@@ -590,26 +475,6 @@ html.keyboard-open .novice-actions { display: none; }
 }
 .novice-intro-btn--main { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 
-/* ── Узлы дороги читаются как кнопки ──────────────────────────────────────────
-   Люди не понимали, что кружки нажимаются: карта читалась как картинка прогресса
-   (жалоба Павла 06.09.2026). Даём доступным узлам тень и отклик на нажатие —
-   статичный аффорданс, без движения: тридцать «дышащих» кружков разом дают ровно
-   ту рябь, от которой уходили в этом дизайне. Движение приберегли для одной
-   разовой подсказки ниже. */
-.path-node--tappable {
-  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .45) !important;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.path-node--tappable:active { transform: scale(.94); }
-
-/* Цель разовой подсказки — мягко пульсирует, пока человек не тапнул ни разу */
-@keyframes nv-node-hint {
-  0%, 100% { box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .45), 0 0 0 0 rgba(232, 176, 36, .55); }
-  50%      { box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .45), 0 0 0 10px rgba(232, 176, 36, 0); }
-}
-.path-node--hint { animation: nv-node-hint 1.9s ease-out infinite; }
-
-/* Само облачко: подпись и хвостик вниз, к кружку */
 .path-tap-hint { pointer-events: none; display: flex; justify-content: center; }
 .path-tap-hint-bubble {
   position: relative;

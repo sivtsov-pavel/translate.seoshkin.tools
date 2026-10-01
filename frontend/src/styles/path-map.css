@@ -1,0 +1,381 @@
+/* ═══ Карта уроков на главной ═══════════════════════════════════════════════════
+   Макет: docs/maket-home (SPEC.md). Одна извилистая дорога сверху вниз, разбитая на
+   главы-разделы; узлы шести состояний; у текущего урока — карточка сбоку.
+
+   Макет был нарисован для ПК и планшета, мобильную карту хендофф велел не трогать.
+   Павел решил иначе (01.10.2026): «натяни его на все версии» — поэтому один набор
+   правил на все ширины, а меняются только ширина колонки и место карточки урока.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Токены ─────────────────────────────────────────────────────────────────────
+   Берём из SPEC, но НЕ переопределяем фон и текст: они приходят из тем проекта, и
+   прибитый сюда кремовый фон выбил бы экран из тёмной темы. */
+:root {
+  --road: #E4DAC6;
+  --road-done: #5DBB8E;
+  --node-locked: #E9E2D3;
+  --node-locked-d: #D6CCB7;
+  --node-locked-ink: #8E8677;
+  --sec-done: #2F7A5E;
+  --sec-done-d: #1E5641;
+  --purple: #7C4DCC;
+  --purple-d: #5B34A0;
+  --gold-ring: #E3AE3A;
+  --gold-ring-d: #B98718;
+}
+
+/* ── Раскладка ──────────────────────────────────────────────────────────────── */
+.path-layout { display: block; }
+.path-col { max-width: 340px; margin: 0 auto; padding: 8px 0 40px; }
+
+@media (min-width: 768px) {
+  .path-col { max-width: 600px; padding: 16px 0 48px; }
+}
+@media (min-width: 1280px) {
+  /* Карта и правая колонка. Правая прокручивается вместе со страницей только до
+     своей высоты — дальше стоит на месте, крутится дорога (SPEC, раздел 2). */
+  .path-layout {
+    display: grid; grid-template-columns: minmax(0, 1fr) 336px; gap: 28px; align-items: start;
+  }
+  .path-col { max-width: 720px; }
+  .path-aside {
+    position: sticky; top: 12px;
+    display: flex; flex-direction: column; gap: 12px; padding-bottom: 32px;
+  }
+}
+
+.path-aside { display: none; }
+@media (min-width: 1280px) { .path-aside { display: flex; } }
+
+.path-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+/* Статистика строкой — везде, кроме ПК: на ПК те же цифры стоят в правой колонке, и
+   наверху они дублировались бы.
+   Правило стоит ПОСЛЕ .path-tiles не случайно: вес селекторов одинаковый, и написанное
+   выше «display: none» общий .path-tiles молча перебивал — на ПК плитки показывались
+   дважды, сверху и справа. */
+.path-tiles--row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+@media (min-width: 768px) { .path-tiles--row { gap: 10px; margin-bottom: 18px; } }
+/* Серия и XP — то, ради чего человек открывает приложение утром. На телефоне их не было
+   вовсе: плитки прятались вместе с правой колонкой, которой там нет. Поэтому здесь они
+   не исчезают, а ужимаются. */
+@media (max-width: 767px) {
+  .path-tile { padding: 9px 4px; border-radius: 13px; }
+  .path-tile-val { font-size: 15px; }
+  .path-tile-lab { font-size: 9.5px; }
+}
+@media (min-width: 1280px) { .path-tiles--row { display: none; } }
+.path-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 12px 8px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line);
+  text-align: center; min-width: 0;
+}
+.path-tile-ico { display: grid; place-items: center; height: 20px; }
+.path-tile-val { font-size: 19px; font-weight: 900; line-height: 1.1; }
+.path-tile-lab { font-size: 10.5px; color: var(--ink-soft); line-height: 1.2; }
+
+/* ── Шапка колонки ──────────────────────────────────────────────────────────── */
+.path-colhead { margin-bottom: 18px; }
+.path-colhead-row {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.path-eyebrow {
+  font-size: 11.5px; font-weight: 800; letter-spacing: .08em; color: var(--ink-soft);
+}
+.path-h1 {
+  margin: 2px 0 0; font-size: 22px; font-weight: 900; line-height: 1.12; letter-spacing: -.02em;
+}
+@media (min-width: 768px) { .path-h1 { font-size: 24px; } }
+@media (min-width: 1280px) { .path-h1 { font-size: 30px; } }
+
+/* Переключатель «Мой раздел / Вся дорога». nowrap обязателен: без него надпись
+   ломалась на две строки и кнопка переставала читаться как кнопка. Когда места
+   не хватает совсем, переключатель переносится под заголовок (flex-wrap выше). */
+.path-seg {
+  display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--surface-2);
+  flex: none;
+}
+.path-seg button {
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 9px 13px; border: none; border-radius: 10px; cursor: pointer;
+  background: transparent; color: var(--ink-soft); font-size: 13px; font-weight: 700;
+}
+.path-seg button.is-on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* Прогресс курса — по разделам. Полсотни чёрточек в ряд не считываются вовсе,
+   пять глав видно с одного взгляда. */
+.path-progress { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.path-progress-bars { display: flex; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.path-progress-seg {
+  flex: 1 1 0; height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden;
+}
+.path-progress-seg.is-done { background: var(--sec-done); }
+.path-progress-seg.is-current > i { display: block; height: 100%; background: var(--purple); border-radius: 5px; }
+.path-progress-num { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
+
+/* ── Шапки разделов ─────────────────────────────────────────────────────────── */
+/* Пройденный — свёрнутая полоса. Разворачивается кликом: пройденное не прячем
+   насовсем, его хочется пересматривать. */
+.path-sec--done {
+  display: flex; align-items: center; gap: 10px; margin: 14px 0;
+  padding: 8px 10px 8px 8px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.path-sec-strip {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px;
+  background: none; border: none; cursor: pointer; color: var(--ink); text-align: left; padding: 4px;
+}
+.path-sec-check {
+  flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--sec-done); color: #fff; box-shadow: 0 3px 0 var(--sec-done-d);
+}
+.path-sec-striptext {
+  font-size: 13px; font-weight: 700; line-height: 1.3;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.path-sec-repeat {
+  flex: none; padding: 9px 14px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+}
+
+/* Текущий раздел — фиолетовая карточка; будущий — та же форма, но приглушённая и с замком */
+.path-sec-card {
+  display: flex; align-items: center; gap: 14px; margin: 18px 0 8px;
+  padding: 14px 16px; border-radius: 22px; flex-wrap: wrap;
+  background: var(--purple); color: #fff; box-shadow: 0 6px 0 var(--purple-d);
+}
+.path-sec-card.is-future {
+  background: var(--surface-2); color: var(--ink-soft); box-shadow: none; border: 1px solid var(--line);
+}
+.path-sec-num {
+  flex: none; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+  font-size: 21px; font-weight: 900; background: rgba(255,255,255,.22);
+}
+.path-sec-card.is-future .path-sec-num { background: var(--surface); color: var(--ink-soft); }
+.path-sec-body { flex: 1 1 200px; min-width: 0; }
+.path-sec-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; opacity: .85; }
+.path-sec-name { font-size: 19px; font-weight: 900; line-height: 1.15; margin-top: 1px; }
+@media (min-width: 768px) { .path-sec-name { font-size: 22px; } }
+.path-sec-progress { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.path-sec-bar {
+  flex: 1 1 120px; max-width: 180px; height: 8px; border-radius: 4px;
+  background: rgba(255,255,255,.3); overflow: hidden;
+}
+.path-sec-card.is-future .path-sec-bar { background: var(--line); }
+.path-sec-bar > i { display: block; height: 100%; background: #fff; border-radius: 4px; }
+.path-sec-card.is-future .path-sec-bar > i { background: var(--ink-soft); }
+.path-sec-count { font-size: 12.5px; font-weight: 700; opacity: .9; white-space: nowrap; }
+.path-sec-ref, .path-sec-lock {
+  flex: none; display: flex; align-items: center; gap: 7px;
+  padding: 10px 14px; border-radius: 14px; font-size: 13px; font-weight: 700; white-space: nowrap;
+  background: rgba(255,255,255,.18); color: #fff; border: none; cursor: pointer;
+}
+.path-sec-lock { background: transparent; color: var(--ink-soft); cursor: default; }
+/* На узких ширинах у замка остаётся только значок: строка «Откроется после
+   контрольной» переносилась на две и ломала карточку (известная беда макета). */
+@media (max-width: 900px) { .path-sec-lock span { display: none; } }
+
+/* ── Дорога ─────────────────────────────────────────────────────────────────── */
+.path-road { position: relative; width: 100%; }
+.path-road-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+.path-node-slot { position: absolute; transform: translateX(-50%); }
+
+/* Метка «СЕЙЧАС» над текущим узлом */
+.path-now {
+  position: absolute; left: 50%; top: -26px; transform: translateX(-50%);
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+  background: var(--ink); color: var(--bg);
+  font-size: 10.5px; font-weight: 900; letter-spacing: .06em;
+}
+
+/* ── Узлы ───────────────────────────────────────────────────────────────────── */
+.path-node {
+  position: relative; width: 100%; height: 100%; padding: 0; border: none; cursor: pointer;
+  display: grid; place-items: center; border-radius: 50%; background: transparent;
+  /* Область нажатия не меньше 44px даже у самого мелкого, запертого узла */
+  min-width: 44px; min-height: 44px;
+  transition: transform .15s;
+}
+.path-node:active { transform: scale(.94); }
+.path-node:focus-visible { outline: 3px solid var(--purple); outline-offset: 4px; }
+.path-node-face { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; }
+.path-node-num { font-weight: 900; line-height: 1; letter-spacing: -.03em; }
+
+.path-node--done .path-node-face {
+  background: var(--sec-done); color: #fff; box-shadow: 0 6px 0 var(--sec-done-d);
+}
+.path-node--open .path-node-face {
+  background: var(--surface); color: var(--node, var(--purple));
+  border: 3px solid var(--node, var(--purple)); box-shadow: 0 6px 0 var(--node-d, var(--purple-d));
+}
+.path-node--locked { cursor: default; }
+.path-node--locked .path-node-face {
+  background: var(--node-locked); color: var(--node-locked-ink); box-shadow: 0 6px 0 var(--node-locked-d);
+}
+.path-node--current .path-node-face {
+  background: var(--purple); color: #fff;
+  border: 7px solid var(--gold-ring); box-shadow: 0 6px 0 var(--gold-ring-d);
+}
+/* Пульсирующее кольцо: у текущего узла оно единственное, что движется на экране —
+   глаз находит «где я» без поиска. */
+.path-node-ring {
+  position: absolute; inset: -10px; border-radius: 50%; pointer-events: none;
+  border: 3px solid var(--gold-ring); animation: path-pulse 2.2s ease-out infinite;
+}
+@keyframes path-pulse {
+  0%   { transform: scale(1);    opacity: .55; }
+  70%  { transform: scale(1.22); opacity: 0; }
+  100% { transform: scale(1.22); opacity: 0; }
+}
+
+.path-node-badge {
+  position: absolute; top: -6px; right: -6px; width: 26px; height: 26px; border-radius: 9px;
+  display: grid; place-items: center; background: var(--surface); border: 1.5px solid;
+  box-shadow: 0 2px 6px rgba(0,0,0,.12);
+}
+
+/* Сундук — скруглённый квадрат, не круг: форма отличает награду от урока */
+.path-node--chest {
+  border-radius: 18px; background: #F6D98A; color: #8A6212;
+  border: 3px solid var(--gold-ring); box-shadow: 0 6px 0 var(--gold-ring-d);
+}
+/* Контрольная — ромб с пунктиром: «рубеж», а не очередная станция */
+.path-node--exam { background: transparent; }
+.path-node--exam .path-node-exam-inner {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  border-radius: 28px; transform: rotate(45deg);
+  background: var(--surface-2); border: 3px dashed var(--node-locked-d); color: var(--node-locked-ink);
+}
+.path-node--exam .path-node-exam-inner > * { transform: rotate(-45deg); }
+
+/* Подпись под узлом */
+.path-cap {
+  position: absolute; width: 150px; text-align: center; pointer-events: none; z-index: 1;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.path-cap-title {
+  font-size: 13px; font-weight: 800; line-height: 1.2;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.path-cap-sub { font-size: 11px; color: var(--ink-soft); line-height: 1.2; }
+/* На телефоне подпись в одну строку: двухстрочная съедает весь зазор до следующего узла,
+   и длинное название перекрывает соседний кружок. Полное имя всё равно стоит в карточке. */
+@media (max-width: 767px) {
+  .path-cap { width: 130px; }
+  .path-cap-title { font-size: 12px; -webkit-line-clamp: 1; }
+  .path-cap-sub { font-size: 10px; }
+}
+
+/* ── Карточка урока ─────────────────────────────────────────────────────────── */
+.path-card-wrap { position: absolute; z-index: 7; width: 312px; max-width: calc(100% - 16px); }
+@media (max-width: 1279px) and (min-width: 768px) { .path-card-wrap { width: 260px; } }
+.path-card-wrap.is-below { width: 100%; max-width: 100%; }
+
+.path-card {
+  position: relative; padding: 14px 16px 16px; border-radius: 22px;
+  background: var(--surface); border: 1px solid var(--line);
+  box-shadow: 0 18px 40px rgba(60, 45, 20, .14);
+}
+/* Хвостик-ромб к узлу — только когда карточка стоит сбоку */
+.path-card-tail {
+  position: absolute; left: -9px; top: 70px; width: 18px; height: 18px;
+  background: var(--surface); border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  transform: rotate(45deg);
+}
+.path-card-wrap.is-below .path-card-tail { display: none; }
+
+.path-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.path-card-chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 8px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+}
+.path-card-num { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.path-card-title { font-size: 18px; font-weight: 900; line-height: 1.2; margin-top: 8px; }
+.path-card-locked {
+  margin-top: 10px; padding: 10px 12px; border-radius: 12px;
+  background: var(--surface-2); color: var(--ink-soft); font-size: 12.5px;
+}
+.path-card-rows { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.path-card-row {
+  display: flex; justify-content: space-between; gap: 8px; padding: 9px 11px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+  cursor: pointer; font-size: 12.5px; font-weight: 700;
+}
+.path-card-progress {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  font-size: 12px; font-weight: 700; color: var(--ink-soft);
+}
+.path-card-bar { flex: 1 1 auto; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.path-card-bar > i { display: block; height: 100%; background: var(--purple); border-radius: 4px; }
+.path-card-go {
+  width: 100%; margin-top: 12px; padding: 14px; border-radius: 14px; border: none; cursor: pointer;
+  background: var(--gold-ring); color: #3A2A05; font-size: 15px; font-weight: 800;
+  box-shadow: 0 4px 0 var(--gold-ring-d);
+}
+.path-card-alt {
+  width: 100%; margin-top: 8px; padding: 11px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+  font-size: 13px; font-weight: 700;
+}
+
+/* ── Хвосты ─────────────────────────────────────────────────────────────────── */
+.path-tails {
+  width: 100%; margin-top: 14px; padding: 13px 16px; border-radius: 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.path-tails-n { color: var(--gold-ring-d); font-weight: 900; }
+
+/* ── Карточки правой колонки ────────────────────────────────────────────────── */
+.path-aside-card {
+  padding: 15px 17px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line);
+}
+.path-aside-card--chest { background: rgba(227, 174, 58, .14); border-color: rgba(227, 174, 58, .4); }
+.path-aside-title { font-size: 14px; font-weight: 900; margin-bottom: 4px; }
+
+.path-daily-row { margin-top: 11px; }
+.path-daily-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; font-weight: 700; }
+.path-daily-bar {
+  display: block; height: 6px; border-radius: 3px; background: var(--surface-2); margin-top: 5px; overflow: hidden;
+}
+.path-daily-bar > i { display: block; height: 100%; border-radius: 3px; }
+
+.path-chest-row { display: flex; align-items: center; gap: 12px; }
+.path-chest-ico {
+  flex: none; width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center;
+  font-size: 22px; background: var(--gold-ring);
+}
+.path-chest-bar {
+  display: block; height: 6px; border-radius: 3px; background: rgba(0,0,0,.09); margin-top: 6px; overflow: hidden;
+}
+.path-chest-bar > i { display: block; height: 100%; background: var(--gold-ring-d); border-radius: 3px; }
+
+.path-week { display: flex; align-items: flex-end; gap: 7px; height: 78px; margin-top: 12px; }
+.path-week-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10.5px; }
+.path-week-bar { width: 100%; border-radius: 7px; }
+
+.path-skill { margin-top: 11px; }
+.path-skill-head { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700; }
+.path-skill-head > span:last-child { color: var(--ink-soft); }
+.path-skill-bar {
+  display: block; height: 8px; border-radius: 4px; background: var(--surface-2); margin-top: 5px; overflow: hidden;
+}
+.path-skill-bar > i { display: block; height: 100%; border-radius: 4px; }
+
+.path-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 11px; }
+.path-legend-row { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; }
+.path-legend-ico {
+  flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid; background: var(--surface);
+}
+
+/* Мотивация (неделя и умения) на телефоне и планшете — там нет правой колонки */
+.path-motivation { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+@media (min-width: 1280px) { .path-motivation { display: none; } }
+
+/* Кому движение мешает — никакого пульса */
+@media (prefers-reduced-motion: reduce) {
+  .path-node-ring { animation: none; opacity: .35; }
+}

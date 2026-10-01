@@ -6,6 +6,8 @@
 import { db } from '../db/index.js'
 import { playableLessonIds, ensureDefaultSchedules, fixedPassedLessons, LESSON_PASSED_HAVING } from '../services/drip.js'
 import { computeStreak } from '../services/streak.js'
+import { buildSections, chestProgress } from '../services/sections.js'
+import { BATCH_SIZE, BATCH_NEW_MIN } from '../services/batch.js'
 
 // Узлов в разделе: столько уроков показываем одной «дорогой», дальше — следующий раздел
 const SECTION_SIZE = 6
@@ -289,7 +291,41 @@ export async function pathRoutes(fastify) {
     const sk = skillRows[0] || {}
     const pctOf = (done, total) => (total ? Math.round((done / total) * 100) : 0)
 
+    // ── Разделы: главы карты. В данных их нет, режем по десять уроков (services/sections.js) ──
+    const sections = buildSections(nodes)
+    const chest = chestProgress(sections)
+
+    // ── Задания дня ──────────────────────────────────────────────────────────
+    // Меряем ровно тем, чем живёт сессия: подход, новое, повторы (services/batch.js). Пока
+    // каждый экран считал своё, человек получал два счёта одного дела — за это и была жалоба
+    // «на главном писалось, что пройдено 91 карточка и 133, а урок начался сначала»
+    // (30.09.2026). Поэтому один закрытый подход закрывает все три задания разом: это не
+    // три разных дела, а один заход, разложенный на составляющие.
+    //
+    // «Новое» определяем по отсутствию попыток ДО сегодня, а не по счётчику повторений:
+    // SM-2 обнуляет repetitions при ошибке, и давно знакомое упражнение выдало бы себя
+    // за новое — ровно та подмена, от которой мы метку is_review и завели.
+    const { rows: todayStats } = await db.query(
+      `SELECT count(DISTINCT a.exercise_id)::int AS total,
+              count(DISTINCT a.exercise_id) FILTER (
+                WHERE NOT EXISTS (SELECT 1 FROM exercise_attempts p
+                                   WHERE p.user_id = a.user_id AND p.exercise_id = a.exercise_id
+                                     AND p.attempted_at < CURRENT_DATE))::int AS fresh
+         FROM exercise_attempts a
+        WHERE a.user_id = $1 AND a.attempted_at >= CURRENT_DATE`, [userId])
+    const doneToday = todayStats[0]?.total || 0
+    const freshToday = todayStats[0]?.fresh || 0
+    const daily = [
+      { key: 'batch',  done: Math.min(doneToday, BATCH_SIZE), total: BATCH_SIZE },
+      { key: 'fresh',  done: Math.min(freshToday, BATCH_NEW_MIN), total: BATCH_NEW_MIN },
+      { key: 'review', done: Math.min(doneToday - freshToday, BATCH_SIZE - BATCH_NEW_MIN),
+        total: BATCH_SIZE - BATCH_NEW_MIN },
+    ]
+
     return {
+      sections,
+      chest,
+      daily,
       section: {
         index: sectionIndex,
         done: section.filter(n => n.state === 'done').length,

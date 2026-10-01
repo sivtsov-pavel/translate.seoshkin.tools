@@ -1,5 +1,6 @@
 import { db } from '../db/index.js'
 import { computeStreak } from '../services/streak.js'
+import { BATCH_SIZE, composeBatch } from '../services/batch.js'
 import { playableLessonIds, ensureDefaultSchedules, fixedPassedLessons, LESSON_PASSED_HAVING } from '../services/drip.js'
 import { recordAttempt } from '../services/attempts.js'
 import { newExerciseIds } from '../services/newExercises.js'
@@ -20,39 +21,6 @@ export function trimUnusedParams(query, params) {
   const used = [...String(query).matchAll(/\$(\d+)/g)].map(m => Number(m[1]))
   const max = used.length ? Math.max(...used) : 0
   return params.length > max ? params.slice(0, max) : params
-}
-
-// Подход — порция упражнений за один заход. Столько успеваешь «за четыре остановки» и
-// столько не пугает в момент открытия урока. Дневную цель это не отменяет: подходов за день
-// можно взять сколько угодно, на финише кнопка «Ещё подход».
-//
-// Было 12, стало 20 — поправка Павла 01.10.2026: «я не учёл, что будут повторы». И она верна:
-// 30.09 повторами были 95 упражнений из 133, то есть семь из десяти. В подходе на 12 нового
-// осталось бы штуки три — учиться стало бы нечем.
-const BATCH_SIZE = 20
-
-// Сколько мест в подходе бережём под НОВОЕ. Одного увеличения партии мало: повторы
-// отбираются по сроку (next_review_date ASC) и при любом размере встают в начало очереди —
-// новое вытесняется тем вернее, чем дольше человек учится. Бронь разрывает этот круг:
-// повторы по сроку делаются, но часть подхода всегда остаётся за новым материалом.
-const BATCH_NEW_MIN = 8
-
-// Состав одного подхода: повторы по сроку плюс забронированная доля нового.
-//
-// Запрос отдаёт пул пошире, а порядок внутри пула уже правильный (сначала новое из
-// пополненных уроков, затем по номеру урока и по сроку повтора). Здесь только выбираем,
-// кого взять, и возвращаем выбранных В ТОМ ЖЕ порядке — иначе типы упражнений в уроке
-// пошли бы вразнобой с педагогической последовательностью.
-function composeBatch(rows, size = BATCH_SIZE, newMin = BATCH_NEW_MIN) {
-  if (rows.length <= size) return rows
-  const fresh  = rows.filter(r => !r.is_review)
-  const review = rows.filter(r => r.is_review)
-  // Бронь под новое не может быть больше, чем нового есть: пустых мест в подходе не бывает.
-  const guaranteedNew = Math.min(newMin, fresh.length)
-  const reviewTake    = Math.min(review.length, size - guaranteedNew)
-  const newTake       = Math.min(fresh.length,  size - reviewTake)
-  const picked = new Set([...review.slice(0, reviewTake), ...fresh.slice(0, newTake)].map(r => r.id))
-  return rows.filter(r => picked.has(r.id))
 }
 
 async function getUserDailyLimit(userId) {
