@@ -189,6 +189,13 @@ export const de = {
   },
   // Übungen
   exercise: {
+    // ── Новая карта уроков (docs/maket-home, 01.10.2026) ─────────────────────
+    isReview: 'Wiederholung',
+    isNew: 'neu',
+    batchClosed: 'Runde geschafft',
+    batchClosedSub: 'Die Runde ist geschafft. Mach weiter oder h\u00f6r auf — gez\u00e4hlt ist es schon.',
+    oneMoreBatch: 'Noch eine Runde',
+    lessonProgress: 'Lektion geschafft',
     batchDone: 'Super! Übungen erledigt',
     continueEx: 'Übungen fortsetzen',
     lessonPassed: 'Lektion geschafft!',
@@ -909,6 +916,28 @@ export const de = {
   },
 
   path: {
+    // ── Новая карта уроков (docs/maket-home, 01.10.2026) ─────────────────────
+    myRoad: 'MEIN WEG',
+    mySection: 'Mein Kapitel',
+    wholeRoad: 'Ganzer Weg',
+    now: 'JETZT',
+    sectionDone: 'geschafft',
+    repeat: 'Wiederholen',
+    reference: 'Handbuch',
+    lessonsOf: 'Lektionen',
+    sectionLocked: '\u00d6ffnet nach dem Kapiteltest',
+    examNode: 'Kapiteltest',
+    examHint: (n) => `Schaffe ${n} Lektionen`,
+    chestNode: 'Truhe',
+    chestLeft: (n) => (n === 0 ? 'Offen — nimm sie' : `Noch ${n} ${n === 1 ? 'Lektion' : 'Lektionen'} — dann ist sie dein`),
+    continueLesson: 'Lektion fortsetzen',
+    dailyTitle: 'Tagesziele',
+    dailyBatch: 'Runde schaffen',
+    dailyFresh: 'Neues lernen',
+    dailyReview: 'Bekanntes wiederholen',
+    dailyDone: 'Fertig',
+    types: 'Lektionstypen',
+    ofLessons: (a, b) => `${a} von ${b}`,
     title: 'Weg',
     section: 'Abschnitt',
     lesson: 'Lektion',
